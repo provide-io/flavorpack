@@ -12,7 +12,7 @@ Complete guide to packaging Python applications with FlavorPack, including depen
     See [System Requirements](../../reference/requirements/) for detailed version information.
 
 !!! warning "Feature Coverage"
-    This guide covers current functionality and items tracked in the roadmap as exploratory work.
+    This guide covers current functionality and items under evaluation.
 
     **✅ What Works Today**:
 
@@ -21,7 +21,7 @@ Complete guide to packaging Python applications with FlavorPack, including depen
     - Automatic dependency resolution via UV
     - Simple package structure
 
-    **📋 Roadmap Items** (see [Roadmap](../roadmap/)):
+    **📋 Exploratory Items**:
 
     - Python version selection
     - Build environment customization
@@ -29,11 +29,11 @@ Complete guide to packaging Python applications with FlavorPack, including depen
     - Platform-specific builds
     - Advanced dependency configuration
 
-    Features marked with 📋 are **tracked in the roadmap as exploratory work**.
+    Features marked with 📋 are **under evaluation**.
 
 ## Overview
 
-FlavorPack provides first-class support for Python applications. This guide covers what works today and what's tracked in the roadmap as exploratory work.
+FlavorPack provides first-class support for Python applications. This guide covers what works today and what's under evaluation.
 
 ## What Works Today
 
@@ -80,11 +80,11 @@ Packaged applications currently use whatever Python version is available in your
 | Python 3.10 or older | ❌ FlavorPack won't run |
 
 !!! info "Current Limitation"
-    **Python version selection is tracked in the roadmap as exploratory work.** You cannot specify a different Python version than what's in your build environment.
+    **Python version selection is under evaluation.** You cannot specify a different Python version than what's in your build environment.
 
     For example, if you build on Python 3.12, your package will use Python 3.12 - you cannot target Python 3.11.
 
-    **Exploratory**: Support for specifying target Python versions via manifest configuration is under evaluation (see [Roadmap](../roadmap/)).
+    **Exploratory**: Support for specifying target Python versions via manifest configuration is under evaluation.
 
 ### Dependency Management ✅
 
@@ -128,13 +128,13 @@ The `[tool.flavor].entry_point` is required and specifies which function runs wh
 
 ## Exploratory Python Features
 
-The following features are tracked in the roadmap as exploratory work. See the [FlavorPack Roadmap](../../roadmap/) for current status and context.
+The following features are under evaluation.
 
 ### Python Version Selection 📋
 
 !!! note "Exploratory Feature"
-    Automatic Python version selection is tracked in the roadmap as exploratory work. Timing may change or be removed.
-    See [Roadmap - Python Version Management](../../roadmap/#python-version-selection) for full details.
+    Automatic Python version selection is under evaluation. Availability may change or be removed.
+    See the notes below for details.
 
 **Current Workaround:** Packages use the Python version from your build environment. If you build on Python 3.12, your package will use Python 3.12.
 
@@ -207,9 +207,9 @@ dependencies = [
 ### Build Environment
 
 !!! note "Exploratory Feature"
-    FlavorPack creates a basic isolated virtual environment during build. Advanced configuration options (custom venv path, build-time environment variables, pre-install commands) are tracked in the roadmap as exploratory work. Timing may change or be removed.
+    FlavorPack creates a basic isolated virtual environment during build. Advanced configuration options (custom venv path, build-time environment variables, pre-install commands) are under evaluation. Availability may change or be removed.
 
-    See [Roadmap - Build Environment Configuration](../../roadmap/#build-environment-configuration) for full details.
+    See the notes below for details.
 
 **Current Behavior:** FlavorPack automatically creates a virtual environment and installs dependencies using UV.
 
@@ -295,18 +295,7 @@ myapp = ["data/*.yaml", "data/*.json"]
 
 ### Including Data Files
 
-```toml
-[tool.flavor]
-# Include package data
-include_package_data = true
-
-[[tool.flavor.slots]]
-id = "data"
-source = "src/myapp/data/"
-target = "data/"
-purpose = "data-files"
-lifecycle = "persistent"
-```
+Use standard Python packaging configuration (for example, `tool.setuptools.package-data`) to ensure data files are included in your package.
 
 ### Accessing Data at Runtime
 
@@ -347,34 +336,9 @@ build_requires = [
     "cython>=0.29"
 ]
 
-# Platform-specific build flags
-[tool.flavor.build.platform.linux_amd64]
-env = {
-    "CFLAGS": "-O3 -march=x86-64",
-    "LDFLAGS": "-Wl,-rpath,$ORIGIN"
-}
-
-[tool.flavor.build.platform.darwin_arm64]
-env = {
-    "ARCHFLAGS": "-arch arm64",
-    "MACOSX_DEPLOYMENT_TARGET": "11.0"
-}
 ```
 
-### Including Shared Libraries
-
-```toml
-[[tool.flavor.slots]]
-id = "libs"
-source = "libs/"
-target = "lib/"
-purpose = "shared-libraries"
-lifecycle = "eager"
-
-[tool.flavor.runtime]
-# Library search paths
-ld_library_path = ["$FLAVOR_WORKENV/lib"]
-```
+Platform-specific build flags are handled by your build environment and compiler toolchain; FlavorPack does not define manifest settings for them yet.
 
 ### Common Binary Packages
 
@@ -400,63 +364,18 @@ dependencies = [
 
 ## Optimization Techniques
 
-!!! note "Exploratory Feature"
-    Runtime optimization configuration (code optimization levels, bytecode compilation, dependency optimization, lazy loading) is tracked in the roadmap as exploratory work. Timing may change or be removed.
+**Current Behavior:** FlavorPack packages all dependencies and Python code as-is.
 
-    See [Roadmap - Runtime Optimization](../../roadmap/#runtime-optimization) and [Roadmap - Advanced Slot Configuration](../../roadmap/#advanced-slot-configuration) for full details.
-
-**Current Behavior:** FlavorPack packages all dependencies and Python code as-is, with basic compression.
-
-**Current Workaround:**
+**Practical tips:**
 - Pre-compile bytecode in your project before packaging
-- Use `.flavor-ignore` or similar to exclude unnecessary files
 - Minimize dependencies in your `pyproject.toml`
-
-## Testing and Quality
-
-### Including Tests in Package
-
-```toml
-[tool.flavor.build]
-# Include tests for debugging
-include_tests = true  # Default: false
-
-[[tool.flavor.slots]]
-id = "tests"
-source = "tests/"
-purpose = "tests"
-lifecycle = "volatile"  # Don't persist between runs
-```
-
-### Running Tests Before Build
-
-```toml
-[tool.flavor.build]
-# Run tests before packaging
-pre_build_commands = [
-    "pytest tests/ -v",
-    "mypy src/ --strict",
-    "black src/ --check"
-]
-```
-
-### Test Fixtures and Data
-
-```toml
-[[tool.flavor.slots]]
-id = "test-fixtures"
-source = "tests/fixtures/"
-target = "test-fixtures/"
-purpose = "test-data"
-lifecycle = "cached"
-```
+- Remove large, unused assets before packaging
 
 ## Environment Variables
 
 ### Runtime Environment
 
 ```toml
-[tool.flavor.execution.runtime]
 [tool.flavor.execution.runtime.env]
 # Clear all host environment variables, then selectively pass through
 unset = ["*"]
@@ -577,10 +496,6 @@ dependencies = [
 
 [tool.flavor]
 entry_point = "myapp.server:run"
-
-[tool.flavor.runtime]
-# Keep server running
-persistent = true
 ```
 
 ## Common Patterns
@@ -800,12 +715,6 @@ dependencies = [
 
 [tool.flavor]
 entry_point = "ml_model.predict:main"
-
-[[tool.flavor.slots]]
-id = "models"
-source = "models/"
-lifecycle = "lazy"
-# Automatic tar.gz compression
 ```
 
 ### Web API Package
@@ -823,10 +732,6 @@ dependencies = [
 
 [tool.flavor]
 entry_point = "api.main:run"
-
-[tool.flavor.runtime]
-persistent = true
-port = 8000
 ```
 
 ## Related Pages

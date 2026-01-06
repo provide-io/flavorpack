@@ -310,18 +310,16 @@ dtruss ./myapp.psp 2>&1 | grep -E "open|stat"
 ### Slow Package Building
 
 **Solutions**:
-- Use `--jobs` flag for parallel processing
-- Exclude unnecessary files early
 - Pre-download dependencies
-- Use local package index
+- Use a local package index when possible
+- Keep the project tree lean before packaging
 
 ### Slow Package Startup
 
 **Solutions**:
-- Mark large init-only files as `volatile`
-- Use `lazy` lifecycle for optional components
-- Enable extraction caching
 - Reduce package size
+- Avoid large assets inside the package when possible
+- Keep dependencies minimal
 
 ### High Memory Usage
 

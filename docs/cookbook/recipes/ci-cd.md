@@ -96,7 +96,7 @@ jobs:
 
       - name: Install FlavorPack
         run: |
-          # Note: FlavorPack is not yet on PyPI - install from source
+          # Note: Install from source when building helpers
           git clone https://github.com/provide-io/flavorpack.git
           cd flavorpack
           uv sync
@@ -148,7 +148,7 @@ build:helpers:
   stage: build
   image: python:3.11
   script:
-    # Note: FlavorPack is not yet on PyPI - install from source
+    # Note: Install from source when building helpers
     - git clone https://github.com/provide-io/flavorpack.git
     - cd flavorpack
     - curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -196,7 +196,7 @@ jobs:
       - run:
           name: Install FlavorPack
           command: |
-            # Note: FlavorPack is not yet on PyPI - install from source
+            # Note: Install from source when building helpers
             git clone https://github.com/provide-io/flavorpack.git
             cd flavorpack
             curl -LsSf https://astral.sh/uv/install.sh | sh

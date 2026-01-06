@@ -36,7 +36,7 @@ flavor verify myapp-1.0.0.psp
 ```
 
 !!! info "Public Key Verification"
-    The `verify` command automatically uses the public key embedded in the package. External key verification is tracked in the roadmap as exploratory work.
+    The `verify` command automatically uses the public key embedded in the package. External key verification is under evaluation.
 
 ## Key Management
 
@@ -214,7 +214,7 @@ flavor verify package.psp
 
 #### Deep Verification
 
-> **Exploratory Feature**: Advanced verification modes are tracked in the roadmap as exploratory work. Currently, the `verify` command performs comprehensive verification of all components.
+> **Exploratory Feature**: Advanced verification modes are under evaluation. Currently, the `verify` command performs comprehensive verification of all components.
 
 ```bash
 # Verify all components (standard verification)
@@ -230,7 +230,7 @@ flavor verify package.psp
 #### Verification with External Key
 
 !!! info "📋 Exploratory Feature"
-    External key verification is tracked in the roadmap as exploratory work. Currently, verification uses the public key embedded in the package.
+    External key verification is under evaluation. Currently, verification uses the public key embedded in the package.
 
 **Current verification:**
 ```bash
@@ -240,7 +240,7 @@ flavor verify package.psp
 
 **Exploratory verification (may change or be removed):**
 ```bash
-# Verify against external trusted key (tracked in the roadmap as exploratory work)
+# Verify against external trusted key (under evaluation)
 flavor verify package.psp --public-key trusted.pub
 flavor verify package.psp --trusted-keys keys/trusted/
 ```
@@ -285,7 +285,7 @@ flavor verify package.psp
 ### 2. Pre-Shared Keys
 
 !!! info "📋 Exploratory Feature"
-    Pre-shared key verification with external key management is tracked in the roadmap as exploratory work.
+    Pre-shared key verification with external key management is under evaluation.
 
 Distribute public keys separately:
 
@@ -323,11 +323,11 @@ flavor verify package.psp
 ### 3. Web of Trust (Exploratory)
 
 !!! info "Exploratory Feature"
-    Multiple signatures from trusted parties is tracked in the roadmap as exploratory work.
+    Multiple signatures from trusted parties is under evaluation.
 
     **Exploratory workflow:**
     ```bash
-    # Sign with multiple keys (tracked in the roadmap as exploratory work)
+    # Sign with multiple keys (under evaluation)
     flavor pack --manifest pyproject.toml --private-key key1.pem
     flavor cosign package.psp --private-key key2.pem
     flavor cosign package.psp --private-key key3.pem
@@ -540,7 +540,7 @@ flavor inspect package.psp
 
 ## Advanced Topics (Exploratory Features)
 
-The following features are tracked in the roadmap as exploratory work:
+The following features are under evaluation:
 
 ### Multi-Signature Packages (Exploratory)
 
@@ -549,7 +549,7 @@ The following features are tracked in the roadmap as exploratory work:
 
     **Exploratory API:**
     ```python
-    # Sign with multiple keys (tracked in the roadmap as exploratory work)
+    # Sign with multiple keys (under evaluation)
     from flavor.signing import multi_sign
 
     multi_sign("package.psp", [
@@ -562,7 +562,7 @@ The following features are tracked in the roadmap as exploratory work:
 ### Threshold Signatures (Exploratory)
 
 !!! info "Exploratory Feature"
-    Threshold signature schemes (N-of-M signatures required) are tracked in the roadmap as exploratory work.
+    Threshold signature schemes (N-of-M signatures required) are under evaluation.
 
     **Exploratory manifest format:**
     ```toml
@@ -574,11 +574,11 @@ The following features are tracked in the roadmap as exploratory work:
 ### Hardware Token Integration (Exploratory)
 
 !!! info "Exploratory Feature"
-    PKCS#11 hardware token support (YubiKey, HSM, etc.) is tracked in the roadmap as exploratory work.
+    PKCS#11 hardware token support (YubiKey, HSM, etc.) is under evaluation.
 
     **Exploratory workflow:**
     ```bash
-    # YubiKey signing (tracked in the roadmap as exploratory work)
+    # YubiKey signing (under evaluation)
     flavor pack --manifest pyproject.toml --pkcs11-module /usr/lib/opensc-pkcs11.so
     ```
 

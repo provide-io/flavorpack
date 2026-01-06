@@ -40,7 +40,7 @@ FlavorPack requires Python 3.11 or later.
 
 !!! warning "Initial release Status - Source Installation Only"
     FlavorPack is in its pre-release series. Installation is available via PyPI.
-    Some documented or roadmap items are exploratory and may change or be removed.
+    Some documented items are exploratory and may change or be removed.
 
 ```bash
 # Clone the repository
@@ -110,37 +110,24 @@ entry_point = "myapp:main"
 
 ### Can I include non-Python files?
 
-!!! info "📋 Exploratory Feature"
-    Manual slot configuration is tracked in the roadmap as exploratory work. Currently, FlavorPack automatically packages your Python application and its dependencies.
+FlavorPack packages your Python application and its dependencies. Include non-Python files by bundling them in your package directory so they are part of your distribution.
 
 ### How do I exclude files from the package?
 
-!!! info "📋 Exploratory Feature"
-    Manifest-based exclude patterns are tracked in the roadmap as exploratory work. See the [Roadmap](../guide/roadmap/) for details.
+There is no manifest-based exclude list yet. Remove unnecessary files from the source tree before packaging.
 
 ### Can I build packages for other platforms?
 
-!!! info "📋 Exploratory Feature"
-    Platform-specific builds via CLI are tracked in the roadmap as exploratory work. Currently, packages are built for the host platform. See the [Roadmap](../guide/roadmap/) for details.
+Packages are built for the host platform. Cross-platform builds are not available yet.
 
 ### How do I reduce package size?
 
-1. Enable compression:
-   ```toml
-   [[tool.flavor.slots]]
-   # Compression is automatic - tar.gz for directories
-   ```
-
-2. Exclude unnecessary files:
-   ```toml
-   [tool.flavor.build]
-   exclude = ["tests/", "docs/"]
-   ```
-
-3. Strip binaries:
+1. Strip binaries:
    ```bash
    flavor pack --manifest pyproject.toml --strip
    ```
+
+2. Keep dependencies minimal and remove unnecessary files before packaging.
 
 ## Running Packages
 
@@ -369,7 +356,7 @@ Subsequent runs: <100ms (cached)
 ### Can I improve build performance?
 
 !!! info "📋 Exploratory Features"
-    Build optimization features like `--parallel` and build caching are tracked in the roadmap as exploratory work.
+    Build optimization features like `--parallel` and build caching are under evaluation.
 
     Currently, build performance is primarily determined by dependency resolution and UV's package installation speed.
 

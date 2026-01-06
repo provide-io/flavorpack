@@ -136,30 +136,6 @@ build-backend = "setuptools.build_meta"
 # FlavorPack-specific configuration
 package_name = "weather-cli"
 entry_point = "weather:main"
-
-[tool.flavor.metadata]
-# Additional metadata for the package
-author = "Your Name"
-website = "https://example.com"
-support = "support@example.com"
-
-[tool.flavor.build]
-# Build configuration
-include_patterns = [
-    "*.py",
-    "README.md",
-    "LICENSE"
-]
-exclude_patterns = [
-    "__pycache__",
-    "*.pyc",
-    ".git"
-]
-
-[tool.flavor.runtime]
-# Runtime configuration
-python_version = "3.11"
-optimization_level = 2  # -OO flag for Python
 ```
 
 ### Create a README
@@ -309,7 +285,7 @@ Your `weather-cli.psp` file is now a **completely self-contained executable** th
 
 === "Package Managers"
 
-    Potential support is tracked in the roadmap as exploratory work for:
+    Potential support is under evaluation for:
     - Homebrew (macOS/Linux)
     - Scoop (Windows)
     - Snap (Linux)
@@ -413,7 +389,7 @@ Try these improvements:
 
 ??? question "Package is too large"
     - Use `--exclude` to skip unnecessary files
-    - Consider using `--compression` for better compression
+    - Consider using `--strip` to reduce binary size
     - Use `flavor inspect` to see what's taking space
 
 ??? question "Network error when fetching weather"

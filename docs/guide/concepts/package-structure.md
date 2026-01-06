@@ -248,20 +248,13 @@ dependencies = [
 
 [tool.flavor]
 entry_point = "myapp:main"
-python_version = "3.11"
 
-[[tool.flavor.slots]]
-id = "config"
-source = "config/"
-purpose = "configuration"
-lifecycle = "persistent"
+[tool.flavor.execution.runtime.env]
+unset = ["*"]
+pass = ["PATH", "HOME", "LANG", "LC_*"]
 
-[[tool.flavor.slots]]
-id = "static"
-source = "static/"
-purpose = "static-resources"
-lifecycle = "cached"
-operations = "tar.gz"
+[tool.flavor.build]
+dependencies = ["../shared-lib"]
 ```
 
 ### Build Process
@@ -422,33 +415,9 @@ def extract_package(metadata, work_dir):
 
 ### Size Optimization
 
-1. **Compression**: Use appropriate operations
-   - `tar.gz` for text-heavy content
-   - `tar` for already-compressed data
-   - `raw` for small files
-
-2. **Deduplication**: Share common libraries
-   ```toml
-   [[tool.flavor.slots]]
-   id = "shared-libs"
-   source = "/common/libs"
-   lifecycle = "cached"
-   ```
-
-3. **Lazy Loading**: Defer optional content
-   ```toml
-   [[tool.flavor.slots]]
-   id = "docs"
-   lifecycle = "lazy"
-   optional = true
-   ```
-
-### Performance Optimization
-
-1. **Parallel Extraction**: Extract slots concurrently
-2. **Memory Mapping**: Use mmap for large files
-3. **Caching**: Reuse extracted environments
-4. **Streaming**: Process without full extraction
+1. **Reduce dependencies**: Remove unused libraries from `pyproject.toml`
+2. **Strip binaries**: Use `flavor pack --strip` to reduce launcher size
+3. **Trim assets**: Remove large, unused assets before packaging
 
 ## Security Features
 

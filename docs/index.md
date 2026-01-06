@@ -1,7 +1,7 @@
 # Welcome to FlavorPack
 
 !!! warning "Pre-release"
-    This documentation covers a pre-release. APIs and features may change, and some documented or roadmap items are exploratory and may change or be removed.
+    This documentation covers a pre-release. APIs and features may change, and some documented items are exploratory and may change or be removed.
 
 
 !!! warning "Initial release Software - Development Version"
@@ -74,7 +74,7 @@ flavor verify myapp.psp
 
 This project is part of a larger ecosystem of tools for Python and Terraform development.
 
-**[View Ecosystem Overview →](https://docs.provide.io/provide-foundation/ecosystem/)**
+**[View Ecosystem Overview →](https://foundry.provide.io/provide-foundation/ecosystem/)**
 
 Understand how provide-foundation, pyvider, flavorpack, and other projects work together.
 

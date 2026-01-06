@@ -131,7 +131,7 @@ flavor verify myapp.psp
 ```
 
 !!! info "📋 Exploratory Features"
-    Additional verification options are tracked in the roadmap as exploratory work:
+    Additional verification options are under evaluation:
 
     - `--quick`: Fast verification (index and signature only)
     - `--deep`: Deep verification (all slot checksums)

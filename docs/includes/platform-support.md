@@ -7,4 +7,4 @@
 | Windows | x86_64 | ⚠️ Disabled | Dynamic | Currently disabled due to UTF-8 issues |
 
 !!! warning "Windows Support Status"
-    Windows support is currently **disabled** in FlavorPack due to UTF-8 encoding issues in the native helpers. Windows support is tracked in the roadmap as exploratory work once these issues are resolved.
+Windows support is currently **disabled** in FlavorPack due to UTF-8 encoding issues in the native helpers. Windows support is under evaluation once these issues are resolved.

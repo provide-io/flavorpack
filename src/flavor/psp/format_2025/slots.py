@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""Slot helpers for PSPF/2025 packages."""
 
 from __future__ import annotations
 
