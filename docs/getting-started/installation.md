@@ -137,7 +137,7 @@ For VS Code users with the Remote-Containers extension.
 
 The devcontainer includes:
 - Python 3.11+
-- Go 1.23+
+- Go 1.24+
 - Rust 1.85+
 - All required build tools
 - Pre-configured environment

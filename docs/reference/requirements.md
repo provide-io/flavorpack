@@ -73,7 +73,7 @@ Only required if you're building or modifying Go/Rust helper binaries:
 **Installation**:
 
 ```bash
-# Install Go 1.23+
+# Install Go 1.24+
 # Download from: https://go.dev/dl/
 # Or use your package manager:
 brew install go@1.23     # macOS
@@ -209,7 +209,7 @@ uv --version
 
 # 3. Check Go (if building helpers)
 go version
-# Expected: go1.23.0 or higher
+# Expected: go1.24.0 or higher
 
 # 4. Check Rust (if building helpers)
 rustc --version

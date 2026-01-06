@@ -79,7 +79,7 @@ Makefile                   # Build automation
 ### Prerequisites
 
 #### For Go Helpers
-- Go 1.23 or higher
+- Go 1.24 or higher
 - Make (optional)
 
 #### For Rust Helpers
