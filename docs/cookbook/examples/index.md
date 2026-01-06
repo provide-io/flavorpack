@@ -370,10 +370,10 @@ flavor pack --no-verify
 
 ```bash
 # Pre-cache dependencies
-uv pip download -r requirements.txt -d uv-cache/
+UV_CACHE_DIR=uv-cache uv sync
 
 # Use local package index
-UV_PIP_INDEX_URL=file:///path/to/uv-cache flavor pack
+UV_INDEX_URL=file:///path/to/uv-cache flavor pack
 ```
 
 ## Next Steps

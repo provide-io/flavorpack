@@ -108,12 +108,12 @@ grep -i "warning" build-debug.log
 flavor inspect --manifest pyproject.toml
 
 # Test dependency resolution
-uv pip compile pyproject.toml
+uv lock
 
 # Test Python environment creation
 uv venv /tmp/test-env
 source /tmp/test-env/bin/activate
-uv pip install -e .
+uv sync
 
 # Test slot creation manually
 tar -czf runtime.tar.gz /tmp/test-env/
@@ -405,8 +405,8 @@ wireshark build-network.pcap
 unshare -n flavor pack --manifest pyproject.toml
 
 # Or use a local wheel cache
-uv pip download -d .cache/uv -r requirements.txt
-UV_PIP_FIND_LINKS=.cache/uv UV_PIP_NO_INDEX=1 flavor pack
+UV_CACHE_DIR=.cache/uv uv sync
+UV_CACHE_DIR=.cache/uv UV_NO_INDEX=1 flavor pack
 ```
 
 ---

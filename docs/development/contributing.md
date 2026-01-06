@@ -372,7 +372,7 @@ Follow conventional commits:
 
 ### Important Notes
 
-- **ALWAYS use uv pip** for wheel operations (avoid system pip)
+- **ALWAYS use uv** for wheel operations (avoid system pip)
 - **NEVER add environment-specific logic in helpers** - they must be generic
 - **Test with Taster first** - if Taster doesn't work, FlavorPack is broken
 - **Use deterministic builds** for testing (`--key-seed`)
