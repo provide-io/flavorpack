@@ -8,11 +8,13 @@ Practical examples and recipes for common use cases.
 
 ### [Examples](../cookbook/examples/index.md)
 Complete working examples for different application types:
+
 - [CLI Tools](../cookbook/examples/cli-tool.md) - Command-line applications
 - [Web Applications](../cookbook/examples/web-app.md) - Web servers and APIs
 
 ### [Recipes](../cookbook/recipes/index.md)
 Step-by-step guides for specific tasks:
+
 - [Docker Integration](../cookbook/recipes/docker.md) - Container workflows
 - [CI/CD Pipelines](../cookbook/recipes/ci-cd.md) - Automated builds
 - [Multi-Platform Builds](../cookbook/recipes/multi-platform.md) - Cross-platform packages
