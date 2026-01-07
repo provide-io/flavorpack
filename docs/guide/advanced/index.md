@@ -16,7 +16,7 @@ These topics are for users who want to:
 
 Understand Go and Rust helper integration.
 
-**[Cross-Language Support →](cross-language/)**
+**[Cross-Language Support →](cross-language.md)**
 
 - Go builder and launcher
 - Rust builder and launcher
@@ -27,7 +27,7 @@ Understand Go and Rust helper integration.
 
 Build custom launchers for specific use cases.
 
-**[Custom Launchers →](launchers/)**
+**[Custom Launchers →](launchers.md)**
 
 - Launcher architecture
 - Building custom launchers
@@ -38,7 +38,7 @@ Build custom launchers for specific use cases.
 
 Extend the build system.
 
-**[Custom Builders →](builders/)**
+**[Custom Builders →](builders.md)**
 
 - Builder architecture
 - Plugin system
@@ -49,7 +49,7 @@ Extend the build system.
 
 Optimize package size and execution speed.
 
-**[Performance Tuning →](performance/)**
+**[Performance Tuning →](performance.md)**
 
 - Reduce package size
 - Optimize extraction
@@ -60,7 +60,7 @@ Optimize package size and execution speed.
 
 Troubleshoot complex issues.
 
-**[Debugging →](debugging/)**
+**[Debugging →](debugging.md)**
 
 - Enable debug logging
 - Trace execution
@@ -97,20 +97,20 @@ Troubleshoot complex issues.
 
 Before diving into advanced topics, you should:
 
-1. ✅ Understand [Core Concepts](../concepts/index/)
-2. ✅ Be comfortable with [Building Packages](../packaging/index/)
-3. ✅ Have experience [Using Packages](../usage/index/)
+1. ✅ Understand [Core Concepts](../concepts/index.md)
+2. ✅ Be comfortable with [Building Packages](../packaging/index.md)
+3. ✅ Have experience [Using Packages](../usage/index.md)
 4. ✅ Know Go or Rust (for helper development)
 
 ## Next Steps
 
 Choose your path:
 
-- **Customization** → [Custom Launchers](launchers/)
-- **Optimization** → [Performance Tuning](performance/)
-- **Problems** → [Debugging](debugging/)
-- **Integration** → [Cross-Language Support](cross-language/)
+- **Customization** → [Custom Launchers](launchers.md)
+- **Optimization** → [Performance Tuning](performance.md)
+- **Problems** → [Debugging](debugging.md)
+- **Integration** → [Cross-Language Support](cross-language.md)
 
 ---
 
-**Need help?** Join the discussion on [GitHub](https://github.com/provide-io/flavorpack/discussions) or check [Troubleshooting](../../troubleshooting/index/).
+**Need help?** Join the discussion on [GitHub](https://github.com/provide-io/flavorpack/discussions) or check [Troubleshooting](../../troubleshooting/index.md).

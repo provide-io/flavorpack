@@ -5,11 +5,11 @@ Complete guide to packaging Python applications with FlavorPack, including depen
 !!! tip "Prerequisites"
     Before packaging Python apps, ensure you have:
 
-    - [FlavorPack installed](../../getting-started/installation/) from source
-    - [Helpers built](../usage/cli/#helpers-build) (`make build-helpers`)
+    - [FlavorPack installed](../../getting-started/installation.md) from source
+    - [Helpers built](../usage/cli.md#helpers-build) (`make build-helpers`)
     - A Python project with valid `pyproject.toml`
 
-    See [System Requirements](../../reference/requirements/) for detailed version information.
+    See [System Requirements](../../reference/requirements.md) for detailed version information.
 
 !!! warning "Feature Coverage"
     This guide covers current functionality and items under evaluation.
@@ -213,7 +213,7 @@ dependencies = [
 
 **Current Behavior:** FlavorPack automatically creates a virtual environment and installs dependencies using UV.
 
-**Current Workaround:** Use standard Python packaging tools (pip, setuptools) in your project's development environment before packaging.
+**Current Workaround:** Use standard Python packaging tooling (uv, setuptools) in your project's development environment before packaging.
 
 ## Entry Points
 
@@ -598,7 +598,7 @@ print("Work environment:", os.environ.get('FLAVOR_WORKENV'))
 flavor inspect package.psp --show-deps
 
 # Verify compatibility
-pip check
+uv sync --frozen
 
 # Force reinstall
 flavor pack --manifest pyproject.toml --force-reinstall
@@ -738,23 +738,23 @@ entry_point = "api.main:run"
 
 **Configuration**:
 
-- 📋 [Package Configuration](configuration/) - Full configuration reference
-- 📝 [Manifest Reference](manifest/) - pyproject.toml specification
-- 🔒 [Package Signing](signing/) - Add cryptographic signatures
-- 🌍 [Platform Support](platforms/) - Multi-platform packaging
+- 📋 [Package Configuration](configuration.md) - Full configuration reference
+- 📝 [Manifest Reference](manifest.md) - pyproject.toml specification
+- 🔒 [Package Signing](signing.md) - Add cryptographic signatures
+- 🌍 [Platform Support](platforms.md) - Multi-platform packaging
 
 **Workflow**:
 
-- 🏗️ [Building Packages](index/) - General packaging guide
-- 📦 [CLI Reference](../usage/cli/#pack) - `flavor pack` command details
-- ✅ [Verification](../usage/cli/#verify) - Verify package integrity
+- 🏗️ [Building Packages](index.md) - General packaging guide
+- 📦 [CLI Reference](../usage/cli.md#pack) - `flavor pack` command details
+- ✅ [Verification](../usage/cli.md#verify) - Verify package integrity
 
 **Examples**:
 
-- 💻 [CLI Tool Example](../../cookbook/examples/cli-tool/) - Package a CLI application
-- 🌐 [Web App Example](../../cookbook/examples/web-app/) - Package a Flask/FastAPI app
+- 💻 [CLI Tool Example](../../cookbook/examples/cli-tool.md) - Package a CLI application
+- 🌐 [Web App Example](../../cookbook/examples/web-app.md) - Package a Flask/FastAPI app
 
 **Help**:
 
-- 🐛 [Troubleshooting](../../troubleshooting/common/) - Common issues and solutions
-- 📝 [FAQ](../../troubleshooting/faq/) - Frequently asked questions
+- 🐛 [Troubleshooting](../../troubleshooting/common.md) - Common issues and solutions
+- 📝 [FAQ](../../troubleshooting/faq.md) - Frequently asked questions

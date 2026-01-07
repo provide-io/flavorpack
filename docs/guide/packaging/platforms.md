@@ -6,8 +6,8 @@ Build packages for different operating systems and architectures.
 
 This page is under development. In the meantime, see:
 
-- **[Building Helpers](../../development/helpers/)** - Build for different platforms
-- **[CI/CD](../../cookbook/recipes/ci-cd/)** - Multi-platform builds in CI
+- **[Building Helpers](../../development/helpers.md)** - Build for different platforms
+- **[CI/CD](../../cookbook/recipes/ci-cd.md)** - Multi-platform builds in CI
 
 ## Topics to be Covered
 
@@ -30,4 +30,4 @@ This page is under development. In the meantime, see:
 
 ---
 
-**Need help now?** See [Getting Started](../../getting-started/index/) or [Architecture](../../development/architecture/).
+**Need help now?** See [Getting Started](../../getting-started/index.md) or [Architecture](../../development/architecture.md).

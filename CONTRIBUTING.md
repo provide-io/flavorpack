@@ -8,7 +8,7 @@ Thank you for your interest in contributing to FlavorPack! This document provide
 
 - Python 3.11 or higher
 - `uv` package manager
-- Go 1.23+ (see `src/flavor-go/go.mod` for exact version)
+- Go 1.24+ (see `src/flavor-go/go.mod` for exact version)
 - Rust 1.85+ (see `src/flavor-rs/Cargo.toml` for exact version)
 - Make (for build automation)
 

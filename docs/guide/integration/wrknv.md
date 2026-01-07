@@ -103,5 +103,5 @@ flavor pack
 ## See Also
 
 - **[wrknv Documentation](https://foundry.provide.io/wrknv/)**
-- **[pyvider Integration](pyvider/)**
-- **[Manifest Configuration](../../guide/packaging/manifest/)**
+- **[pyvider Integration](pyvider.md)**
+- **[Manifest Configuration](../../guide/packaging/manifest.md)**

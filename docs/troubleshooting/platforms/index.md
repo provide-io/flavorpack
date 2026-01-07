@@ -8,7 +8,7 @@ FlavorPack packages are designed to work across platforms, but each operating sy
 
 ## Platform Guides
 
-### [Linux Troubleshooting](linux/)
+### [Linux Troubleshooting](linux.md)
 
 Comprehensive troubleshooting for Linux distributions:
 
@@ -23,7 +23,7 @@ Comprehensive troubleshooting for Linux distributions:
 - RHEL/CentOS 8+, Fedora 37+
 - Alpine 3.16+, Arch Linux
 
-### [macOS Troubleshooting](macos/)
+### [macOS Troubleshooting](macos.md)
 
 macOS-specific issues and solutions:
 
@@ -37,7 +37,7 @@ macOS-specific issues and solutions:
 - macOS 10.15 (Catalina) and newer
 - Both Intel and Apple Silicon
 
-### [Windows Troubleshooting](windows/)
+### [Windows Troubleshooting](windows.md)
 
 Windows-specific issues and solutions:
 
@@ -113,6 +113,6 @@ If you can't resolve a platform-specific issue:
 ---
 
 **See Also**:
-- [Common Issues](../common/) - Cross-platform troubleshooting
-- [Error Reference](../errors/) - Error message explanations
-- [FAQ](../faq/) - Frequently asked questions
+- [Common Issues](../common.md) - Cross-platform troubleshooting
+- [Error Reference](../errors.md) - Error message explanations
+- [FAQ](../faq.md) - Frequently asked questions

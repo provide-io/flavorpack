@@ -97,7 +97,7 @@ make release-validate-full
 
 ```bash
 # Install from local wheel
-uv pip install dist/flavorpack-*.whl
+uv tool install dist/flavorpack-*.whl
 
 # Test basic operations
 flavor --version
@@ -157,7 +157,7 @@ git push --tags
 make release-upload-test
 
 # Test installation
-uv pip install --index-url https://test.pypi.org/simple/ flavorpack
+uv tool install --index-url https://test.pypi.org/simple/ flavorpack
 ```
 
 ### Production PyPI
@@ -232,7 +232,7 @@ The release process can be automated through GitHub Actions:
 5. **Upload**: Publish to PyPI
 6. **Create release**: Auto-create GitHub release
 
-See [CI/CD Documentation](ci-cd/) for workflow details.
+See [CI/CD Documentation](ci-cd.md) for workflow details.
 
 ## Troubleshooting
 
@@ -311,6 +311,6 @@ twine upload --repository pypi --yank dist/flavorpack-X.Y.Z-*.whl
 ---
 
 **See also:**
-- [CI/CD](ci-cd/) - Automated release workflows
-- [Contributing](contributing/) - Development guidelines
-- [Testing](testing/index/) - Test requirements before release
+- [CI/CD](ci-cd.md) - Automated release workflows
+- [Contributing](contributing.md) - Development guidelines
+- [Testing](testing/index.md) - Test requirements before release
