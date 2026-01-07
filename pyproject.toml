@@ -252,3 +252,23 @@ public_key_path = "keys/flavor-public.key"
 
 [tool.bandit]
 exclude_dirs = [".venv", "tests", "workenv"]
+
+################################################################################
+# Security Scanning Allowlist
+################################################################################
+
+[tool.security]
+# Paths to exclude from secret scanning (TruffleHog, GitGuardian, Gitleaks)
+# Run: we security generate (via wrknv) to regenerate tool configs
+description = "Test signing keys and build artifacts - intentionally committed"
+allowed_paths = [
+    # Test signing keys for package development
+    "keys/**",
+    "test-keys/**",
+    "helpers/*/keys/**",
+    "tests/*/keys/**",
+    # Build artifacts (Rust target dirs)
+    "helpers/flavor-rust/target/**",
+    # Old security scan output files (in git history)
+    ".provide/output/security/**",
+]
