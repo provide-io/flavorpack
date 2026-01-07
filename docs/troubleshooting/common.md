@@ -332,9 +332,9 @@ dtruss ./myapp.psp 2>&1 | grep -E "open|stat"
 ## Getting Help
 
 ### Check Documentation
-1. Review [User Guide](../guide/index/)
-2. Check [API Reference](../api/index/)
-3. Read [Architecture](../development/architecture/)
+1. Review [User Guide](../guide/index.md)
+2. Check [API Reference](../api/index.md)
+3. Read [Architecture](../development/architecture.md)
 
 ### Debugging Checklist
 - [ ] Using latest version?
@@ -570,19 +570,17 @@ flavor pack \
 
 ```bash
 # 1. Pre-download dependencies
-mkdir -p .cache/pip
-pip download -d .cache/pip -r requirements.txt
+mkdir -p .cache/uv
+UV_CACHE_DIR=.cache/uv uv sync
 
 # 2. Use local package index
-flavor pack \
-  --pip-index-url file://$(pwd)/.cache/pip \
-  --no-index
+UV_INDEX_URL=file://$(pwd)/.cache/uv UV_NO_INDEX=1 flavor pack
 
 # 3. Vendor dependencies
-uv pip install --target vendor/ -r requirements.txt
+UV_CACHE_DIR=vendor uv sync
 
 # 4. Build in offline mode
-PIP_NO_INDEX=1 PIP_FIND_LINKS=vendor/ flavor pack
+UV_CACHE_DIR=vendor UV_NO_INDEX=1 flavor pack
 ```
 
 ### Debugging Helper Issues
@@ -653,15 +651,15 @@ make install-helpers
 
 See detailed troubleshooting for your platform:
 
-- [Linux](platforms/linux/)
-- [macOS](platforms/macos/)
-- [Windows](platforms/windows/)
+- [Linux](platforms/linux.md)
+- [macOS](platforms/macos.md)
+- [Windows](platforms/windows.md)
 
 ---
 
 ## See Also
 
-- [CLI Reference](../guide/usage/cli/) - All commands
-- [Environment Variables](../guide/usage/environment/) - Configuration
-- [Cache Management](../guide/usage/cache/) - Cache troubleshooting
-- [Advanced Debugging](../guide/advanced/debugging/) - Deep debugging techniques
+- [CLI Reference](../guide/usage/cli.md) - All commands
+- [Environment Variables](../guide/usage/environment.md) - Configuration
+- [Cache Management](../guide/usage/cache.md) - Cache troubleshooting
+- [Advanced Debugging](../guide/advanced/debugging.md) - Deep debugging techniques

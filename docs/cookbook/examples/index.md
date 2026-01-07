@@ -370,15 +370,15 @@ flavor pack --no-verify
 
 ```bash
 # Pre-cache dependencies
-pip download -r requirements.txt -d pip-cache/
+UV_CACHE_DIR=uv-cache uv sync
 
 # Use local package index
-PIP_INDEX_URL=file:///path/to/pip-cache flavor pack
+UV_INDEX_URL=file:///path/to/uv-cache flavor pack
 ```
 
 ## Next Steps
 
-- Review the [API Reference](../../api/index/) for detailed function documentation
-- Check the [CLI Reference](../../guide/usage/cli/) for all command options
-- Read the [Package Format Specification](../../reference/spec/fep-0001-core-format-and-operation-chains/) for technical details
-- See [Troubleshooting Guide](../../troubleshooting/common/) for common issues
+- Review the [API Reference](../../api/index.md) for detailed function documentation
+- Check the [CLI Reference](../../guide/usage/cli.md) for all command options
+- Read the [Package Format Specification](../../reference/spec/fep-0001-core-format-and-operation-chains.md) for technical details
+- See [Troubleshooting Guide](../../troubleshooting/common.md) for common issues

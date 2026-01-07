@@ -1,7 +1,7 @@
 # Welcome to FlavorPack
 
 !!! warning "Pre-release"
-    This documentation covers a pre-release. APIs and features may change, and some documented items are exploratory and may change or be removed.
+    This documentation covers a pre-release. APIs and features may change during the pre-release series.
 
 
 !!! warning "Initial release Software - Development Version"
@@ -17,7 +17,7 @@
 
     Package your first application in under 5 minutes.
 
-    [:octicons-arrow-right-24: Quick Start](getting-started/quickstart/)
+    [:octicons-arrow-right-24: Quick Start](getting-started/quickstart.md)
 
 -   :fontawesome-solid-cube:{ .lg .middle } **Single-File Distribution**
 
@@ -25,7 +25,7 @@
 
     Package applications into one executable that runs anywhere.
 
-    [:octicons-arrow-right-24: Package Structure](guide/concepts/package-structure/)
+    [:octicons-arrow-right-24: Package Structure](guide/concepts/package-structure.md)
 
 -   :fontawesome-solid-shield:{ .lg .middle } **Secure by Default**
 
@@ -33,7 +33,7 @@
 
     Ed25519 signature verification ensures integrity.
 
-    [:octicons-arrow-right-24: Security Model](guide/concepts/security/)
+    [:octicons-arrow-right-24: Security Model](guide/concepts/security.md)
 
 -   :fontawesome-solid-language:{ .lg .middle } **Cross-Language**
 
@@ -41,7 +41,7 @@
 
     Python orchestrator with native Go and Rust launchers.
 
-    [:octicons-arrow-right-24: Architecture](explanation/architecture/)
+    [:octicons-arrow-right-24: Architecture](explanation/architecture.md)
 
 </div>
 
@@ -94,9 +94,9 @@ Understand how provide-foundation, pyvider, flavorpack, and other projects work 
 ## Community
 
 - **GitHub**: [Issues and pull requests](https://github.com/provide-io/flavorpack)
-- **Documentation**: [Guides and API reference](getting-started/index/)
-- **Support**: [Get help](community/support/)
+- **Documentation**: [Guides and API reference](getting-started/index.md)
+- **Support**: [Get help](community/support.md)
 
 ---
 
-**Ready to package your Python applications?** Check out our [Quick Start guide](getting-started/quickstart/) or explore the [architecture](explanation/architecture/).
+**Ready to package your Python applications?** Check out our [Quick Start guide](getting-started/quickstart.md) or explore the [architecture](explanation/architecture.md).

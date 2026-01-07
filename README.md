@@ -29,7 +29,7 @@ FlavorPack creates self-contained, portable executables using the Progressive Se
 
 - Python 3.11 or higher
 - UV package manager (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
-- Go 1.23+ and Rust 1.85+ (for building helpers - see `src/flavor-go/go.mod` and `src/flavor-rs/Cargo.toml`)
+- Go 1.24+ and Rust 1.85+ (for building helpers - see `src/flavor-go/go.mod` and `src/flavor-rs/Cargo.toml`)
 
 ### Installation
 

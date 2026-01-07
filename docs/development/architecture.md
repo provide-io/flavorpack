@@ -115,7 +115,7 @@ The 8KB index block contains:
 
 ### Slot Operation Chains
 
-PSPF/2025 uses **operation chains** to specify transformations applied to slot data. See [FEP-0001 Operation Chain System](../reference/spec/fep-0001-core-format-and-operation-chains/#5-operation-chain-system) for complete specification.
+PSPF/2025 uses **operation chains** to specify transformations applied to slot data. See [FEP-0001 Operation Chain System](../reference/spec/fep-0001-core-format-and-operation-chains.md#5-operation-chain-system) for complete specification.
 
 **Common Operation Chains:**
 - `[]` (empty) - Raw uncompressed data
@@ -250,7 +250,7 @@ python_packager.install_dependencies(requirements)
 ### Step 3: Slot Creation
 Each component is packaged into a tar.gz slot:
 1. **Python Runtime Slot** - Python interpreter and standard library
-2. **Dependencies Slot** - All pip packages as wheels
+2. **Dependencies Slot** - All Python packages as wheels
 3. **Application Slot** - Application code
 4. **Volatile Slots** - Temporary data removed after setup
 

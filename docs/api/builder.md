@@ -3,7 +3,7 @@
 The FlavorPack Builder API provides tools for creating PSPF packages programmatically.
 
 !!! note "Low-Level API"
-    This is a low-level API for advanced use cases. Most users should use the [Packaging API](packaging/) instead.
+    This is a low-level API for advanced use cases. Most users should use the [Packaging API](packaging.md) instead.
 
     The Builder API gives you fine-grained control over the PSPF package creation process, including slot management, operation chains, and binary format assembly.
 

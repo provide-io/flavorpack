@@ -153,13 +153,13 @@ system_site_packages = false
 # Environment variables for build
 env = {
     "NUMPY_SETUP_DEBUG": "1",
-    "PIP_NO_CACHE_DIR": "1"
+    "UV_NO_CACHE": "1"
 }
 
 # Pre-install commands
 pre_install_commands = [
-    "uv pip install --upgrade setuptools wheel",
-    "uv pip install numpy==1.24.0"
+    "uv sync --upgrade",
+    "uv add numpy==1.24.0"
 ]
 
 # Pre-build validation
@@ -177,9 +177,6 @@ pre_build_commands = [
 
 ```toml
 [tool.flavor.build]
-# Use pip instead of uv
-use_pip = true
-
 # Custom index URL
 index_url = "https://pypi.company.com/simple"
 
@@ -597,7 +594,7 @@ flavor demo cli-tool
 
 ### Supply Chain Security
 
-See [FEP-0004: Supply Chain JIT](reference/spec/future/fep-0004-supply-chain-jit/):
+See [FEP-0004: Supply Chain JIT](reference/spec/future/fep-0004-supply-chain-jit.md):
 
 - Reproducible builds with attestation
 - SBOM (Software Bill of Materials) generation
@@ -610,7 +607,7 @@ See [FEP-0004: Supply Chain JIT](reference/spec/future/fep-0004-supply-chain-jit
 
 ### Runtime JIT Loading
 
-See [FEP-0005: Runtime JIT Loading](reference/spec/future/fep-0005-runtime-jit-loading/):
+See [FEP-0005: Runtime JIT Loading](reference/spec/future/fep-0005-runtime-jit-loading.md):
 
 - Lazy loading of dependencies
 - On-demand extraction
@@ -622,7 +619,7 @@ See [FEP-0005: Runtime JIT Loading](reference/spec/future/fep-0005-runtime-jit-l
 
 ### Staged Payload Architecture
 
-See [FEP-0006: Staged Payload Architecture](reference/spec/future/fep-0006-staged-payload-architecture/):
+See [FEP-0006: Staged Payload Architecture](reference/spec/future/fep-0006-staged-payload-architecture.md):
 
 - Multi-stage package execution
 - Progressive enhancement
@@ -679,8 +676,8 @@ flavor plugin install cloud-deploy
 
 Want to help implement these features? Check out:
 
-- [Contributing Guide](development/contributing/)
-- [Development Setup](development/index/)
+- [Contributing Guide](development/contributing.md)
+- [Development Setup](development/index.md)
 - [GitHub Issues](https://github.com/provide-io/flavorpack/issues)
 
 Feature requests and discussions are welcome in the [GitHub Discussions](https://github.com/provide-io/flavorpack/discussions).
@@ -689,7 +686,7 @@ Feature requests and discussions are welcome in the [GitHub Discussions](https:/
 
 ## See Also
 
-- [Current Documentation](guide/index/) - What's available now
-- [PSPF Specification](reference/spec/fep-0001-core-format-and-operation-chains/) - Format details
-- [Exploratory Enhancement Proposals](reference/spec/pspf-2025/) - Detailed FEPs
-- [Changelog](community/changelog/) - What's been implemented
+- [Current Documentation](guide/index.md) - What's available now
+- [PSPF Specification](reference/spec/fep-0001-core-format-and-operation-chains.md) - Format details
+- [Exploratory Enhancement Proposals](reference/spec/pspf-2025.md) - Detailed FEPs
+- [Changelog](community/changelog.md) - What's been implemented

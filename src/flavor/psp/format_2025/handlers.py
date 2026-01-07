@@ -242,7 +242,7 @@ def reverse_operations(data: bytes, packed_ops: int) -> bytes:  # noqa: C901
                     logger.error("❌ ZSTD library not available for decompression")
                     raise ArchiveError(
                         "ZSTD decompression required but zstandard library not installed. "
-                        "Install with: pip install provide-foundation[compression]"
+                        "Install with: uv add provide-foundation[compression]"
                     ) from e
             else:
                 logger.warning(f"⚠️ Unsupported operation for reversal: {op}")

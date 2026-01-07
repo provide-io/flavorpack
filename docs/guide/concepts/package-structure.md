@@ -189,7 +189,7 @@ slots/
 
 | Purpose | Description | Typical Content |
 |---------|-------------|-----------------|
-| `python-environment` | Python venv | site-packages, pip |
+| `python-environment` | Python venv | site-packages, metadata |
 | `application-code` | Main code | Python modules |
 | `configuration` | Settings | JSON, YAML, TOML |
 | `static-resources` | Assets | Images, fonts |
@@ -472,7 +472,7 @@ FLAVOR_LOG_LEVEL=debug ./package.psp
 
 ## Related Documentation
 
-- [Binary Layout](../../reference/spec/pspf-2025/) - Technical format details
-- [Slots](../../reference/spec/pspf-2025/) - Slot system specification
-- [Metadata](../../reference/spec/pspf-2025/) - Metadata structure
-- [Building Packages](../../guide/packaging/index/) - Build guide
+- [Binary Layout](../../reference/spec/pspf-2025.md) - Technical format details
+- [Slots](../../reference/spec/pspf-2025.md) - Slot system specification
+- [Metadata](../../reference/spec/pspf-2025.md) - Metadata structure
+- [Building Packages](../../guide/packaging/index.md) - Build guide

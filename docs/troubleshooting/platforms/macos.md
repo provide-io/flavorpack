@@ -154,8 +154,8 @@ export HTTPS_PROXY=http://proxy.example.com:8080
 # Clear FlavorPack cache
 rm -rf ~/.cache/flavor/workenv/
 
-# Clear pip cache if packaging issues
-pip cache purge
+# Clear uv cache if packaging issues
+uv cache clean
 
 # Rebuild package
 flavor pack --manifest pyproject.toml --force
@@ -230,12 +230,12 @@ sudo dtruss ./myapp.psp 2>&1 | head -100
 
 ## Getting Help
 
-- Check [Common Issues](../common/) for cross-platform problems
-- Review [Security Troubleshooting](../../guide/concepts/security/) for signing issues
-- Visit [Community Support](../../community/support/) for additional help
+- Check [Common Issues](../common.md) for cross-platform problems
+- Review [Security Troubleshooting](../../guide/concepts/security.md) for signing issues
+- Visit [Community Support](../../community/support.md) for additional help
 
 ## Related Documentation
 
-- [Installation Guide](../../getting-started/installation/)
-- [Platform Support](../../guide/packaging/platforms/)
-- [Building Helpers](../../development/helpers/)
+- [Installation Guide](../../getting-started/installation.md)
+- [Platform Support](../../guide/packaging/platforms.md)
+- [Building Helpers](../../development/helpers.md)

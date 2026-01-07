@@ -137,7 +137,7 @@ For VS Code users with the Remote-Containers extension.
 
 The devcontainer includes:
 - Python 3.11+
-- Go 1.23+
+- Go 1.24+
 - Rust 1.85+
 - All required build tools
 - Pre-configured environment
@@ -359,14 +359,14 @@ flavor keygen --out-dir keys/
 ```
 
 !!! note "Signing Keys"
-    Signing keys are passed via CLI options (`--private-key` and `--public-key`), not environment variables. See the [Signing Guide](../guide/packaging/signing/) for details.
+    Signing keys are passed via CLI options (`--private-key` and `--public-key`), not environment variables. See the [Signing Guide](../guide/packaging/signing.md) for details.
 
 !!! warning "No Ad-Hoc Signing"
     **NEVER do ad-hoc signing unless SPECIFICALLY REQUESTED** or after approval. Always use proper key management and signing workflows.
 
 ### 2. Environment Variables
 
-FlavorPack uses environment variables for configuration, caching, and logging. For complete documentation, see the [Environment Variables Guide](../guide/usage/environment/).
+FlavorPack uses environment variables for configuration, caching, and logging. For complete documentation, see the [Environment Variables Guide](../guide/usage/environment.md).
 
 Common variables:
 
@@ -377,7 +377,7 @@ Common variables:
 | `FLAVOR_LOG_LEVEL` | Logging level for Go/Rust components | `warn` |
 | `FLAVOR_VALIDATION` | Validation level (strict, standard, relaxed, minimal, none) | `standard` |
 
-See the [complete environment variable reference](../guide/usage/environment/) for all available variables and detailed examples.
+See the [complete environment variable reference](../guide/usage/environment.md) for all available variables and detailed examples.
 
 ### 3. Package Operations
 
@@ -538,18 +538,18 @@ make validate-pspf-combo
 
 If you encounter issues:
 
-1. **Check the [Troubleshooting Guide](../troubleshooting/common/)**
+1. **Check the [Troubleshooting Guide](../troubleshooting/common.md)**
 2. **Search [existing issues](https://github.com/provide-io/flavorpack/issues)**
 3. **Open a [new issue](https://github.com/provide-io/flavorpack/issues/new)**
-4. **Review [Documentation](../guide/concepts/index/)** for PSPF concepts
+4. **Review [Documentation](../guide/concepts/index.md)** for PSPF concepts
 
 ## Next Steps
 
 After installation:
 
-- 📖 Follow the [Quick Start](quickstart/) guide
-- 🎯 Create your [First Package](first-package/)
-- 🔧 Explore [Configuration Options](../guide/packaging/configuration/)
-- 📚 Read about [Core Concepts](../guide/concepts/index/)
-- 🏗️ Learn about [PSPF Format](../guide/concepts/pspf-format/)
-- 🔐 Set up [Package Signing](../guide/packaging/signing/)
+- 📖 Follow the [Quick Start](quickstart.md) guide
+- 🎯 Create your [First Package](first-package.md)
+- 🔧 Explore [Configuration Options](../guide/packaging/configuration.md)
+- 📚 Read about [Core Concepts](../guide/concepts/index.md)
+- 🏗️ Learn about [PSPF Format](../guide/concepts/pspf-format.md)
+- 🔐 Set up [Package Signing](../guide/packaging/signing.md)

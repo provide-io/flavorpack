@@ -6,8 +6,8 @@ Extend FlavorPack's build system with custom builders.
 
 This page is under development. In the meantime, see:
 
-- **[Building Helpers](../../development/helpers/)** - Build builders
-- **[Architecture](../../development/architecture/)** - Builder design
+- **[Building Helpers](../../development/helpers.md)** - Build builders
+- **[Architecture](../../development/architecture.md)** - Builder design
 
 ## Topics to be Covered
 
@@ -30,4 +30,4 @@ Custom builders enable:
 
 ---
 
-**See also:** [Custom Launchers](launchers/) | [Architecture](../../development/architecture/)
+**See also:** [Custom Launchers](launchers.md) | [Architecture](../../development/architecture.md)

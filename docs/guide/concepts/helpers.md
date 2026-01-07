@@ -270,7 +270,7 @@ You're using a dynamically-linked binary instead of the static musl binary.
 
 ## See Also
 
-- [Cross-Language Support](../advanced/cross-language/) - How Python, Go, and Rust work together
-- [Architecture](../../development/architecture/) - Overall system design
-- [Building Helpers](../../development/helpers/) - Development guide for helpers
-- [Platform Support](../packaging/platforms/) - Platform-specific packaging guides
+- [Cross-Language Support](../advanced/cross-language.md) - How Python, Go, and Rust work together
+- [Architecture](../../development/architecture.md) - Overall system design
+- [Building Helpers](../../development/helpers.md) - Development guide for helpers
+- [Platform Support](../packaging/platforms.md) - Platform-specific packaging guides

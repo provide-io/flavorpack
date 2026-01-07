@@ -15,7 +15,7 @@ A custom HTTP client tool called `api-tool` that:
 - Wraps HTTPie with custom defaults and shortcuts
 - Includes colored output and JSON formatting
 - Can be distributed as a single executable
-- Works without requiring Python or pip on target systems
+- Works without requiring Python or a package manager on target systems
 - Includes environment-specific API configurations
 
 ---
@@ -503,7 +503,7 @@ api-tool get /users
 
 - ✅ **Single file** - No installation required
 - ✅ **No Python required** - Includes Python runtime
-- ✅ **No pip required** - All dependencies bundled
+- ✅ **No package manager required** - All dependencies bundled
 - ✅ **Cross-platform** - Build once per platform
 - ✅ **Reproducible** - Same build everywhere
 - ✅ **Secure** - Cryptographically signed
@@ -697,9 +697,9 @@ Congratulations! You've successfully:
 
 ### Learn More
 
-- **[FlavorPack API Reference](../api/index/)** - Complete packaging API
-- **[Cookbook Examples](../cookbook/examples/index/)** - More packaging patterns
-- **[Advanced Topics](../guide/advanced/index/)** - Custom builders, performance
+- **[FlavorPack API Reference](../api/index.md)** - Complete packaging API
+- **[Cookbook Examples](../cookbook/examples/index.md)** - More packaging patterns
+- **[Advanced Topics](../guide/advanced/index.md)** - Custom builders, performance
 - **[HTTPie Documentation](https://httpie.io/docs/cli)** - Complete HTTPie reference
 
 ---

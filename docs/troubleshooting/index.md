@@ -55,7 +55,7 @@ FLAVOR_LOG_LEVEL=debug ./myapp.psp
 ```bash
 # Ensure FlavorPack is installed from source
 cd flavorpack
-uv pip install -e .
+uv sync
 
 # Check PATH
 which flavor
@@ -84,7 +84,7 @@ chmod +x $(which flavor)
 **Solution**:
 ```bash
 # Install build dependencies
-uv pip install --upgrade setuptools wheel
+uv sync --upgrade
 
 # Sync all dependencies
 uv sync
@@ -463,20 +463,7 @@ export XDG_CACHE_HOME=/path/to/cache    # Alternative cache location
 export FLAVOR_VALIDATION=none           # Skip verification (DANGER! Never use in production)
 ```
 
-#### 📋 Exploratory Features
-
-These environment variables are under evaluation:
-
-```bash
-# Not yet implemented - exploratory and may change or be removed
-export FLAVOR_KEEP_TEMP=1               # Keep temporary files for debugging
-export FLAVOR_NO_CLEANUP=1              # Disable automatic cleanup
-export FLAVOR_PARALLEL_EXTRACTION=1     # Enable parallel slot extraction
-export FLAVOR_CACHE_SIZE=10GB           # Set cache size limit
-export FLAVOR_VERIFY_SIGNATURES=1       # Enforce signature verification
-```
-
-See the [Environment Variables Guide](../guide/usage/environment/) for a complete reference.
+See the [Environment Variables Guide](../guide/usage/environment.md) for a complete reference.
 
 ## Performance Optimization
 
@@ -519,10 +506,10 @@ export FLAVOR_CACHE=/fast/disk/cache
 
 ### Self-Service Resources
 
-1. **Documentation**: Read the [User Guide](../guide/index/)
-2. **Examples**: Check the [Examples Section](../getting-started/examples/)
-3. **FAQ**: See [Frequently Asked Questions](faq/)
-4. **API Reference**: Consult [API Documentation](../api/index/)
+1. **Documentation**: Read the [User Guide](../guide/index.md)
+2. **Examples**: Check the [Examples Section](../getting-started/examples.md)
+3. **FAQ**: See [Frequently Asked Questions](faq.md)
+4. **API Reference**: Consult [API Documentation](../api/index.md)
 
 ### Community Support
 
@@ -553,9 +540,9 @@ env | grep FLAVOR
 
 ## Related Documentation
 
-- [Common Errors](errors/) - Detailed error explanations
-- [Platform-Specific Issues](platforms/index/) - OS-specific guides
-- [FAQ](faq/) - Frequently asked questions
-- [Glossary](../reference/glossary/) - Technical term definitions
-- [Security Model](../guide/concepts/security/) - Security features and best practices
-- [Performance Tuning](../guide/advanced/performance/) - Optimization guide
+- [Common Errors](errors.md) - Detailed error explanations
+- [Platform-Specific Issues](platforms/index.md) - OS-specific guides
+- [FAQ](faq.md) - Frequently asked questions
+- [Glossary](../reference/glossary.md) - Technical term definitions
+- [Security Model](../guide/concepts/security.md) - Security features and best practices
+- [Performance Tuning](../guide/advanced/performance.md) - Optimization guide
