@@ -1,9 +1,5 @@
 # Welcome to FlavorPack
 
-!!! warning "Pre-release"
-    This documentation covers a pre-release. APIs and features may change during the pre-release series.
-
-
 !!! warning "Initial release Software - Development Version"
     FlavorPack is currently in early initial release. APIs, file formats, and commands may change without notice. Not recommended for production use. Check current version with `flavor --version`. Install with `uv tool install flavorpack`, then run `make build-helpers`.
 
