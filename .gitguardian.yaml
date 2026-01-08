@@ -12,3 +12,8 @@ secret:
   - tests/*/keys/**
   - helpers/flavor-rust/target/**
   - .provide/output/security/**
+  - site/**
+  - docs/SECURITY.md
+  - tests/**
+  - '*-bfiles.txt'
+  - .rsp_context.json

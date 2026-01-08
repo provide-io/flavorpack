@@ -271,4 +271,14 @@ allowed_paths = [
     "helpers/flavor-rust/target/**",
     # Old security scan output files (in git history)
     ".provide/output/security/**",
+    # Built documentation site
+    "site/**",
+    # Security documentation with example patterns
+    "docs/SECURITY.md",
+    # Test files with example keys
+    "tests/**",
+    # Bfiles output
+    "*-bfiles.txt",
+    # Responsum game context
+    ".rsp_context.json",
 ]
