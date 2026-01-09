@@ -14,8 +14,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/security-scan-helpers.sh"
 
 CARGO_LOCK="${1:-src/flavor-rs/Cargo.lock}"
-CARGO_LOCK="${1:-src/flavor-rust/Cargo.lock}"
->>>>>>> fixing up building stuff
 OUTPUT_DIR="${2:-artifacts/security}"
 
 echo "🦀 Running cargo-audit Security Scan"
