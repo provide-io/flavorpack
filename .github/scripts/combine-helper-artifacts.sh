@@ -98,9 +98,7 @@ fi
 
 # Show final results
 echo "✅ Combined artifacts created successfully:"
-<<<<<<< HEAD
 ls -lh *.zip
-=======
 ls -lh "$OUTPUT_DIR"/*.zip
 >>>>>>> fixing up building stuff
 
