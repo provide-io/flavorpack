@@ -618,7 +618,8 @@ jobs:
           TOTAL_VULNS=0
           
           if [ -f "dependency-reports/python-dependency-reports/python-deps-report.json" ]; then
-            PY_VULNS=$(jq -r '.vulnerabilities.pip_audit + .vulnerabilities.safety' dependency-reports/python-dependency-reports/python-deps-report.json)
+            PY_VULNS=$(jq -r '((.vulnerabilities.pip_audit // 0) + (.vulnerabilities.safety // 0))' dependency-reports/python-dependency-reports/python-deps-report.json)
+            PY_VULNS=${PY_VULNS:-0}  # Default to 0 if empty
             TOTAL_VULNS=$((TOTAL_VULNS + PY_VULNS))
             
             if [ "$PY_VULNS" -gt 0 ]; then
@@ -645,8 +646,9 @@ jobs:
           COPYLEFT_FOUND=false
           
           if [ -f "dependency-reports/python-dependency-reports/python-deps-report.json" ]; then
-            PY_COPYLEFT=$(jq -r '.licenses.copyleft' dependency-reports/python-dependency-reports/python-deps-report.json)
-            if [ "$PY_COPYLEFT" -gt 0 ]; then
+            PY_COPYLEFT=$(jq -r '(.licenses.copyleft // 0)' dependency-reports/python-dependency-reports/python-deps-report.json)
+            PY_COPYLEFT=${PY_COPYLEFT:-0}  # Default to 0 if empty
+            if [ "$PY_COPYLEFT" -gt 0 ] 2>/dev/null; then
               echo "⚠️ Python: $PY_COPYLEFT copyleft licenses detected" >> $GITHUB_STEP_SUMMARY
               COPYLEFT_FOUND=true
             fi
@@ -664,6 +666,7 @@ jobs:
           
           if [ "${{ needs.python-deps.outputs.has_updates }}" = "true" ]; then
             UPDATES="${{ needs.python-deps.outputs.update_count }}"
+            UPDATES=${UPDATES:-0}  # Default to 0 if empty
             TOTAL_UPDATES=$((TOTAL_UPDATES + UPDATES))
             echo "- 🐍 Python: $UPDATES packages can be updated" >> $GITHUB_STEP_SUMMARY
           fi

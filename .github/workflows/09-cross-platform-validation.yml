@@ -75,9 +75,14 @@ jobs:
       - name: 🔧 Extract helpers
         shell: bash
         run: |
-          mkdir -p dist/bin
-          unzip -o helpers-dist/flavor-helpers-${{ steps.helpers.outputs.version }}-${{ matrix.platform }}.zip -d dist/bin/
+          mkdir -p dist/bin helpers-extract
+          unzip -o helpers-dist/flavor-helpers-${{ steps.helpers.outputs.version }}-${{ matrix.platform }}.zip -d helpers-extract/
+
+          # Move files from nested directory structure to dist/bin/
+          find helpers-extract -type f \( -name "flavor-*-builder-*" -o -name "flavor-*-launcher-*" \) -exec mv {} dist/bin/ \;
+
           chmod +x dist/bin/* 2>/dev/null || true
+          echo "Extracted helpers:"
           ls -lh dist/bin/
 
       - name: 📦 Install Flavor
