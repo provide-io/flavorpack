@@ -115,15 +115,23 @@ echo "🔨 Building taster..."
     "$VERSION"
 
 # The build script creates the taster in tests/taster/
-# Move it to the output directory
+# Move it to the output directory if needed
 TASTER_SOURCE="tests/taster/taster-${VERSION}-${PLATFORM}.psp"
 if [[ ! -f "$TASTER_SOURCE" ]]; then
     echo "❌ Taster build failed - output file not found: $TASTER_SOURCE"
     exit 1
 fi
 
-echo "📦 Moving taster to output directory..."
-mv "$TASTER_SOURCE" "$TASTER_PATH"
+# Resolve both paths to absolute paths for comparison
+TASTER_SOURCE_ABS=$(cd "$(dirname "$TASTER_SOURCE")" && pwd)/$(basename "$TASTER_SOURCE")
+TASTER_PATH_ABS=$(cd "$(dirname "$TASTER_PATH")" 2>/dev/null && pwd)/$(basename "$TASTER_PATH") 2>/dev/null || TASTER_PATH_ABS="$TASTER_PATH"
+
+if [[ "$TASTER_SOURCE_ABS" != "$TASTER_PATH_ABS" ]]; then
+    echo "📦 Moving taster to output directory..."
+    mv "$TASTER_SOURCE" "$TASTER_PATH"
+else
+    echo "📦 Taster already at output location"
+fi
 
 # Verify the taster was moved successfully
 if [[ ! -f "$TASTER_PATH" ]]; then
