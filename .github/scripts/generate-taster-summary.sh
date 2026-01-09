@@ -36,7 +36,15 @@ if [[ ! -d "$RESULTS_DIR" ]]; then
 fi
 
 # Determine output file
-OUTPUT_FILE="${GITHUB_STEP_SUMMARY:-/dev/stdout}"
+if [[ -n "${GITHUB_STEP_SUMMARY:-}" && -f "$GITHUB_STEP_SUMMARY" ]]; then
+    OUTPUT_FILE="$GITHUB_STEP_SUMMARY"
+elif [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
+    touch "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+    OUTPUT_FILE="${GITHUB_STEP_SUMMARY}"
+else
+    OUTPUT_FILE="/dev/null"
+fi
+echo "Using summary output: $OUTPUT_FILE"
 
 # Helper function to write to summary
 write_summary() {
