@@ -44,10 +44,6 @@ fi
 if [[ ! -d "$OUTPUT_DIR" ]]; then
     echo "📁 Creating output directory: $OUTPUT_DIR"
     mkdir -p "$OUTPUT_DIR"
-if [[ ! -d "$OUTPUT_DIR" ]]; then
-    echo "❌ Output directory not found: $OUTPUT_DIR"
-    exit 1
->>>>>>> fixing up building stuff
 fi
 
 echo "🔧 Preparing Taster build"
@@ -132,10 +128,6 @@ mv "$TASTER_SOURCE" "$TASTER_PATH"
 # Verify the taster was moved successfully
 if [[ ! -f "$TASTER_PATH" ]]; then
     echo "❌ Failed to move taster to: $TASTER_PATH"
-# Verify the taster was built
-if [[ ! -f "$TASTER_PATH" ]]; then
-    echo "❌ Taster build failed - output file not found: $TASTER_PATH"
->>>>>>> fixing up building stuff
     exit 1
 fi
 

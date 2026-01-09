@@ -210,10 +210,10 @@ jobs:
         shell: bash
         run: |
           .github/scripts/organize-platform-helpers.sh \
-            "helpers-dist" \
-            "${{ needs.setup.outputs.helper_version }}" \
             "${{ matrix.platform }}" \
-            "src/flavor/helpers/bin"
+            "helpers-dist" \
+            "src/flavor/helpers/bin" \
+            "${{ needs.setup.outputs.helper_version }}"
       
       - name: 📦 Install build tools
         shell: bash
