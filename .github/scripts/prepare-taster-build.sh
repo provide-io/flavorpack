@@ -40,12 +40,10 @@ if [[ ! -d "$FLAVOR_DIR" ]]; then
     exit 1
 fi
 
-<<<<<<< HEAD
 # Create output directory if it doesn't exist
 if [[ ! -d "$OUTPUT_DIR" ]]; then
     echo "📁 Creating output directory: $OUTPUT_DIR"
     mkdir -p "$OUTPUT_DIR"
-=======
 if [[ ! -d "$OUTPUT_DIR" ]]; then
     echo "❌ Output directory not found: $OUTPUT_DIR"
     exit 1
@@ -120,7 +118,6 @@ echo "🔨 Building taster..."
     "$PLATFORM" \
     "$VERSION"
 
-<<<<<<< HEAD
 # The build script creates the taster in tests/taster/
 # Move it to the output directory
 TASTER_SOURCE="tests/taster/taster-${VERSION}-${PLATFORM}.psp"
@@ -135,7 +132,6 @@ mv "$TASTER_SOURCE" "$TASTER_PATH"
 # Verify the taster was moved successfully
 if [[ ! -f "$TASTER_PATH" ]]; then
     echo "❌ Failed to move taster to: $TASTER_PATH"
-=======
 # Verify the taster was built
 if [[ ! -f "$TASTER_PATH" ]]; then
     echo "❌ Taster build failed - output file not found: $TASTER_PATH"
