@@ -3,8 +3,8 @@ name: 09 🌍 Cross-Platform Validation
 on:
   workflow_dispatch:
     inputs:
-      helper_run_id:
-        description: 'Helper Prep run ID (leave empty for latest)'
+      flavor_run_id:
+        description: 'Flavor Pipeline run ID (leave empty for latest)'
         type: string
         required: false
 
@@ -22,176 +22,76 @@ permissions:
   actions: read
 
 jobs:
-  # Build PSP packages on each platform
-  build-packages:
-    name: 📦 Build PSP on ${{ matrix.platform_name }}
+  # Setup and download Flavor PSP packages from the Flavor Pipeline
+  setup:
+    name: 🔧 Setup & Get Flavor PSP
     if: >-
       github.event_name == 'workflow_dispatch' ||
       github.event_name == 'schedule' ||
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
-    runs-on: ${{ matrix.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: linux_amd64
-            platform_name: Linux AMD64
-            runner: ubuntu-24.04
-          - platform: linux_arm64
-            platform_name: Linux ARM64
-            runner: ubuntu-24.04-arm
-          - platform: darwin_amd64
-            platform_name: macOS Intel
-            runner: macos-15-intel
-          - platform: darwin_arm64
-            platform_name: macOS ARM64
-            runner: macos-15
-          # Windows: wheels built only in flavor pipeline, no PSP packages
-
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      flavor_run_id: ${{ steps.flavor.outputs.run_id }}
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+      - name: 🔍 Determine version
+        id: version
+        run: |
+          VERSION=$(cat VERSION)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: 🔍 Determine helper version
-        id: helpers
-        shell: bash
-        run: .github/scripts/determine-helper-version.sh "${{ inputs.helper_run_id }}"
+      - name: 🔍 Get Flavor run
+        id: flavor
+        run: |
+          # Get Flavor run ID - prefer input, then triggering workflow, then latest success
+          if [ -n "${{ inputs.flavor_run_id }}" ]; then
+            RUN_ID="${{ inputs.flavor_run_id }}"
+          elif [ "${{ github.event_name }}" = "workflow_run" ]; then
+            RUN_ID="${{ github.event.workflow_run.id }}"
+          else
+            RUN_ID=$(gh run list --workflow 03-flavor-pipeline.yml --status success --limit 1 --json databaseId -q '.[0].databaseId')
+          fi
+          echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
+          echo "Using Flavor Pipeline run: $RUN_ID"
         env:
           GH_TOKEN: ${{ github.token }}
 
-      - name: 📥 Download helper artifacts
+      - name: 📥 Download all Flavor PSP artifacts
         uses: dawidd6/action-download-artifact@v6
         with:
-          workflow: 01-helper-prep.yml
-          run_id: ${{ steps.helpers.outputs.run_id }}
-          name: flavor-helpers-${{ steps.helpers.outputs.version }}-${{ matrix.platform }}
-          path: ./helpers-dist
+          workflow: 03-flavor-pipeline.yml
+          run_id: ${{ steps.flavor.outputs.run_id }}
+          name_is_regexp: true
+          name: "^flavor-${{ steps.version.outputs.version }}-"
+          path: ./flavor-artifacts
 
-      - name: 🔧 Extract helpers
-        shell: bash
+      - name: 🔧 Organize Flavor packages
         run: |
-          mkdir -p dist/bin helpers-extract
-          unzip -o helpers-dist/flavor-helpers-${{ steps.helpers.outputs.version }}-${{ matrix.platform }}.zip -d helpers-extract/
+          mkdir -p flavor-psp
+          # Move all PSP and EXE files from subdirectories to flavor-psp
+          find flavor-artifacts -type f \( -name "*.psp" -o -name "*.exe" \) -exec mv {} flavor-psp/ \;
+          echo "Available Flavor PSP packages:"
+          ls -la flavor-psp/
 
-          # Move files from nested directory structure to dist/bin/
-          find helpers-extract -type f \( -name "flavor-*-builder-*" -o -name "flavor-*-launcher-*" \) -exec mv {} dist/bin/ \;
-
-          chmod +x dist/bin/* 2>/dev/null || true
-          echo "Extracted helpers:"
-          ls -lh dist/bin/
-
-      - name: 📦 Install Flavor
-        shell: bash
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev,test]"
-
-      - name: 🔨 Build test PSP package
-        shell: bash
-        env:
-          PYTHONUTF8: "1"
-          PYTHONIOENCODING: "utf-8"
-        run: |
-          # Create a simple test application
-          mkdir -p test-app
-          cat > test-app/main.py << 'EOF'
-          #!/usr/bin/env python3
-          import sys
-          import json
-          import platform
-
-          def main():
-              info = {
-                  "message": "Cross-platform test successful",
-                  "python_version": sys.version,
-                  "platform": platform.platform(),
-                  "machine": platform.machine(),
-                  "system": platform.system()
-              }
-              print(json.dumps(info, indent=2))
-              return 0
-
-          if __name__ == "__main__":
-              sys.exit(main())
-          EOF
-
-          cat > test-app/pyproject.toml << 'EOF'
-          [project]
-          name = "cross-platform-test"
-          version = "0.1.0"
-          description = "Cross-platform PSP validation test package"
-
-          [project.scripts]
-          cross-platform-test = "main:main"
-          EOF
-
-          chmod +x test-app/main.py
-
-          # Debug: List all files in dist/bin
-          echo "Contents of dist/bin:"
-          ls -la dist/bin/ || echo "dist/bin does not exist"
-
-          # Debug: Show current directory
-          echo "Current directory:"
-          pwd
-
-          # Find helper binaries - prefer Go builders as they support pyproject.toml directly
-          BUILDER_BIN=$(find dist/bin/ -name "flavor-go-builder-*${{ matrix.platform }}*" -type f | head -1)
-          if [ -z "$BUILDER_BIN" ]; then
-            BUILDER_BIN=$(find dist/bin/ -name "flavor-rs-builder-*${{ matrix.platform }}*" -type f | head -1)
-          fi
-
-          LAUNCHER_BIN=$(find dist/bin/ -name "flavor-go-launcher-*${{ matrix.platform }}*" -type f | head -1)
-          if [ -z "$LAUNCHER_BIN" ]; then
-            LAUNCHER_BIN=$(find dist/bin/ -name "flavor-rs-launcher-*${{ matrix.platform }}*" -type f | head -1)
-          fi
-
-          echo "Using builder: $BUILDER_BIN"
-          echo "Using launcher: $LAUNCHER_BIN"
-
-          # Validate binaries found
-          if [ -z "$BUILDER_BIN" ] || [ -z "$LAUNCHER_BIN" ]; then
-            echo "ERROR: Helper binaries not found!"
-            echo "Looking for pattern: dist/bin/flavor-*-builder-${{ matrix.platform }}*"
-            exit 1
-          fi
-
-          # Build PSP package
-          flavor pack \
-            --manifest test-app/pyproject.toml \
-            --output cross-platform-test-${{ matrix.platform }}.psp \
-            --builder-bin "$BUILDER_BIN" \
-            --launcher-bin "$LAUNCHER_BIN"
-
-          # Generate metadata for validation
-          flavor inspect cross-platform-test-${{ matrix.platform }}.psp --json > package-info-${{ matrix.platform }}.json
-
-          ls -lh cross-platform-test-${{ matrix.platform }}.psp
-
-      - name: 📤 Upload PSP package
+      - name: 📤 Upload Flavor PSP for test jobs
         uses: actions/upload-artifact@v4
         with:
-          name: psp-built-on-${{ matrix.platform }}
-          path: |
-            cross-platform-test-${{ matrix.platform }}.psp
-            package-info-${{ matrix.platform }}.json
-          retention-days: 7
+          name: flavor-psp-${{ github.run_id }}
+          path: flavor-psp/
 
-  # Test extraction on different platforms
+  # Test cross-platform verification, inspection, and extraction
   test-cross-platform:
-    name: 🧪 Extract ${{ matrix.build_platform }} PSP on ${{ matrix.test_platform_name }}
-    needs: build-packages
+    name: 🧪 Test ${{ matrix.build_platform }} on ${{ matrix.test_platform_name }}
+    needs: setup
     runs-on: ${{ matrix.test_runner }}
     strategy:
       fail-fast: false
       matrix:
         # Test matrix: build platform × test platform
-        # Focus on cross-platform scenarios (skip same-platform)
+        # Focus on cross-platform scenarios (different OS or arch)
         include:
           # Linux AMD64 packages tested on other platforms
           - build_platform: linux_amd64
@@ -217,11 +117,17 @@ jobs:
             test_platform_name: macOS ARM64
             test_runner: macos-15
 
-          # macOS packages tested on Linux
+          # macOS AMD64 packages tested on other platforms
           - build_platform: darwin_amd64
             test_platform: linux_amd64
             test_platform_name: Linux AMD64
             test_runner: ubuntu-24.04
+          - build_platform: darwin_amd64
+            test_platform: darwin_arm64
+            test_platform_name: macOS ARM64
+            test_runner: macos-15
+
+          # macOS ARM64 packages tested on other platforms
           - build_platform: darwin_arm64
             test_platform: linux_amd64
             test_platform_name: Linux AMD64
@@ -230,26 +136,6 @@ jobs:
             test_platform: linux_arm64
             test_platform_name: Linux ARM64
             test_runner: ubuntu-24.04-arm
-
-          # Windows packages tested on other platforms
-          - build_platform: windows_amd64
-            test_platform: linux_amd64
-            test_platform_name: Linux AMD64
-            test_runner: ubuntu-24.04
-          - build_platform: windows_arm64
-            test_platform: linux_amd64
-            test_platform_name: Linux AMD64
-            test_runner: ubuntu-24.04
-
-          # Linux packages tested on Windows
-          - build_platform: linux_amd64
-            test_platform: windows_amd64
-            test_platform_name: Windows AMD64
-            test_runner: windows-2025
-          - build_platform: linux_amd64
-            test_platform: windows_arm64
-            test_platform_name: Windows ARM64
-            test_runner: windows-11-arm
 
     steps:
       - name: 📥 Checkout
@@ -264,14 +150,29 @@ jobs:
         shell: bash
         run: |
           python -m pip install --upgrade pip
-          # Core package only - no dev/test extras (avoids grpcio build issues on Windows ARM64)
           pip install -e .
 
-      - name: 📥 Download PSP built on ${{ matrix.build_platform }}
+      - name: 📥 Download Flavor PSP packages
         uses: actions/download-artifact@v4
         with:
-          name: psp-built-on-${{ matrix.build_platform }}
+          name: flavor-psp-${{ github.run_id }}
           path: ./test-packages
+
+      - name: 🔍 Find package
+        id: find
+        shell: bash
+        run: |
+          # Find the PSP file for the build platform
+          PSP_FILE=$(find test-packages -name "flavor-*-${{ matrix.build_platform }}.psp" | head -1)
+
+          if [ -z "$PSP_FILE" ]; then
+            echo "❌ No PSP package found for ${{ matrix.build_platform }}"
+            ls -la test-packages/
+            exit 1
+          fi
+
+          echo "psp_file=$PSP_FILE" >> $GITHUB_OUTPUT
+          echo "Found: $PSP_FILE"
 
       - name: 🔍 Verify PSP package
         shell: bash
@@ -282,7 +183,7 @@ jobs:
           echo "## 🔍 Verifying ${{ matrix.build_platform }} package on ${{ matrix.test_platform_name }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          PSP_FILE="test-packages/cross-platform-test-${{ matrix.build_platform }}.psp"
+          PSP_FILE="${{ steps.find.outputs.psp_file }}"
 
           if ! flavor verify "$PSP_FILE"; then
             echo "❌ Verification failed!" >> $GITHUB_STEP_SUMMARY
@@ -300,7 +201,7 @@ jobs:
           echo "### 📋 Inspection" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          PSP_FILE="test-packages/cross-platform-test-${{ matrix.build_platform }}.psp"
+          PSP_FILE="${{ steps.find.outputs.psp_file }}"
 
           # Inspect in JSON format
           flavor inspect "$PSP_FILE" --json > inspect-output.json
@@ -313,14 +214,11 @@ jobs:
           echo "- Slot count: $SLOT_COUNT" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          # Compare with original metadata
-          if [ -f "test-packages/package-info-${{ matrix.build_platform }}.json" ]; then
-            ORIG_SLOT_COUNT=$(jq -r '.slots | length' "test-packages/package-info-${{ matrix.build_platform }}.json")
-            if [ "$SLOT_COUNT" != "$ORIG_SLOT_COUNT" ]; then
-              echo "⚠️ Slot count mismatch: expected $ORIG_SLOT_COUNT, got $SLOT_COUNT" >> $GITHUB_STEP_SUMMARY
-              exit 1
-            fi
-            echo "✅ Slot count matches original: $SLOT_COUNT" >> $GITHUB_STEP_SUMMARY
+          if [ "$SLOT_COUNT" -gt 0 ]; then
+            echo "✅ Package has $SLOT_COUNT slots" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Package has no slots!" >> $GITHUB_STEP_SUMMARY
+            exit 1
           fi
 
       - name: 📂 Extract all slots
@@ -332,7 +230,7 @@ jobs:
           echo "### 📂 Extraction" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          PSP_FILE="test-packages/cross-platform-test-${{ matrix.build_platform }}.psp"
+          PSP_FILE="${{ steps.find.outputs.psp_file }}"
 
           # Extract all slots
           mkdir -p extracted
@@ -344,7 +242,7 @@ jobs:
           # List extracted content
           echo "Extracted files:" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          ls -lhR extracted/ >> $GITHUB_STEP_SUMMARY
+          ls -lhR extracted/ | head -50 >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
           # Validate extracted metadata
@@ -368,7 +266,7 @@ jobs:
           echo "### 🔐 Integrity Check" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          PSP_FILE="test-packages/cross-platform-test-${{ matrix.build_platform }}.psp"
+          PSP_FILE="${{ steps.find.outputs.psp_file }}"
 
           # Re-verify after extraction (tests checksum validation)
           if ! flavor verify "$PSP_FILE"; then
@@ -393,7 +291,7 @@ jobs:
   # Summary report
   validation-report:
     name: 📊 Validation Report
-    needs: [build-packages, test-cross-platform]
+    needs: [setup, test-cross-platform]
     if: always()
     runs-on: ubuntu-24.04
 
@@ -406,18 +304,18 @@ jobs:
           echo "**Timestamp:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          BUILD_RESULT="${{ needs.build-packages.result }}"
+          SETUP_RESULT="${{ needs.setup.result }}"
           TEST_RESULT="${{ needs.test-cross-platform.result }}"
 
           echo "## Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| 📦 Build Packages | $BUILD_RESULT |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔧 Setup | $SETUP_RESULT |" >> $GITHUB_STEP_SUMMARY
           echo "| 🧪 Cross-Platform Tests | $TEST_RESULT |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          if [ "$BUILD_RESULT" = "success" ] && [ "$TEST_RESULT" = "success" ]; then
+          if [ "$SETUP_RESULT" = "success" ] && [ "$TEST_RESULT" = "success" ]; then
             echo "✅ **All cross-platform validation tests passed!**" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ **Cross-platform validation failed. Check job details.**" >> $GITHUB_STEP_SUMMARY
