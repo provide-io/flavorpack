@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 """Windows PE Executable Utilities for PSPF Format Compatibility.
 
 Provides utilities for manipulating Windows PE (Portable Executable) files
