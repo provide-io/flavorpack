@@ -23,8 +23,8 @@ echo "   Version: $VERSION"
 mkdir -p "$OUTPUT_DIR"
 
 # Extract platform-specific helpers using download-helpers.sh
-HELPERS_DIST=$(dirname "$HELPERS_ZIP")
-.github/scripts/download-helpers.sh "$HELPERS_DIST" "$VERSION" "$PLATFORM"
+# HELPERS_ZIP is already the directory name (e.g., helpers-dist), not a file path
+.github/scripts/download-helpers.sh "$HELPERS_ZIP" "$VERSION" "$PLATFORM"
 
 # Copy ONLY the versioned platform-specific helpers to the package location
 echo ""
@@ -66,36 +66,20 @@ for file in "$OUTPUT_DIR"/*; do
         if [[ "$PLATFORM" == "windows_"* ]]; then
             if [[ "$base" == *"-${PLATFORM}.exe" ]]; then
                 echo "   ✅ $base (correct platform)"
-<<<<<<< HEAD
                 CORRECT_COUNT=$((CORRECT_COUNT + 1))
             else
                 echo "   ❌ $base (WRONG platform - removing)"
                 rm "$file"
                 WRONG_COUNT=$((WRONG_COUNT + 1))
-=======
-                ((CORRECT_COUNT++))
-            else
-                echo "   ❌ $base (WRONG platform - removing)"
-                rm "$file"
-                ((WRONG_COUNT++))
->>>>>>> fixing up building stuff
             fi
         else
             if [[ "$base" == *"-${PLATFORM}" ]]; then
                 echo "   ✅ $base (correct platform)"
-<<<<<<< HEAD
                 CORRECT_COUNT=$((CORRECT_COUNT + 1))
             else
                 echo "   ❌ $base (WRONG platform - removing)"
                 rm "$file"
                 WRONG_COUNT=$((WRONG_COUNT + 1))
-=======
-                ((CORRECT_COUNT++))
-            else
-                echo "   ❌ $base (WRONG platform - removing)"
-                rm "$file"
-                ((WRONG_COUNT++))
->>>>>>> fixing up building stuff
             fi
         fi
     fi

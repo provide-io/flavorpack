@@ -98,11 +98,7 @@ fi
 
 # Show final results
 echo "✅ Combined artifacts created successfully:"
-<<<<<<< HEAD
 ls -lh *.zip
-=======
-ls -lh "$OUTPUT_DIR"/*.zip
->>>>>>> fixing up building stuff
 
 # Count binaries in combined archive
 BINARY_COUNT=$(find all-helpers -type f | wc -l)

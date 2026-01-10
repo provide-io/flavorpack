@@ -4,7 +4,7 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![uv](https://img.shields.io/badge/uv-package_manager-FF6B35.svg)](https://github.com/astral-sh/uv)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-[![CI](https://github.com/provide-io/flavorpack/actions/workflows/ci.yml/badge.svg)](https://github.com/provide-io/flavorpack/actions)
+[![Build](https://github.com/provide-io/flavorpack/actions/workflows/03-flavor-pipeline.yml/badge.svg)](https://github.com/provide-io/flavorpack/actions/workflows/03-flavor-pipeline.yml)
 
 **Cross-language packaging system for self-contained, portable executables**
 

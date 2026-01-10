@@ -8,17 +8,23 @@
 
 set -euo pipefail
 
-WHEEL_FILE="${1:?Wheel file path required}"
+WHEEL_PATTERN="${1:?Wheel file path or pattern required}"
 PLATFORM="${2:-unknown}"
 
 echo "🔍 Validating wheel structure..."
-echo "   Wheel: $WHEEL_FILE"
+echo "   Pattern: $WHEEL_PATTERN"
 echo "   Platform: $PLATFORM"
 
-if [ ! -f "$WHEEL_FILE" ]; then
-    echo "❌ Wheel file not found: $WHEEL_FILE"
+# Expand glob pattern to find actual wheel file
+# shellcheck disable=SC2086
+WHEEL_FILE=$(ls -1 $WHEEL_PATTERN 2>/dev/null | head -1)
+
+if [ -z "$WHEEL_FILE" ] || [ ! -f "$WHEEL_FILE" ]; then
+    echo "❌ Wheel file not found matching: $WHEEL_PATTERN"
     exit 1
 fi
+
+echo "   Found: $WHEEL_FILE"
 
 echo ""
 echo "📦 Wheel contents:"
@@ -49,13 +55,8 @@ if [ -z "$HELPERS" ]; then
     exit 1
 else
     echo "$HELPERS" | while read -r line; do
-<<<<<<< HEAD
         # Extract just the filename (first field from zipfile output)
         HELPER_NAME=$(echo "$line" | awk '{print $1}' | xargs basename)
-=======
-        # Extract just the filename
-        HELPER_NAME=$(echo "$line" | awk '{print $NF}')
->>>>>>> fixing up building stuff
         echo "   ✅ $HELPER_NAME"
     done
 fi
@@ -84,11 +85,7 @@ if [ "$PLATFORM" != "unknown" ]; then
 
     WRONG_PLATFORM=0
     python -m zipfile -l "$WHEEL_FILE" | grep "flavor/helpers/bin/flavor-" | grep -v "/$" | while read -r line; do
-<<<<<<< HEAD
         HELPER_NAME=$(echo "$line" | awk '{print $1}' | xargs basename)
-=======
-        HELPER_NAME=$(echo "$line" | awk '{print $NF}')
->>>>>>> fixing up building stuff
 
         if [[ "$PLATFORM" == "windows_"* ]]; then
             # Windows binaries should end with platform.exe
