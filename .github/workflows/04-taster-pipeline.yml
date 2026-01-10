@@ -137,9 +137,10 @@ jobs:
         shell: bash
         run: |
           .github/scripts/prepare-taster-build.sh \
-            "flavor-psp" \
             "${{ matrix.platform }}" \
-            "${{ needs.setup.outputs.version }}"
+            "flavor-psp" \
+            "${{ needs.setup.outputs.version }}" \
+            "tests/taster"
 
           # Export path for subsequent steps
           echo "taster_path=$PWD/tests/taster/taster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.psp" >> $GITHUB_OUTPUT
@@ -222,6 +223,12 @@ jobs:
           pattern: taster-results-*
           path: all-results
 
+      - name: 📥 Download taster for linux_amd64
+        uses: actions/download-artifact@v4
+        with:
+          name: taster-${{ needs.setup.outputs.version }}-linux_amd64
+          path: taster-packages
+
       - name: 📥 Download helpers
         uses: dawidd6/action-download-artifact@v6
         with:
@@ -244,7 +251,16 @@ jobs:
 
       - name: 🧪 Run comprehensive taster tests
         run: |
-          .github/scripts/run-comprehensive-taster-tests.sh
+          # Add workenv to PATH (setup-python-workenv.sh creates this)
+          export PATH="$PWD/workenv/bin:$PATH"
+
+          # Artifact root is tests/taster/, so file is directly in taster-packages/
+          TASTER_PATH="taster-packages/taster-${{ needs.setup.outputs.version }}-linux_amd64.psp"
+          chmod +x "$TASTER_PATH"
+          .github/scripts/run-comprehensive-taster-tests.sh \
+            "$TASTER_PATH" \
+            "linux_amd64" \
+            "helpers/bin"
 
   # Summary and validation
   validate:
@@ -265,9 +281,8 @@ jobs:
       - name: 📊 Generate summary
         run: |
           .github/scripts/generate-taster-summary.sh \
-            "${{ needs.setup.outputs.helper_version }}" \
-            "${{ github.repository }}" \
-            "${{ github.run_id }}"
+            "test-results" \
+            "${{ needs.setup.outputs.helper_version }}"
 
       - name: 🎯 Check status
         run: |

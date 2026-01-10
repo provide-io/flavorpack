@@ -210,10 +210,10 @@ jobs:
         shell: bash
         run: |
           .github/scripts/organize-platform-helpers.sh \
-            "helpers-dist" \
-            "${{ needs.setup.outputs.helper_version }}" \
             "${{ matrix.platform }}" \
-            "src/flavor/helpers/bin"
+            "helpers-dist" \
+            "src/flavor/helpers/bin" \
+            "${{ needs.setup.outputs.helper_version }}"
       
       - name: 📦 Install build tools
         shell: bash
@@ -453,9 +453,14 @@ jobs:
       - name: 📊 Generate summary
         run: |
           .github/scripts/generate-flavor-summary.sh \
+            "test-results" \
+            "wheel-artifacts" \
+            "flavor-artifacts" \
             "${{ needs.setup.outputs.helper_version }}" \
+            "${{ needs.test.result }}" \
+            "${{ needs.build-wheels.result }}" \
+            "${{ needs.build-flavor.result }}" \
             "${{ needs.test-flavor-psp.result }}" \
-            "${{ github.repository }}" \
             "${{ github.run_id }}"
       
       - name: 🎯 Check status
