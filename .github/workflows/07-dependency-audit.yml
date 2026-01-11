@@ -202,7 +202,17 @@ jobs:
         if: always()
         run: |
           source audit-env/bin/activate
-          
+
+          # Calculate license counts (variables don't persist between steps)
+          COPYLEFT=0
+          UNKNOWN=0
+          if [ -f python-licenses.json ]; then
+            COPYLEFT=$(jq '[.[] | select(.License | test("GPL|AGPL|LGPL"))] | length' python-licenses.json 2>/dev/null || echo 0)
+            UNKNOWN=$(jq '[.[] | select(.License == "UNKNOWN")] | length' python-licenses.json 2>/dev/null || echo 0)
+          fi
+          COPYLEFT=${COPYLEFT:-0}
+          UNKNOWN=${UNKNOWN:-0}
+
           # Create comprehensive report
           cat > python-deps-report.json << EOF
           {
