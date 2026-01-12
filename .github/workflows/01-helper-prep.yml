@@ -13,7 +13,7 @@ jobs:
   # Setup job - determine version and what to build
   setup:
     name: 📊 Setup
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.version.outputs.version }}
       matrix: ${{ steps.matrix.outputs.matrix }}
@@ -232,7 +232,7 @@ jobs:
     name: 📦 Combine & Validate
     needs: [setup, build]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
