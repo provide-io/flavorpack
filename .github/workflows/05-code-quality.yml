@@ -428,7 +428,7 @@ jobs:
       - name: 🐹 Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24.9'
+          go-version: "${{ vars.GO_VERSION }}"
           cache: true
           cache-dependency-path: |
             src/flavor-go/go.sum
