@@ -1,6 +1,6 @@
 module github.com/provide-io/flavor/go/flavor
 
-go 1.26.1
+go 1.24.9
 
 require (
 	github.com/provide-io/provide-telemetry/go/logger v0.3.1
