@@ -47,7 +47,7 @@ jobs:
   # Secret Scanning
   secret-scan:
     name: 🔑 Secret Scanning
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -86,7 +86,7 @@ jobs:
   # Python Security
   python-security:
     name: 🐍 Python Security
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -188,7 +188,7 @@ jobs:
   # Go Security
   go-security:
     name: 🐹 Go Security
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -242,7 +242,7 @@ jobs:
   # Rust Security
   rust-security:
     name: 🦀 Rust Security
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -331,7 +331,7 @@ jobs:
   # Container Security Scan
   container-security:
     name: 🐳 Container Security
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -387,7 +387,7 @@ jobs:
   # Infrastructure as Code Security
   iac-security:
     name: 🏗️ IaC Security
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -432,7 +432,7 @@ jobs:
     name: 📊 Security Report
     needs: [secret-scan, python-security, go-security, rust-security, container-security, iac-security]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4

@@ -39,7 +39,7 @@ jobs:
   # Python Code Quality
   python-quality:
     name: 🐍 Python Quality
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       issues: write
@@ -109,7 +109,7 @@ jobs:
   # Go Code Quality
   go-quality:
     name: 🐹 Go Quality
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -142,7 +142,7 @@ jobs:
   # Rust Code Quality
   rust-quality:
     name: 🦀 Rust Quality
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -190,7 +190,7 @@ jobs:
     name: 📊 Quality Report
     needs: [python-quality, go-quality, rust-quality]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4

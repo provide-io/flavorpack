@@ -29,7 +29,7 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       github.event_name == 'schedule' ||
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.version.outputs.version }}
       flavor_run_id: ${{ steps.flavor.outputs.run_id }}

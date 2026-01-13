@@ -21,7 +21,7 @@ jobs:
   # Setup and download helper artifacts
   setup:
     name: 🔧 Setup & Get Helpers
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       helper_version: ${{ steps.helpers.outputs.version }}
       helper_run_id: ${{ steps.helpers.outputs.run_id }}
@@ -423,7 +423,7 @@ jobs:
     name: ✅ Validate & Summary
     needs: [setup, test, build-wheels, build-flavor, test-flavor-psp]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
