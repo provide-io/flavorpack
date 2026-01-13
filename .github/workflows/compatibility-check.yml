@@ -19,7 +19,7 @@ jobs:
   # Build fresh helpers with static linking
   build-static:
     name: 🔨 Build Static Binaries
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -122,7 +122,7 @@ jobs:
   test-core-distros:
     name: 🐧 Test Core Distros
     needs: build-static
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -205,7 +205,7 @@ jobs:
   test-extended-distros:
     name: 🐧 Test Extended Distros
     needs: build-static
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: github.event.inputs.extended_distros == 'true' || github.event_name == 'schedule'
     strategy:
       fail-fast: false
@@ -254,7 +254,7 @@ jobs:
   test-arm64:
     name: 🦾 Test ARM64 (QEMU)
     needs: build-static
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -306,7 +306,7 @@ jobs:
   test-pretaster:
     name: 🔬 Pretaster in Containers
     needs: build-static
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -352,7 +352,7 @@ jobs:
     name: 📊 Compatibility Report
     needs: [test-core-distros, test-extended-distros, test-arm64, test-pretaster]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -441,7 +441,7 @@ jobs:
     name: ✅ Final Status
     needs: [test-core-distros, compatibility-report]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📊 Check overall status
         run: |
