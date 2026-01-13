@@ -1,6 +1,6 @@
 module github.com/provide-io/flavor/go/flavor
 
-go 1.24.0
+go 1.24.9
 
 require (
 	github.com/hashicorp/go-hclog v1.6.3
