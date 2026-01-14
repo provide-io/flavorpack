@@ -73,7 +73,7 @@ Only required if you're building or modifying Go/Rust helper binaries:
 **Installation**:
 
 ```bash
-# Install Go 1.24+
+# Install Go 1.23+
 # Download from: https://go.dev/dl/
 # Or use your package manager:
 brew install go@1.23     # macOS
@@ -105,7 +105,7 @@ These tools enhance the development experience but are not required:
 |------|---------|--------------|
 | **Make** | Build automation | `brew install make` (macOS) or pre-installed (Linux) |
 | **Docker** | Container testing | [docker.com](https://docker.com) |
-| **MkDocs** | Documentation preview | `uv add mkdocs-material` |
+| **MkDocs** | Documentation preview | `uv pip install mkdocs-material` |
 
 ---
 
@@ -119,6 +119,7 @@ FlavorPack's Python dependencies are declared in `pyproject.toml`:
 [project]
 dependencies = [
     "provide-foundation[all]>=0.0.0.dev0",
+    "pip>=25.2",
     "uv>=0.8.13",
 ]
 ```
@@ -127,6 +128,7 @@ These are automatically installed when you run `uv sync`.
 
 **Key Dependencies**:
 - **provide-foundation**: Core utilities, logging, and crypto functions
+- **pip**: Python package installer (embedded in packages)
 - **uv**: Fast package manager for dependency resolution
 
 ### Development Dependencies
@@ -186,9 +188,9 @@ macOS binaries are built separately for Intel and Apple Silicon:
 - `*-darwin_amd64` - Intel Macs
 - `*-darwin_arm64` - Apple Silicon Macs
 
-### Windows
+### Windows (Experimental)
 
-Windows support is currently disabled due to UTF-8 encoding issues in the native helpers.
+Windows support is experimental and not yet production-ready.
 
 ---
 
@@ -207,7 +209,7 @@ uv --version
 
 # 3. Check Go (if building helpers)
 go version
-# Expected: go1.24.0 or higher
+# Expected: go1.23.0 or higher
 
 # 4. Check Rust (if building helpers)
 rustc --version
@@ -259,11 +261,11 @@ rustup update
 
 ## See Also
 
-- [Contributing Guide](../development/contributing.md) - Development setup walkthrough
-- [Installation Guide](../getting-started/installation.md) - User installation
-- [Platform Support](../includes/platform-support.md) - Platform compatibility details
-- [Troubleshooting](../troubleshooting/common.md) - Common issues and solutions
+- [Contributing Guide](../development/contributing/) - Development setup walkthrough
+- [Installation Guide](../getting-started/installation/) - User installation
+- [Platform Support](../includes/platform-support/) - Platform compatibility details
+- [Troubleshooting](../troubleshooting/common/) - Common issues and solutions
 
 ---
 
-**Questions?** Check the [FAQ](../troubleshooting/faq.md) or join our [community discussions](../community/discussions.md).
+**Questions?** Check the [FAQ](../troubleshooting/faq/) or join our [community discussions](../community/discussions/).

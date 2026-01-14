@@ -25,12 +25,9 @@ def read_root():
 def create_item(item: Item):
     return {"item": item, "message": "Created successfully"}
 
-def main():
+if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-
-if __name__ == "__main__":
-    main()
 ```
 
 ### Configuration
@@ -46,7 +43,12 @@ dependencies = [
 ]
 
 [tool.flavor]
-entry_point = "myapi.main:main"
+type = "python-app"
+entry_point = "myapi.main:app"
+
+[tool.flavor.execution]
+command = "{workenv}/bin/uvicorn"
+args = ["myapi.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 [tool.flavor.execution.runtime.env]
 pass = ["PORT", "HOST", "LOG_LEVEL"]
@@ -88,19 +90,31 @@ def process_data():
     # Process data
     return {"result": "processed"}
 
-def main():
-    app.run(host="0.0.0.0", port=5000)
-
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
 ```
 
 ```toml
 [tool.flavor]
-entry_point = "myapi:main"
+type = "python-app"
 
-[tool.flavor.execution.runtime.env]
-set = { PORT = "5000", HOST = "0.0.0.0" }
+[tool.flavor.execution]
+command = "{workenv}/bin/python"
+args = ["-m", "flask", "run", "--host=0.0.0.0"]
+
+[[tool.flavor.slots]]
+id = 2
+path = "./templates"
+extract_to = "templates"
+lifecycle = "cached"
+operations = "tar.gz"
+
+[[tool.flavor.slots]]
+id = 3
+path = "./static"
+extract_to = "static"
+lifecycle = "cached"
+operations = "tar.gz"
 ```
 
 ## Production Deployment
@@ -143,6 +157,6 @@ CMD ["/app/myapi.psp"]
 
 ## See Also
 
-- **[Docker Integration](../recipes/docker.md)**
-- **[CI/CD](../recipes/ci-cd.md)**
-- **[Multi-Platform Builds](../recipes/multi-platform.md)**
+- **[Docker Integration](../recipes/docker/)**
+- **[CI/CD](../recipes/ci-cd/)**
+- **[Multi-Platform Builds](../recipes/multi-platform/)**

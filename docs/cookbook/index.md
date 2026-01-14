@@ -18,7 +18,7 @@ Short, focused how-to guides for specific integration scenarios and workflows.
 
 Package command-line applications and utilities.
 
-**[CLI Tools Example →](examples/cli-tool.md)**
+**[CLI Tools Example →](examples/cli-tool/)**
 
 Learn how to package:
 - Click-based CLI tools
@@ -30,7 +30,7 @@ Learn how to package:
 
 Package FastAPI, Flask, and other web applications.
 
-**[Web Applications Example →](examples/web-app.md)**
+**[Web Applications Example →](examples/web-app/)**
 
 Learn how to package:
 - FastAPI APIs
@@ -44,7 +44,7 @@ Learn how to package:
 
 Use FlavorPack packages in Docker containers.
 
-**[Docker Integration Recipe →](recipes/docker.md)**
+**[Docker Integration Recipe →](recipes/docker/)**
 
 Learn about:
 - Minimal Docker images
@@ -56,7 +56,7 @@ Learn about:
 
 Automate packaging in CI/CD.
 
-**[CI/CD Pipelines Recipe →](recipes/ci-cd.md)**
+**[CI/CD Pipelines Recipe →](recipes/ci-cd/)**
 
 Learn about:
 - GitHub Actions
@@ -68,21 +68,21 @@ Learn about:
 
 ### By Application Type
 
-- **CLI Tools** → [CLI Example](examples/cli-tool.md)
-- **Web APIs** → [Web App Example](examples/web-app.md)
-- **Terraform Providers** → [Pyvider Integration](../guide/integration/pyvider.md)
+- **CLI Tools** → [CLI Example](examples/cli-tool/)
+- **Web APIs** → [Web App Example](examples/web-app/)
+- **Terraform Providers** → [Pyvider Integration](../guide/integration/pyvider/)
 
 ### By Integration
 
-- **Docker** → [Docker Recipe](recipes/docker.md)
-- **CI/CD** → [CI/CD Recipe](recipes/ci-cd.md)
-- **wrknv** → [wrknv Integration](../guide/integration/wrknv.md)
+- **Docker** → [Docker Recipe](recipes/docker/)
+- **CI/CD** → [CI/CD Recipe](recipes/ci-cd/)
+- **wrknv** → [wrknv Integration](../guide/integration/wrknv/)
 
 ### By Use Case
 
-- **Development** → [Testing Guide](../development/testing/index.md)
-- **Production** → [Docker Recipe](recipes/docker.md)
-- **Distribution** → [CI/CD Recipe](recipes/ci-cd.md)
+- **Development** → [Testing Guide](../development/testing/index/)
+- **Production** → [Docker Recipe](recipes/docker/)
+- **Distribution** → [CI/CD Recipe](recipes/ci-cd/)
 
 ## Contributing Examples
 
@@ -93,7 +93,7 @@ Have a great example or recipe? We'd love to include it!
 3. Submit a pull request
 4. Include clear documentation
 
-See [Contributing Guide](../development/contributing.md) for details.
+See [Contributing Guide](../development/contributing/) for details.
 
 ## Example Template
 
@@ -129,11 +129,11 @@ Related examples and topics
 
 ## Need Help?
 
-- 📖 Check the [User Guide](../guide/index.md)
+- 📖 Check the [User Guide](../guide/index/)
 - 🔍 Search the documentation
-- 💬 Ask in [Community Support](../community/support.md)
+- 💬 Ask in [Community Support](../community/support/)
 - 🐛 Report issues on [GitHub](https://github.com/provide-io/flavorpack/issues)
 
 ---
 
-**Ready to start?** Try the [CLI Tools Example](examples/cli-tool.md) or [Web Applications Example](examples/web-app.md).
+**Ready to start?** Try the [CLI Tools Example](examples/cli-tool/) or [Web Applications Example](examples/web-app/).

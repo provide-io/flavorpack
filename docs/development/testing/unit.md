@@ -2,7 +2,7 @@
 
 Write unit tests for FlavorPack components.
 
-## Exploratory
+## Coming Soon
 
 Complete unit testing guide under development.
 
@@ -29,4 +29,4 @@ pytest tests/test_builder.py::test_basic_build
 
 ---
 
-**See also:** [Testing Guide](index.md) | [Integration Tests](integration.md)
+**See also:** [Testing Guide](index/) | [Integration Tests](integration/)

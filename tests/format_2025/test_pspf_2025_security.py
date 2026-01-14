@@ -1,5 +1,5 @@
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
@@ -186,7 +186,7 @@ class TestPSPFSecurity:
         # For now, skip this strict check as implementation may vary
         # assert not result['valid'], "Tampering should be detected"
         # assert result['tamper_detected'] or not result['signature_valid'], "Should detect tampered metadata"
-        # Tampering detection implementation may vary
+        pass  # Tampering detection implementation may vary
 
     def test_slot_tampering_detection(self, temp_dir: Path, test_builder: PSPFBuilder) -> None:
         """Test detection of tampered slot data."""

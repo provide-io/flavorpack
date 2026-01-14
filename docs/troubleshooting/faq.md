@@ -3,7 +3,7 @@
 Common questions and answers about FlavorPack.
 
 !!! note "Package Name vs Tool Name"
-    **FlavorPack** (or `flavorpack`) is the Python package name. The command-line tool and API is called **`flavor`**. Install with `uv sync` (initial release), use with `flavor pack`.
+    **FlavorPack** (or `flavorpack`) is the Python package name. The command-line tool and API is called **`flavor`**. Install with `uv sync` (alpha), use with `flavor pack`.
 
 ## General Questions
 
@@ -38,9 +38,8 @@ FlavorPack requires Python 3.11 or later.
 
 ### How do I install FlavorPack?
 
-!!! warning "Initial release Status - Source Installation Only"
-    FlavorPack is in its pre-release series. Installation is available via PyPI.
-    Some APIs may change during the pre-release series.
+!!! warning "Alpha Status - Source Installation Only"
+    FlavorPack is currently in alpha. Installation from PyPI is **not yet available**.
 
 ```bash
 # Clone the repository
@@ -60,12 +59,12 @@ make build-helpers
 flavor --version
 ```
 
-See the [Installation Guide](../getting-started/installation.md) for complete instructions.
+See the [Installation Guide](../getting-started/installation/) for complete instructions.
 
 ### Do I need to install anything else?
 
-Yes, during initial release you need to build the launcher binaries locally. This requires:
-- Go 1.24+
+Yes, during alpha you need to build the launcher binaries locally. This requires:
+- Go 1.23+
 - Rust 1.85+
 - Make
 
@@ -73,7 +72,7 @@ Run `make build-helpers` to build the Go and Rust launcher/builder binaries.
 
 ### Can I use FlavorPack in a virtual environment?
 
-Yes, FlavorPack works perfectly in virtual environments. During initial release, use source installation:
+Yes, FlavorPack works perfectly in virtual environments. During alpha, use source installation:
 
 ```bash
 python -m venv venv
@@ -84,7 +83,7 @@ uv sync
 
 ### How do I update FlavorPack?
 
-During initial release, update from source:
+During alpha, update from source:
 
 ```bash
 cd flavorpack
@@ -110,24 +109,37 @@ entry_point = "myapp:main"
 
 ### Can I include non-Python files?
 
-FlavorPack packages your Python application and its dependencies. Include non-Python files by bundling them in your package directory so they are part of your distribution.
+!!! info "📋 Planned Feature"
+    Manual slot configuration is planned for a future release. Currently, FlavorPack automatically packages your Python application and its dependencies.
 
 ### How do I exclude files from the package?
 
-There is no manifest-based exclude list yet. Remove unnecessary files from the source tree before packaging.
+!!! info "📋 Planned Feature"
+    Manifest-based exclude patterns are planned for a future release. See the [Roadmap](../guide/roadmap/) for details.
 
 ### Can I build packages for other platforms?
 
-Packages are built for the host platform. Cross-platform builds are not available yet.
+!!! info "📋 Planned Feature"
+    Platform-specific builds via CLI are planned. Currently, packages are built for the host platform. See the [Roadmap](../guide/roadmap/) for details.
 
 ### How do I reduce package size?
 
-1. Strip binaries:
+1. Enable compression:
+   ```toml
+   [[tool.flavor.slots]]
+   # Compression is automatic - tar.gz for directories
+   ```
+
+2. Exclude unnecessary files:
+   ```toml
+   [tool.flavor.build]
+   exclude = ["tests/", "docs/"]
+   ```
+
+3. Strip binaries:
    ```bash
    flavor pack --manifest pyproject.toml --strip
    ```
-
-2. Keep dependencies minimal and remove unnecessary files before packaging.
 
 ## Running Packages
 
@@ -314,7 +326,7 @@ packages = build_package_from_manifest(
 )
 ```
 
-See the [API Reference](../api/index.md) for complete documentation.
+See the [API Reference](../api/index/) for complete documentation.
 
 ### Can I customize the launcher?
 
@@ -322,7 +334,7 @@ You can build custom launchers from the Go or Rust source in the `helpers/` dire
 
 ### Can I embed FlavorPack in CI/CD?
 
-Yes, FlavorPack works well in CI/CD. During initial release, use source installation:
+Yes, FlavorPack works well in CI/CD. During alpha, use source installation:
 
 {% raw %}
 ```yaml
@@ -355,8 +367,8 @@ Subsequent runs: <100ms (cached)
 
 ### Can I improve build performance?
 
-!!! info "📋 Exploratory Features"
-    Build optimization features like `--parallel` and build caching are under evaluation.
+!!! info "📋 Planned Features"
+    Build optimization features like `--parallel` and build caching are planned for future releases.
 
     Currently, build performance is primarily determined by dependency resolution and UV's package installation speed.
 
@@ -398,7 +410,7 @@ Contact support@provide.io for commercial support options.
 
 ## Related Documentation
 
-- [Getting Started](../getting-started/index.md) - Quick start guide
-- [User Guide](../guide/index.md) - Comprehensive documentation
-- [Troubleshooting](index.md) - Problem solving guide
-- [API Reference](../api/index.md) - Programming interface
+- [Getting Started](../getting-started/index/) - Quick start guide
+- [User Guide](../guide/index/) - Comprehensive documentation
+- [Troubleshooting](index/) - Problem solving guide
+- [API Reference](../api/index/) - Programming interface

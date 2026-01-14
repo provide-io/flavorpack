@@ -1,7 +1,7 @@
 # Welcome to FlavorPack
 
-!!! warning "Initial release Software - Development Version"
-    FlavorPack is currently in early initial release. APIs, file formats, and commands may change without notice. Not recommended for production use. Check current version with `flavor --version`. Install with `uv tool install flavorpack`, then run `make build-helpers`.
+!!! warning "Alpha Software - Development Version"
+    FlavorPack is currently in early alpha. APIs, file formats, and commands may change without notice. Not recommended for production use. Check current version with `flavor --version`. **Source installation only** at this time.
 
 **FlavorPack** is a cross-language packaging system that creates self-contained, portable executables using the **Progressive Secure Package Format (PSPF/2025)**. Ship Python applications as single binaries that work without installation, dependencies, or configuration.
 
@@ -13,7 +13,7 @@
 
     Package your first application in under 5 minutes.
 
-    [:octicons-arrow-right-24: Quick Start](getting-started/quickstart.md)
+    [:octicons-arrow-right-24: Quick Start](getting-started/quickstart/)
 
 -   :fontawesome-solid-cube:{ .lg .middle } **Single-File Distribution**
 
@@ -21,7 +21,7 @@
 
     Package applications into one executable that runs anywhere.
 
-    [:octicons-arrow-right-24: Package Structure](guide/concepts/package-structure.md)
+    [:octicons-arrow-right-24: Package Structure](guide/concepts/package-structure/)
 
 -   :fontawesome-solid-shield:{ .lg .middle } **Secure by Default**
 
@@ -29,7 +29,7 @@
 
     Ed25519 signature verification ensures integrity.
 
-    [:octicons-arrow-right-24: Security Model](guide/concepts/security.md)
+    [:octicons-arrow-right-24: Security Model](guide/concepts/security/)
 
 -   :fontawesome-solid-language:{ .lg .middle } **Cross-Language**
 
@@ -37,7 +37,7 @@
 
     Python orchestrator with native Go and Rust launchers.
 
-    [:octicons-arrow-right-24: Architecture](explanation/architecture.md)
+    [:octicons-arrow-right-24: Architecture](explanation/architecture/)
 
 </div>
 
@@ -70,7 +70,7 @@ flavor verify myapp.psp
 
 This project is part of a larger ecosystem of tools for Python and Terraform development.
 
-**[View Ecosystem Overview →](https://foundry.provide.io/provide-foundation/ecosystem/)**
+**[View Ecosystem Overview →](https://docs.provide.io/provide-foundation/ecosystem/)**
 
 Understand how provide-foundation, pyvider, flavorpack, and other projects work together.
 
@@ -90,9 +90,9 @@ Understand how provide-foundation, pyvider, flavorpack, and other projects work 
 ## Community
 
 - **GitHub**: [Issues and pull requests](https://github.com/provide-io/flavorpack)
-- **Documentation**: [Guides and API reference](getting-started/index.md)
-- **Support**: [Get help](community/support.md)
+- **Documentation**: [Guides and API reference](getting-started/index/)
+- **Support**: [Get help](community/support/)
 
 ---
 
-**Ready to package your Python applications?** Check out our [Quick Start guide](getting-started/quickstart.md) or explore the [architecture](explanation/architecture.md).
+**Ready to package your Python applications?** Check out our [Quick Start guide](getting-started/quickstart/) or explore the [architecture](explanation/architecture/).

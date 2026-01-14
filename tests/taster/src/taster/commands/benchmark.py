@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
@@ -145,6 +145,7 @@ def _display_worker_summary(worker_results: Sequence[WorkerResult], duration: in
 @click.group("benchmark")
 def benchmark_command() -> None:
     """⚡ Performance testing and profiling"""
+    pass
 
 
 @benchmark_command.command("memory")

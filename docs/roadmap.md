@@ -1,17 +1,20 @@
 # FlavorPack Roadmap
 
-This roadmap shows the current implementation status and exploratory items for FlavorPack. Use this to understand what works today versus what's under consideration. Roadmap items are non-binding and may change or be removed.
+This roadmap shows the current implementation status and planned features for FlavorPack. Use this to understand what works today versus what's coming in future releases.
+
+!!! info "Version Status"
+    FlavorPack is currently in **alpha** stage. APIs, file formats, and commands may change without notice.
 
 ## Legend
 
 - ✅ **Implemented** - Works today, documented and tested
 - 🚧 **In Progress** - Partially implemented or under active development
-- 📋 **Exploratory** - Designed but under evaluation
-- 💡 **Proposed** - Under consideration; may change or be removed
+- 📋 **Planned** - Designed but not yet implemented
+- 💡 **Proposed** - Under consideration for future releases
 
 ---
 
-## What Works Today
+## What Works Today (Alpha)
 
 ### Core Functionality ✅
 
@@ -98,19 +101,11 @@ map = { OLD = "NEW" }            # ✅ Rename variables
 
 ---
 
-## Exploratory Features
+## Planned Features
 
-The following features are documented in guides but are **under evaluation**. They represent potential evolution of FlavorPack.
+The following features are documented in guides but are **not yet implemented**. They represent the planned evolution of FlavorPack.
 
 ### Manifest Configuration Features 📋
-
-#### Build Host Redaction
-
-Allow opting out of emitting `build.platform.host` in metadata for privacy or reproducible builds.
-
-**Status**: 📋 Exploratory
-**Priority**: High
-**Complexity**: Low
 
 #### Slot Configuration
 
@@ -124,7 +119,7 @@ extract_to = "{workenv}/config"
 permissions = "0644"
 ```
 
-**Status**: 📋 Exploratory
+**Status**: 📋 Planned
 **Use Case**: Enable custom slot purposes, lifecycles, platform-specific slots, and lazy-loaded content
 
 #### Python Version Selection
@@ -136,9 +131,19 @@ min_version = "3.11"  # Minimum acceptable
 max_version = "3.13"  # Maximum acceptable
 ```
 
-**Status**: 🔶 Exploratory
-**Priority**: Medium
+**Status**: 📋 Planned
+**Priority**: High
+**Target Version**: v0.3.0
+**Target Date**: Q1 2026
 **Complexity**: Medium
+
+**Planned Capabilities**:
+- Detect Python version from `pyproject.toml`
+- Support `requires-python` specification
+- Automatic Python installation if missing
+- Multiple Python version support in single package
+
+**Current Workaround**: Package uses the Python version from your build environment
 
 #### Build Environment Configuration
 
@@ -153,13 +158,13 @@ system_site_packages = false
 # Environment variables for build
 env = {
     "NUMPY_SETUP_DEBUG": "1",
-    "UV_NO_CACHE": "1"
+    "PIP_NO_CACHE_DIR": "1"
 }
 
 # Pre-install commands
 pre_install_commands = [
-    "uv sync --upgrade",
-    "uv add numpy==1.24.0"
+    "pip install --upgrade pip setuptools wheel",
+    "pip install numpy==1.24.0"
 ]
 
 # Pre-build validation
@@ -169,7 +174,7 @@ pre_build_commands = [
 ]
 ```
 
-**Status**: 🔶 Exploratory
+**Status**: 📋 Planned
 **Priority**: High
 **Complexity**: Medium
 
@@ -177,6 +182,9 @@ pre_build_commands = [
 
 ```toml
 [tool.flavor.build]
+# Use pip instead of uv
+use_pip = true
+
 # Custom index URL
 index_url = "https://pypi.company.com/simple"
 
@@ -191,7 +199,7 @@ trusted_hosts = [
 ]
 ```
 
-**Status**: 🔶 Exploratory
+**Status**: 📋 Planned
 **Priority**: Medium
 **Complexity**: Low-Medium
 
@@ -213,7 +221,7 @@ compile_bytecode = true
 strip_docstrings = true
 ```
 
-**Status**: 🔶 Exploratory
+**Status**: 📋 Planned
 **Priority**: Low
 **Complexity**: Low
 
@@ -235,7 +243,7 @@ no_dev_deps = true
 requirements_file = "requirements.lock"
 ```
 
-**Status**: 🔶 Exploratory
+**Status**: 📋 Planned
 **Priority**: Medium
 **Complexity**: Medium
 
@@ -262,7 +270,7 @@ source = "config/"
 lifecycle = "persistent"  # Keep across runs
 ```
 
-**Status**: 🔶 Exploratory
+**Status**: 📋 Planned
 **Priority**: Medium
 **Complexity**: High
 
@@ -282,7 +290,7 @@ target = "lib/"
 platform = "darwin"
 ```
 
-**Status**: 🔶 Exploratory
+**Status**: 📋 Planned
 **Priority**: Medium
 **Complexity**: Medium
 
@@ -306,7 +314,7 @@ env = {
 }
 ```
 
-**Status**: 🔶 Exploratory
+**Status**: 📋 Planned
 **Priority**: Low
 **Complexity**: Medium
 
@@ -325,7 +333,7 @@ persistent = true
 port = 8000
 ```
 
-**Status**: 📋 Exploratory
+**Status**: 📋 Planned
 **Priority**: Medium
 **Complexity**: High
 
@@ -353,7 +361,7 @@ OLD_VAR = "NEW_VAR"
 **Status**: 🟢 Partially Implemented
 **Priority**: High
 **Complexity**: Medium
-**Note**: Basic environment control exists, advanced features under evaluation
+**Note**: Basic environment control exists, advanced features planned
 
 ---
 
@@ -469,6 +477,7 @@ flavor inspect myapp.psp --dependency-tree
 
 ```bash
 flavor inspect myapp.psp --slot-details
+flavor inspect myapp.psp --compression-stats
 ```
 
 **Status**: 🔴 Not Started
@@ -594,7 +603,7 @@ flavor demo cli-tool
 
 ### Supply Chain Security
 
-See [FEP-0004: Supply Chain JIT](reference/spec/future/fep-0004-supply-chain-jit.md):
+See [FEP-0004: Supply Chain JIT](reference/spec/future/fep-0004-supply-chain-jit/):
 
 - Reproducible builds with attestation
 - SBOM (Software Bill of Materials) generation
@@ -607,7 +616,7 @@ See [FEP-0004: Supply Chain JIT](reference/spec/future/fep-0004-supply-chain-jit
 
 ### Runtime JIT Loading
 
-See [FEP-0005: Runtime JIT Loading](reference/spec/future/fep-0005-runtime-jit-loading.md):
+See [FEP-0005: Runtime JIT Loading](reference/spec/future/fep-0005-runtime-jit-loading/):
 
 - Lazy loading of dependencies
 - On-demand extraction
@@ -619,7 +628,7 @@ See [FEP-0005: Runtime JIT Loading](reference/spec/future/fep-0005-runtime-jit-l
 
 ### Staged Payload Architecture
 
-See [FEP-0006: Staged Payload Architecture](reference/spec/future/fep-0006-staged-payload-architecture.md):
+See [FEP-0006: Staged Payload Architecture](reference/spec/future/fep-0006-staged-payload-architecture/):
 
 - Multi-stage package execution
 - Progressive enhancement
@@ -662,31 +671,133 @@ flavor plugin install cloud-deploy
 
 ---
 
-## Legend
+## Migration to v1.0
 
-- ✅ **Implemented** - Feature is complete and tested
-- 🟢 **Partially Implemented** - Basic functionality exists
-- 🟡 **In Progress** - Actively being developed
-- 🔶 **Exploratory** - Design complete, awaiting implementation
-- 🔴 **Not Started** - Concept only, no implementation
+Features required before declaring v1.0 stable:
+
+### Critical for v1.0
+
+- ✅ Core PSPF/2025 format implementation
+- ✅ Ed25519 signature verification
+- ✅ Cross-language (Python/Go/Rust) compatibility
+- ✅ Basic Python packaging
+- 📋 Complete API documentation
+- 📋 Comprehensive test coverage
+- 📋 Production-ready error handling
+- 📋 Performance optimization
+- 📋 Windows support (currently beta)
+
+### Nice to Have for v1.0
+
+- Environment variable consolidation
+- Advanced build configuration
+- Dependency optimization
+- Platform-specific builds
+- CI/CD integration templates
 
 ---
 
-## Contributing
+## Feature Status Summary
 
-Want to help implement these features? Check out:
+| Feature | Status | Priority | Target Version |
+|---------|--------|----------|----------------|
+| Python Version Detection | 📋 Planned | High | v0.3.0 (Q1 2026) |
+| Build Environment Config | 📋 Planned | High | v0.3.0 |
+| Dependency Optimization | 📋 Planned | High | v0.3.0 |
+| Runtime Optimization | 📋 Planned | Medium | v0.4.0 |
+| Advanced Slot Config | 📋 Planned | Medium | v0.4.0 |
+| Platform-Specific Builds | 📋 Planned | Low | v0.4.0 |
+| Persistent Service Mode | 📋 Planned | Medium | v0.4.0 |
+| Compression Options | 🟡 In Progress | Low | v0.3.0 |
+| Encryption Support | 🔴 Not Started | Medium | v0.5.0 |
+| Multi-Platform Packages | 🔴 Not Started | Low | v0.6.0 |
+| Windows Full Support | 🚧 In Progress | High | v0.3.0 |
+| Complete API Docs | 🟡 In Progress | High | v0.3.0 |
+| Supply Chain Security | 🔴 Not Started | Medium | v1.0.0 |
+| Plugin System | 🔴 Not Started | Low | v0.5.0 |
+| Package Registry | 🔴 Not Started | Low | Future |
 
-- [Contributing Guide](development/contributing.md)
-- [Development Setup](development/index.md)
-- [GitHub Issues](https://github.com/provide-io/flavorpack/issues)
+---
 
-Feature requests and discussions are welcome in the [GitHub Discussions](https://github.com/provide-io/flavorpack/discussions).
+## Version History
+
+### v0.2.0 (Current - Alpha)
+- ✅ Core PSPF/2025 format implementation
+- ✅ Basic Python packaging with UV
+- ✅ Cross-platform helpers (macOS, Linux)
+- ✅ CLI tooling (pack, verify, inspect, extract, keygen, workenv, helpers)
+- ✅ Ed25519 signature support
+- ✅ Work environment caching
+- ✅ Comprehensive documentation
+
+### v0.1.0 (Initial Release)
+- Proof of concept
+- Basic PSPF format
+- Single platform support
+
+### Planned Releases
+
+**v0.3.0** (Q1 2026) - Python Management & Windows
+- Python version detection and selection
+- Build environment configuration
+- Dependency optimization
+- Complete Windows support
+- Complete API documentation
+
+**v0.4.0** (Q2 2026) - Advanced Features
+- Runtime optimization
+- Advanced slot configuration
+- Platform-specific builds
+- Persistent service mode
+- Plugin system foundation
+
+**v0.5.0** (Q3 2026) - Security & Integration
+- Encryption support
+- Enhanced CI/CD templates
+- Plugin marketplace
+- Poetry/PDM integration
+
+**v1.0.0** (Q4 2026) - Stable Release
+- Production-ready stability
+- Complete test coverage
+- Supply chain security
+- Performance optimizations
+- Long-term support commitment
+
+---
+
+## Contributing to Roadmap
+
+Want to help implement roadmap features?
+
+1. **Pick a Feature:** Choose from "Planned" features above
+2. **Discuss Approach:** Open GitHub Discussion
+3. **Create FEP:** Submit FlavorPack Enhancement Proposal if needed
+4. **Submit PR:** Implement with tests and docs
+
+See our [Contributing Guide](development/contributing/) for detailed instructions.
+
+---
+
+## Feature Request Process
+
+Have an idea for FlavorPack? Here's how to suggest features:
+
+1. **Check Existing Roadmap:** Review this document first
+2. **Search Issues:** Check if already proposed on [GitHub Issues](https://github.com/provide-io/flavorpack/issues)
+3. **Submit FEP:** Create FlavorPack Enhancement Proposal for major features
+4. **Community Discussion:** Discuss in [GitHub Discussions](https://github.com/provide-io/flavorpack/discussions)
 
 ---
 
 ## See Also
 
-- [Current Documentation](guide/index.md) - What's available now
-- [PSPF Specification](reference/spec/fep-0001-core-format-and-operation-chains.md) - Format details
-- [Exploratory Enhancement Proposals](reference/spec/pspf-2025.md) - Detailed FEPs
-- [Changelog](community/changelog.md) - What's been implemented
+- [Current Documentation](guide/index/) - What's available now
+- [PSPF Specification](reference/spec/fep-0001-core-format-and-operation-chains/) - Format details
+- [Future Enhancement Proposals](reference/spec/pspf-2025/) - Detailed FEPs
+- [Changelog](community/changelog/) - What's been implemented
+
+---
+
+**Last Updated:** October 30, 2025
+**Next Review:** December 2025

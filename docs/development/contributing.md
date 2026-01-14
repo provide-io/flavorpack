@@ -17,7 +17,7 @@ This guide provides comprehensive instructions for setting up the development en
 
 - **Python 3.11 or higher**
 - **UV package manager**: `curl -LsSf https://astral.sh/uv/install.sh | sh`
-- **Go 1.24+**: For building Go helpers (see `src/flavor-go/go.mod`)
+- **Go 1.23+**: For building Go helpers (see `src/flavor-go/go.mod`)
 - **Rust 1.85+**: For building Rust helpers (see `src/flavor-rs/Cargo.toml`)
 - **Git**: For version control
 
@@ -372,15 +372,15 @@ Follow conventional commits:
 
 ### Important Notes
 
-- **ALWAYS use uv** for wheel operations (avoid system pip)
+- **ALWAYS use pip3** for wheel operations (never pip or uv pip for wheels)
 - **NEVER add environment-specific logic in helpers** - they must be generic
 - **Test with Taster first** - if Taster doesn't work, FlavorPack is broken
 - **Use deterministic builds** for testing (`--key-seed`)
 
 ## Resources
 
-- [Architecture Documentation](architecture.md)
-- [CI/CD Pipeline](ci-cd.md)
-- [User Guide](../guide/index.md)
-- [API Reference](../api/index.md)
-- [Troubleshooting Guide](../troubleshooting/common.md)
+- [Architecture Documentation](architecture/)
+- [CI/CD Pipeline](ci-cd/)
+- [User Guide](../guide/index/)
+- [API Reference](../api/index/)
+- [Troubleshooting Guide](../troubleshooting/common/)

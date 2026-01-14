@@ -40,7 +40,7 @@ jobs:
   # ==================================================================================
   prepare:
     name: 🔍 Prepare Release
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
       version_tag: ${{ steps.version.outputs.version_tag }}
@@ -68,7 +68,7 @@ jobs:
   collect-wheels:
     name: 🎡 Collect Platform Wheels
     needs: prepare
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout for scripts
         uses: actions/checkout@v4
@@ -107,7 +107,7 @@ jobs:
   collect-packages:
     name: 📦 Collect PSP Packages
     needs: prepare
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout for scripts
         uses: actions/checkout@v4
@@ -157,7 +157,7 @@ jobs:
   generate-assets:
     name: 📊 Generate Release Assets
     needs: [prepare, collect-wheels, collect-packages]
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -270,7 +270,7 @@ jobs:
     name: 🏷️ Create GitHub Release
     needs: [prepare, generate-assets]
     if: github.event.inputs.dry_run != 'true'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -350,7 +350,7 @@ jobs:
     name: 🧪 Publish to TestPyPI
     needs: [prepare, generate-assets]
     if: github.event.inputs.dry_run != 'true' && github.event.inputs.publish_testpypi == 'true'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     environment:
       name: testpypi
       url: https://test.pypi.org/project/flavorpack
@@ -392,7 +392,7 @@ jobs:
     name: 🐍 Publish to PyPI
     needs: [prepare, create-release]
     if: github.event.inputs.dry_run != 'true' && github.event.inputs.publish_pypi == 'true'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     environment:
       name: pypi
       url: https://pypi.org/project/flavorpack
@@ -433,7 +433,7 @@ jobs:
     name: 📊 Release Summary
     needs: [prepare, collect-wheels, collect-packages, create-release, publish-pypi, publish-testpypi]
     if: always()
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - name: 📊 Generate Summary
         run: |
