@@ -36,7 +36,7 @@ flavor verify myapp-1.0.0.psp
 ```
 
 !!! info "Public Key Verification"
-    The `verify` command automatically uses the public key embedded in the package. External key verification is under evaluation.
+    The `verify` command automatically uses the public key embedded in the package. External key verification is planned for a future release.
 
 ## Key Management
 
@@ -214,7 +214,7 @@ flavor verify package.psp
 
 #### Deep Verification
 
-> **Exploratory Feature**: Advanced verification modes are under evaluation. Currently, the `verify` command performs comprehensive verification of all components.
+> **Planned Feature**: Advanced verification modes are planned for a future release. Currently, the `verify` command performs comprehensive verification of all components.
 
 ```bash
 # Verify all components (standard verification)
@@ -229,8 +229,8 @@ flavor verify package.psp
 
 #### Verification with External Key
 
-!!! info "📋 Exploratory Feature"
-    External key verification is under evaluation. Currently, verification uses the public key embedded in the package.
+!!! info "📋 Planned Feature"
+    External key verification is planned for a future release. Currently, verification uses the public key embedded in the package.
 
 **Current verification:**
 ```bash
@@ -238,9 +238,9 @@ flavor verify package.psp
 flavor verify package.psp
 ```
 
-**Exploratory verification (may change or be removed):**
+**Planned verification (future release):**
 ```bash
-# Verify against external trusted key (under evaluation)
+# Verify against external trusted key (not yet implemented)
 flavor verify package.psp --public-key trusted.pub
 flavor verify package.psp --trusted-keys keys/trusted/
 ```
@@ -284,19 +284,19 @@ flavor verify package.psp
 
 ### 2. Pre-Shared Keys
 
-!!! info "📋 Exploratory Feature"
-    Pre-shared key verification with external key management is under evaluation.
+!!! info "📋 Planned Feature"
+    Pre-shared key verification with external key management is planned for a future release.
 
 Distribute public keys separately:
 
 ```toml
-# Exploratory configuration format
+# Planned configuration format
 [tool.flavor.security]
 trust_model = "pre-shared"
 require_known_key = true
 ```
 
-**Exploratory Distribution Methods**:
+**Planned Distribution Methods**:
 ```bash
 # Via secure channel
 scp public.pem user@server:/etc/flavor/trusted-keys/
@@ -314,20 +314,20 @@ apt-get install myapp-signing-keys
 flavor verify package.psp
 ```
 
-**Exploratory Verification**:
+**Planned Verification**:
 ```bash
-# Exploratory: Verify against trusted keys
+# Future: Verify against trusted keys
 # flavor verify package.psp --trusted-keys /etc/flavor/trusted-keys/
 ```
 
-### 3. Web of Trust (Exploratory)
+### 3. Web of Trust (Future)
 
-!!! info "Exploratory Feature"
-    Multiple signatures from trusted parties is under evaluation.
+!!! info "Planned Feature"
+    Multiple signatures from trusted parties is planned for a future release.
 
-    **Exploratory workflow:**
+    **Planned workflow:**
     ```bash
-    # Sign with multiple keys (under evaluation)
+    # Sign with multiple keys (not yet implemented)
     flavor pack --manifest pyproject.toml --private-key key1.pem
     flavor cosign package.psp --private-key key2.pem
     flavor cosign package.psp --private-key key3.pem
@@ -336,7 +336,7 @@ flavor verify package.psp
     flavor verify package.psp --min-signatures 2
     ```
 
-### 4. Certificate Authority (Exploratory)
+### 4. Certificate Authority (Future)
 
 X.509 certificate chains:
 
@@ -538,18 +538,18 @@ flavor inspect package.psp
 # - Format version and metadata
 ```
 
-## Advanced Topics (Exploratory Features)
+## Advanced Topics (Future Features)
 
-The following features are under evaluation:
+The following features are planned for future releases:
 
-### Multi-Signature Packages (Exploratory)
+### Multi-Signature Packages (Planned)
 
-!!! info "Exploratory Feature"
+!!! info "Future Feature"
     Support for multiple signatures per package is under development.
 
-    **Exploratory API:**
+    **Planned API:**
     ```python
-    # Sign with multiple keys (under evaluation)
+    # Sign with multiple keys (not yet implemented)
     from flavor.signing import multi_sign
 
     multi_sign("package.psp", [
@@ -559,26 +559,26 @@ The following features are under evaluation:
     ])
     ```
 
-### Threshold Signatures (Exploratory)
+### Threshold Signatures (Planned)
 
-!!! info "Exploratory Feature"
-    Threshold signature schemes (N-of-M signatures required) are under evaluation.
+!!! info "Future Feature"
+    Threshold signature schemes (N-of-M signatures required) are planned.
 
-    **Exploratory manifest format:**
+    **Planned manifest format:**
     ```toml
     [tool.flavor.security.multisig]
     required_signatures = 2
     total_signers = 3
     ```
 
-### Hardware Token Integration (Exploratory)
+### Hardware Token Integration (Planned)
 
-!!! info "Exploratory Feature"
-    PKCS#11 hardware token support (YubiKey, HSM, etc.) is under evaluation.
+!!! info "Future Feature"
+    PKCS#11 hardware token support (YubiKey, HSM, etc.) is planned.
 
-    **Exploratory workflow:**
+    **Planned workflow:**
     ```bash
-    # YubiKey signing (under evaluation)
+    # YubiKey signing (not yet implemented)
     flavor pack --manifest pyproject.toml --pkcs11-module /usr/lib/opensc-pkcs11.so
     ```
 
@@ -602,7 +602,7 @@ The following features are under evaluation:
 
 ## Related Documentation
 
-- [Cryptographic Specification](../../reference/spec/pspf-2025.md) - Technical details
-- [Security Model](../concepts/security.md) - Security architecture
-- [Package Verification](../../api/index.md) - API reference
-- [Troubleshooting](../../troubleshooting/index.md#signature-and-security) - Common issues
+- [Cryptographic Specification](../../reference/spec/pspf-2025/) - Technical details
+- [Security Model](../concepts/security/) - Security architecture
+- [Package Verification](../../api/index/) - API reference
+- [Troubleshooting](../../troubleshooting/index/#signature-and-security) - Common issues

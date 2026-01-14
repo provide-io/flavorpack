@@ -1,3 +1,0 @@
-# Build Configuration
-Settings that affect the creation of the .psp file (compression, slots, signing).
-...

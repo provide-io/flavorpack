@@ -136,6 +136,30 @@ build-backend = "setuptools.build_meta"
 # FlavorPack-specific configuration
 package_name = "weather-cli"
 entry_point = "weather:main"
+
+[tool.flavor.metadata]
+# Additional metadata for the package
+author = "Your Name"
+website = "https://example.com"
+support = "support@example.com"
+
+[tool.flavor.build]
+# Build configuration
+include_patterns = [
+    "*.py",
+    "README.md",
+    "LICENSE"
+]
+exclude_patterns = [
+    "__pycache__",
+    "*.pyc",
+    ".git"
+]
+
+[tool.flavor.runtime]
+# Runtime configuration
+python_version = "3.11"
+optimization_level = 2  # -OO flag for Python
 ```
 
 ### Create a README
@@ -285,7 +309,7 @@ Your `weather-cli.psp` file is now a **completely self-contained executable** th
 
 === "Package Managers"
 
-    Potential support is under evaluation for:
+    Future support planned for:
     - Homebrew (macOS/Linux)
     - Scoop (Windows)
     - Snap (Linux)
@@ -380,16 +404,16 @@ Try these improvements:
 
 ### Learn More
 
-- 📖 [Package Configuration](../guide/packaging/configuration.md) - Advanced options
-- 🔧 [Python Packaging](../guide/packaging/python.md) - Python-specific features
-- 🚀 [Performance Tips](../guide/advanced/performance.md) - Optimization techniques
-- 🎨 [CLI Tool Example](../cookbook/examples/cli-tool.md) - Advanced CLI packaging
+- 📖 [Package Configuration](../guide/packaging/configuration/) - Advanced options
+- 🔧 [Python Packaging](../guide/packaging/python/) - Python-specific features
+- 🚀 [Performance Tips](../guide/advanced/performance/) - Optimization techniques
+- 🎨 [CLI Tool Example](../cookbook/examples/cli-tool/) - Advanced CLI packaging
 
 ## Troubleshooting
 
 ??? question "Package is too large"
     - Use `--exclude` to skip unnecessary files
-    - Consider using `--strip` to reduce binary size
+    - Consider using `--compression` for better compression
     - Use `flavor inspect` to see what's taking space
 
 ??? question "Network error when fetching weather"

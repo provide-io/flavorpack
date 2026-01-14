@@ -27,7 +27,7 @@ make test
 
 Learn how to contribute to FlavorPack.
 
-**[Contributing Guide →](contributing.md)**
+**[Contributing Guide →](contributing/)**
 
 - Code of conduct
 - Development workflow
@@ -38,7 +38,7 @@ Learn how to contribute to FlavorPack.
 
 Understand FlavorPack's architecture.
 
-**[Architecture Guide →](architecture.md)**
+**[Architecture Guide →](architecture/)**
 
 - System design
 - Component interaction
@@ -49,7 +49,7 @@ Understand FlavorPack's architecture.
 
 Develop and build native helpers.
 
-**[Building Helpers →](helpers.md)**
+**[Building Helpers →](helpers/)**
 
 - Go helper development
 - Rust helper development
@@ -60,7 +60,7 @@ Develop and build native helpers.
 
 Write and run tests.
 
-**[Testing Guide →](testing/index.md)**
+**[Testing Guide →](testing/index/)**
 
 - Unit tests
 - Integration tests
@@ -71,7 +71,7 @@ Write and run tests.
 
 Understand the CI/CD pipeline.
 
-**[CI/CD Guide →](ci-cd.md)**
+**[CI/CD Guide →](ci-cd/)**
 
 - GitHub Actions workflows
 - Build matrix
@@ -82,7 +82,7 @@ Understand the CI/CD pipeline.
 
 Learn about releasing new versions.
 
-**[Release Process →](release.md)**
+**[Release Process →](release/)**
 
 - Version management
 - Changelog
@@ -165,18 +165,18 @@ cargo test
 
 ### Getting Help
 
-- Read the [Contributing Guide](contributing.md)
+- Read the [Contributing Guide](contributing/)
 - Check existing issues and PRs
 - Ask in Discussions
 - Join community calls (announced in Discussions)
 
 ## Next Steps
 
-1. **First contribution?** → Start with [Contributing Guide](contributing.md)
-2. **Want to understand the code?** → Read [Architecture](architecture.md)
-3. **Building helpers?** → See [Building Helpers](helpers.md)
-4. **Writing tests?** → Check [Testing Guide](testing/index.md)
+1. **First contribution?** → Start with [Contributing Guide](contributing/)
+2. **Want to understand the code?** → Read [Architecture](architecture/)
+3. **Building helpers?** → See [Building Helpers](helpers/)
+4. **Writing tests?** → Check [Testing Guide](testing/index/)
 
 ---
 
-**Ready to contribute?** Head to the **[Contributing Guide](contributing.md)**!
+**Ready to contribute?** Head to the **[Contributing Guide](contributing/)**!

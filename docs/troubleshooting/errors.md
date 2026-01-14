@@ -100,7 +100,7 @@ dependencies = [
     "flask>=2.0",
 ]
 
-# 📋 EXPLORATORY: --no-deps option under evaluation
+# 📋 PLANNED: --no-deps option not yet implemented
 # flavor pack --manifest pyproject.toml --no-deps
 
 # Current workaround: Fix dependency conflicts in pyproject.toml
@@ -156,6 +156,51 @@ version = "1.0.0"     # Required
 entry_point = "app:main"  # Required
 ```
 
+#### "Invalid slot configuration"
+
+**Cause**: Slot definition has errors.
+
+**Solution**:
+```toml
+[[tool.flavor.slots]]
+id = "data"           # Required: unique ID
+source = "data/"      # Required: source path
+purpose = "data-files"  # Optional but recommended
+lifecycle = "persistent"  # Valid lifecycle
+```
+
+#### "Invalid platform: {platform}"
+
+**Cause**: Unknown platform identifier.
+
+**Solution**:
+```bash
+# Use valid platform
+flavor pack --manifest pyproject.toml --platform linux_amd64
+# Valid: linux_amd64, linux_arm64, darwin_amd64, darwin_arm64, windows_amd64
+```
+
+#### "Invalid codec: {codec}"
+
+**Cause**: Unknown compression codec.
+
+**Solution**:
+```toml
+[[tool.flavor.slots]]
+# Operations are handled automatically based on source type
+```
+
+#### "Invalid lifecycle: {lifecycle}"
+
+**Cause**: Unknown slot lifecycle.
+
+**Solution**:
+```toml
+[[tool.flavor.slots]]
+lifecycle = "persistent"
+# Valid: persistent, volatile, temporary, cached, init-only, lazy, eager
+```
+
 ## Packaging Errors
 
 ### PackagingError
@@ -182,8 +227,21 @@ chmod -R r+X data/
 
 **Solution**:
 ```bash
+# 📋 PLANNED: Manual slot configuration not yet implemented
+# Slots are currently created automatically
+
+# [[tool.flavor.slots]]
+# id = "data-part1"
+# source = "data/part1/"
+
+# [[tool.flavor.slots]]
+# id = "data-part2"
+# source = "data/part2/"
+
+# [[tool.flavor.slots]]
+# lifecycle = "lazy"  # Not yet implemented
+
 # Current: No size limits enforced
-# If you hit size issues, remove or downsample large assets before packaging.
 ```
 
 #### "Package size exceeds limit: {size}"
@@ -192,9 +250,20 @@ chmod -R r+X data/
 
 **Solution**:
 ```bash
-# Current: remove unneeded files before packaging and keep dependencies minimal
-# You can also strip launcher symbols:
+# Exclude unnecessary files
+[tool.flavor.build]
+exclude = [
+    "**/__pycache__",
+    "tests/",
+    "docs/",
+    ".git/"
+]
+
+# 📋 PLANNED: Compression and strip options not yet implemented
+# flavor pack --manifest pyproject.toml --compress
 # flavor pack --manifest pyproject.toml --strip
+
+# Current: Optimize by excluding files in pyproject.toml
 ```
 
 #### "Failed to sign package"
@@ -374,7 +443,7 @@ FLAVOR_CACHE=/tmp/cache ./package.psp
 
 **Solution**:
 ```bash
-# 📋 EXPLORATORY: Python version selection under evaluation
+# 📋 PLANNED: Python version selection not yet implemented
 # flavor pack --manifest pyproject.toml --python-version 3.11
 
 # Current: Package uses build environment's Python version
@@ -383,7 +452,7 @@ FLAVOR_CACHE=/tmp/cache ./package.psp
 # Verify package contents
 flavor inspect package.psp
 
-# 📋 EXPLORATORY: Slot extraction under evaluation
+# 📋 PLANNED: Slot extraction not yet implemented
 # flavor extract package.psp --slot python-runtime
 ```
 
@@ -575,7 +644,7 @@ If you encounter an error not listed here:
 
 ## Related Documentation
 
-- [Troubleshooting Guide](index.md) - General troubleshooting
-- [FAQ](faq.md) - Common questions
-- [Platform Issues](platforms/index.md) - OS-specific problems
-- [API Reference](../api/index.md) - Error classes and handling
+- [Troubleshooting Guide](index/) - General troubleshooting
+- [FAQ](faq/) - Common questions
+- [Platform Issues](platforms/index/) - OS-specific problems
+- [API Reference](../api/index/) - Error classes and handling

@@ -67,7 +67,11 @@ dependencies = [
 gh = "githelper.cli:cli"
 
 [tool.flavor]
+type = "python-app"
 entry_point = "githelper.cli:cli"
+
+[tool.flavor.execution]
+command = "{workenv}/bin/gh"
 
 [tool.flavor.execution.runtime.env]
 # Clean environment with essential variables
@@ -148,11 +152,12 @@ if __name__ == '__main__':
     cli()
 ```
 
-Package with configuration:
+Package with enhanced configuration:
 
 ```toml
-[tool.flavor]
-entry_point = "devtools:cli"
+[tool.flavor.execution]
+command = "{workenv}/bin/devtools"
+args = []
 
 [tool.flavor.execution.runtime.env]
 unset = ["*"]
@@ -161,6 +166,17 @@ pass = [
     "DOCKER_*", "KUBECONFIG",
     "AWS_*", "GOOGLE_*"  # Cloud credentials
 ]
+
+[tool.flavor.slots]
+# Slot 0: Python runtime (auto-generated)
+# Slot 1: Application code (auto-generated)
+
+[[tool.flavor.slots]]
+id = 2
+path = "./config"
+extract_to = "config"
+lifecycle = "cached"
+operations = "tar.gz"  # or "tar|gzip" for pipe-separated format
 ```
 
 ## Tips & Best Practices
@@ -241,16 +257,26 @@ flavor pack
 # Check what's included
 flavor inspect githelper.psp
 
-# Reduce dependencies and rebuild
-flavor pack --manifest pyproject.toml --strip
+# Exclude unnecessary files in pyproject.toml
+```
+
+```toml
+[tool.flavor.build]
+exclude = [
+    "**/__pycache__",
+    "**/*.pyc",
+    "tests/",
+    "docs/",
+    ".git/",
+]
 ```
 
 ### Command Not Found
 
 ```toml
 # Ensure entry point is correct
-[tool.flavor]
-entry_point = "githelper.cli:cli"  # Must match [project.scripts]
+[tool.flavor.execution]
+command = "{workenv}/bin/gh"  # Must match [project.scripts]
 ```
 
 ### Missing Dependencies
@@ -265,7 +291,7 @@ flavor pack --manifest pyproject.toml
 
 ## Next Steps
 
-- **[Web Applications](web-app.md)** - Package Flask/FastAPI apps
-- **[Examples Index](index.md)** - More cookbook examples
-- **[Docker Integration](../recipes/docker.md)** - Use in containers
-- **[CI/CD](../recipes/ci-cd.md)** - Automate packaging in CI pipelines
+- **[Web Applications](web-app/)** - Package Flask/FastAPI apps
+- **[Examples Index](index/)** - More cookbook examples
+- **[Docker Integration](../recipes/docker/)** - Use in containers
+- **[CI/CD](../recipes/ci-cd/)** - Automate packaging in CI pipelines

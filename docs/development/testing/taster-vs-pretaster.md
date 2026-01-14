@@ -187,7 +187,7 @@ PRETASTER systematically tests these combinations:
 | Builder | Launcher | Status | Notes |
 |---------|----------|--------|-------|
 | Python | Go | ✅ Supported | Most common combination |
-| Python | Rust | ✅ Supported | Production-focused |
+| Python | Rust | ✅ Supported | Production-ready |
 | Go | Go | ✅ Supported | Native Go toolchain |
 | Rust | Rust | ✅ Supported | Native Rust toolchain |
 
@@ -337,5 +337,5 @@ pytest tests/taster/tests/ -v --cov
 
 - [TASTER README](https://github.com/provide-io/flavorpack/tree/develop/tests/taster) - Complete TASTER documentation
 - [PRETASTER README](https://github.com/provide-io/flavorpack/tree/develop/tests/pretaster) - Complete PRETASTER documentation
-- [Testing Guide](./index.md) - General testing strategy
-- [Cross-Language Testing](./cross-language.md) - Cross-language test details
+- [Testing Guide](./index/) - General testing strategy
+- [Cross-Language Testing](./cross-language/) - Cross-language test details

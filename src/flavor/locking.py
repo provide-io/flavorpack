@@ -1,9 +1,9 @@
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""File locking helpers for build and cache operations."""
+"""TODO: Add module docstring."""
 
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -15,6 +15,8 @@ from provide.foundation.file.lock import FileLock
 
 class LockError(Exception):
     """Error during lock operations."""
+
+    pass
 
 
 class LockManager:

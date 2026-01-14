@@ -96,7 +96,7 @@ jobs:
 
       - name: Install FlavorPack
         run: |
-          # Note: Install from source when building helpers
+          # Note: FlavorPack is not yet on PyPI - install from source
           git clone https://github.com/provide-io/flavorpack.git
           cd flavorpack
           uv sync
@@ -148,10 +148,10 @@ build:helpers:
   stage: build
   image: python:3.11
   script:
-    # Note: Install from source when building helpers
+    # Note: FlavorPack is not yet on PyPI - install from source
     - git clone https://github.com/provide-io/flavorpack.git
     - cd flavorpack
-    - curl -LsSf https://astral.sh/uv/install.sh | sh
+    - pip install uv
     - uv sync
     - make build-helpers
   artifacts:
@@ -196,10 +196,10 @@ jobs:
       - run:
           name: Install FlavorPack
           command: |
-            # Note: Install from source when building helpers
+            # Note: FlavorPack is not yet on PyPI - install from source
             git clone https://github.com/provide-io/flavorpack.git
             cd flavorpack
-            curl -LsSf https://astral.sh/uv/install.sh | sh
+            pip install uv
             uv sync
 
       - run:
@@ -332,7 +332,7 @@ strategy:
 
 ## Complete Real-World Example
 
-Here's a production-focused GitHub Actions workflow that builds, tests, and releases packages for multiple platforms with proper caching and error handling:
+Here's a production-ready GitHub Actions workflow that builds, tests, and releases packages for multiple platforms with proper caching and error handling:
 
 {% raw %}
 ```yaml
@@ -528,5 +528,5 @@ jobs:
 
 ## See Also
 
-- **[Docker Integration](docker.md)**
-- **[Multi-Platform Builds](multi-platform.md)**
+- **[Docker Integration](docker/)**
+- **[Multi-Platform Builds](multi-platform/)**

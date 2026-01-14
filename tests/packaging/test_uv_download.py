@@ -1,5 +1,5 @@
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-import sys
 import tempfile
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -243,7 +242,6 @@ class TestUVDownload:
                 # Verify that the download failed as expected
                 assert result is None
 
-    @pytest.mark.skipif(sys.platform == "linux", reason="Test requires macOS/Windows for host UV fallback")
     def test_prepare_artifacts_non_linux_fallback(self) -> None:
         """Test that prepare_artifacts falls back to host UV on non-Linux."""
         packager = PythonPackager(
@@ -259,53 +257,20 @@ class TestUVDownload:
             # Create a fake host UV
             fake_uv_path = "/usr/local/bin/uv"
 
-            # Mock all locations where get_os_name/get_arch_name are imported
             with (
                 patch(
-                    "flavor.packaging.python.slot_builder.get_os_name",
+                    "provide.foundation.platform.get_os_name",
                     return_value="darwin",
                 ),
                 patch(
-                    "flavor.packaging.python.slot_builder.get_arch_name",
+                    "provide.foundation.platform.get_arch_name",
                     return_value="arm64",
                 ),
-                patch(
-                    "flavor.packaging.python.dependency_resolver.get_os_name",
-                    return_value="darwin",
-                ),
-                patch(
-                    "flavor.packaging.python.dependency_resolver.get_arch_name",
-                    return_value="arm64",
-                ),
-                patch(
-                    "flavor.packaging.python.environment_builder.get_os_name",
-                    return_value="darwin",
-                ),
-                patch(
-                    "flavor.packaging.python.environment_builder.get_arch_name",
-                    return_value="arm64",
-                ),
-                patch(
-                    "flavor.packaging.python.uv_manager.get_os_name",
-                    return_value="darwin",
-                ),
-                patch(
-                    "flavor.packaging.python.uv_manager.get_arch_name",
-                    return_value="arm64",
-                ),
-                patch.object(
-                    packager.slot_builder.env_builder,
-                    "find_uv_command",
-                    return_value=fake_uv_path,
-                ),
-                patch.object(
-                    packager.slot_builder.env_builder,
-                    "create_python_placeholder",
-                    return_value=None,
-                ),
-                patch.object(packager.slot_builder, "_copy_executable"),
+                patch.object(packager.env_builder, "find_uv_command", return_value=fake_uv_path),
+                patch.object(packager, "_copy_executable"),
                 patch.object(packager.slot_builder, "_build_wheels"),
                 patch.object(packager.slot_builder, "_create_metadata"),
+                patch.object(packager.env_builder, "create_python_placeholder"),
                 patch("tarfile.open"),
             ):
                 # Don't pre-create directories - let the method create them

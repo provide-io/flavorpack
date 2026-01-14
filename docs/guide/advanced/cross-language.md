@@ -64,4 +64,4 @@ All helpers produce **identical PSPF/2025 format** packages with full cross-comp
 
 ---
 
-**See also:** [Architecture](../../development/architecture.md) | [Testing](../../development/testing/cross-language.md)
+**See also:** [Architecture](../../development/architecture/) | [Testing](../../development/testing/cross-language/)

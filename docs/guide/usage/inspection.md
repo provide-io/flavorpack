@@ -78,15 +78,12 @@ flavor inspect myapp.psp --json
     "license": "Apache-2.0"
   },
   "build_metadata": {
-    "tool": "flavor-python",
-    "tool_version": "0.1.0",
-    "deterministic": false,
-    "timestamp": "2025-10-24T15:30:00+00:00",
-    "platform": {
-      "os": "linux",
-      "arch": "x86_64",
-      "host": "builder-host"
-    }
+    "timestamp": "2025-10-24T15:30:00Z",
+    "builder_version": "0.1.0",
+    "builder_type": "flavor-rs-builder",
+    "launcher_type": "rust",
+    "platform": "linux-x86_64",
+    "python_version": "3.11.9"
   },
   "slots": [
     {
@@ -94,14 +91,14 @@ flavor inspect myapp.psp --json
       "name": "python-runtime",
       "purpose": "Python 3.11 runtime",
       "size": 44564480,
-      "operations": "tgz"
+      "codec": "tar.gz"
     },
     {
       "index": 1,
       "name": "app-code",
       "purpose": "Application code and dependencies",
       "size": 629120,
-      "operations": "tgz"
+      "codec": "tar.gz"
     }
   ]
 }
@@ -121,8 +118,8 @@ flavor inspect myapp.psp --json | jq -r '.slots[].name'
 # Get build timestamp
 flavor inspect myapp.psp --json | jq -r '.build_metadata.timestamp'
 
-# Check build tool version
-flavor inspect myapp.psp --json | jq -r '.build_metadata.tool_version'
+# Check Python version
+flavor inspect myapp.psp --json | jq -r '.build_metadata.python_version'
 ```
 
 ---
@@ -458,10 +455,10 @@ flavor inspect myapp.psp --json | jq '.size'
 flavor inspect myapp.psp --json | jq '.size / 1048576 | floor'
 ```
 
-### Check Build Tool Version
+### Find Python Version
 
 ```bash
-flavor inspect myapp.psp --json | jq -r '.build_metadata.tool_version'
+flavor inspect myapp.psp --json | jq -r '.build_metadata.python_version'
 ```
 
 ### List All Slots
@@ -552,11 +549,11 @@ tar -tzf slot.tar.gz  # Check if valid tar.gz
 
 ## See Also
 
-- [CLI Reference](cli.md) - All inspection commands
-- [Running Packages](running.md) - Package execution
-- [Cache Management](cache.md) - Work environment cache
-- [Verification Guide](../concepts/security.md) - Security model
-- [Package Structure](../concepts/package-structure.md) - PSPF format details
+- [CLI Reference](cli/) - All inspection commands
+- [Running Packages](running/) - Package execution
+- [Cache Management](cache/) - Work environment cache
+- [Verification Guide](../concepts/security/) - Security model
+- [Package Structure](../concepts/package-structure/) - PSPF format details
 
 ---
 
