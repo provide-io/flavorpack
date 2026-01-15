@@ -1,9 +1,9 @@
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Helper binary discovery and management."""
+"""TODO: Add module docstring."""
 
 from flavor.helpers.manager import HelperInfo, HelperManager
 
@@ -11,7 +11,7 @@ __all__ = ["HelperInfo", "HelperManager"]
 
 # Try to import embedded helpers if available
 try:
-    import flavor.helpers.bin as _bin_module  # type: ignore[import-not-found]
+    import flavor.helpers.bin as _bin_module  # type: ignore[import-untyped]
 
     # Re-export available functions
     __all__.extend(

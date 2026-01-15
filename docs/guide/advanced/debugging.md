@@ -108,12 +108,12 @@ grep -i "warning" build-debug.log
 flavor inspect --manifest pyproject.toml
 
 # Test dependency resolution
-uv lock
+uv pip compile pyproject.toml
 
 # Test Python environment creation
 uv venv /tmp/test-env
 source /tmp/test-env/bin/activate
-uv sync
+uv pip install -e .
 
 # Test slot creation manually
 tar -czf runtime.tar.gz /tmp/test-env/
@@ -404,9 +404,9 @@ wireshark build-network.pcap
 # Test with network disabled (Linux)
 unshare -n flavor pack --manifest pyproject.toml
 
-# Or use a local wheel cache
-UV_CACHE_DIR=.cache/uv uv sync
-UV_CACHE_DIR=.cache/uv UV_NO_INDEX=1 flavor pack
+# Or use pip cache
+pip download -d .cache/pip -r requirements.txt
+PIP_FIND_LINKS=.cache/pip PIP_NO_INDEX=1 flavor pack
 ```
 
 ---
@@ -457,9 +457,8 @@ docker run -it --rm \
 
 # Inside container
 apt-get update
-apt-get install -y python3.11 make
-curl -LsSf https://astral.sh/uv/install.sh | sh
-uv tool install flavor
+apt-get install -y python3.11 python3-pip make
+pip3 install flavor
 
 # Run same commands as CI
 make build-helpers
@@ -502,11 +501,11 @@ When debugging issues:
 
 ## See Also
 
-- [Troubleshooting Guide](../../troubleshooting/common.md) - Common issues
-- [Performance Optimization](performance.md) - Performance debugging
-- [Testing Guide](../../development/testing/index.md) - Testing techniques
-- [Environment Variables](../usage/environment.md) - Logging configuration
+- [Troubleshooting Guide](../../troubleshooting/common/) - Common issues
+- [Performance Optimization](performance/) - Performance debugging
+- [Testing Guide](../../development/testing/index/) - Testing techniques
+- [Environment Variables](../usage/environment/) - Logging configuration
 
 ---
 
-**Need more help?** Check the [troubleshooting guide](../../troubleshooting/common.md) or report issues on GitHub.
+**Need more help?** Check the [troubleshooting guide](../../troubleshooting/common/) or report issues on GitHub.

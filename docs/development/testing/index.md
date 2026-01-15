@@ -10,10 +10,10 @@ FlavorPack uses a multi-layered testing approach to ensure reliability across Py
 
 FlavorPack uses two complementary testing frameworks:
 
-- **[TASTER](./taster-vs-pretaster.md#taster-comprehensive-python-testing-framework)** - Comprehensive Python-based testing suite with property-based testing, format validation, and deep integration tests
-- **[PRETASTER](./taster-vs-pretaster.md#pretaster-fast-cross-language-validation)** - Fast shell-based cross-language validation for builder/launcher compatibility
+- **[TASTER](./taster-vs-pretaster/#taster-comprehensive-python-testing-framework)** - Comprehensive Python-based testing suite with property-based testing, format validation, and deep integration tests
+- **[PRETASTER](./taster-vs-pretaster/#pretaster-fast-cross-language-validation)** - Fast shell-based cross-language validation for builder/launcher compatibility
 
-📖 **[TASTER vs PRETASTER Comparison Guide](./taster-vs-pretaster.md)** - Detailed comparison and usage recommendations
+📖 **[TASTER vs PRETASTER Comparison Guide](./taster-vs-pretaster/)** - Detailed comparison and usage recommendations
 
 ## Test Structure
 
@@ -393,7 +393,7 @@ jobs:
       
       - name: Install dependencies
         run: |
-          uv sync --group dev
+          pip install -e .[dev]
       
       - name: Run tests
         run: |
@@ -453,7 +453,7 @@ def test_external_command(mock_run):
 
 ## Related Documentation
 
-- [Contributing Guide](../contributing.md)
-- [CI/CD Pipeline](../ci-cd.md)
-- [Architecture](../architecture.md)
-- [API Reference](../../api/index.md)
+- [Contributing Guide](../contributing/)
+- [CI/CD Pipeline](../ci-cd/)
+- [Architecture](../architecture/)
+- [API Reference](../../api/index/)

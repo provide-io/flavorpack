@@ -1,5 +1,5 @@
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
@@ -318,7 +318,7 @@ class TestPerformance:
         elapsed = time.time() - start
 
         assert result.success
-        assert elapsed < 2.5  # Should be fast; allow extra buffer for CI timing variance
+        assert elapsed < 2.0  # Should be fast even with many slots
 
 
 if __name__ == "__main__":

@@ -1448,7 +1448,7 @@ class JITDiagnostics:
 
 **Status Note**
 
-This specification is EXPERIMENTAL and represents advanced functionality under evaluation for a future PSPF/2025 revision. Implementation complexity is high and requires significant runtime support.
+This specification is EXPERIMENTAL and represents advanced functionality planned for PSPF/2025 v1.5. Implementation complexity is high and requires significant runtime support.
 
 **Copyright Notice**
 

@@ -40,7 +40,7 @@ jobs:
   # Python Dependency Audit
   python-deps:
     name: 🐍 Python Dependencies
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     outputs:
       has_updates: ${{ steps.check.outputs.has_updates }}
       update_count: ${{ steps.check.outputs.update_count }}
@@ -202,17 +202,7 @@ jobs:
         if: always()
         run: |
           source audit-env/bin/activate
-
-          # Calculate license counts (variables don't persist between steps)
-          COPYLEFT=0
-          UNKNOWN=0
-          if [ -f python-licenses.json ]; then
-            COPYLEFT=$(jq '[.[] | select(.License | test("GPL|AGPL|LGPL"))] | length' python-licenses.json 2>/dev/null || echo 0)
-            UNKNOWN=$(jq '[.[] | select(.License == "UNKNOWN")] | length' python-licenses.json 2>/dev/null || echo 0)
-          fi
-          COPYLEFT=${COPYLEFT:-0}
-          UNKNOWN=${UNKNOWN:-0}
-
+          
           # Create comprehensive report
           cat > python-deps-report.json << EOF
           {
@@ -245,7 +235,7 @@ jobs:
   # Go Dependency Audit
   go-deps:
     name: 🐹 Go Dependencies
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     outputs:
       has_updates: ${{ steps.check.outputs.has_updates }}
     steps:
@@ -255,7 +245,7 @@ jobs:
       - name: 🐹 Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: "${{ vars.GO_VERSION }}"
       
       - name: 🔍 Dependency Analysis
         run: |
@@ -397,7 +387,7 @@ jobs:
   # Rust Dependency Audit
   rust-deps:
     name: 🦀 Rust Dependencies
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     outputs:
       has_updates: ${{ steps.check.outputs.has_updates }}
     steps:
@@ -558,7 +548,7 @@ jobs:
     name: 📊 Dependency Report
     needs: [python-deps, go-deps, rust-deps]
     if: always()
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -586,18 +576,14 @@ jobs:
           # Python summary
           if [ -d "dependency-reports/python-dependency-reports" ]; then
             if [ -f "dependency-reports/python-dependency-reports/python-deps-report.json" ]; then
-              TOTAL=$(jq -r '(.total_dependencies // 0)' dependency-reports/python-dependency-reports/python-deps-report.json)
-              VULNS=$(jq -r '((.vulnerabilities.pip_audit // 0) + (.vulnerabilities.safety // 0))' dependency-reports/python-dependency-reports/python-deps-report.json)
-              UPDATES=$(jq -r '(.updates_available // 0)' dependency-reports/python-dependency-reports/python-deps-report.json)
-
-              TOTAL=${TOTAL:-0}
-              VULNS=${VULNS:-0}
-              UPDATES=${UPDATES:-0}
-
+              TOTAL=$(jq -r '.total_dependencies' dependency-reports/python-dependency-reports/python-deps-report.json)
+              VULNS=$(jq -r '.vulnerabilities.pip_audit + .vulnerabilities.safety' dependency-reports/python-dependency-reports/python-deps-report.json)
+              UPDATES=$(jq -r '.updates_available' dependency-reports/python-dependency-reports/python-deps-report.json)
+              
               STATUS="✅"
-              [ "$VULNS" -gt 0 ] 2>/dev/null && STATUS="🚨"
-              [ "$VULNS" -eq 0 ] 2>/dev/null && [ "$UPDATES" -gt 5 ] 2>/dev/null && STATUS="⚠️"
-
+              [ "$VULNS" -gt 0 ] && STATUS="🚨"
+              [ "$VULNS" -eq 0 ] && [ "$UPDATES" -gt 5 ] && STATUS="⚠️"
+              
               echo "| 🐍 Python | $TOTAL | $VULNS | $UPDATES | $STATUS |" >> $GITHUB_STEP_SUMMARY
             fi
           fi
@@ -632,8 +618,7 @@ jobs:
           TOTAL_VULNS=0
           
           if [ -f "dependency-reports/python-dependency-reports/python-deps-report.json" ]; then
-            PY_VULNS=$(jq -r '((.vulnerabilities.pip_audit // 0) + (.vulnerabilities.safety // 0))' dependency-reports/python-dependency-reports/python-deps-report.json)
-            PY_VULNS=${PY_VULNS:-0}  # Default to 0 if empty
+            PY_VULNS=$(jq -r '.vulnerabilities.pip_audit + .vulnerabilities.safety' dependency-reports/python-dependency-reports/python-deps-report.json)
             TOTAL_VULNS=$((TOTAL_VULNS + PY_VULNS))
             
             if [ "$PY_VULNS" -gt 0 ]; then
@@ -660,9 +645,8 @@ jobs:
           COPYLEFT_FOUND=false
           
           if [ -f "dependency-reports/python-dependency-reports/python-deps-report.json" ]; then
-            PY_COPYLEFT=$(jq -r '(.licenses.copyleft // 0)' dependency-reports/python-dependency-reports/python-deps-report.json)
-            PY_COPYLEFT=${PY_COPYLEFT:-0}  # Default to 0 if empty
-            if [ "$PY_COPYLEFT" -gt 0 ] 2>/dev/null; then
+            PY_COPYLEFT=$(jq -r '.licenses.copyleft' dependency-reports/python-dependency-reports/python-deps-report.json)
+            if [ "$PY_COPYLEFT" -gt 0 ]; then
               echo "⚠️ Python: $PY_COPYLEFT copyleft licenses detected" >> $GITHUB_STEP_SUMMARY
               COPYLEFT_FOUND=true
             fi
@@ -680,7 +664,6 @@ jobs:
           
           if [ "${{ needs.python-deps.outputs.has_updates }}" = "true" ]; then
             UPDATES="${{ needs.python-deps.outputs.update_count }}"
-            UPDATES=${UPDATES:-0}  # Default to 0 if empty
             TOTAL_UPDATES=$((TOTAL_UPDATES + UPDATES))
             echo "- 🐍 Python: $UPDATES packages can be updated" >> $GITHUB_STEP_SUMMARY
           fi

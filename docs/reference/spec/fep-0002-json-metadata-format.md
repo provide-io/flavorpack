@@ -43,7 +43,7 @@ This specification defines:
 - Extension mechanisms for vendor-specific fields
 
 This specification does NOT define:
-- Binary wire format (reserved for possible future versions; may change or be removed)
+- Binary wire format (reserved for future versions)
 - Network transmission protocols
 - Metadata compression algorithms (handled at package level)
 - Runtime behavior of metadata fields
@@ -95,7 +95,7 @@ Regular expressions use PCRE syntax.
 | string    | operations | Operation chain string (see Section 7) |
 | number    | uint32     | 0 to 4,294,967,295                    |
 | number    | uint64     | 0 to 18,446,744,073,709,551,615      |
-| string    | timestamp  | RFC3339 timestamp (ISO-8601 profile)  |
+| number    | timestamp  | Unix timestamp (seconds since epoch)   |
 | string    | path       | Forward slashes, no ".." traversal     |
 
 ## 3. JSON Metadata Structure
@@ -106,8 +106,7 @@ The metadata MUST be a single JSON object with the following structure:
 
 ```json
 {
-  "format": "PSPF/2025",
-  "format_version": "1.0.0",
+  "format_version": "2025.0.0",
   "package": {
     "name": "package-name",
     "version": "1.0.0",
@@ -117,22 +116,11 @@ The metadata MUST be a single JSON object with the following structure:
     "homepage": "https://example.com"
   },
   "build": {
-    "tool": "flavor-python",
-    "tool_version": "0.1.0",
-    "deterministic": false,
-    "timestamp": "2025-10-24T15:30:00+00:00",
-    "platform": {
-      "os": "linux",
-      "arch": "x86_64",
-      "host": "linux/x86_64 builder-host"
-    }
-  },
-  "launcher": {
-    "tool": "flavor-rs-launcher",
-    "tool_version": "0.1.0",
-    "size": 2201600,
-    "checksum": "sha256:deadbeef",
-    "capabilities": ["mmap"]
+    "timestamp": 1704067200,
+    "platform": "linux_x86_64",
+    "builder": "flavorpack-0.1.0",
+    "source_hash": "abc123...",
+    "reproducible": true
   },
   "slots": [
     {
@@ -155,18 +143,6 @@ The metadata MUST be a single JSON object with the following structure:
     },
     "working_directory": "."
   },
-  "verification": {
-    "integrity_seal": {
-      "required": true,
-      "algorithm": "ed25519"
-    },
-    "signed": true,
-    "require_verification": true
-  },
-  "compatibility": {
-    "min_format_version": "1.0.0",
-    "features": ["runtime_env"]
-  },
   "dependencies": {
     "runtime": ["libc.so.6"],
     "optional": ["libfoo.so.1"]
@@ -181,7 +157,6 @@ The metadata MUST be a single JSON object with the following structure:
 
 ```
 root
-├── format* (string)
 ├── format_version* (string)
 ├── package* (object)
 │   ├── name* (string)
@@ -191,20 +166,11 @@ root
 │   ├── license (string)
 │   └── homepage (string)
 ├── build (object)
-│   ├── tool (string)
-│   ├── tool_version (string)
-│   ├── deterministic (boolean)
-│   ├── timestamp (string)
-│   └── platform (object)
-│       ├── os (string)
-│       ├── arch (string)
-│       └── host (string)
-├── launcher (object)
-│   ├── tool (string)
-│   ├── tool_version (string)
-│   ├── size (number)
-│   ├── checksum (string)
-│   └── capabilities (array)
+│   ├── timestamp (number)
+│   ├── platform (string)
+│   ├── builder (string)
+│   ├── source_hash (string)
+│   └── reproducible (boolean)
 ├── slots* (array)
 │   └── [slot] (object)
 │       ├── id* (number)
@@ -221,15 +187,6 @@ root
 │   ├── args (array of strings)
 │   ├── env (object)
 │   └── working_directory (string)
-├── verification (object)
-│   ├── integrity_seal (object)
-│   │   ├── required (boolean)
-│   │   └── algorithm (string)
-│   ├── signed (boolean)
-│   └── require_verification (boolean)
-├── compatibility (object)
-│   ├── min_format_version (string)
-│   └── features (array)
 ├── dependencies (object)
 │   ├── runtime (array of strings)
 │   └── optional (array of strings)
@@ -243,22 +200,15 @@ root
 
 ### 4.1 Root Level Fields
 
-#### 4.1.1 format (REQUIRED)
+#### 4.1.1 format_version (REQUIRED)
 
 **Type**: string  
-**Example**: "PSPF/2025"  
+**Pattern**: `^\d{4}\.\d+\.\d+$`  
+**Example**: "2025.0.0"  
 
-Identifies the PSPF format family.
+Identifies the metadata format version. For v0, this MUST be "2025.0.0".
 
-#### 4.1.2 format_version (REQUIRED)
-
-**Type**: string  
-**Pattern**: `^\d+\.\d+\.\d+$`  
-**Example**: "1.0.0"  
-
-Identifies the metadata schema version. Current releases MUST emit "1.0.0".
-
-#### 4.1.3 package (REQUIRED)
+#### 4.1.2 package (REQUIRED)
 
 **Type**: object  
 
@@ -306,7 +256,7 @@ Vendor-specific extensions. All keys MUST begin with "x-".
 **Max Length**: 255  
 **Example**: "my-application"  
 
-Package identifier. MUST be lowercase initial releasenumeric with hyphens and underscores.
+Package identifier. MUST be lowercase alphanumeric with hyphens and underscores.
 
 #### 4.2.2 version (REQUIRED)
 
@@ -446,60 +396,43 @@ Unix-style permissions as octal string.
 
 ### 4.4 Build Object Fields
 
-#### 4.4.1 tool (OPTIONAL)
+#### 4.4.1 timestamp (OPTIONAL)
+
+**Type**: number  
+**Example**: 1704067200  
+
+Unix timestamp of package creation.
+
+#### 4.4.2 platform (OPTIONAL)
+
+**Type**: string  
+**Pattern**: `^[a-z]+_[a-z0-9]+$`  
+**Example**: "linux_x86_64", "darwin_arm64", "windows_amd64"  
+
+Target platform identifier.
+
+#### 4.4.3 builder (OPTIONAL)
 
 **Type**: string  
 **Max Length**: 255  
-**Example**: "flavor-python"  
+**Example**: "flavorpack-0.1.0"  
 
-Tool used to create the package.
+Tool and version used to create package.
 
-#### 4.4.2 tool_version (OPTIONAL)
+#### 4.4.4 source_hash (OPTIONAL)
 
 **Type**: string  
-**Max Length**: 255  
-**Example**: "0.1.0"  
+**Pattern**: `^[a-f0-9]{64}$`  
+**Example**: "abc123..."  
 
-Version of the tool used to create the package.
+SHA-256 hash of source code tree.
 
-#### 4.4.3 deterministic (OPTIONAL)
+#### 4.4.5 reproducible (OPTIONAL)
 
 **Type**: boolean  
-**Example**: false  
+**Example**: true  
 
-Whether the build was intended to be deterministic.
-
-#### 4.4.4 timestamp (OPTIONAL)
-
-**Type**: string  
-**Pattern**: RFC3339  
-**Example**: "2025-10-24T15:30:00+00:00"  
-
-RFC3339 timestamp of package creation.
-
-#### 4.4.5 platform (OPTIONAL)
-
-**Type**: object  
-**Example**: {"os": "linux", "arch": "x86_64", "host": "linux/x86_64 builder-host"}  
-
-Build platform information.
-
-##### 4.4.5.1 os (REQUIRED)
-
-**Type**: string  
-**Example**: "linux"  
-
-##### 4.4.5.2 arch (REQUIRED)
-
-**Type**: string  
-**Example**: "x86_64"  
-
-##### 4.4.5.3 host (OPTIONAL)
-
-**Type**: string  
-**Example**: "linux/x86_64 builder-host"  
-
-Build host identifier. Implementations may omit this for deterministic builds.
+Whether package was built reproducibly.
 
 ### 4.5 Execution Object Fields
 
@@ -669,19 +602,15 @@ LOWER = %x61-7A  ; a-z
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://pspf.io/schemas/1.0.0/metadata.json",
+  "$id": "https://pspf.io/schemas/2025.0.0/metadata.json",
   "title": "PSPF/2025 Package Metadata",
   "type": "object",
-  "required": ["format", "format_version", "package", "slots"],
+  "required": ["format_version", "package", "slots"],
   "additionalProperties": false,
   "properties": {
-    "format": {
-      "type": "string",
-      "const": "PSPF/2025"
-    },
     "format_version": {
       "type": "string",
-      "const": "1.0.0"
+      "const": "2025.0.0"
     },
     "package": {
       "type": "object",
@@ -722,100 +651,24 @@ LOWER = %x61-7A  ; a-z
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "tool": {
-          "type": "string",
-          "maxLength": 255
-        },
-        "tool_version": {
-          "type": "string",
-          "maxLength": 255
-        },
-        "deterministic": {
-          "type": "boolean"
-        },
         "timestamp": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "platform": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "os": {
-              "type": "string"
-            },
-            "arch": {
-              "type": "string"
-            },
-            "host": {
-              "type": "string"
-            }
-          },
-          "required": ["os", "arch"]
-        }
-      }
-    },
-    "launcher": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "tool": {
-          "type": "string"
-        },
-        "tool_version": {
-          "type": "string"
-        },
-        "size": {
           "type": "integer",
           "minimum": 0
         },
-        "checksum": {
-          "type": "string"
+        "platform": {
+          "type": "string",
+          "pattern": "^[a-z]+_[a-z0-9]+$"
         },
-        "capabilities": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "verification": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "integrity_seal": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "required": {
-              "type": "boolean"
-            },
-            "algorithm": {
-              "type": "string"
-            }
-          }
+        "builder": {
+          "type": "string",
+          "maxLength": 255
         },
-        "signed": {
+        "source_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "reproducible": {
           "type": "boolean"
-        },
-        "require_verification": {
-          "type": "boolean"
-        }
-      }
-    },
-    "compatibility": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "min_format_version": {
-          "type": "string"
-        },
-        "features": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
         }
       }
     },
@@ -951,7 +804,7 @@ function parseMetadata(jsonBytes):
         return ERROR_SCHEMA_VIOLATION
     
     // 4. Check format version
-    if metadata.format_version != "1.0.0":
+    if metadata.format_version != "2025.0.0":
         return ERROR_UNSUPPORTED_VERSION
     
     // 5. Validate semantic constraints
@@ -1219,8 +1072,7 @@ Implementations SHOULD meet these targets:
 **Input**:
 ```json
 {
-  "format": "PSPF/2025",
-  "format_version": "1.0.0",
+  "format_version": "2025.0.0",
   "package": {
     "name": "test",
     "version": "1.0.0"
@@ -1231,7 +1083,7 @@ Implementations SHOULD meet these targets:
 
 **Canonical Form** (hex):
 ```
-7b22666f726d6174223a22505350462f32303235222c22666f726d61745f76657273696f6e223a22312e302e30222c227061636b616765223a7b226e616d65223a2274657374222c2276657273696f6e223a22312e302e30227d2c22736c6f7473223a5b5d7d
+7b22666f726d61745f76657273696f6e223a22323032352e302e30222c227061636b616765223a7b226e616d65223a2274657374222c2276657273696f6e223a22312e302e30227d2c22736c6f7473223a5b5d7d
 ```
 
 **SHA-256**: `5f95b7cf2f47fc5b7866ea021fe51cea6bc3bbceb9d3eb87a1244bd8db576eb0`
@@ -1241,8 +1093,7 @@ Implementations SHOULD meet these targets:
 **Input**:
 ```json
 {
-  "format": "PSPF/2025",
-  "format_version": "1.0.0",
+  "format_version": "2025.0.0",
   "package": {
     "name": "example-app",
     "version": "2.1.0-beta+build.123",
@@ -1252,15 +1103,11 @@ Implementations SHOULD meet these targets:
     "homepage": "https://pspf.io"
   },
   "build": {
-    "tool": "flavor-python",
-    "tool_version": "0.1.0",
-    "deterministic": false,
-    "timestamp": "2025-10-24T15:30:00+00:00",
-    "platform": {
-      "os": "linux",
-      "arch": "x86_64",
-      "host": "linux/x86_64 builder-host"
-    }
+    "timestamp": 1704067200,
+    "platform": "linux_x86_64",
+    "builder": "flavorpack-0.1.0",
+    "source_hash": "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789",
+    "reproducible": true
   },
   "slots": [
     {
@@ -1311,7 +1158,7 @@ Implementations SHOULD meet these targets:
 **Duplicate Slot ID**:
 ```json
 {
-  "format_version": "1.0.0",
+  "format_version": "2025.0.0",
   "package": {"name": "test", "version": "1.0.0"},
   "slots": [
     {"id": 0, "name": "slot1", ...},
@@ -1324,7 +1171,7 @@ Expected Error: `ERROR_DUPLICATE_SLOT_ID (1200)`
 **Invalid Operation String**:
 ```json
 {
-  "format_version": "1.0.0",
+  "format_version": "2025.0.0",
   "package": {"name": "test", "version": "1.0.0"},
   "slots": [{
     "id": 0,

@@ -91,7 +91,12 @@ dependencies = [
 ]
 
 [tool.flavor]
-entry_point = "terraform_provider_example:main"
+type = "terraform-provider"
+provider_name = "example"
+
+[tool.flavor.execution]
+command = "{workenv}/bin/python"
+args = ["-m", "pyvider.plugin"]
 
 [tool.flavor.execution.runtime.env]
 pass = ["TF_*", "EXAMPLE_*"]
@@ -148,7 +153,16 @@ resource "example_server" "web" {
 
 ## Multi-Platform Providers
 
-Build and package on each target platform to match the launcher binaries.
+### Package for All Platforms
+
+```bash
+# Build for each platform
+for platform in linux_amd64 darwin_arm64 darwin_amd64 windows_amd64; do
+  flavor pack \
+    --platform $platform \
+    --output terraform-provider-example_v1.0.0_$platform
+done
+```
 
 ### Provider Registry Structure
 
@@ -188,6 +202,22 @@ class Database:
             "endpoint": f"{config.name}.db.example.com",
             "created_at": datetime.now().isoformat()
         }
+```
+
+### Custom Packaging Configuration
+
+```toml
+[tool.flavor.terraform]
+provider_name = "example"
+namespace = "mycompany"
+version = "1.0.0"
+
+[[tool.flavor.slots]]
+id = 2
+path = "./schemas"
+extract_to = "schemas"
+lifecycle = "cached"
+operations = "tar+gzip"
 ```
 
 ## Testing Providers
@@ -274,6 +304,6 @@ dependencies = [
 ## See Also
 
 - **[Pyvider Documentation](https://foundry.provide.io/pyvider/)**
-- **[wrknv Integration](wrknv.md)**
-- **[CI/CD Integration](../../cookbook/recipes/ci-cd.md)**
-- **[Packaging Guide](../../guide/packaging/index.md)**
+- **[wrknv Integration](wrknv/)**
+- **[CI/CD Integration](../../cookbook/recipes/ci-cd/)**
+- **[Multi-Platform Builds](../../cookbook/recipes/multi-platform/)**

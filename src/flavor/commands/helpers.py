@@ -1,5 +1,5 @@
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
@@ -23,6 +23,7 @@ log = get_command_logger("helpers")
 @click.group("helpers")
 def helper_group() -> None:
     """Manage Flavor helper binaries (launchers and builders)."""
+    pass
 
 
 @helper_group.command("list")

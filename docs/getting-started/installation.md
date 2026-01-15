@@ -1,7 +1,7 @@
 # Installation
 
-!!! warning "Feature Coverage"
-    This guide focuses on the current installation paths. Check your version with `flavor --version`.
+!!! warning "Alpha Release - Source Installation Only"
+    FlavorPack is in early alpha. PyPI packages and pre-built binaries are not yet available. Check current version with `flavor --version`. **Install from source only.**
 
 Get started with FlavorPack, a cross-language packaging system implementing the Progressive Secure Package Format (PSPF/2025) that creates self-contained, portable executables from Python applications.
 
@@ -66,7 +66,7 @@ See [Rust's official installation guide](https://www.rust-lang.org/tools/install
 | Windows | x86_64 | ⚠️ Disabled | Dynamic | Currently disabled due to UTF-8 issues |
 
 !!! warning "Windows Support Status"
-    Windows support is currently **disabled** in FlavorPack due to UTF-8 encoding issues in the native helpers.
+    Windows support is currently **disabled** in FlavorPack due to UTF-8 encoding issues in the native helpers. Windows support is planned for a future release once these issues are resolved.
 
 !!! info "Binary Compatibility"
     All Linux binaries are built as static executables:
@@ -104,7 +104,7 @@ Best for developers who want the latest features and ability to build custom hel
 === "Windows"
 
     !!! warning "Windows Not Currently Supported"
-        Windows support is currently **disabled** due to UTF-8 encoding issues in the native helpers.
+        Windows support is currently **disabled** due to UTF-8 encoding issues in the native helpers. Windows support is planned for a future release.
 
         For now, Windows users can use WSL2 (Windows Subsystem for Linux) and follow the Linux installation instructions.
 
@@ -118,14 +118,18 @@ Best for developers who want the latest features and ability to build custom hel
     # Then follow Linux installation steps in WSL
     ```
 
-### Method 2: Using uv
+### Method 2: Using pip
 
-Install from PyPI:
+!!! info "Planned for Future Release"
+    PyPI installation is planned for a future release. Currently unavailable.
 
-```bash
-uv tool install flavorpack
-make build-helpers
-```
+    **When available**, installation will be:
+    ```bash
+    pip install flavorpack
+    make build-helpers
+    ```
+
+    For now, please use source installation (Method 1 above).
 
 ### Method 3: Development Container
 
@@ -137,7 +141,7 @@ For VS Code users with the Remote-Containers extension.
 
 The devcontainer includes:
 - Python 3.11+
-- Go 1.24+
+- Go 1.23+
 - Rust 1.85+
 - All required build tools
 - Pre-configured environment
@@ -313,7 +317,7 @@ uv run mypy src/flavor
     - **Trace logging is essential** - Preserve all debug/trace logging for diagnostics
     - Use structured logging with emoji prefixes (DAS pattern)
     - Rust code must compile with `--warnings-as-errors` (strict mode)
-    - All implementations must be production-focused and reliable
+    - All implementations must be production-ready and reliable
 
 ### Pre-commit Hooks
 
@@ -359,14 +363,14 @@ flavor keygen --out-dir keys/
 ```
 
 !!! note "Signing Keys"
-    Signing keys are passed via CLI options (`--private-key` and `--public-key`), not environment variables. See the [Signing Guide](../guide/packaging/signing.md) for details.
+    Signing keys are passed via CLI options (`--private-key` and `--public-key`), not environment variables. See the [Signing Guide](../guide/packaging/signing/) for details.
 
 !!! warning "No Ad-Hoc Signing"
     **NEVER do ad-hoc signing unless SPECIFICALLY REQUESTED** or after approval. Always use proper key management and signing workflows.
 
 ### 2. Environment Variables
 
-FlavorPack uses environment variables for configuration, caching, and logging. For complete documentation, see the [Environment Variables Guide](../guide/usage/environment.md).
+FlavorPack uses environment variables for configuration, caching, and logging. For complete documentation, see the [Environment Variables Guide](../guide/usage/environment/).
 
 Common variables:
 
@@ -377,7 +381,7 @@ Common variables:
 | `FLAVOR_LOG_LEVEL` | Logging level for Go/Rust components | `warn` |
 | `FLAVOR_VALIDATION` | Validation level (strict, standard, relaxed, minimal, none) | `standard` |
 
-See the [complete environment variable reference](../guide/usage/environment.md) for all available variables and detailed examples.
+See the [complete environment variable reference](../guide/usage/environment/) for all available variables and detailed examples.
 
 ### 3. Package Operations
 
@@ -447,7 +451,7 @@ The project has a polyglot architecture with three main layers:
 ### Linux
 
 - **Static Binaries**: We provide musl-based static binaries for maximum compatibility
-- **AppImage**: Potential support is under evaluation
+- **AppImage**: Future support planned for AppImage format
 - **Permissions**: Packages need execute permission (`chmod +x`)
 
 ### Windows
@@ -538,18 +542,18 @@ make validate-pspf-combo
 
 If you encounter issues:
 
-1. **Check the [Troubleshooting Guide](../troubleshooting/common.md)**
+1. **Check the [Troubleshooting Guide](../troubleshooting/common/)**
 2. **Search [existing issues](https://github.com/provide-io/flavorpack/issues)**
 3. **Open a [new issue](https://github.com/provide-io/flavorpack/issues/new)**
-4. **Review [Documentation](../guide/concepts/index.md)** for PSPF concepts
+4. **Review [Documentation](../guide/concepts/index/)** for PSPF concepts
 
 ## Next Steps
 
 After installation:
 
-- 📖 Follow the [Quick Start](quickstart.md) guide
-- 🎯 Create your [First Package](first-package.md)
-- 🔧 Explore [Configuration Options](../guide/packaging/configuration.md)
-- 📚 Read about [Core Concepts](../guide/concepts/index.md)
-- 🏗️ Learn about [PSPF Format](../guide/concepts/pspf-format.md)
-- 🔐 Set up [Package Signing](../guide/packaging/signing.md)
+- 📖 Follow the [Quick Start](quickstart/) guide
+- 🎯 Create your [First Package](first-package/)
+- 🔧 Explore [Configuration Options](../guide/packaging/configuration/)
+- 📚 Read about [Core Concepts](../guide/concepts/index/)
+- 🏗️ Learn about [PSPF Format](../guide/concepts/pspf-format/)
+- 🔐 Set up [Package Signing](../guide/packaging/signing/)

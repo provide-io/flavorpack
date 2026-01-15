@@ -5,14 +5,16 @@ Complete guide to packaging Python applications with FlavorPack, including depen
 !!! tip "Prerequisites"
     Before packaging Python apps, ensure you have:
 
-    - [FlavorPack installed](../../getting-started/installation.md) from source
-    - [Helpers built](../usage/cli.md#helpers-build) (`make build-helpers`)
+    - [FlavorPack installed](../../getting-started/installation/) from source
+    - [Helpers built](../usage/cli/#helpers-build) (`make build-helpers`)
     - A Python project with valid `pyproject.toml`
 
-    See [System Requirements](../../reference/requirements.md) for detailed version information.
+    See [System Requirements](../../reference/requirements/) for detailed version information.
 
-!!! warning "Feature Coverage"
-    This guide covers current functionality and items under evaluation.
+!!! warning "Alpha Release - Many Features Not Yet Implemented"
+    **This guide shows both working features and planned future features.**
+
+    FlavorPack's Python packaging is in alpha. Basic packaging works today, but many advanced features documented here are **planned for future releases**.
 
     **✅ What Works Today**:
 
@@ -21,7 +23,7 @@ Complete guide to packaging Python applications with FlavorPack, including depen
     - Automatic dependency resolution via UV
     - Simple package structure
 
-    **📋 Exploratory Items**:
+    **📋 Planned for Future Releases** (see [Roadmap](../roadmap/)):
 
     - Python version selection
     - Build environment customization
@@ -29,11 +31,11 @@ Complete guide to packaging Python applications with FlavorPack, including depen
     - Platform-specific builds
     - Advanced dependency configuration
 
-    Features marked with 📋 are **under evaluation**.
+    Features marked with 📋 are **not yet implemented**.
 
 ## Overview
 
-FlavorPack provides first-class support for Python applications. This guide covers what works today and what's under evaluation.
+FlavorPack provides first-class support for Python applications. This guide covers what works today and what's planned for future releases.
 
 ## What Works Today
 
@@ -80,11 +82,11 @@ Packaged applications currently use whatever Python version is available in your
 | Python 3.10 or older | ❌ FlavorPack won't run |
 
 !!! info "Current Limitation"
-    **Python version selection is under evaluation.** You cannot specify a different Python version than what's in your build environment.
+    **Python version selection is not yet implemented.** You cannot specify a different Python version than what's in your build environment.
 
     For example, if you build on Python 3.12, your package will use Python 3.12 - you cannot target Python 3.11.
 
-    **Exploratory**: Support for specifying target Python versions via manifest configuration is under evaluation.
+    **Planned**: Future releases will support specifying target Python versions via manifest configuration (see [Roadmap](../roadmap/)).
 
 ### Dependency Management ✅
 
@@ -126,15 +128,15 @@ The `[tool.flavor].entry_point` is required and specifies which function runs wh
 
 ---
 
-## Exploratory Python Features
+## Planned Python Features
 
-The following features are under evaluation.
+The following features are planned but **not yet implemented**. See the [FlavorPack Roadmap](../../roadmap/) for detailed status, target versions, and implementation timelines.
 
 ### Python Version Selection 📋
 
-!!! note "Exploratory Feature"
-    Automatic Python version selection is under evaluation. Availability may change or be removed.
-    See the notes below for details.
+!!! note "Planned Feature"
+    Automatic Python version selection is planned for **v0.3.0 (Q1 2026)**.
+    See [Roadmap - Python Version Management](../../roadmap/#python-version-selection) for full details.
 
 **Current Workaround:** Packages use the Python version from your build environment. If you build on Python 3.12, your package will use Python 3.12.
 
@@ -206,14 +208,14 @@ dependencies = [
 
 ### Build Environment
 
-!!! note "Exploratory Feature"
-    FlavorPack creates a basic isolated virtual environment during build. Advanced configuration options (custom venv path, build-time environment variables, pre-install commands) are under evaluation. Availability may change or be removed.
+!!! note "Planned Feature"
+    FlavorPack creates a basic isolated virtual environment during build. Advanced configuration options (custom venv path, build-time environment variables, pre-install commands) are **planned for v0.3.0 (Q1 2026)**.
 
-    See the notes below for details.
+    See [Roadmap - Build Environment Configuration](../../roadmap/#build-environment-configuration) for full details.
 
 **Current Behavior:** FlavorPack automatically creates a virtual environment and installs dependencies using UV.
 
-**Current Workaround:** Use standard Python packaging tooling (uv, setuptools) in your project's development environment before packaging.
+**Current Workaround:** Use standard Python packaging tools (pip, setuptools) in your project's development environment before packaging.
 
 ## Entry Points
 
@@ -295,7 +297,18 @@ myapp = ["data/*.yaml", "data/*.json"]
 
 ### Including Data Files
 
-Use standard Python packaging configuration (for example, `tool.setuptools.package-data`) to ensure data files are included in your package.
+```toml
+[tool.flavor]
+# Include package data
+include_package_data = true
+
+[[tool.flavor.slots]]
+id = "data"
+source = "src/myapp/data/"
+target = "data/"
+purpose = "data-files"
+lifecycle = "persistent"
+```
 
 ### Accessing Data at Runtime
 
@@ -336,9 +349,34 @@ build_requires = [
     "cython>=0.29"
 ]
 
+# Platform-specific build flags
+[tool.flavor.build.platform.linux_amd64]
+env = {
+    "CFLAGS": "-O3 -march=x86-64",
+    "LDFLAGS": "-Wl,-rpath,$ORIGIN"
+}
+
+[tool.flavor.build.platform.darwin_arm64]
+env = {
+    "ARCHFLAGS": "-arch arm64",
+    "MACOSX_DEPLOYMENT_TARGET": "11.0"
+}
 ```
 
-Platform-specific build flags are handled by your build environment and compiler toolchain; FlavorPack does not define manifest settings for them yet.
+### Including Shared Libraries
+
+```toml
+[[tool.flavor.slots]]
+id = "libs"
+source = "libs/"
+target = "lib/"
+purpose = "shared-libraries"
+lifecycle = "eager"
+
+[tool.flavor.runtime]
+# Library search paths
+ld_library_path = ["$FLAVOR_WORKENV/lib"]
+```
 
 ### Common Binary Packages
 
@@ -364,18 +402,63 @@ dependencies = [
 
 ## Optimization Techniques
 
-**Current Behavior:** FlavorPack packages all dependencies and Python code as-is.
+!!! note "Planned Feature"
+    Runtime optimization configuration (code optimization levels, bytecode compilation, dependency optimization, lazy loading) is **planned for v0.4.0 (Q2 2026)**.
 
-**Practical tips:**
+    See [Roadmap - Runtime Optimization](../../roadmap/#runtime-optimization) and [Roadmap - Advanced Slot Configuration](../../roadmap/#advanced-slot-configuration) for full details.
+
+**Current Behavior:** FlavorPack packages all dependencies and Python code as-is, with basic compression.
+
+**Current Workaround:**
 - Pre-compile bytecode in your project before packaging
+- Use `.flavor-ignore` or similar to exclude unnecessary files
 - Minimize dependencies in your `pyproject.toml`
-- Remove large, unused assets before packaging
+
+## Testing and Quality
+
+### Including Tests in Package
+
+```toml
+[tool.flavor.build]
+# Include tests for debugging
+include_tests = true  # Default: false
+
+[[tool.flavor.slots]]
+id = "tests"
+source = "tests/"
+purpose = "tests"
+lifecycle = "volatile"  # Don't persist between runs
+```
+
+### Running Tests Before Build
+
+```toml
+[tool.flavor.build]
+# Run tests before packaging
+pre_build_commands = [
+    "pytest tests/ -v",
+    "mypy src/ --strict",
+    "black src/ --check"
+]
+```
+
+### Test Fixtures and Data
+
+```toml
+[[tool.flavor.slots]]
+id = "test-fixtures"
+source = "tests/fixtures/"
+target = "test-fixtures/"
+purpose = "test-data"
+lifecycle = "cached"
+```
 
 ## Environment Variables
 
 ### Runtime Environment
 
 ```toml
+[tool.flavor.execution.runtime]
 [tool.flavor.execution.runtime.env]
 # Clear all host environment variables, then selectively pass through
 unset = ["*"]
@@ -496,6 +579,10 @@ dependencies = [
 
 [tool.flavor]
 entry_point = "myapp.server:run"
+
+[tool.flavor.runtime]
+# Keep server running
+persistent = true
 ```
 
 ## Common Patterns
@@ -598,7 +685,7 @@ print("Work environment:", os.environ.get('FLAVOR_WORKENV'))
 flavor inspect package.psp --show-deps
 
 # Verify compatibility
-uv sync --frozen
+pip check
 
 # Force reinstall
 flavor pack --manifest pyproject.toml --force-reinstall
@@ -715,6 +802,12 @@ dependencies = [
 
 [tool.flavor]
 entry_point = "ml_model.predict:main"
+
+[[tool.flavor.slots]]
+id = "models"
+source = "models/"
+lifecycle = "lazy"
+# Automatic tar.gz compression
 ```
 
 ### Web API Package
@@ -732,29 +825,33 @@ dependencies = [
 
 [tool.flavor]
 entry_point = "api.main:run"
+
+[tool.flavor.runtime]
+persistent = true
+port = 8000
 ```
 
 ## Related Pages
 
 **Configuration**:
 
-- 📋 [Package Configuration](configuration.md) - Full configuration reference
-- 📝 [Manifest Reference](manifest.md) - pyproject.toml specification
-- 🔒 [Package Signing](signing.md) - Add cryptographic signatures
-- 🌍 [Platform Support](platforms.md) - Multi-platform packaging
+- 📋 [Package Configuration](configuration/) - Full configuration reference
+- 📝 [Manifest Reference](manifest/) - pyproject.toml specification
+- 🔒 [Package Signing](signing/) - Add cryptographic signatures
+- 🌍 [Platform Support](platforms/) - Multi-platform packaging
 
 **Workflow**:
 
-- 🏗️ [Building Packages](index.md) - General packaging guide
-- 📦 [CLI Reference](../usage/cli.md#pack) - `flavor pack` command details
-- ✅ [Verification](../usage/cli.md#verify) - Verify package integrity
+- 🏗️ [Building Packages](index/) - General packaging guide
+- 📦 [CLI Reference](../usage/cli/#pack) - `flavor pack` command details
+- ✅ [Verification](../usage/cli/#verify) - Verify package integrity
 
 **Examples**:
 
-- 💻 [CLI Tool Example](../../cookbook/examples/cli-tool.md) - Package a CLI application
-- 🌐 [Web App Example](../../cookbook/examples/web-app.md) - Package a Flask/FastAPI app
+- 💻 [CLI Tool Example](../../cookbook/examples/cli-tool/) - Package a CLI application
+- 🌐 [Web App Example](../../cookbook/examples/web-app/) - Package a Flask/FastAPI app
 
 **Help**:
 
-- 🐛 [Troubleshooting](../../troubleshooting/common.md) - Common issues and solutions
-- 📝 [FAQ](../../troubleshooting/faq.md) - Frequently asked questions
+- 🐛 [Troubleshooting](../../troubleshooting/common/) - Common issues and solutions
+- 📝 [FAQ](../../troubleshooting/faq/) - Frequently asked questions

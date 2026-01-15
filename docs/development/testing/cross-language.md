@@ -2,7 +2,7 @@
 
 Test compatibility across Python, Go, and Rust implementations.
 
-## Exploratory
+## Coming Soon
 
 Complete cross-language testing guide under development.
 
@@ -39,4 +39,4 @@ make test BUILDER=go LAUNCHER=rust
 
 ---
 
-**See also:** [Testing Guide](index.md) | [Pretaster README
+**See also:** [Testing Guide](index/) | [Pretaster README

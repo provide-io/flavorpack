@@ -1,13 +1,44 @@
-project_name = "flavorpack"
-version = "0.1.0"
+# Python Library wrknv.toml Template
+# Canonical task configuration for Python library projects in the provide.io ecosystem
+# This file is maintained in provide-foundry and can be extracted to library projects
+#
+# Source: provide-foundry/src/provide/foundry/config/wrknv.python.tmpl
+# To update: run extraction function from provide-foundry
+#
+# Usage:
+#   we tasks              # List all available tasks
+#   we <task>             # Run a task (e.g., we test, we lint)
+#   we run <task>         # Explicit run command
+#   we run <task> --info  # Show task details
 
-[tasks]
-typecheck = "mypy src/"
-build = "uv build"
+# ==============================================================================
+# 🧪 Testing
+# ==============================================================================
 
-[tasks.setup]
-_default = "uv sync"
-pre-commit = "if ! command -v pre-commit >/dev/null 2>&1; then\n  echo \"Installing pre-commit...\"\n  uv tool install pre-commit\nfi\nif [ ! -f .pre-commit-config.yaml ]; then\n  echo \"Installing standard pre-commit config...\"\n  if [ -f ../ci-tooling/configs/pre-commit-config.yaml ]; then\n    cp ../ci-tooling/configs/pre-commit-config.yaml .pre-commit-config.yaml\n  else\n    echo \"Warning: ci-tooling/configs/pre-commit-config.yaml not found\"\n    echo \"Please ensure ci-tooling is cloned at ../ci-tooling\"\n    exit 1\n  fi\nfi\npre-commit install\npre-commit install --hook-type commit-msg\necho \"✓ Pre-commit hooks installed\"\n"
+[tasks.test]
+_default = "pytest"
+parallel = "pytest -n auto"
+verbose = "pytest -vvv"
+unit = "pytest -m unit"
+integration = "pytest -m integration"
+
+[tasks.test.coverage]
+_default = "pytest --cov=src --cov-report=html --cov-report=term-missing"
+xml = "pytest --cov=src --cov-report=xml --cov-report=term"
+
+# ==============================================================================
+# 🧬 Mutation Testing
+# ==============================================================================
+
+[tasks.mutation]
+_default = "mutmut run"
+results = "mutmut results"
+browse = "mutmut browse"
+clean = "rm -rf .mutmut-cache html/"
+
+# ==============================================================================
+# 🔍 Code Quality
+# ==============================================================================
 
 [tasks.lint]
 _default = "ruff check ."
@@ -17,55 +48,13 @@ fix = "ruff check . --fix"
 _default = "ruff format ."
 check = "ruff format . --check"
 
-[tasks.test]
-_default = "pytest"
-unit = "pytest -m unit"
-integration = "pytest -m integration"
-cross_language = "pytest -m cross_language"
-security = "pytest -m security"
-fast = "pytest tests/ -x"
-parallel = "pytest -n auto"
-verbose = "pytest -vvv"
-
-[tasks.test.coverage]
-_default = "pytest --cov=src --cov-report=html --cov-report=term-missing"
-run = "pytest --cov=flavor --cov-report=term-missing tests/"
-xml = "pytest --cov=src --cov-report=xml --cov-report=term"
-
-[tasks.mutation]
-_default = "mutmut run"
-results = "mutmut results"
-browse = "mutmut browse"
-clean = "rm -rf .mutmut-cache html/"
-
 [tasks.quality]
-_default = [
-    "lint",
-    "typecheck",
-]
-parallel = true
-all = [
-    "format.check",
-    "lint",
-    "typecheck",
-    "test",
-]
+_default = ["lint", "typecheck"]
+all = ["format.check", "lint", "typecheck", "test"]
 
-[tasks.ci]
-_default = [
-    "quality",
-    "test",
-    "build",
-]
-test = [
-    "test.parallel",
-    "test.coverage",
-]
-quality = [
-    "format.check",
-    "lint",
-    "typecheck",
-]
+# ==============================================================================
+# 🏗️ Build & Package
+# ==============================================================================
 
 [tasks.pkg]
 install = "uv pip install -e ."
@@ -73,20 +62,28 @@ uninstall = "uv pip uninstall -y $(grep '^name = ' pyproject.toml | cut -d'\"' -
 lock = "uv lock"
 version = "cat VERSION 2>/dev/null || grep '^version = ' pyproject.toml | cut -d'\"' -f2"
 
+# ==============================================================================
+# 🧹 Clean
+# ==============================================================================
+
 [tasks.clean]
-run = "rm -rf build/ dist/ *.egg-info .pytest_cache .mypy_cache .ruff_cache .hypothesis htmlcov/ .coverage .mutmut-cache site/\nfind . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true\nfind . -type f -name '*.pyc' -delete 2>/dev/null || true\nfind . -type f -name '*.pyo' -delete 2>/dev/null || true\n"
+run = """
+rm -rf build/ dist/ *.egg-info .pytest_cache .mypy_cache .ruff_cache .hypothesis htmlcov/ .coverage .mutmut-cache site/
+find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+find . -type f -name '*.pyc' -delete 2>/dev/null || true
+find . -type f -name '*.pyo' -delete 2>/dev/null || true
+"""
+
+# ==============================================================================
+# 📚 Documentation
+# ==============================================================================
 
 [tasks.docs]
-_default = "python .provide/foundry/scripts/docs_serve.py"
+_default = "mkdocs serve"
 setup = "python -c \"from provide.foundry.config import extract_base_mkdocs; from pathlib import Path; extract_base_mkdocs(Path('.'))\""
-build = "python .provide/foundry/scripts/docs_preflight.py && mkdocs build"
+build = "mkdocs build"
+serve = "mkdocs serve"
 clean = "rm -rf site .provide"
-preflight = "python .provide/foundry/scripts/docs_preflight.py"
-validate = "python .provide/foundry/scripts/docs_validate.py"
-
-[tasks.docs.serve]
-run = "python .provide/foundry/scripts/docs_serve.py"
-timeout = 604800.0
 
 [tasks.docs.links]
 _default = "lychee --offline --verbose --no-progress './docs/**/*.md' './src/**/*.md' './README.md' './.github/**/*.md' './CONTRIBUTING.md' 2>&1 | grep -v 'INFO'"
@@ -94,36 +91,50 @@ check = "lychee --offline --verbose --no-progress './docs/**/*.md' './src/**/*.m
 local = "lychee --offline --verbose --no-progress './docs/**/*.md' './src/**/*.md' './README.md' './.github/**/*.md' './CONTRIBUTING.md' 2>&1 | grep -v 'INFO'"
 external = "lychee --verbose --no-progress './docs/**/*.md' './src/**/*.md' './README.md' './.github/**/*.md' './CONTRIBUTING.md'"
 
+# ==============================================================================
+# 🚀 Development Workflow Shortcuts
+# ==============================================================================
+
 [tasks.dev]
 setup = "uv sync"
 test = "pytest -n auto"
 check = "ruff format . && ruff check . && mypy src/"
 
-[tasks.helpers]
-_default = "./build.sh"
-build = "./build.sh"
+# ==============================================================================
+# 🤖 CI/CD Pipelines
+# ==============================================================================
 
-[tasks.validate]
-_default = "cd tests/pretaster && make test"
-pspf = "cd tests/pretaster && make test"
-full = "cd tests/pretaster && make all"
-combo = "cd tests/pretaster && make combo-test"
-clean-cache = "cd tests/pretaster && make clean-cache"
-logs = "cd tests/pretaster && make show-logs"
+[tasks.ci]
+_default = ["quality", "test", "build"]
+test = ["test.parallel", "test.coverage"]
+quality = ["format.check", "lint", "typecheck"]
 
-[tasks.wheel]
-_default = "PLATFORM=$(python3 -c \"import platform; arch = platform.machine().lower(); arch = 'amd64' if arch == 'x86_64' else 'arm64' if arch in ['arm64', 'aarch64'] else arch; os = 'darwin' if platform.system() == 'Darwin' else 'linux' if platform.system() == 'Linux' else 'windows'; print(f'{os}_{arch}')\")\npython3 tools/build_wheel.py --platform $PLATFORM\n"
-universal = "python3 tools/build_wheel.py --platform universal"
+# ==============================================================================
+# Simple Top-Level Tasks
+# ==============================================================================
 
-[tasks.release]
-_default = "python3 tools/build_wheel.py --all"
-all = "python3 tools/build_wheel.py --all"
-validate = "python3 tools/validate_wheel.py --all"
-validate-full = "python3 tools/validate_wheel.py --all --full"
-clean = "rm -rf dist/ build/ *.egg-info src/flavor.egg-info\nrm -rf dist/bin\nfind . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true\necho \"✨ Release artifacts cleaned\"\n"
-upload = "if [ -z \"$(ls -A dist/*.whl 2>/dev/null)\" ]; then\n  echo \"❌ No wheels found in dist/\"\n  echo \"Run 'we release all' first\"\n  exit 1\nfi\necho \"📤 Uploading to PyPI...\"\ntwine upload dist/*.whl\n"
-upload-test = "if [ -z \"$(ls -A dist/*.whl 2>/dev/null)\" ]; then\n  echo \"❌ No wheels found in dist/\"\n  echo \"Run 'we release all' first\"\n  exit 1\nfi\necho \"📤 Uploading to TestPyPI...\"\ntwine upload --repository testpypi dist/*.whl\n"
-test = "echo \"🧪 Testing release process...\"\n./build.sh\nPLATFORM=$(python3 -c \"import platform; arch = platform.machine().lower(); arch = 'amd64' if arch == 'x86_64' else 'arm64' if arch in ['arm64', 'aarch64'] else arch; os = 'darwin' if platform.system() == 'Darwin' else 'linux' if platform.system() == 'Linux' else 'windows'; print(f'{os}_{arch}')\")\necho \"Testing with platform: $PLATFORM\"\npython3 tools/build_wheel.py --platform $PLATFORM\npython3 tools/validate_wheel.py --all --full\n"
+[tasks]
+typecheck = "mypy src/"
+build = "uv build"
 
-[tasks.security]
-_default = "bandit -r src/ -c pyproject.toml"
+[tasks.setup]
+_default = "uv sync"
+pre-commit = """
+if ! command -v pre-commit >/dev/null 2>&1; then
+  echo "Installing pre-commit..."
+  uv pip install pre-commit
+fi
+if [ ! -f .pre-commit-config.yaml ]; then
+  echo "Installing standard pre-commit config..."
+  if [ -f ../ci-tooling/configs/pre-commit-config.yaml ]; then
+    cp ../ci-tooling/configs/pre-commit-config.yaml .pre-commit-config.yaml
+  else
+    echo "Warning: ci-tooling/configs/pre-commit-config.yaml not found"
+    echo "Please ensure ci-tooling is cloned at ../ci-tooling"
+    exit 1
+  fi
+fi
+pre-commit install
+pre-commit install --hook-type commit-msg
+echo "✓ Pre-commit hooks installed"
+"""

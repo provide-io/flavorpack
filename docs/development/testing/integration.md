@@ -2,7 +2,7 @@
 
 Test component interactions and end-to-end workflows.
 
-## Exploratory
+## Coming Soon
 
 Complete integration testing guide under development.
 
@@ -26,4 +26,4 @@ pytest -m e2e
 
 ---
 
-**See also:** [Testing Guide](index.md) | [Cross-Language Tests](cross-language.md)
+**See also:** [Testing Guide](index/) | [Cross-Language Tests](cross-language/)

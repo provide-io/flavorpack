@@ -58,13 +58,15 @@ xattr -c myapp.psp
 
 **Symptom**: "Bad CPU type in executable"
 
-**Solution**: Build on the correct architecture:
+**Solution**: Build for the correct architecture:
 ```bash
 # Check your architecture
 uname -m  # Returns "arm64" or "x86_64"
 
-# Build on the target machine
-flavor pack --manifest pyproject.toml
+# Build for specific architecture
+flavor pack --manifest pyproject.toml --platform darwin_arm64
+# or
+flavor pack --manifest pyproject.toml --platform darwin_x86_64
 ```
 
 #### Rosetta 2 Compatibility
@@ -154,8 +156,8 @@ export HTTPS_PROXY=http://proxy.example.com:8080
 # Clear FlavorPack cache
 rm -rf ~/.cache/flavor/workenv/
 
-# Clear uv cache if packaging issues
-uv cache clean
+# Clear pip cache if packaging issues
+pip cache purge
 
 # Rebuild package
 flavor pack --manifest pyproject.toml --force
@@ -230,12 +232,12 @@ sudo dtruss ./myapp.psp 2>&1 | head -100
 
 ## Getting Help
 
-- Check [Common Issues](../common.md) for cross-platform problems
-- Review [Security Troubleshooting](../../guide/concepts/security.md) for signing issues
-- Visit [Community Support](../../community/support.md) for additional help
+- Check [Common Issues](../common/) for cross-platform problems
+- Review [Security Troubleshooting](../../guide/concepts/security/) for signing issues
+- Visit [Community Support](../../community/support/) for additional help
 
 ## Related Documentation
 
-- [Installation Guide](../../getting-started/installation.md)
-- [Platform Support](../../guide/packaging/platforms.md)
-- [Building Helpers](../../development/helpers.md)
+- [Installation Guide](../../getting-started/installation/)
+- [Platform Support](../../guide/packaging/platforms/)
+- [Building Helpers](../../development/helpers/)

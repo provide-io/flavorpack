@@ -43,7 +43,7 @@ jobs:
   # Project License Analysis
   project-license:
     name: 📜 Project License
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     outputs:
       project_license: ${{ steps.detect.outputs.license }}
       has_license: ${{ steps.detect.outputs.has_license }}
@@ -132,7 +132,7 @@ jobs:
   # Python License Compliance
   python-license:
     name: 🐍 Python Licenses
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     outputs:
       compliant: ${{ steps.check.outputs.compliant }}
       violations: ${{ steps.check.outputs.violations }}
@@ -312,7 +312,7 @@ jobs:
   # Go License Compliance
   go-license:
     name: 🐹 Go Licenses
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     outputs:
       compliant: ${{ steps.check.outputs.compliant }}
     steps:
@@ -322,7 +322,7 @@ jobs:
       - name: 🐹 Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: "${{ vars.GO_VERSION }}"
       
       - name: 📦 Install go-licenses
         run: |
@@ -395,7 +395,7 @@ jobs:
   # Rust License Compliance
   rust-license:
     name: 🦀 Rust Licenses
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     outputs:
       compliant: ${{ steps.check.outputs.compliant }}
     steps:
@@ -502,7 +502,7 @@ jobs:
   # SBOM Generation
   sbom-generation:
     name: 📜 SBOM Generation
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     if: inputs.generate_sbom == true
     steps:
       - name: 📥 Checkout
@@ -607,7 +607,7 @@ jobs:
     name: 📊 Compliance Report
     needs: [project-license, python-license, go-license, rust-license, sbom-generation]
     if: always()
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - name: 📥 Download all reports
         uses: actions/download-artifact@v4

@@ -2,8 +2,8 @@
 
 Platform-specific issues and solutions for Windows users.
 
-!!! warning "Windows Support"
-    Windows support is currently disabled due to UTF-8 encoding issues in the native helpers. This page documents expected behavior once support resumes.
+!!! warning "Beta Support"
+    Windows support is currently in beta. Some features may be limited or require additional configuration.
 
 ## Common Issues
 
@@ -112,7 +112,7 @@ py -0
 py -3.11 -m flavor pack --manifest pyproject.toml
 
 # Set default version
-uv self update
+py -3.11 -m pip install --upgrade pip
 ```
 
 ### Antivirus Interference
@@ -374,12 +374,12 @@ Write-Host "`n=== Test Execution ===" -ForegroundColor Cyan
 
 ## Getting Help
 
-- Check [Common Issues](../common.md) for cross-platform problems
-- Review [Security Troubleshooting](../../guide/concepts/security.md) for permission issues
-- Visit [Community Support](../../community/support.md) for additional help
+- Check [Common Issues](../common/) for cross-platform problems
+- Review [Security Troubleshooting](../../guide/concepts/security/) for permission issues
+- Visit [Community Support](../../community/support/) for additional help
 
 ## Related Documentation
 
-- [Installation Guide](../../getting-started/installation.md)
-- [Platform Support](../../guide/packaging/platforms.md)
-- [Building Helpers](../../development/helpers.md)
+- [Installation Guide](../../getting-started/installation/)
+- [Platform Support](../../guide/packaging/platforms/)
+- [Building Helpers](../../development/helpers/)
