@@ -1,5 +1,5 @@
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
@@ -10,7 +10,6 @@ from __future__ import annotations
 from unittest.mock import MagicMock, Mock, patch
 
 from click.testing import CliRunner
-import pytest
 
 from flavor.cli import main as cli_main
 
@@ -81,12 +80,7 @@ class TestCleanCommand:
 
     @patch("flavor.cache.CacheManager")
     @patch("click.confirm")
-    def test_clean_user_aborts(
-        self,
-        mock_confirm: Mock,
-        mock_cache_class: Mock,
-        capsys: pytest.CaptureFixture[str],
-    ) -> None:
+    def test_clean_user_aborts(self, mock_confirm: Mock, mock_cache_class: Mock) -> None:
         """Test clean when user aborts confirmation."""
         mock_cache = Mock()
         mock_cache.list_cached.return_value = [{"id": "pkg1", "name": "package-1", "size": 1_000_000}]
@@ -96,8 +90,7 @@ class TestCleanCommand:
         mock_confirm.return_value = False
 
         runner = CliRunner()
-        with capsys.disabled():
-            result = runner.invoke(cli_main, ["clean"])
+        result = runner.invoke(cli_main, ["clean"])
 
         assert result.exit_code == 0
         assert "Aborted." in result.output

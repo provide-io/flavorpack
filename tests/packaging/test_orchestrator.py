@@ -1,5 +1,5 @@
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
@@ -156,6 +156,7 @@ def test_external_builder_command_construction(
         output_path = Path(orchestrator.output_flavor_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_bytes(b"mock package content from external builder" * 1000)
+        return None  # run returns None on success
 
     mock_run.side_effect = create_mock_file_external
 

@@ -14,7 +14,7 @@ FlavorPack follows [Semantic Versioning 2.0.0](https://semver.org/):
 - **MINOR**: New features, backward compatible
 - **PATCH**: Bug fixes, backward compatible
 
-Current initial release version format: `0.0.XXXX-initial release` where XXXX is the build number.
+Current alpha version format: `0.0.XXXX-alpha` where XXXX is the build number.
 
 ## Release Checklist
 
@@ -97,7 +97,7 @@ make release-validate-full
 
 ```bash
 # Install from local wheel
-uv tool install dist/flavorpack-*.whl
+pip install dist/flavorpack-*.whl
 
 # Test basic operations
 flavor --version
@@ -157,7 +157,7 @@ git push --tags
 make release-upload-test
 
 # Test installation
-uv tool install --index-url https://test.pypi.org/simple/ flavorpack
+pip install --index-url https://test.pypi.org/simple/ flavorpack
 ```
 
 ### Production PyPI
@@ -208,7 +208,7 @@ Brief description of major changes.
 ## Installation
 
 \`\`\`bash
-uv tool install flavorpack==0.1.0
+pip install flavorpack==0.1.0
 \`\`\`
 
 ## Assets
@@ -232,7 +232,7 @@ The release process can be automated through GitHub Actions:
 5. **Upload**: Publish to PyPI
 6. **Create release**: Auto-create GitHub release
 
-See [CI/CD Documentation](ci-cd.md) for workflow details.
+See [CI/CD Documentation](ci-cd/) for workflow details.
 
 ## Troubleshooting
 
@@ -280,7 +280,7 @@ make release-all
 ### Verification
 
 - [ ] Check PyPI page: https://pypi.org/project/flavorpack/
-- [ ] Test fresh installation: `uv tool install flavorpack`
+- [ ] Test fresh installation: `pip install flavorpack`
 - [ ] Verify helper binaries included
 - [ ] Test basic commands work
 - [ ] Check documentation site is updated
@@ -304,13 +304,13 @@ If a critical issue is found after release:
 
 ```bash
 # Yank a release (requires PyPI permissions)
-uv tool install twine
+pip install twine
 twine upload --repository pypi --yank dist/flavorpack-X.Y.Z-*.whl
 ```
 
 ---
 
 **See also:**
-- [CI/CD](ci-cd.md) - Automated release workflows
-- [Contributing](contributing.md) - Development guidelines
-- [Testing](testing/index.md) - Test requirements before release
+- [CI/CD](ci-cd/) - Automated release workflows
+- [Contributing](contributing/) - Development guidelines
+- [Testing](testing/index/) - Test requirements before release

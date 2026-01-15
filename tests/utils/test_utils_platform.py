@@ -1,5 +1,5 @@
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
@@ -261,17 +261,6 @@ class TestPlatformDetection:
 
     def test_platform_consistency(self) -> None:
         """Test that all platform functions return consistent results."""
-        from provide.foundation.platform.detection import (
-            get_arch_name as foundation_get_arch_name,
-            get_os_name as foundation_get_os_name,
-            get_platform_string as foundation_get_platform_string,
-        )
-
-        # Clear cache to ensure we get fresh values (prevents cache pollution from mocked tests)
-        foundation_get_os_name.cache_clear()
-        foundation_get_arch_name.cache_clear()
-        foundation_get_platform_string.cache_clear()
-
         # Get all values
         os_name = get_os_name()
         arch_name = get_arch_name()

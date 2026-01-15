@@ -250,7 +250,7 @@ Each slot has:
 #### Slot Descriptor Binary Layout (64 bytes)
 
 !!! info "Complete Specification"
-    The slot descriptor is a precisely defined 64-byte binary structure. For the complete specification including all fields, byte offsets, cross-language implementations, and detailed field descriptions, see [**Slot Descriptor Specification**](../../reference/spec/SLOT_DESCRIPTOR_SPECIFICATION.md).
+    The slot descriptor is a precisely defined 64-byte binary structure. For the complete specification including all fields, byte offsets, cross-language implementations, and detailed field descriptions, see [**Slot Descriptor Specification**](../../reference/spec/SLOT_DESCRIPTOR_SPECIFICATION/).
 
 **Quick Reference - Field Layout:**
 
@@ -506,9 +506,9 @@ Offset    | Component
 
 ## Further Reading
 
-- 📚 [FEP-0001: Core Format Specification](../../reference/spec/fep-0001-core-format-and-operation-chains.md) - Complete PSPF/2025 binary format specification
-- 📋 [Slot Descriptor Specification](../../reference/spec/SLOT_DESCRIPTOR_SPECIFICATION.md) - Detailed slot descriptor format
-- 🔧 [Builder API](../../api/builder.md) - How packages are created programmatically
-- 🔍 [Reader API](../../api/reader.md) - How packages are read and extracted
-- 🔒 [Security Model](security.md) - In-depth security analysis
-- 📦 [Package Structure](package-structure.md) - High-level package organization
+- 📚 [FEP-0001: Core Format Specification](../../reference/spec/fep-0001-core-format-and-operation-chains/) - Complete PSPF/2025 binary format specification
+- 📋 [Slot Descriptor Specification](../../reference/spec/SLOT_DESCRIPTOR_SPECIFICATION/) - Detailed slot descriptor format
+- 🔧 [Builder API](../../api/builder/) - How packages are created programmatically
+- 🔍 [Reader API](../../api/reader/) - How packages are read and extracted
+- 🔒 [Security Model](security/) - In-depth security analysis
+- 📦 [Package Structure](package-structure/) - High-level package organization

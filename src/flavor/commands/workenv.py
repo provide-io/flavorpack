@@ -1,5 +1,5 @@
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
@@ -23,6 +23,7 @@ log = get_command_logger("workenv")
 @click.group("workenv")
 def workenv_group() -> None:
     """Manage the Flavor work environment cache."""
+    pass
 
 
 @workenv_group.command("list")

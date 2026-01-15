@@ -310,16 +310,18 @@ dtruss ./myapp.psp 2>&1 | grep -E "open|stat"
 ### Slow Package Building
 
 **Solutions**:
+- Use `--jobs` flag for parallel processing
+- Exclude unnecessary files early
 - Pre-download dependencies
-- Use a local package index when possible
-- Keep the project tree lean before packaging
+- Use local package index
 
 ### Slow Package Startup
 
 **Solutions**:
+- Mark large init-only files as `volatile`
+- Use `lazy` lifecycle for optional components
+- Enable extraction caching
 - Reduce package size
-- Avoid large assets inside the package when possible
-- Keep dependencies minimal
 
 ### High Memory Usage
 
@@ -332,9 +334,9 @@ dtruss ./myapp.psp 2>&1 | grep -E "open|stat"
 ## Getting Help
 
 ### Check Documentation
-1. Review [User Guide](../guide/index.md)
-2. Check [API Reference](../api/index.md)
-3. Read [Architecture](../development/architecture.md)
+1. Review [User Guide](../guide/index/)
+2. Check [API Reference](../api/index/)
+3. Read [Architecture](../development/architecture/)
 
 ### Debugging Checklist
 - [ ] Using latest version?
@@ -570,17 +572,19 @@ flavor pack \
 
 ```bash
 # 1. Pre-download dependencies
-mkdir -p .cache/uv
-UV_CACHE_DIR=.cache/uv uv sync
+mkdir -p .cache/pip
+pip download -d .cache/pip -r requirements.txt
 
 # 2. Use local package index
-UV_INDEX_URL=file://$(pwd)/.cache/uv UV_NO_INDEX=1 flavor pack
+flavor pack \
+  --pip-index-url file://$(pwd)/.cache/pip \
+  --no-index
 
 # 3. Vendor dependencies
-UV_CACHE_DIR=vendor uv sync
+pip install --target vendor/ -r requirements.txt
 
 # 4. Build in offline mode
-UV_CACHE_DIR=vendor UV_NO_INDEX=1 flavor pack
+PIP_NO_INDEX=1 PIP_FIND_LINKS=vendor/ flavor pack
 ```
 
 ### Debugging Helper Issues
@@ -651,15 +655,15 @@ make install-helpers
 
 See detailed troubleshooting for your platform:
 
-- [Linux](platforms/linux.md)
-- [macOS](platforms/macos.md)
-- [Windows](platforms/windows.md)
+- [Linux](platforms/linux/)
+- [macOS](platforms/macos/)
+- [Windows](platforms/windows/)
 
 ---
 
 ## See Also
 
-- [CLI Reference](../guide/usage/cli.md) - All commands
-- [Environment Variables](../guide/usage/environment.md) - Configuration
-- [Cache Management](../guide/usage/cache.md) - Cache troubleshooting
-- [Advanced Debugging](../guide/advanced/debugging.md) - Deep debugging techniques
+- [CLI Reference](../guide/usage/cli/) - All commands
+- [Environment Variables](../guide/usage/environment/) - Configuration
+- [Cache Management](../guide/usage/cache/) - Cache troubleshooting
+- [Advanced Debugging](../guide/advanced/debugging/) - Deep debugging techniques

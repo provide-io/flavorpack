@@ -171,12 +171,12 @@ The verify command performs comprehensive validation:
 - Validates Ed25519 signature
 - Reports any integrity issues
 
-#### 📋 Exploratory Verification Modes
+#### 📋 Planned Verification Modes
 
-Additional verification levels are under evaluation:
+Additional verification levels are planned for future releases:
 
 ```bash
-# Exploratory examples (may change or be removed)
+# Coming in future versions
 flavor verify package.psp --quick     # Quick (index only)
 flavor verify package.psp --deep      # Deep (all slots)
 flavor verify package.psp --paranoid  # Paranoid (extract and verify)
@@ -257,12 +257,12 @@ verification: authenticity
 use_case: enterprise_deployment
 ```
 
-### 📋 Certificate-Based (Exploratory Feature)
+### 📋 Certificate-Based (Planned Feature)
 
-PKI integration is under evaluation to support public distribution:
+PKI integration is planned for future releases to support public distribution:
 
 ```yaml
-# X.509 certificate chains (under evaluation)
+# X.509 certificate chains (not yet implemented)
 trust_model: pki
 verification: chain_of_trust
 use_case: public_distribution
@@ -284,12 +284,12 @@ FOUNDATION_LOG_LEVEL=debug      # Python component logging
 ```
 
 !!! warning "Security Configuration"
-    For signature verification configuration, use CLI flags (`--private-key`, `--public-key`, `--key-seed`) rather than environment variables. See the [Environment Variables Guide](../../guide/usage/environment.md) for the complete list of available variables.
+    For signature verification configuration, use CLI flags (`--private-key`, `--public-key`, `--key-seed`) rather than environment variables. See the [Environment Variables Guide](../../guide/usage/environment/) for the complete list of available variables.
 
 ### Configuration File
 
-!!! info "📋 Exploratory Feature - Not Yet Implemented"
-    Configuration file support is under evaluation. Currently, all configuration is done via environment variables and CLI flags.
+!!! info "📋 Planned Feature - Not Yet Implemented"
+    Configuration file support is planned for a future release. Currently, all configuration is done via environment variables and CLI flags.
 
 #### Current Configuration Methods
 
@@ -307,12 +307,12 @@ export FOUNDATION_LOG_LEVEL=debug
 export FLAVOR_CACHE=/custom/cache
 ```
 
-#### Exploratory Configuration File Format
+#### Planned Configuration File Format
 
-Exploratory: configuration file support may be added; availability may change or be removed:
+Future releases will support a configuration file:
 
 ```toml
-# ~/.flavor/config.toml (under evaluation)
+# ~/.flavor/config.toml (not yet supported - planned feature)
 [security]
 verify_signatures = true
 require_https = true
@@ -484,7 +484,7 @@ Working towards:
 
 ## Related Documentation
 
-- [Cryptographic Specification](../../reference/spec/pspf-2025.md) - Technical crypto details
-- [Package Format](../../reference/spec/fep-0001-core-format-and-operation-chains.md) - Binary security features
-- [CLI Reference](../../guide/usage/cli.md#verify) - Verification commands
-- [Troubleshooting](../concepts/security.md) - Security issues
+- [Cryptographic Specification](../../reference/spec/pspf-2025/) - Technical crypto details
+- [Package Format](../../reference/spec/fep-0001-core-format-and-operation-chains/) - Binary security features
+- [CLI Reference](../../guide/usage/cli/#verify) - Verification commands
+- [Troubleshooting](../concepts/security/) - Security issues

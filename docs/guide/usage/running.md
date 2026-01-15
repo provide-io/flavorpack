@@ -264,4 +264,4 @@ kubectl run myapp --image=alpine --command -- /app/myapp.psp
 
 ---
 
-**See also:** [CLI Reference](cli.md) | [Environment Variables](environment.md) | [Cache Management](cache.md)
+**See also:** [CLI Reference](cli/) | [Environment Variables](environment/) | [Cache Management](cache/)

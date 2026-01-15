@@ -2,8 +2,10 @@
 
 Comprehensive guide to diagnosing and resolving common FlavorPack issues.
 
-!!! warning "Feature Coverage"
-    This troubleshooting guide focuses on implemented functionality.
+!!! warning "Alpha Software - Some Features Not Yet Implemented"
+    FlavorPack is in **alpha** status. This troubleshooting guide includes solutions for both implemented and planned features. Features marked with 📋 **PLANNED** are not yet available.
+
+    If you encounter issues with features that don't work, check the [Roadmap](../guide/roadmap/) to see implementation status.
 
 ## Overview
 
@@ -55,7 +57,7 @@ FLAVOR_LOG_LEVEL=debug ./myapp.psp
 ```bash
 # Ensure FlavorPack is installed from source
 cd flavorpack
-uv sync
+uv pip install -e .
 
 # Check PATH
 which flavor
@@ -84,7 +86,7 @@ chmod +x $(which flavor)
 **Solution**:
 ```bash
 # Install build dependencies
-uv sync --upgrade
+uv pip install --upgrade pip setuptools wheel
 
 # Sync all dependencies
 uv sync
@@ -119,13 +121,29 @@ entry_point = "myapp:main"  # module:function
 **Symptom**: Package over 100MB
 
 **Causes**:
+- Uncompressed slots
 - Unnecessary files included
 - Large dependencies
 
 **Solutions**:
-- Remove unnecessary files before packaging
-- Keep dependencies minimal
-- Use `flavor pack --strip` to reduce launcher size
+```toml
+# Enable compression
+[[tool.flavor.slots]]
+operations = "tar.gz"  # Compress with gzip
+
+# Exclude unnecessary files
+[tool.flavor.build]
+exclude = [
+    "**/__pycache__",
+    "**/test_*",
+    "docs/",
+    ".git/"
+]
+
+# Strip binaries
+[tool.flavor.build]
+strip = true
+```
 
 #### Build Timeout
 
@@ -140,7 +158,7 @@ FOUNDATION_LOG_LEVEL=debug flavor pack --manifest pyproject.toml
 # Clear build cache if stuck
 rm -rf ~/.cache/flavor/build
 
-# Note: Timeout option is under evaluation
+# Note: Timeout option is planned for a future release
 ```
 
 #### Missing Launcher
@@ -212,7 +230,7 @@ file myapp.psp
 df -h
 
 # Clear cache
-flavor clean --yes
+flavor workenv clean
 
 # Use different cache location
 export FLAVOR_CACHE=/tmp/flavor-cache
@@ -237,7 +255,9 @@ dependencies = [
     # Add all required packages
 ]
 
-# Pin dependency versions as needed
+# Pin Python version
+[tool.flavor]
+python_version = "3.11"
 ```
 
 #### Memory Issues
@@ -245,6 +265,13 @@ dependencies = [
 **Symptom**: `MemoryError` or application crashes
 
 **Solutions**:
+```toml
+# Set memory limits
+[tool.flavor.execution]
+min_memory = "256MB"
+max_memory = "2GB"
+```
+
 ```bash
 # Monitor memory usage
 FLAVOR_LOG_LEVEL=debug ./myapp.psp
@@ -463,7 +490,20 @@ export XDG_CACHE_HOME=/path/to/cache    # Alternative cache location
 export FLAVOR_VALIDATION=none           # Skip verification (DANGER! Never use in production)
 ```
 
-See the [Environment Variables Guide](../guide/usage/environment.md) for a complete reference.
+#### 📋 Planned Features
+
+These environment variables are planned for future releases:
+
+```bash
+# Not yet implemented - coming in future versions
+export FLAVOR_KEEP_TEMP=1               # Keep temporary files for debugging
+export FLAVOR_NO_CLEANUP=1              # Disable automatic cleanup
+export FLAVOR_PARALLEL_EXTRACTION=1     # Enable parallel slot extraction
+export FLAVOR_CACHE_SIZE=10GB           # Set cache size limit
+export FLAVOR_VERIFY_SIGNATURES=1       # Enforce signature verification
+```
+
+See the [Environment Variables Guide](../guide/usage/environment/) for a complete reference.
 
 ## Performance Optimization
 
@@ -487,6 +527,43 @@ flavor workenv clean --older-than 7
 export FLAVOR_CACHE=/fast/disk/cache
 ```
 
+### 📋 Planned Performance Features
+
+The following performance optimizations are planned for future releases:
+
+#### Build Optimizations (Planned)
+
+```bash
+# Not yet implemented - coming in future versions
+flavor pack --manifest pyproject.toml --parallel        # Parallel packaging
+flavor pack --manifest pyproject.toml --no-tests        # Skip test files
+flavor pack --manifest pyproject.toml --no-docs         # Skip documentation
+```
+
+#### Extraction Optimizations (Planned)
+
+```toml
+# Not yet implemented - will be available in future release
+
+[[tool.flavor.slots]]
+operations = "tar"      # Manual operation control
+lifecycle = "lazy"      # Lazy loading for optional content
+
+[tool.flavor.features]
+parallel_extraction = true     # Concurrent slot extraction
+streaming_extraction = true    # Stream instead of full extraction
+```
+
+#### Memory Management (Planned)
+
+```toml
+# Not yet implemented - will be available in future release
+
+[tool.flavor.execution]
+max_memory = "512MB"    # Set memory limits
+min_memory = "128MB"    # Minimum required memory
+```
+
 ## Error Messages Reference
 
 ### Common Error Messages
@@ -506,10 +583,10 @@ export FLAVOR_CACHE=/fast/disk/cache
 
 ### Self-Service Resources
 
-1. **Documentation**: Read the [User Guide](../guide/index.md)
-2. **Examples**: Check the [Examples Section](../getting-started/examples.md)
-3. **FAQ**: See [Frequently Asked Questions](faq.md)
-4. **API Reference**: Consult [API Documentation](../api/index.md)
+1. **Documentation**: Read the [User Guide](../guide/index/)
+2. **Examples**: Check the [Examples Section](../getting-started/examples/)
+3. **FAQ**: See [Frequently Asked Questions](faq/)
+4. **API Reference**: Consult [API Documentation](../api/index/)
 
 ### Community Support
 
@@ -540,9 +617,9 @@ env | grep FLAVOR
 
 ## Related Documentation
 
-- [Common Errors](errors.md) - Detailed error explanations
-- [Platform-Specific Issues](platforms/index.md) - OS-specific guides
-- [FAQ](faq.md) - Frequently asked questions
-- [Glossary](../reference/glossary.md) - Technical term definitions
-- [Security Model](../guide/concepts/security.md) - Security features and best practices
-- [Performance Tuning](../guide/advanced/performance.md) - Optimization guide
+- [Common Errors](errors/) - Detailed error explanations
+- [Platform-Specific Issues](platforms/index/) - OS-specific guides
+- [FAQ](faq/) - Frequently asked questions
+- [Glossary](../reference/glossary/) - Technical term definitions
+- [Security Model](../guide/concepts/security/) - Security features and best practices
+- [Performance Tuning](../guide/advanced/performance/) - Optimization guide

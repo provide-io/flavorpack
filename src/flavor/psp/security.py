@@ -1,5 +1,5 @@
 #
-# SPDX-FileCopyrightText: Copyright (c) provide.io llc. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
 
@@ -70,6 +70,7 @@ class PSPFIntegrityVerifier:
 
     def __init__(self) -> None:
         """Initialize the verifier."""
+        pass
 
     def verify_integrity(self, bundle_path: Path) -> IntegrityResult:  # noqa: C901
         """
@@ -113,70 +114,75 @@ class PSPFIntegrityVerifier:
                 ):
                     logger.debug("🔐 Skipping signature verification due to validation level")
                     signature_valid = True
-                # Verify signature if present
-                elif hasattr(index, "integrity_signature") and hasattr(index, "public_key"):
-                    if (
-                        index.integrity_signature
-                        and index.public_key
-                        and index.integrity_signature != b"\x00" * 512
-                        and index.public_key != b"\x00" * 32
-                    ):
-                        # Get the original metadata JSON that was signed during building
-                        # Read compressed metadata from file
-                        assert reader._backend is not None
-                        metadata_compressed = reader._backend.read_at(
-                            index.metadata_offset, index.metadata_size
-                        )
-
-                        # Convert to bytes if memoryview
-                        if isinstance(metadata_compressed, memoryview):
-                            metadata_compressed = bytes(metadata_compressed)
-
-                        # Decompress to get the original JSON that was signed
-                        import gzip
-
-                        metadata_json = gzip.decompress(metadata_compressed)
-
-                        # Verify Ed25519 signature
-                        try:
-                            # Extract first 64 bytes for Ed25519 signature
-                            ed25519_signature = index.integrity_signature[:64]
-
-                            verifier = Ed25519Verifier(index.public_key)
-                            signature_valid = verifier.verify(metadata_json, ed25519_signature)
-                            logger.debug(f"🔐 Signature validation result: {signature_valid}")
-
-                        except Exception as e:
-                            # Handle signature validation failure based on level
-                            signature_valid = False
-                            if validation_level == ValidationLevel.STRICT:
-                                logger.error(f"❌ Signature verification error: {e}")
-                                tamper_detected = True
-                                raise
-                            elif validation_level == ValidationLevel.STANDARD:
-                                logger.warning(f"⚠️ Signature verification error: {e}")
-                                logger.warning("🚨 SECURITY WARNING: Package integrity verification failed")
-                                logger.warning("🚨 Package may be corrupted or tampered with")
-                                logger.warning(
-                                    "🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)"
-                                )
-                            else:
-                                logger.warning(f"⚠️ Signature verification error: {e}")
-                                logger.warning("⚠️ Continuing due to validation level")
-                    # Missing or null signatures
-                    elif validation_level == ValidationLevel.STRICT:
-                        logger.error("🔐 No valid signatures found - package unsigned")
-                        signature_valid = False
-                    else:
-                        logger.debug("🔐 No valid signatures found")
-                        signature_valid = False
-                # No signature fields in index
-                elif validation_level == ValidationLevel.STRICT:
-                    logger.error("🔐 Index missing signature fields")
-                    signature_valid = False
                 else:
-                    logger.debug("🔐 Index missing signature fields")
-                    signature_valid = False
+                    # Verify signature if present
+                    if hasattr(index, "integrity_signature") and hasattr(index, "public_key"):
+                        if (
+                            index.integrity_signature
+                            and index.public_key
+                            and index.integrity_signature != b"\x00" * 512
+                            and index.public_key != b"\x00" * 32
+                        ):
+                            # Get the original metadata JSON that was signed during building
+                            # Read compressed metadata from file
+                            assert reader._backend is not None
+                            metadata_compressed = reader._backend.read_at(
+                                index.metadata_offset, index.metadata_size
+                            )
+
+                            # Convert to bytes if memoryview
+                            if isinstance(metadata_compressed, memoryview):
+                                metadata_compressed = bytes(metadata_compressed)
+
+                            # Decompress to get the original JSON that was signed
+                            import gzip
+
+                            metadata_json = gzip.decompress(metadata_compressed)
+
+                            # Verify Ed25519 signature
+                            try:
+                                # Extract first 64 bytes for Ed25519 signature
+                                ed25519_signature = index.integrity_signature[:64]
+
+                                verifier = Ed25519Verifier(index.public_key)
+                                signature_valid = verifier.verify(metadata_json, ed25519_signature)
+                                logger.debug(f"🔐 Signature validation result: {signature_valid}")
+
+                            except Exception as e:
+                                # Handle signature validation failure based on level
+                                signature_valid = False
+                                if validation_level == ValidationLevel.STRICT:
+                                    logger.error(f"❌ Signature verification error: {e}")
+                                    tamper_detected = True
+                                    raise
+                                elif validation_level == ValidationLevel.STANDARD:
+                                    logger.warning(f"⚠️ Signature verification error: {e}")
+                                    logger.warning(
+                                        "🚨 SECURITY WARNING: Package integrity verification failed"
+                                    )
+                                    logger.warning("🚨 Package may be corrupted or tampered with")
+                                    logger.warning(
+                                        "🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)"
+                                    )
+                                else:
+                                    logger.warning(f"⚠️ Signature verification error: {e}")
+                                    logger.warning("⚠️ Continuing due to validation level")
+                        else:
+                            # Missing or null signatures
+                            if validation_level == ValidationLevel.STRICT:
+                                logger.error("🔐 No valid signatures found - package unsigned")
+                                signature_valid = False
+                            else:
+                                logger.debug("🔐 No valid signatures found")
+                                signature_valid = False
+                    else:
+                        # No signature fields in index
+                        if validation_level == ValidationLevel.STRICT:
+                            logger.error("🔐 Index missing signature fields")
+                            signature_valid = False
+                        else:
+                            logger.debug("🔐 Index missing signature fields")
+                            signature_valid = False
 
                 # Verify slot checksums (skip for minimal level)
                 if validation_level != ValidationLevel.MINIMAL:

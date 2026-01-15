@@ -266,7 +266,6 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 
 	metadata := &Metadata{
 		Format: "PSPF/2025",
-		FormatVersion: "1.0.0",
 		Package: PackageInfo{
 			Name:        config.Package.Name,
 			Version:     config.Package.Version,

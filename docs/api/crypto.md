@@ -3,7 +3,7 @@
 Ed25519 key generation and management for PSPF package signing.
 
 !!! note "High-Level API Recommended"
-    Most users should use the CLI tools or [Packaging API](packaging.md) which handle cryptography automatically. This page documents the low-level key management API for advanced use cases.
+    Most users should use the CLI tools or [Packaging API](packaging/) which handle cryptography automatically. This page documents the low-level key management API for advanced use cases.
 
 ## Overview
 
@@ -517,8 +517,8 @@ from flavor.psp.format_2025.keys import load_keys_from_path  # For raw files
 
 ## Related Documentation
 
-- **[Packaging API](packaging.md)** - High-level package building with automatic signing
-- **[Security Model](../guide/concepts/security.md)** - FlavorPack security architecture
-- **[Signing Guide](../guide/packaging/signing.md)** - Package signing workflow
-- **[CLI Reference](../guide/usage/cli.md#keygen)** - CLI key generation
-- **[PSPF Security Specification](../reference/spec/fep-0001-core-format-and-operation-chains.md#7-security-model)** - Format security details
+- **[Packaging API](packaging/)** - High-level package building with automatic signing
+- **[Security Model](../guide/concepts/security/)** - FlavorPack security architecture
+- **[Signing Guide](../guide/packaging/signing/)** - Package signing workflow
+- **[CLI Reference](../guide/usage/cli/#keygen)** - CLI key generation
+- **[PSPF Security Specification](../reference/spec/fep-0001-core-format-and-operation-chains/#7-security-model)** - Format security details

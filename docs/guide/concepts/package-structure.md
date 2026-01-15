@@ -189,7 +189,7 @@ slots/
 
 | Purpose | Description | Typical Content |
 |---------|-------------|-----------------|
-| `python-environment` | Python venv | site-packages, metadata |
+| `python-environment` | Python venv | site-packages, pip |
 | `application-code` | Main code | Python modules |
 | `configuration` | Settings | JSON, YAML, TOML |
 | `static-resources` | Assets | Images, fonts |
@@ -248,13 +248,20 @@ dependencies = [
 
 [tool.flavor]
 entry_point = "myapp:main"
+python_version = "3.11"
 
-[tool.flavor.execution.runtime.env]
-unset = ["*"]
-pass = ["PATH", "HOME", "LANG", "LC_*"]
+[[tool.flavor.slots]]
+id = "config"
+source = "config/"
+purpose = "configuration"
+lifecycle = "persistent"
 
-[tool.flavor.build]
-dependencies = ["../shared-lib"]
+[[tool.flavor.slots]]
+id = "static"
+source = "static/"
+purpose = "static-resources"
+lifecycle = "cached"
+operations = "tar.gz"
 ```
 
 ### Build Process
@@ -415,9 +422,33 @@ def extract_package(metadata, work_dir):
 
 ### Size Optimization
 
-1. **Reduce dependencies**: Remove unused libraries from `pyproject.toml`
-2. **Strip binaries**: Use `flavor pack --strip` to reduce launcher size
-3. **Trim assets**: Remove large, unused assets before packaging
+1. **Compression**: Use appropriate operations
+   - `tar.gz` for text-heavy content
+   - `tar` for already-compressed data
+   - `raw` for small files
+
+2. **Deduplication**: Share common libraries
+   ```toml
+   [[tool.flavor.slots]]
+   id = "shared-libs"
+   source = "/common/libs"
+   lifecycle = "cached"
+   ```
+
+3. **Lazy Loading**: Defer optional content
+   ```toml
+   [[tool.flavor.slots]]
+   id = "docs"
+   lifecycle = "lazy"
+   optional = true
+   ```
+
+### Performance Optimization
+
+1. **Parallel Extraction**: Extract slots concurrently
+2. **Memory Mapping**: Use mmap for large files
+3. **Caching**: Reuse extracted environments
+4. **Streaming**: Process without full extraction
 
 ## Security Features
 
@@ -472,7 +503,7 @@ FLAVOR_LOG_LEVEL=debug ./package.psp
 
 ## Related Documentation
 
-- [Binary Layout](../../reference/spec/pspf-2025.md) - Technical format details
-- [Slots](../../reference/spec/pspf-2025.md) - Slot system specification
-- [Metadata](../../reference/spec/pspf-2025.md) - Metadata structure
-- [Building Packages](../../guide/packaging/index.md) - Build guide
+- [Binary Layout](../../reference/spec/pspf-2025/) - Technical format details
+- [Slots](../../reference/spec/pspf-2025/) - Slot system specification
+- [Metadata](../../reference/spec/pspf-2025/) - Metadata structure
+- [Building Packages](../../guide/packaging/index/) - Build guide

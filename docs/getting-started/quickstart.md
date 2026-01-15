@@ -12,7 +12,7 @@ Before you begin, ensure you have:
 - **Git** for cloning the repository
 
 !!! info "Need More Details?"
-    See the complete [System Requirements](../reference/requirements.md) for detailed version information and platform support.
+    See the complete [System Requirements](../reference/requirements/) for detailed version information and platform support.
 
 ## Installation
 
@@ -45,7 +45,7 @@ make build-helpers
 ```
 
 !!! tip "Pre-built binaries"
-    Pre-built binaries are not distributed yet. Build helpers from source for your platform.
+    Pre-built binaries for common platforms will be available in future releases.
 
 ## Your First Package
 
@@ -183,18 +183,18 @@ ls extracted/
 Now that you've created your first package:
 
 ### Learn More
-- 📖 [Core Concepts](../guide/concepts/pspf-format.md) - Understand the PSPF format
-- 🎯 [Package Configuration](../guide/packaging/configuration.md) - Advanced packaging options
-- 🔧 [Python Packaging Guide](../guide/packaging/python.md) - Python-specific features
+- 📖 [Core Concepts](../guide/concepts/pspf-format/) - Understand the PSPF format
+- 🎯 [Package Configuration](../guide/packaging/configuration/) - Advanced packaging options
+- 🔧 [Python Packaging Guide](../guide/packaging/python/) - Python-specific features
 
 ### Try Examples
-- 💻 [CLI Tool Example](../cookbook/examples/cli-tool.md) - Package a CLI application
-- 🌐 [Web App Example](../cookbook/examples/web-app.md) - Package a Flask/FastAPI app
+- 💻 [CLI Tool Example](../cookbook/examples/cli-tool/) - Package a CLI application
+- 🌐 [Web App Example](../cookbook/examples/web-app/) - Package a Flask/FastAPI app
 
 ### Get Help
-- 🐛 [Troubleshooting](../troubleshooting/common.md) - Common issues and solutions
-- 💬 [Community](../community/support.md) - Get help from the community
-- 📝 [FAQ](../troubleshooting/faq.md) - Frequently asked questions
+- 🐛 [Troubleshooting](../troubleshooting/common/) - Common issues and solutions
+- 💬 [Community](../community/support/) - Get help from the community
+- 📝 [FAQ](../troubleshooting/faq/) - Frequently asked questions
 
 ## Tips for Success
 
@@ -215,22 +215,22 @@ Now that you've created your first package:
 
 **Continue Learning**:
 
-- 📖 [Core Concepts](../guide/concepts/pspf-format.md) - Understand the PSPF format
-- 🎯 [Package Configuration](../guide/packaging/configuration.md) - Advanced packaging options
-- 🔧 [Python Packaging Guide](../guide/packaging/python.md) - Python-specific features
-- 🔒 [Package Signing](../guide/packaging/signing.md) - Add cryptographic signatures
-- 📋 [CLI Reference](../guide/usage/cli.md) - Complete command documentation
+- 📖 [Core Concepts](../guide/concepts/pspf-format/) - Understand the PSPF format
+- 🎯 [Package Configuration](../guide/packaging/configuration/) - Advanced packaging options
+- 🔧 [Python Packaging Guide](../guide/packaging/python/) - Python-specific features
+- 🔒 [Package Signing](../guide/packaging/signing/) - Add cryptographic signatures
+- 📋 [CLI Reference](../guide/usage/cli/) - Complete command documentation
 
 **Examples**:
 
-- 💻 [CLI Tool Example](../cookbook/examples/cli-tool.md) - Package a CLI application
-- 🌐 [Web App Example](../cookbook/examples/web-app.md) - Package a Flask/FastAPI app
+- 💻 [CLI Tool Example](../cookbook/examples/cli-tool/) - Package a CLI application
+- 🌐 [Web App Example](../cookbook/examples/web-app/) - Package a Flask/FastAPI app
 
 **Need Help?**:
 
-- 🐛 [Troubleshooting](../troubleshooting/common.md) - Common issues and solutions
-- 💬 [Community](../community/support.md) - Get help from the community
-- 📝 [FAQ](../troubleshooting/faq.md) - Frequently asked questions
+- 🐛 [Troubleshooting](../troubleshooting/common/) - Common issues and solutions
+- 💬 [Community](../community/support/) - Get help from the community
+- 📝 [FAQ](../troubleshooting/faq/) - Frequently asked questions
 
 ---
 

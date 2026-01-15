@@ -11,7 +11,7 @@ FlavorPack transforms Python applications into portable executables that run any
 ### 1. Install FlavorPack
 
 ```bash
-uv tool install flavorpack
+pip install flavor
 ```
 
 ### 2. Create a Manifest
@@ -29,6 +29,7 @@ dependencies = [
 
 [tool.flavor]
 entry_point = "myapp:main"
+python_version = "3.11"
 ```
 
 ### 3. Build the Package
@@ -126,6 +127,23 @@ dependencies = [
 [tool.flavor]
 # Required: Entry point module:function
 entry_point = "myapp:main"
+
+# Python version (default: current)
+python_version = "3.11"
+
+# Optional: Additional slots
+[[tool.flavor.slots]]
+id = "config"
+source = "config/"
+purpose = "configuration"
+lifecycle = "persistent"
+
+[[tool.flavor.slots]]
+id = "static"
+source = "static/"
+purpose = "static-resources"
+lifecycle = "cached"
+# Automatic tar.gz compression
 ```
 
 ### Step 4: Build Package
@@ -160,7 +178,7 @@ Always verify your package after building:
 # Basic verification
 flavor verify myapp-1.0.0.psp
 
-# Deep verification (full validation)
+# Deep verification (all slots)
 flavor verify myapp-1.0.0.psp --deep
 
 # Inspect package contents
@@ -174,8 +192,9 @@ flavor inspect myapp-1.0.0.psp
 FlavorPack automatically creates a virtual environment with your dependencies:
 
 - Installs all dependencies from `pyproject.toml`
-- Includes a uv-managed environment for runtime dependency management
-- Packages the environment into the PSPF payload
+- Includes pip for runtime package management
+- Optimizes for size (removes __pycache__, tests, docs)
+- Compresses with tar.gz for efficiency
 
 ### Application Code
 
@@ -183,11 +202,12 @@ Your source code is packaged separately:
 
 - Preserves directory structure
 - Includes all Python modules
-- Includes your project files and resources
+- Excludes test files by default
+- Can include data files and resources
 
 ### Slots
 
-Packages are assembled into internal slots:
+Organize content into logical slots:
 
 | Slot Type | Purpose | Example Content |
 |-----------|---------|-----------------|
@@ -199,58 +219,92 @@ Packages are assembled into internal slots:
 
 ## Build Options
 
-### Builder and Launcher Binaries
+### Launcher Selection
 
-Provide custom helper binaries when needed:
+Choose between Go and Rust launchers:
 
 ```bash
+# Use Rust launcher (default)
+flavor pack --manifest pyproject.toml --launcher rust
+
+# Use Go launcher
+flavor pack --manifest pyproject.toml --launcher go
+
 # Use specific launcher binary
 flavor pack --manifest pyproject.toml --launcher-bin /path/to/launcher
-
-# Use specific builder binary
-flavor pack --manifest pyproject.toml --builder-bin /path/to/builder
 ```
 
-### Output and Verification
+### Compression
+
+Control slot compression:
+
+```toml
+[[tool.flavor.slots]]
+id = "large-data"
+source = "data/"
+# Automatic tar.gz compression  # Options: raw, tar, gzip, tgz
+```
+
+### Platform-Specific Builds
+
+Build for specific platforms:
 
 ```bash
-# Specify output location
-flavor pack --manifest pyproject.toml --output dist/myapp.psp
+# Build for current platform (default)
+flavor pack --manifest pyproject.toml
 
-# Skip verification (not recommended)
-flavor pack --manifest pyproject.toml --no-verify
-
-# Strip debug symbols for smaller size
-flavor pack --manifest pyproject.toml --strip
+# Build for specific platform
+flavor pack --manifest pyproject.toml --platform linux_amd64
+flavor pack --manifest pyproject.toml --platform darwin_arm64
+flavor pack --manifest pyproject.toml --platform windows_amd64
 ```
 
 ## Advanced Features
 
-### Runtime Environment Variables
+### Multiple Entry Points
 
-Control which environment variables are available at runtime:
+Support multiple commands:
 
 ```toml
-[tool.flavor.execution.runtime.env]
-unset = ["*"]
-pass = ["PATH", "HOME", "TERM", "LANG", "LC_*"]
+[project.scripts]
+myapp = "myapp:main"
+myapp-admin = "myapp.admin:main"
+myapp-worker = "myapp.worker:main"
 ```
 
-### Build Dependencies
+### Custom Slots
 
-Declare local build-time dependencies:
+Add custom content slots:
+
+```toml
+[[tool.flavor.slots]]
+id = "models"
+source = "models/"
+purpose = "data-files"
+lifecycle = "lazy"  # Load on demand
+platform = "linux_amd64"  # Platform-specific
+```
+
+### Build Hooks
+
+Run commands during build:
 
 ```toml
 [tool.flavor.build]
-dependencies = ["../shared-lib"]
+pre_build = ["pytest", "myapp/scripts/prepare.py"]
+post_build = ["myapp/scripts/verify.py"]
 ```
 
-### Deterministic Signing Keys
+### Deterministic Builds
 
-Generate deterministic signing keys:
+Ensure reproducible builds:
 
 ```bash
-# Use command line
+# Set seed for deterministic builds
+export FLAVOR_SEED="my-secret-seed"
+flavor pack --manifest pyproject.toml
+
+# Or use command line
 flavor pack --manifest pyproject.toml --key-seed "my-secret-seed"
 ```
 
@@ -270,8 +324,9 @@ flavor pack --manifest pyproject.toml --key-seed "my-secret-seed"
 
 ### 3. Size Optimization
 
-- Keep dependencies lean
-- Strip debug symbols for production (`--strip`)
+- Exclude unnecessary files (tests, docs)
+- Use appropriate compression
+- Strip debug symbols for production
 
 ### 4. Security
 
@@ -291,10 +346,10 @@ flavor pack --manifest pyproject.toml --key-seed "my-secret-seed"
 
 | Issue | Solution |
 |-------|----------|
-| Large package size | Reduce dependencies, use `--strip` |
+| Large package size | Use compression, exclude unnecessary files |
 | Missing dependencies | Check pyproject.toml dependencies |
 | Entry point not found | Verify module:function syntax |
-| Platform incompatibility | Build on the target platform |
+| Platform incompatibility | Build for specific platform |
 
 ### Debug Mode
 
@@ -325,6 +380,11 @@ dependencies = ["flask>=2.0", "gunicorn>=20.0"]
 
 [tool.flavor]
 entry_point = "webapp:create_app"
+
+[[tool.flavor.slots]]
+id = "templates"
+source = "templates/"
+purpose = "static-resources"
 ```
 
 ### CLI Tool
@@ -352,13 +412,19 @@ dependencies = ["numpy", "pandas", "scikit-learn"]
 
 [tool.flavor]
 entry_point = "model:predict"
+
+[[tool.flavor.slots]]
+id = "models"
+source = "trained_models/"
+purpose = "data-files"
+lifecycle = "lazy"
 ```
 
 ## Related Documentation
 
-- [Manifest Configuration](manifest.md) - Detailed manifest options
-- [Python Packaging](python.md) - Python-specific features
-- [Package Signing](signing.md) - Security and signatures
-- [Platform Support](platforms.md) - Cross-platform packaging
-- [API Reference](../../api/index.md) - Python API
-- [Troubleshooting](../../troubleshooting/index.md) - Common issues
+- [Manifest Configuration](manifest/) - Detailed manifest options
+- [Python Packaging](python/) - Python-specific features
+- [Package Signing](signing/) - Security and signatures
+- [Platform Support](platforms/) - Cross-platform packaging
+- [API Reference](../../api/index/) - Python API
+- [Troubleshooting](../../troubleshooting/index/) - Common issues
