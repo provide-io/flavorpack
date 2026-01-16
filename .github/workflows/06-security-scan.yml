@@ -141,12 +141,10 @@ jobs:
             bandit[toml] \
             safety \
             pip-audit \
-            semgrep \
             dlint \
-            pyt \
             dodgy \
             vulture
-          
+
           # Install project for dependency scanning
           pip install -e ".[dev,test]"
       
@@ -236,26 +234,10 @@ jobs:
       - name: 🔬 Semgrep SAST Analysis
         id: semgrep
         continue-on-error: true
-        run: |
-          source security-env/bin/activate
-          echo "### Semgrep Static Analysis" >> $GITHUB_STEP_SUMMARY
-          
-          # Run Semgrep with various rulesets
-          semgrep --config=auto \
-                  --json \
-                  --output=semgrep.json \
-                  src/ helpers/ 2>&1 | tee semgrep.log || true
-          
-          if [ -f semgrep.json ]; then
-            FINDINGS=$(jq '.results | length' semgrep.json)
-            echo "Found $FINDINGS security findings via Semgrep" >> $GITHUB_STEP_SUMMARY
-            
-            if [ "$FINDINGS" -gt 0 ]; then
-              echo '```json' >> $GITHUB_STEP_SUMMARY
-              jq '.results[0:5] | map({path: .path, message: .extra.message, severity: .extra.severity})' semgrep.json >> $GITHUB_STEP_SUMMARY
-              echo '```' >> $GITHUB_STEP_SUMMARY
-            fi
-          fi
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: auto
+          generateSarif: false
       
       - name: 🐛 Dodgy Suspicious Code Detection
         continue-on-error: true
@@ -279,12 +261,17 @@ jobs:
         continue-on-error: true
         run: |
           source security-env/bin/activate
-          
+
           # Convert Bandit to SARIF
           bandit -r src/ helpers/ -f sarif -o bandit.sarif || true
-          
-          # Semgrep SARIF output
-          semgrep --config=auto --sarif --output=semgrep.sarif src/ helpers/ || true
+
+      - name: 🔬 Semgrep SARIF Generation
+        if: inputs.enable_sarif == true
+        continue-on-error: true
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: auto
+          generateSarif: true
       
       - name: 📤 Upload SARIF Results
         if: inputs.enable_sarif == true
