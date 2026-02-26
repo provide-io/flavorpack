@@ -43,6 +43,64 @@ jobs:
       - name: 🔨 Build and verify static binaries
         run: ci/build-compat-binaries.sh
 
+          # Rust builds (musl for static linking)
+          cd flavor-rs
+          make clean
+          RUSTFLAGS="-C target-feature=+crt-static" cargo build --release --target x86_64-unknown-linux-musl
+          cp target/x86_64-unknown-linux-musl/release/flavor-rs-builder ../../dist/bin/flavor-rs-builder-linux_amd64
+          cp target/x86_64-unknown-linux-musl/release/flavor-rs-launcher ../../dist/bin/flavor-rs-launcher-linux_amd64
+          cd ..
+      
+      # ARM64 builds disabled temporarily - focusing on AMD64 testing
+      # - name: 🔨 Build ARM64 binaries
+      #   run: |
+      #     cd helpers
+      #     
+      #     # Go ARM64 builds
+      #     cd flavor-go
+      #     GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -buildvcs=false \
+      #       -o ../bin/flavor-go-builder-linux_arm64 cmd/flavor-go-builder/main.go
+      #     GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -buildvcs=false \
+      #       -o ../bin/flavor-go-launcher-linux_arm64 cmd/flavor-go-launcher/main.go
+      #     cd ..
+      #     
+      #     # Rust ARM64 builds
+      #     cd flavor-rs
+      #     export CC_aarch64_unknown_linux_musl=aarch64-linux-musl-gcc
+      #     export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=aarch64-linux-musl-gcc
+      #     cargo build --release --target aarch64-unknown-linux-musl
+      #     cp target/aarch64-unknown-linux-musl/release/flavor-rs-builder ../bin/flavor-rs-builder-linux_arm64
+      #     cp target/aarch64-unknown-linux-musl/release/flavor-rs-launcher ../bin/flavor-rs-launcher-linux_arm64
+      #     cd ..
+      
+      - name: 🔍 Verify static linking
+        run: |
+          echo "Verifying static linking for all binaries..."
+          failed=0
+          
+          for binary in dist/bin/flavor-*-linux_*; do
+            if [ -f "$binary" ]; then
+              echo -n "Checking $(basename $binary): "
+              # Check if binary is static - either file says "statically linked" or ldd says "not a dynamic executable"
+              if file "$binary" | grep -q "statically linked"; then
+                echo "✅ Static (file)"
+              elif ldd "$binary" 2>&1 | grep -q "not a dynamic executable\|statically linked"; then
+                echo "✅ Static (ldd)"
+              else
+                echo "❌ Dynamic"
+                echo "  File output: $(file $binary)"
+                echo "  LDD output:"
+                ldd "$binary" 2>&1 | head -3 | sed 's/^/    /'
+                failed=1
+              fi
+            fi
+          done
+          
+          if [ $failed -eq 1 ]; then
+            echo "ERROR: Some binaries are not statically linked!"
+            exit 1
+          fi
+      
       - name: 📦 Upload artifacts
         uses: actions/upload-artifact@v7
         with:
