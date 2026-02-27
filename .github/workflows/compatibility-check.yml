@@ -56,7 +56,7 @@ jobs:
           # Rust builds (musl for static linking)
           cd flavor-rs
           make clean
-          cargo build --release --target x86_64-unknown-linux-musl
+          RUSTFLAGS="-C target-feature=+crt-static" cargo build --release --target x86_64-unknown-linux-musl
           cp target/x86_64-unknown-linux-musl/release/flavor-rs-builder ../../dist/bin/flavor-rs-builder-linux_amd64
           cp target/x86_64-unknown-linux-musl/release/flavor-rs-launcher ../../dist/bin/flavor-rs-launcher-linux_amd64
           cd ..
@@ -179,16 +179,26 @@ jobs:
             for binary in flavor-*-linux_${{ matrix.distro.arch == 'amd64' && 'amd64' || 'arm64' }}; do
               if [ -f "$binary" ]; then
                 printf "%-40s" "$binary:"
-                
-                # Test --version
-                if ./$binary --version >/dev/null 2>&1; then
-                  version=$(./$binary --version 2>&1 | head -1)
-                  echo "✅ Works (${version})"
+
+                if echo "$binary" | grep -q "launcher"; then
+                  # Launchers pass all args to packaged app - use CLI mode
+                  if FLAVOR_LAUNCHER_CLI=1 ./$binary help >/dev/null 2>&1; then
+                    echo "✅ Works (launcher)"
+                  else
+                    echo "❌ Failed"
+                    FLAVOR_LAUNCHER_CLI=1 ./$binary help 2>&1 | head -5 | sed "s/^/    /"
+                    failed=1
+                  fi
                 else
-                  echo "❌ Failed"
-                  echo "  Error output:"
-                  ./$binary --version 2>&1 | head -5 | sed "s/^/    /"
-                  failed=1
+                  # Builders support --version directly
+                  if ./$binary --version >/dev/null 2>&1; then
+                    version=$(./$binary --version 2>&1 | head -1)
+                    echo "✅ Works (${version})"
+                  else
+                    echo "❌ Failed"
+                    ./$binary --version 2>&1 | head -5 | sed "s/^/    /"
+                    failed=1
+                  fi
                 fi
               fi
             done
@@ -241,10 +251,18 @@ jobs:
             for binary in flavor-*-linux_amd64; do
               if [ -f "$binary" ]; then
                 echo -n "Testing $binary: "
-                if ./$binary --version >/dev/null 2>&1; then
-                  echo "✅ PASS"
+                if echo "$binary" | grep -q "launcher"; then
+                  if FLAVOR_LAUNCHER_CLI=1 ./$binary help >/dev/null 2>&1; then
+                    echo "✅ PASS (launcher)"
+                  else
+                    echo "❌ FAIL"
+                  fi
                 else
-                  echo "❌ FAIL"
+                  if ./$binary --version >/dev/null 2>&1; then
+                    echo "✅ PASS"
+                  else
+                    echo "❌ FAIL"
+                  fi
                 fi
               fi
             done
@@ -293,10 +311,18 @@ jobs:
             for binary in flavor-*-linux_arm64; do
               if [ -f "$binary" ]; then
                 echo -n "Testing $binary: "
-                if ./$binary --version >/dev/null 2>&1; then
-                  echo "✅ PASS"
+                if echo "$binary" | grep -q "launcher"; then
+                  if FLAVOR_LAUNCHER_CLI=1 ./$binary help >/dev/null 2>&1; then
+                    echo "✅ PASS (launcher)"
+                  else
+                    echo "❌ FAIL"
+                  fi
                 else
-                  echo "❌ FAIL"
+                  if ./$binary --version >/dev/null 2>&1; then
+                    echo "✅ PASS"
+                  else
+                    echo "❌ FAIL"
+                  fi
                 fi
               fi
             done
