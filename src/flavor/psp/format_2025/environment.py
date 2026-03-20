@@ -124,7 +124,8 @@ def _unset_all_except_preserved(env_map: dict[str, str], should_preserve: Callab
     keys_to_remove = [k for k in env_map if not should_preserve(k)]
     for key in keys_to_remove:
         del env_map[key]
-        plog.trace(f"  🗑️ Unset: {key}")
+        if plog.is_trace_enabled():
+            plog.trace(f"  🗑️ Unset: {key}")
 
 
 def _unset_glob_pattern(env_map: dict[str, str], pattern: str, should_preserve: Callable[[str], bool]) -> None:
@@ -132,7 +133,8 @@ def _unset_glob_pattern(env_map: dict[str, str], pattern: str, should_preserve: 
     keys_to_remove = [k for k in env_map if fnmatch.fnmatch(k, pattern) and not should_preserve(k)]
     for key in keys_to_remove:
         del env_map[key]
-        plog.trace(f"  🗑️ Unset (glob): {key}")
+        if plog.is_trace_enabled():
+            plog.trace(f"  🗑️ Unset (glob): {key}")
 
 
 def _unset_exact_match(env_map: dict[str, str], pattern: str, should_preserve: Callable[[str], bool]) -> None:

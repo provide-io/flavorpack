@@ -65,7 +65,8 @@ class DependencyResolver:
             try:
                 result = run([uv_path, "--version"], capture_output=True, timeout=10)
                 if result.returncode == 0:
-                    logger.trace(f"UV version check successful: {result.stdout.strip()}")
+                    if logger.is_trace_enabled():
+                        logger.trace(f"UV version check successful: {result.stdout.strip()}")
                     return uv_path
                 else:
                     logger.warning(f"UV version check failed: {result.stderr}")
@@ -73,16 +74,9 @@ class DependencyResolver:
                 logger.warning(f"Failed to verify UV at {uv_path}: {e}")
 
         # Check if UV is available via pipx
-        pipx_uv = shutil.which("pipx")
-        if pipx_uv:
-            try:
-                logger.trace("Checking if UV is available via pipx")
-                result = run(["pipx", "run", "uv", "--version"], capture_output=True, timeout=15)
-                if result.returncode == 0:
-                    logger.debug("UV found via pipx")
-                    return "pipx run uv"
-            except Exception as e:
-                logger.trace(f"pipx uv check failed: {e}")
+        pipx_result = self._find_uv_via_pipx()
+        if pipx_result:
+            return pipx_result
 
         if raise_if_not_found:
             raise FileNotFoundError(
@@ -90,6 +84,22 @@ class DependencyResolver:
                 "https://docs.astral.sh/uv/getting-started/installation/"
             )
 
+        return None
+
+    def _find_uv_via_pipx(self) -> str | None:
+        """Check if UV is available via pipx."""
+        pipx_uv = shutil.which("pipx")
+        if not pipx_uv:
+            return None
+        try:
+            logger.trace("Checking if UV is available via pipx")
+            result = run(["pipx", "run", "uv", "--version"], capture_output=True, timeout=15)
+            if result.returncode == 0:
+                logger.debug("UV found via pipx")
+                return "pipx run uv"
+        except Exception as e:
+            if logger.is_trace_enabled():
+                logger.trace(f"pipx uv check failed: {e}")
         return None
 
     @retry(
@@ -126,7 +136,8 @@ class DependencyResolver:
             return None
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            logger.trace(f"Created temp directory for UV download: {temp_dir}")
+            if logger.is_trace_enabled():
+                logger.trace(f"Created temp directory for UV download: {temp_dir}")
 
             # Download UV wheel using pip
             uv_wheel = self._download_uv_with_pip(temp_dir)
@@ -153,7 +164,8 @@ class DependencyResolver:
         try:
             logger.trace("Checking if pip is available")
             result = run(pip_check_cmd, check=True, capture_output=True)
-            logger.trace(f"pip is available: {result.stdout.strip()}")
+            if logger.is_trace_enabled():
+                logger.trace(f"pip is available: {result.stdout.strip()}")
             return True
         except Exception:
             logger.info("pip not found, installing it first")
@@ -248,21 +260,24 @@ class DependencyResolver:
             Up to 3 attempts with exponential backoff for network errors
         """
         logger.debug("Running UV download command", cmd=" ".join(download_cmd))
-        logger.trace(f"Full command: {download_cmd}")
+        if logger.is_trace_enabled():
+            logger.trace(f"Full command: {download_cmd}")
 
         result = run(download_cmd, check=True, capture_output=True)
-        if result.stdout:
+        if result.stdout and logger.is_trace_enabled():
             logger.trace(f"Download stdout: {result.stdout.strip()}")
-        if result.stderr:
+        if result.stderr and logger.is_trace_enabled():
             logger.trace(f"Download stderr: {result.stderr.strip()}")
 
         return True
 
     def _find_downloaded_uv_wheel(self, temp_dir: str) -> Path | None:
         """Find and validate downloaded UV wheel."""
-        logger.trace(f"Searching for UV wheel in {temp_dir}")
+        if logger.is_trace_enabled():
+            logger.trace(f"Searching for UV wheel in {temp_dir}")
         all_files = list(Path(temp_dir).iterdir())
-        logger.trace(f"Files in temp dir: {[f.name for f in all_files]}")
+        if logger.is_trace_enabled():
+            logger.trace(f"Files in temp dir: {[f.name for f in all_files]}")
 
         for file in Path(temp_dir).glob("uv-*.whl"):
             if logger.is_debug_enabled():
@@ -296,7 +311,8 @@ class DependencyResolver:
 
         try:
             with zipfile.ZipFile(uv_wheel, "r") as wheel_zip:
-                logger.trace(f"Wheel contents (first 10): {wheel_zip.namelist()[:10]}")
+                if logger.is_trace_enabled():
+                    logger.trace(f"Wheel contents (first 10): {wheel_zip.namelist()[:10]}")
                 # UV binary is typically at uv/uv in the wheel
                 for name in wheel_zip.namelist():
                     if name.endswith("/uv") or name == "uv":
@@ -310,7 +326,8 @@ class DependencyResolver:
                         ):
                             content = src.read()
                             dst.write(content)
-                            logger.trace(f"Extracted UV binary, size: {len(content)} bytes")
+                            if logger.is_trace_enabled():
+                                logger.trace(f"Extracted UV binary, size: {len(content)} bytes")
 
                         # Make executable (Unix-like systems only)
                         if not self.is_windows:
