@@ -107,7 +107,8 @@ def _process_unset_operations(
         return
 
     unset_patterns = runtime_env["unset"]
-    plog.debug(f"🗑️ Processing {len(unset_patterns)} unset patterns")
+    if plog.is_debug_enabled():
+        plog.debug(f"🗑️ Processing {len(unset_patterns)} unset patterns")
 
     for pattern in unset_patterns:
         if pattern == "*":
@@ -138,7 +139,8 @@ def _unset_exact_match(env_map: dict[str, str], pattern: str, should_preserve: C
     """Unset variable with exact match."""
     if pattern in env_map and not should_preserve(pattern):
         del env_map[pattern]
-        plog.debug(f"🗑️ Unset: {pattern}")
+        if plog.is_debug_enabled():
+            plog.debug(f"🗑️ Unset: {pattern}")
 
 
 def _process_map_operations(
@@ -149,12 +151,14 @@ def _process_map_operations(
         return
 
     map_ops = runtime_env["map"]
-    plog.debug(f"🔄 Processing {len(map_ops)} map operations")
+    if plog.is_debug_enabled():
+        plog.debug(f"🔄 Processing {len(map_ops)} map operations")
 
     for old_key, new_key in map_ops.items():
         if old_key in env_map and not should_preserve(old_key):
             env_map[new_key] = env_map.pop(old_key)
-            plog.debug(f"🔄 Mapped: {old_key} -> {new_key}")
+            if plog.is_debug_enabled():
+                plog.debug(f"🔄 Mapped: {old_key} -> {new_key}")
 
 
 def _process_set_operations(env_map: dict[str, str], runtime_env: dict[str, Any]) -> None:
@@ -163,11 +167,13 @@ def _process_set_operations(env_map: dict[str, str], runtime_env: dict[str, Any]
         return
 
     set_ops = runtime_env["set"]
-    plog.debug(f"📝 Processing {len(set_ops)} set operations")
+    if plog.is_debug_enabled():
+        plog.debug(f"📝 Processing {len(set_ops)} set operations")
 
     for key, value in set_ops.items():
         env_map[key] = value
-        plog.debug(f"📝 Set: {key} = '{value}'")
+        if plog.is_debug_enabled():
+            plog.debug(f"📝 Set: {key} = '{value}'")
 
 
 def _verify_pass_requirements(pass_patterns: list[str], env_map: dict[str, str]) -> None:

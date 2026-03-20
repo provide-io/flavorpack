@@ -96,7 +96,8 @@ class PythonSlotBuilder:
         # Ensure bin directory exists for UV binary
         bin_dir = payload_dir / "bin"
         ensure_dir(bin_dir, mode=DEFAULT_DIR_PERMS)
-        logger.debug(f"Created bin directory: {bin_dir}")
+        if logger.is_debug_enabled():
+            logger.debug(f"Created bin directory: {bin_dir}")
 
         # Handle UV binary - download manylinux2014 version on Linux, copy from host on other platforms
         uv_obtained = False
@@ -144,7 +145,8 @@ class PythonSlotBuilder:
                 work_uv = work_dir / self.uv_exe
                 self._copy_executable(uv_host_path, work_uv)
                 artifacts["uv_binary"] = work_uv
-                logger.debug(f"UV binary copied to work dir: {work_uv}")
+                if logger.is_debug_enabled():
+                    logger.debug(f"UV binary copied to work dir: {work_uv}")
             else:
                 # We still need to provide UV somehow - this is a critical error for Python packages
                 raise FileNotFoundError(
@@ -373,7 +375,8 @@ class PythonSlotBuilder:
 
         for req_file in possible_files:
             if req_file.exists():
-                logger.debug(f"Found requirements file: {req_file}")
+                if logger.is_debug_enabled():
+                    logger.debug(f"Found requirements file: {req_file}")
                 return req_file
 
         logger.debug("No requirements file found")

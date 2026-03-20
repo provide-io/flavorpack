@@ -142,7 +142,8 @@ class PythonPackager:
                     "manager": "uv",
                 }
         except Exception as e:
-            logger.debug(f"UV not found: {e}")
+            if logger.is_debug_enabled():
+                logger.debug(f"UV not found: {e}")
 
         # Fall back to system Python
         return {
@@ -283,7 +284,8 @@ class PythonPackager:
                 try:
                     safe_rmtree(dir_path, missing_ok=True)
                 except Exception as e:
-                    logger.debug(f"Failed to remove {dir_path}: {e}")
+                    if logger.is_debug_enabled():
+                        logger.debug(f"Failed to remove {dir_path}: {e}")
 
     def get_runtime_dependencies(self) -> list[str]:
         """
