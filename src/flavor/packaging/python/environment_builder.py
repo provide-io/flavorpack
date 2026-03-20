@@ -119,9 +119,9 @@ class PythonEnvironmentBuilder:
         logger.debug("💻🚀📋 Running command", command=" ".join(cmd))
 
         result = run(cmd, check=True, capture_output=True)
-        if result.stdout:
+        if result.stdout and logger.is_trace_enabled():
             logger.trace(f"UV install stdout: {result.stdout.strip()}")
-        if result.stderr:
+        if result.stderr and logger.is_trace_enabled():
             logger.trace(f"UV install stderr: {result.stderr.strip()}")
 
         return self._find_python_installation(uv_install_dir, uv_cmd)
@@ -295,26 +295,22 @@ class PythonEnvironmentBuilder:
         def filter_and_reorganize(tarinfo: tarfile.TarInfo) -> tarfile.TarInfo | None:
             # Skip EXTERNALLY-MANAGED files
             if tarinfo.name.endswith("EXTERNALLY-MANAGED"):
-                logger.trace(f"  ⏭️ Skipping: {tarinfo.name} (EXTERNALLY-MANAGED)")
+                if logger.is_trace_enabled():
+                    logger.trace(f"  ⏭️ Skipping: {tarinfo.name} (EXTERNALLY-MANAGED)")
                 return None
 
             # Reorganize bin -> Scripts for Windows
             original_name = tarinfo.name
             if self.is_windows and tarinfo.name.startswith("./bin/"):
                 tarinfo.name = tarinfo.name.replace("./bin/", "./Scripts/", 1)
-                logger.trace(f"  🔄 Renamed: {original_name} -> {tarinfo.name}")
+                if logger.is_trace_enabled():
+                    logger.trace(f"  🔄 Renamed: {original_name} -> {tarinfo.name}")
             elif self.is_windows and tarinfo.name == "./bin":
                 tarinfo.name = "./Scripts"
-                logger.trace(f"  🔄 Renamed: {original_name} -> {tarinfo.name}")
+                if logger.is_trace_enabled():
+                    logger.trace(f"  🔄 Renamed: {original_name} -> {tarinfo.name}")
 
-            # Log what we're adding
-            if tarinfo.isfile():
-                stats["files_added"] += 1
-                stats["bytes_added"] += tarinfo.size
-                if stats["files_added"] <= 10 or stats["files_added"] % 100 == 0:
-                    logger.trace(f"  📄 Adding file: {tarinfo.name} ({tarinfo.size:,} bytes)")
-            elif tarinfo.isdir():
-                logger.trace(f"  📁 Adding directory: {tarinfo.name}")
+            _trace_tarball_entry(tarinfo, stats)
 
             return deterministic_filter(tarinfo)
 
@@ -328,6 +324,17 @@ class PythonEnvironmentBuilder:
             f"📦 Created tarball: {python_tgz.name} "
             f"(size: {tarball_size:,} bytes, compression: {compression_ratio:.1f}%)"
         )
+
+
+def _trace_tarball_entry(tarinfo: tarfile.TarInfo, stats: dict[str, int]) -> None:
+    """Log tarball entry at trace level."""
+    if tarinfo.isfile():
+        stats["files_added"] += 1
+        stats["bytes_added"] += tarinfo.size
+        if (stats["files_added"] <= 10 or stats["files_added"] % 100 == 0) and logger.is_trace_enabled():
+            logger.trace(f"  📄 Adding file: {tarinfo.name} ({tarinfo.size:,} bytes)")
+    elif tarinfo.isdir() and logger.is_trace_enabled():
+        logger.trace(f"  📁 Adding directory: {tarinfo.name}")
 
 
 # 🌶️📦🔚

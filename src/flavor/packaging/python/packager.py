@@ -280,7 +280,8 @@ class PythonPackager:
 
         for dir_path in dirs_to_clean:
             if dir_path.exists():
-                logger.trace(f"Removing {dir_path}")
+                if logger.is_trace_enabled():
+                    logger.trace(f"Removing {dir_path}")
                 try:
                     safe_rmtree(dir_path, missing_ok=True)
                 except Exception as e:

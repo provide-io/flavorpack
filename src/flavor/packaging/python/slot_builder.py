@@ -281,7 +281,8 @@ class PythonSlotBuilder:
                     depth=depth,
                 )
         else:
-            logger.trace(f"No pyproject.toml found in {dep_path}")
+            if logger.is_trace_enabled():
+                logger.trace(f"No pyproject.toml found in {dep_path}")
 
         # Add this dependency after its dependencies (post-order)
         if dep_path not in all_deps:
