@@ -178,4 +178,27 @@ def load_public_key_raw(key_path: Path) -> bytes:
         )
 
 
+def derive_public_key_raw(private_key_path: Path) -> bytes:
+    """Derive a raw Ed25519 public key from a PEM-encoded private key."""
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric import ed25519
+
+    pem_data = private_key_path.read_bytes()
+    try:
+        private_key = serialization.load_pem_private_key(pem_data, password=None)
+    except Exception as e:
+        raise ValueError(
+            f"Failed to load private key from {private_key_path}: {e}\n"
+            f"Ensure the key is in PEM format and is a valid Ed25519 key."
+        ) from e
+
+    if not isinstance(private_key, ed25519.Ed25519PrivateKey):
+        raise ValueError(f"Incompatible key type at {private_key_path}: expected Ed25519 private key.")
+
+    return private_key.public_key().public_bytes(
+        encoding=serialization.Encoding.Raw,
+        format=serialization.PublicFormat.Raw,
+    )
+
+
 # 🌶️📦🔚

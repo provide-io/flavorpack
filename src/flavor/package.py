@@ -334,15 +334,14 @@ def _setup_key_paths(
     public_key_path: Path | None,
     manifest_dir: Path,
     key_seed: str | None,
-) -> tuple[Path, Path]:
-    """Setup key paths and generate keys if needed."""
-    if not private_key_path:
-        private_key_path = manifest_dir / "keys" / "flavor-private.key"
-    if not public_key_path:
-        public_key_path = manifest_dir / "keys" / "flavor-public.key"
+) -> tuple[Path | None, Path | None]:
+    """Normalize signing key inputs without generating repository-local keys."""
+    _ = manifest_dir
+    if key_seed:
+        return private_key_path, public_key_path
 
-    if not key_seed and not private_key_path.exists():
-        generate_key_pair(manifest_dir / "keys")
+    if public_key_path and not private_key_path:
+        raise ValueError("Public key path requires a private key path when packaging")
 
     return private_key_path, public_key_path
 
@@ -351,8 +350,8 @@ def _create_orchestrator(
     config_data: dict[str, Any],
     manifest_dir: Path,
     output_flavor_path: Path,
-    private_key_path: Path,
-    public_key_path: Path,
+    private_key_path: Path | None,
+    public_key_path: Path | None,
     launcher_bin: Path | None,
     builder_bin: Path | None,
     strip_binaries: bool,
@@ -362,8 +361,8 @@ def _create_orchestrator(
 ) -> PackagingOrchestrator:
     """Create and configure the PackagingOrchestrator."""
     return PackagingOrchestrator(
-        package_integrity_key_path=str(private_key_path),
-        public_key_path=str(public_key_path),
+        package_integrity_key_path=str(private_key_path) if private_key_path else None,
+        public_key_path=str(public_key_path) if public_key_path else None,
         output_flavor_path=str(output_flavor_path),
         build_config=config_data["build_config"],
         manifest_dir=manifest_dir,

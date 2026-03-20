@@ -5,6 +5,7 @@
 
 """PSPF key management utilities for handling cryptographic keys."""
 
+from functools import lru_cache
 import hashlib
 from pathlib import Path
 
@@ -58,12 +59,14 @@ def resolve_keys(config: KeyConfig) -> tuple[bytes, bytes]:
     return generate_ephemeral_keys()
 
 
+@lru_cache(maxsize=16)
 def generate_deterministic_keys(seed: str) -> tuple[bytes, bytes]:
     """
     Generate deterministic Ed25519 keys from a seed string.
 
     Uses SHA256 to derive a 32-byte seed from the input string,
-    ensuring reproducible key generation.
+    ensuring reproducible key generation. Results are cached since
+    the same seed always produces identical keys.
 
     Args:
         seed: Seed string for deterministic generation
@@ -189,7 +192,8 @@ def save_keys_to_path(private_key: bytes, public_key: bytes, key_path: Path) -> 
     private_key_path.chmod(DEFAULT_FILE_PERMS)
 
     logger.info(f"💾 Saved keys to {key_path}")
-    logger.debug(f"   Public key hash: {hashlib.sha256(public_key).hexdigest()[:8]}")
+    if logger.is_debug_enabled():
+        logger.debug(f"   Public key hash: {hashlib.sha256(public_key).hexdigest()[:8]}")
 
 
 def create_key_config(

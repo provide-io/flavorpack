@@ -60,7 +60,8 @@ class DependencyResolver:
         # Check if UV is in PATH
         uv_path = shutil.which("uv")
         if uv_path:
-            logger.debug(f"Found UV in PATH: {uv_path}")
+            if logger.is_debug_enabled():
+                logger.debug(f"Found UV in PATH: {uv_path}")
             try:
                 result = run([uv_path, "--version"], capture_output=True, timeout=10)
                 if result.returncode == 0:
@@ -117,7 +118,8 @@ class DependencyResolver:
         Retries:
             Up to 3 attempts with exponential backoff for network errors
         """
-        logger.debug(f"Platform: {get_os_name()}, Architecture: {get_arch_name()}")
+        if logger.is_debug_enabled():
+            logger.debug(f"Platform: {get_os_name()}, Architecture: {get_arch_name()}")
 
         # First ensure pip is available
         if not self._ensure_pip_available():
@@ -263,7 +265,8 @@ class DependencyResolver:
         logger.trace(f"Files in temp dir: {[f.name for f in all_files]}")
 
         for file in Path(temp_dir).glob("uv-*.whl"):
-            logger.debug(f"Found UV wheel: {file.name}")
+            if logger.is_debug_enabled():
+                logger.debug(f"Found UV wheel: {file.name}")
             self._validate_manylinux_wheel(file)
             return file
 
@@ -274,7 +277,8 @@ class DependencyResolver:
         """Validate that UV wheel is manylinux2014 compatible."""
         if "manylinux" in uv_wheel.name:
             if "manylinux2014" in uv_wheel.name or "manylinux_2_17" in uv_wheel.name:
-                logger.debug(f"✅ UV wheel is manylinux2014 compatible: {uv_wheel.name}")
+                if logger.is_debug_enabled():
+                    logger.debug(f"✅ UV wheel is manylinux2014 compatible: {uv_wheel.name}")
             else:
                 logger.warning(f"⚠️ UV wheel is not manylinux2014: {uv_wheel.name}")
 
@@ -298,7 +302,8 @@ class DependencyResolver:
                     if name.endswith("/uv") or name == "uv":
                         uv_path = dest_dir / "uv"
 
-                        logger.debug(f"Extracting UV binary from {name}")
+                        if logger.is_debug_enabled():
+                            logger.debug(f"Extracting UV binary from {name}")
                         with (
                             wheel_zip.open(name) as src,
                             uv_path.open("wb") as dst,

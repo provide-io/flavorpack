@@ -152,9 +152,9 @@ class BuildSpec:
         if not self.metadata:
             return False
 
-        # Check for package name (various possible locations)
+        package_metadata = self.metadata.get("package", {})
         has_name = "name" in self.metadata or (
-            "package" in self.metadata and "name" in self.metadata["package"]
+            isinstance(package_metadata, dict) and "name" in package_metadata
         )
 
         return has_name
