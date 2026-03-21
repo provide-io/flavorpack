@@ -634,6 +634,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "memray", marker = "sys_platform != 'emscripten'" },
     { name = "provide-testkit", extra = ["all"] },
 ]
 docs = [
@@ -650,7 +651,10 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-dev = [{ name = "provide-testkit", extras = ["all"] }]
+dev = [
+    { name = "memray", marker = "sys_platform != 'emscripten'", specifier = ">=1.0" },
+    { name = "provide-testkit", extras = ["all"] },
+]
 docs = [
     { name = "mkdocs-mermaid2-plugin", specifier = ">=1.1.0" },
     { name = "provide-testkit", extras = ["docs"] },
