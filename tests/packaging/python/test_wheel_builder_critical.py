@@ -5,13 +5,9 @@
 
 """Tests for WheelBuilder - critical features."""
 
-import importlib.metadata
 from pathlib import Path
-import sys
 import tempfile
 from unittest.mock import Mock, patch
-
-import pytest
 
 from flavor.packaging.python.wheel_builder import WheelBuilder
 
@@ -91,8 +87,6 @@ class TestWheelBuilderCriticalFeatures:
 
     def test_build_isolation_configurable(self) -> None:
         """CRITICAL: Build isolation must be configurable for complex packages."""
-        from flavor.packaging.python.wheel_builder import _PINNED_BUILD_BACKENDS
-
         with tempfile.TemporaryDirectory() as temp_dir:
             source_path = Path(temp_dir) / "package"
             source_path.mkdir()
@@ -105,20 +99,18 @@ class TestWheelBuilderCriticalFeatures:
 
             python_exe = Path("/usr/bin/python3")
 
-            with patch("flavor.packaging.python.wheel_builder.importlib_metadata") as mock_meta:
-                mock_meta.version.side_effect = lambda pkg: _PINNED_BUILD_BACKENDS[pkg]
-                with patch("flavor.packaging.python.wheel_builder.run") as mock_run:
-                    mock_result = Mock(returncode=0, stdout="Built wheel")
-                    mock_run.side_effect = [mock_result, mock_result, mock_result]
+            with patch("flavor.packaging.python.wheel_builder.run") as mock_run:
+                mock_result = Mock(returncode=0, stdout="Built wheel")
+                mock_run.side_effect = [mock_result, mock_result, mock_result]
 
-                    # Test with isolation disabled
-                    self.wheel_builder.build_wheel_from_source(
-                        python_exe, source_path, wheel_dir, use_isolation=False
-                    )
+                # Test with isolation disabled
+                self.wheel_builder.build_wheel_from_source(
+                    python_exe, source_path, wheel_dir, use_isolation=False
+                )
 
-                    args = mock_run.call_args_list[-1][0]
-                    cmd = args[0]
-                    assert "--no-build-isolation" in cmd
+                args = mock_run.call_args_list[-1][0]
+                cmd = args[0]
+                assert "--no-build-isolation" in cmd
 
     @patch("flavor.packaging.python.wheel_builder.run")
     def test_build_wheel_bootstraps_pip_with_ensurepip(self, mock_run: Mock) -> None:
@@ -136,8 +128,7 @@ class TestWheelBuilderCriticalFeatures:
             wheel_file.touch()
 
             python_exe = Path("/usr/bin/python3")
-            with patch.object(sys, "platform", "linux"):
-                result = self.wheel_builder.build_wheel_from_source(python_exe, source_path, wheel_dir)
+            result = self.wheel_builder.build_wheel_from_source(python_exe, source_path, wheel_dir)
 
             assert result == wheel_file
             assert mock_run.call_args_list[0][0][0] == ["/usr/bin/python3", "-m", "pip", "--version"]
@@ -179,41 +170,50 @@ class TestWheelBuilderCriticalFeatures:
                 "pip",
             ]
 
-    def test_ensure_backend_raises_on_version_mismatch(self) -> None:
-        """CRITICAL: version mismatch must raise RuntimeError — never install."""
-        python_exe = Path("/usr/bin/python3")
+    @patch("flavor.packaging.python.wheel_builder.run")
+    def test_build_wheel_installs_backend_for_no_isolation(self, mock_run: Mock) -> None:
+        """Test no-isolation builds install setuptools and wheel when missing."""
+        pip_ready = Mock(returncode=0, stdout="pip 25.0.1")
+        backend_missing = RuntimeError("setuptools missing")
+        install_backend = Mock(returncode=0, stdout="installed")
+        build_wheel = Mock(returncode=0, stdout="Built wheel")
+        mock_run.side_effect = [pip_ready, backend_missing, install_backend, build_wheel]
 
-        with patch("flavor.packaging.python.wheel_builder.importlib_metadata") as mock_meta:
-            mock_meta.version.side_effect = lambda pkg: "99.0.0"
-            with pytest.raises(RuntimeError, match="Build backend mismatch"):
-                self.wheel_builder._ensure_no_isolation_build_backend(python_exe)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_path = Path(temp_dir) / "mypackage"
+            source_path.mkdir()
+            wheel_dir = Path(temp_dir) / "wheels"
+            wheel_dir.mkdir()
+            wheel_file = wheel_dir / "mypackage-1.0.0-py3-none-any.whl"
+            wheel_file.touch()
 
-    def test_ensure_backend_passes_on_correct_versions(self) -> None:
-        """CRITICAL: correct versions must pass silently with no subprocess calls."""
-        from flavor.packaging.python.wheel_builder import _PINNED_BUILD_BACKENDS
+            python_exe = Path("/usr/bin/python3")
+            result = self.wheel_builder.build_wheel_from_source(
+                python_exe,
+                source_path,
+                wheel_dir,
+                use_isolation=False,
+            )
 
-        python_exe = Path("/usr/bin/python3")
-
-        with patch("flavor.packaging.python.wheel_builder.importlib_metadata") as mock_meta:
-            mock_meta.version.side_effect = lambda pkg: _PINNED_BUILD_BACKENDS[pkg]
-            with patch("flavor.packaging.python.wheel_builder.run") as mock_run:
-                self.wheel_builder._ensure_no_isolation_build_backend(python_exe)
-                mock_run.assert_not_called()
-
-    def test_ensure_backend_raises_when_package_not_installed(self) -> None:
-        """CRITICAL: missing package must raise RuntimeError — never install."""
-        python_exe = Path("/usr/bin/python3")
-
-        with patch("flavor.packaging.python.wheel_builder.importlib_metadata") as mock_meta:
-            mock_meta.version.side_effect = importlib.metadata.PackageNotFoundError("setuptools")
-            mock_meta.PackageNotFoundError = importlib.metadata.PackageNotFoundError
-            with pytest.raises(RuntimeError, match="Build backend not found"):
-                self.wheel_builder._ensure_no_isolation_build_backend(python_exe)
+            assert result == wheel_file
+            assert mock_run.call_args_list[1][0][0] == [
+                "/usr/bin/python3",
+                "-c",
+                "import setuptools, wheel",
+            ]
+            assert mock_run.call_args_list[2][0][0] == [
+                "/usr/bin/python3",
+                "-m",
+                "pip",
+                "install",
+                "setuptools",
+                "wheel",
+            ]
 
     def test_manager_separation_maintained(self) -> None:
         """CRITICAL: PyPA pip and UV managers must remain separate and distinct."""
         # Verify both managers are separate instances
-        assert id(self.wheel_builder.pypapip) != id(self.wheel_builder.uv)
+        assert self.wheel_builder.pypapip is not self.wheel_builder.uv
 
         # Verify they have different capabilities
         assert hasattr(self.wheel_builder.pypapip, "_get_pypapip_download_cmd")

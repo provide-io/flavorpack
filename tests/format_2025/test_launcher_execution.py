@@ -165,8 +165,8 @@ class TestWorkEnvironment:
     @pytest.fixture
     def bundle_with_setup_commands(self) -> Iterator[Path]:
         """Create a bundle with setup commands."""
-        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir_str:
-            tmpdir = Path(tmpdir_str)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir = Path(tmpdir)
             package_version = tmpdir.name
 
             # Create a Python runtime tarball

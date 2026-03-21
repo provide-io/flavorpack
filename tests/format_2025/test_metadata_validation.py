@@ -9,7 +9,6 @@ from pathlib import Path
 
 import pytest
 
-from flavor.psp.format_2025.slots import SlotMetadata
 from flavor.psp.format_2025.validation import extract_package_metadata
 from flavor.psp.metadata.validators import validate_metadata
 
@@ -257,7 +256,8 @@ class TestMetadataValidation:
 class TestBuildSpecValidation:
     """Tests for validate_spec, validate_slots, validate_key_config, validate_build_options."""
 
-    def _make_slot(self, tmp_path: Path | None = None, **kwargs: object) -> SlotMetadata:
+    def _make_slot(self, tmp_path: object = None, **kwargs: object) -> object:
+
         from flavor.psp.format_2025.slots import SlotMetadata
 
         # Create a real temp file for source path (validator checks existence)
@@ -283,7 +283,7 @@ class TestBuildSpecValidation:
         defaults.update(kwargs)
         return SlotMetadata(**defaults)  # type: ignore[arg-type]
 
-    def test_valid_spec_no_errors(self, tmp_path: Path) -> None:
+    def test_valid_spec_no_errors(self, tmp_path: object) -> None:
         """A valid spec with metadata and slot returns no errors."""
         from flavor.psp.format_2025.spec import BuildSpec
         from flavor.psp.format_2025.validation import validate_spec
@@ -291,7 +291,7 @@ class TestBuildSpecValidation:
         slot = self._make_slot(tmp_path=tmp_path)
         spec = BuildSpec(
             metadata={"package": {"name": "mypkg"}},
-            slots=[slot],  # ty: ignore[invalid-argument-type]
+            slots=[slot],
         )
         errors = validate_spec(spec)
         assert errors == []
@@ -337,7 +337,7 @@ class TestBuildSpecValidation:
 
         slot0a = self._make_slot(index=0, id="a")
         slot0b = self._make_slot(index=0, id="b")
-        errors = validate_slots([slot0a, slot0b])  # ty: ignore[invalid-argument-type]
+        errors = validate_slots([slot0a, slot0b])
         assert any("duplicate" in e.lower() or "🔢" in e for e in errors)
 
     def test_validate_slots_duplicate_name(self) -> None:
@@ -346,7 +346,7 @@ class TestBuildSpecValidation:
 
         slot0 = self._make_slot(index=0, id="same")
         slot1 = self._make_slot(index=1, id="same")
-        errors = validate_slots([slot0, slot1])  # ty: ignore[invalid-argument-type]
+        errors = validate_slots([slot0, slot1])
         assert any("duplicate" in e.lower() or "📝" in e for e in errors)
 
     def test_validate_key_config_both_keys_required(self) -> None:

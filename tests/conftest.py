@@ -90,16 +90,6 @@ def _check_binaries_available() -> bool:
 binaries_available: bool = _check_binaries_available()
 
 
-def pytest_addoption(parser: pytest.Parser) -> None:
-    """Register custom CLI options."""
-    parser.addoption(
-        "--parity-report",
-        action="store_true",
-        default=False,
-        help="Generate cross-language parity Markdown report to reports/parity-report.md",
-    )
-
-
 def pytest_configure(config: pytest.Config) -> None:
     """Register custom markers."""
     config.addinivalue_line(
