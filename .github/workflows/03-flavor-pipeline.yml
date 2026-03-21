@@ -29,7 +29,10 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
-      
+
+      - name: 🔧 Ensure gh CLI available
+        run: type gh >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq gh)
+
       - name: 🔍 Determine helper version
         id: helpers
         run: |
@@ -132,7 +135,9 @@ jobs:
         run: |
           source workenv/bin/activate
           .github/scripts/run-tests.sh "${{ matrix.marker }}" "${{ matrix.path }}" "${{ inputs.test_filter }}"
-      
+        env:
+          FLAVOR_REQUIRE_HELPERS: "1"
+
       - name: 📊 Collect Test Metadata
         if: always()
         run: |
