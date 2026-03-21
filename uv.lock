@@ -636,7 +636,7 @@ docs = [
 [package.metadata]
 requires-dist = [
     { name = "pip", specifier = ">=25.2" },
-    { name = "provide-foundation", extras = ["all"], specifier = ">=0.3.21,<0.4" },
+    { name = "provide-foundation", extras = ["all"], specifier = ">=0.3.21" },
     { name = "setuptools", specifier = ">=68.0.0" },
     { name = "uv", specifier = ">=0.9.6" },
 ]

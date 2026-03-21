@@ -28,7 +28,7 @@ classifiers = [
     "Topic :: System :: Archiving :: Packaging",
 ]
 dependencies = [
-    "provide-foundation[all]>=0.3.21,<0.4",
+    "provide-foundation[all]>=0.3.21",
     "pip>=25.2",
     "uv>=0.9.6",
     "setuptools>=68.0.0",  # Required for building wheels at runtime
