@@ -28,10 +28,10 @@ class TestXorEncode:
         "data",
         [
             b"\x00",
-            b"\xFF",
+            b"\xff",
             b"hello",
             b"\x00" * 16,
-            b"\xFF" * 16,
+            b"\xff" * 16,
             bytes(range(256)),
         ],
     )
@@ -43,10 +43,10 @@ class TestXorEncode:
         "data",
         [
             b"\x00",
-            b"\xFF",
+            b"\xff",
             b"hello",
             b"\x00" * 16,
-            b"\xFF" * 16,
+            b"\xff" * 16,
             bytes(range(256)),
         ],
     )
