@@ -1,8 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
 """Memray test fixtures and runner stub (replaces wrknv.memray dependency)."""
-
 from __future__ import annotations
 
 import json
@@ -18,12 +14,11 @@ import pytest
 # Runner implementation
 # ---------------------------------------------------------------------------
 
-
-def run_memray_stress(
+def _run_memray_stress(
     script: str,
     baseline_key: str,
     output_dir: Path,
-    baselines: dict[str, int],
+    baselines: dict,
     baselines_path: Path,
 ) -> None:
     """Run a memray stress script and compare .bin file size against baseline."""
@@ -60,7 +55,7 @@ def run_memray_stress(
 # ---------------------------------------------------------------------------
 
 _runner_mod = types.ModuleType("wrknv.memray.runner")
-_runner_mod.run_memray_stress = run_memray_stress  # type: ignore[attr-defined]
+_runner_mod.run_memray_stress = _run_memray_stress  # type: ignore[attr-defined]
 
 _memray_mod = types.ModuleType("wrknv.memray")
 _memray_mod.runner = _runner_mod  # type: ignore[attr-defined]
@@ -90,11 +85,10 @@ def memray_baselines_path() -> Path:
 
 
 @pytest.fixture(scope="session")
-def memray_baseline(memray_baselines_path: Path) -> dict[str, int]:
+def memray_baseline(memray_baselines_path: Path) -> dict:
     """Loaded baseline dict (empty dict if file is missing or empty)."""
     if memray_baselines_path.exists():
         text = memray_baselines_path.read_text().strip()
         if text:
-            result: dict[str, int] = json.loads(text)
-            return result
+            return json.loads(text)
     return {}
