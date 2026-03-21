@@ -1,0 +1,30 @@
+{
+  "name": "pretaster-permissions",
+  "version": "1.0.0",
+  "description": "Executable permission retention test for single-file slots",
+  "package": {
+    "name": "pretaster-permissions",
+    "version": "1.0.0",
+    "description": "Executable permission retention test for single-file slots"
+  },
+  "format": "PSPF/2025",
+  "slots": [
+    {
+      "slot": 0,
+      "id": "permission-script",
+      "source": "scripts/permission_test.sh",
+      "target": "bin/permission-test",
+      "purpose": "tool",
+      "lifecycle": "cache",
+      "operations": "raw",
+      "permissions": "0755"
+    }
+  ],
+  "command": "{workenv}/bin/permission-test",
+  "execution": {
+    "command": "{workenv}/bin/permission-test",
+    "args": [],
+    "env": {},
+    "primary_slot": 0
+  }
+}
