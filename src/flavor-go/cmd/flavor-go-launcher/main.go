@@ -11,8 +11,29 @@ import (
 	"github.com/provide-io/flavor/go/flavor/pkg/psp/format_2025"
 )
 
-var executablePathFn = os.Executable
-var launchFn = format_2025.LaunchWithLogLevel
+const version = "0.3.21"
+
+// Phase 19 cache invalidation: Force rebuild with CGO enabled for Windows (2025-10-31)
+
+func getBuilderTimestamp() string {
+	// Try to get vcs.time from build info
+	if info, ok := debug.ReadBuildInfo(); ok {
+		for _, setting := range info.Settings {
+			if setting.Key == "vcs.time" {
+				if t, err := time.Parse(time.RFC3339, setting.Value); err == nil {
+					return t.UTC().Format(time.RFC3339)
+				}
+			}
+		}
+	}
+	// Fallback to binary modification time
+	if exePath, err := os.Executable(); err == nil {
+		if stat, err := os.Stat(exePath); err == nil {
+			return stat.ModTime().UTC().Format(time.RFC3339)
+		}
+	}
+	return time.Now().UTC().Format(time.RFC3339)
+}
 
 func main() {
 	// Set up panic recovery to return specific exit code
