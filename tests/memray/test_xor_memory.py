@@ -1,4 +1,5 @@
 """Memory profiling tests for XOR cipher."""
+
 from __future__ import annotations
 
 from pathlib import Path
