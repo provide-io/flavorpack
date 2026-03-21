@@ -1,4 +1,4 @@
-# Requires Rust 1.85+ for edition 2024
+# Requires Rust 1.86+ for edition 2024 (fully stable)
 
 [package]
 name = "flavor"
@@ -7,7 +7,7 @@ edition = "2024"
 authors = ["provide.io <code@provide.io>", "Tim Perkins <code@tim.life>"]
 description = "Progressive Secure Package Format (PSPF) Reference Implementation"
 license = "Apache-2.0"
-rust-version = "1.85"
+rust-version = "1.86"
 
 [lib]
 name = "flavor"
@@ -53,6 +53,9 @@ windows = { version = "0.58", features = [
     "Win32_Storage_FileSystem",
     "Win32_System_SystemServices"
 ] }
+
+[dev-dependencies]
+proptest = "1.6"
 
 [features]
 default = []
