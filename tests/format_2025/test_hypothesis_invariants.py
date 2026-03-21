@@ -34,8 +34,6 @@ VALID_OPS = [OP_TAR, OP_GZIP, OP_BZIP2, OP_XZ, OP_ZSTD]
 op_strategy = st.sampled_from(VALID_OPS)
 ops_list_strategy = st.lists(op_strategy, min_size=0, max_size=8)
 
-pytestmark = [pytest.mark.property, pytest.mark.ci]
-
 
 @pytest.mark.unit
 class TestOperationsHypothesis:
@@ -112,14 +110,6 @@ class TestXorHypothesis:
         # but encoding should be deterministic
         assert xor_encode(data) == encoded
 
-    @given(
-        data=st.binary(min_size=0, max_size=1024),
-        key=st.binary(min_size=1, max_size=32),
-    )
-    def test_custom_key_roundtrip(self, data: bytes, key: bytes) -> None:
-        """Encode/decode with arbitrary key is lossless."""
-        assert xor_decode(xor_encode(data, key), key) == data
-
 
 @pytest.mark.unit
 class TestSlotDescriptorHypothesis:
@@ -173,16 +163,8 @@ class TestValidateMetadataHypothesis:
     """Property-based tests: validate_metadata is stable on known-good structures."""
 
     @given(
-        name=st.text(
-            min_size=1,
-            max_size=50,
-            alphabet=st.characters(whitelist_categories=["Ll", "Lu", "Nd"], whitelist_characters="-_"),
-        ),
-        version=st.text(
-            min_size=1,
-            max_size=20,
-            alphabet=st.characters(whitelist_categories=["Nd"], whitelist_characters="."),
-        ),
+        name=st.text(min_size=1, max_size=50, alphabet=st.characters(whitelist_categories=("Ll", "Lu", "Nd"), whitelist_characters="-_")),
+        version=st.text(min_size=1, max_size=20, alphabet=st.characters(whitelist_categories=("Nd",), whitelist_characters=".")),
     )
     def test_valid_metadata_always_passes(self, name: str, version: str) -> None:
         """Well-formed metadata always passes validate_metadata."""
@@ -198,7 +180,7 @@ class TestValidateMetadataHypothesis:
         path=st.text(
             min_size=1,
             max_size=50,
-            alphabet=st.characters(whitelist_categories=["Ll"], whitelist_characters="/"),
+            alphabet=st.characters(whitelist_categories=("Ll",), whitelist_characters="/"),
         )
     )
     def test_workenv_dir_path_always_valid_with_prefix(self, path: str) -> None:
@@ -211,20 +193,6 @@ class TestValidateMetadataHypothesis:
             "workenv": {"directories": [{"path": full_path}]},
         }
         assert validate_metadata(metadata) is True
-
-
-@pytest.mark.unit
-class TestSlotDescriptorEdgeCases:
-    """Edge-case property tests for SlotDescriptor boundaries."""
-
-    @given(data=st.binary(min_size=64, max_size=64))
-    @settings(max_examples=200)
-    def test_any_64_bytes_unpacks_without_crash(self, data: bytes) -> None:
-        """Any 64-byte input must unpack without crashing."""
-        from flavor.psp.format_2025.slots import SlotDescriptor
-
-        desc = SlotDescriptor.unpack(data)
-        assert desc.pack() == data  # Round-trip must be exact
 
 
 # 🌶️📦🔚

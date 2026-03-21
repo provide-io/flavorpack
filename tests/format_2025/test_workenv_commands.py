@@ -257,8 +257,8 @@ class TestRunEnumerateExecuteCommand:
 
         # Should execute for both files
         assert mock_run.call_count == 2
-        assert mock_run.call_args_list[0].args[0][-1].replace("\\", "/") == str(file1).replace("\\", "/")
-        assert mock_run.call_args_list[1].args[0][-1].replace("\\", "/") == str(file2).replace("\\", "/")
+        assert mock_run.call_args_list[0].args[0][-1] == str(file1)
+        assert mock_run.call_args_list[1].args[0][-1] == str(file2)
 
     @patch("flavor.psp.format_2025.workenv.run")
     def test_enumerate_execute_no_matches(self, mock_run: Mock, tmp_path: Path) -> None:
@@ -303,7 +303,7 @@ class TestRunEnumerateExecuteCommand:
         manager._run_enumerate_execute_command(cmd, workenv_dir, metadata, env)
 
         assert mock_run.call_count == 1
-        assert mock_run.call_args.args[0][-1] == file1.as_posix()
+        assert mock_run.call_args.args[0][-1] == str(file1)
 
     @patch("flavor.psp.format_2025.workenv.run")
     def test_enumerate_execute_command_failure(self, mock_run: Mock, tmp_path: Path) -> None:
@@ -335,7 +335,6 @@ class TestRunEnumerateExecuteCommand:
 class TestRunChmodCommand:
     """Test _run_chmod_command method."""
 
-    @pytest.mark.skipif(sys.platform == "win32", reason="POSIX file permissions not enforced on Windows")
     def test_run_chmod_command_updates_permissions(self, tmp_path: Path) -> None:
         """Test chmod command applies the requested permissions."""
         mock_reader = Mock()

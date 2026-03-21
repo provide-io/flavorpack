@@ -134,11 +134,7 @@ def _run_bootstrap_cache_test(helper_manager: HelperManager, verbose: bool) -> b
             temp_dir = Path(temp_dir_str)
             manifest = _prepare_bootstrap_project(temp_dir)
 
-            # Compute workenv path consistently: both Go and Rust launchers create
-            # workenvs at ~/.cache/flavor/workenv/{psp_name}. Use HOME directly
-            # to avoid dependency on which FLAVOR_CACHE* env var is set.
-            cache_base = Path.home() / ".cache" / "flavor" / "workenv"
-            workenv_dir = cache_base / "bootstrap-test"
+            workenv_dir = Path.home() / ".cache" / "flavor" / "workenv" / "bootstrap-test_1.0.0"
             if workenv_dir.exists():
                 shutil.rmtree(workenv_dir, ignore_errors=True)
 

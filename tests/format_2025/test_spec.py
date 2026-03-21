@@ -145,7 +145,9 @@ class TestBuildSpec:
 
     def test_with_slot(self) -> None:
         """with_slot appends a slot."""
-        slot = SlotMetadata(index=0, id="s", source="/tmp/x", target="x", size=0, checksum="abc")
+        slot = SlotMetadata(
+            index=0, id="s", source="/tmp/x", target="x", size=0, checksum="abc"
+        )
         spec = BuildSpec().with_slot(slot)
         assert len(spec.slots) == 1
 
@@ -228,7 +230,9 @@ class TestPreparedSlot:
     """Tests for PreparedSlot."""
 
     def _make_slot_metadata(self) -> SlotMetadata:
-        return SlotMetadata(index=0, id="test", source="/tmp/x", target="test.txt", size=10, checksum="abcdef")
+        return SlotMetadata(
+            index=0, id="test", source="/tmp/x", target="test.txt", size=10, checksum="abcdef"
+        )
 
     def test_basic_construction(self) -> None:
         """PreparedSlot can be constructed with required fields."""
