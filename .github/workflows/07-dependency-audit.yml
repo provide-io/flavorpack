@@ -215,8 +215,8 @@ jobs:
             },
             "updates_available": $([ -f outdated-python.json ] && jq length outdated-python.json || echo 0),
             "licenses": {
-              "copyleft": $COPYLEFT,
-              "unknown": $UNKNOWN
+              "copyleft": ${COPYLEFT:-0},
+              "unknown": ${UNKNOWN:-0}
             }
           }
           EOF
