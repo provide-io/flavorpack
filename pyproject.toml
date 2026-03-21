@@ -49,13 +49,8 @@ Homepage = "https://github.com/provide-io/flavorpack"
 
 [dependency-groups]
 dev = [
-    # provide-testkit[all] includes memray which does not support win32
-    "provide-testkit[all]; sys_platform != 'win32'",
-    "provide-testkit; sys_platform == 'win32'",
-    "memray>=1.0; sys_platform != 'emscripten' and sys_platform != 'win32'",
-    # protobuf is included via provide-testkit[all] on non-Windows; add explicitly for Windows
-    "protobuf>=4.0; sys_platform == 'win32'",
-    "hypothesis>=6.0",
+    "provide-testkit[all]",
+    "memray>=1.0; sys_platform != 'emscripten'",
 ]
 docs = [
     "provide-testkit[docs]",
@@ -206,39 +201,8 @@ markers = [
 ]
 
 [tool.mutmut]
-# Only mutate pure-Python modules (no subprocess/HelperManager calls).
-# Excluded: helpers/, commands/ (doctor/helpers/utils use HelperManager),
-# packaging/ (orchestrator + python/* shell out to Go/Rust/uv).
-paths_to_mutate = [
-    "src/flavor/cache.py",
-    "src/flavor/exceptions.py",
-    "src/flavor/output.py",
-    "src/flavor/package.py",
-    "src/flavor/verification.py",
-    "src/flavor/config",
-    "src/flavor/psp",
-    "src/flavor/utils",
-]
+paths_to_mutate = ["src/flavor"]
 tests_dir = ["tests"]
-also_copy = [
-    "VERSION",
-    "Makefile",
-    "scripts",
-    "tools",
-    ".github/workflows",
-    # Note: tests/ is always copied by mutmut automatically (hardcoded in its Config class)
-    # Non-mutated src/flavor modules (must not overlap with paths_to_mutate)
-    "src/flavor/__init__.py",
-    "src/flavor/__main__.py",
-    "src/flavor/cli.py",
-    "src/flavor/console.py",
-    "src/flavor/locking.py",
-    "src/flavor/py.typed",
-    "src/flavor/helpers",
-    "src/flavor/commands",
-    "src/flavor/packaging",
-    "src/flavor/templates",
-]
 runner = "pytest"
 # Skip tests that fail in the mutants sandbox (env-specific or need Go/Rust sources)
 pytest_add_cli_args = [
