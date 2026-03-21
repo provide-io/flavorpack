@@ -104,7 +104,8 @@ class BundleExecutor:
                 # For non-tarballs, use relative path
                 primary_path = slot_name
             command = command.replace("{primary}", str(primary_path))
-            logger.trace(f"🔄 Substituted {{primary}} -> {primary_path}")
+            if logger.is_trace_enabled():
+                logger.trace(f"🔄 Substituted {{primary}} -> {primary_path}")
         else:
             logger.warning(f"⚠️ Primary slot {primary_slot} not found")
 
