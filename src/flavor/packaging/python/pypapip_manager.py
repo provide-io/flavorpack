@@ -94,7 +94,7 @@ class PyPaPipManager:
         return cmd
 
     # ⚠️ CRITICAL: This method handles manylinux platform tags - DO NOT REMOVE! ⚠️
-    def _get_pypapip_download_cmd(
+    def _get_pypapip_download_cmd(  # noqa: C901
         self,
         python_exe: Path,
         dest_dir: Path,
@@ -126,13 +126,15 @@ class PyPaPipManager:
         py_major = py_parts[0]
         py_minor = py_parts[1] if len(py_parts) > 1 else "11"
         cmd.extend(["--python-version", f"{py_major}.{py_minor}"])
-        logger.debug(f"Added Python version constraint: {py_major}.{py_minor}")
+        if logger.is_debug_enabled():
+            logger.debug(f"Added Python version constraint: {py_major}.{py_minor}")
 
         # Handle platform tags
         if platform_tag:
             # Use explicitly provided platform tag (works on any OS)
             cmd.extend(["--platform", platform_tag])
-            logger.debug(f"Added platform constraint: {platform_tag}")
+            if logger.is_debug_enabled():
+                logger.debug(f"Added platform constraint: {platform_tag}")
         elif get_os_name() == "linux" and binary_only:
             # For Linux builds, explicitly request manylinux wheels for maximum compatibility
             # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
@@ -143,13 +145,15 @@ class PyPaPipManager:
             # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
             if arch == "amd64":
                 cmd.extend(["--platform", f"{self.MANYLINUX_TAG}_x86_64"])
-                logger.debug(f"Added platform constraint: {self.MANYLINUX_TAG}_x86_64")
+                if logger.is_debug_enabled():
+                    logger.debug(f"Added platform constraint: {self.MANYLINUX_TAG}_x86_64")
             elif arch == "arm64":
                 # ARM64 uses manylinux2014_aarch64 to match published wheels
                 # Note: This is equivalent to manylinux_2_17_aarch64 (glibc 2.17)
                 # We use manylinux2014 format for compatibility with published wheels
                 cmd.extend(["--platform", f"{self.MANYLINUX_TAG}_aarch64"])
-                logger.debug(f"Added platform constraint: {self.MANYLINUX_TAG}_aarch64")
+                if logger.is_debug_enabled():
+                    logger.debug(f"Added platform constraint: {self.MANYLINUX_TAG}_aarch64")
                 logger.warning("⚠️ grpcio on CentOS 7 ARM64 may have C++ ABI issues")
 
         if requirements_file:
