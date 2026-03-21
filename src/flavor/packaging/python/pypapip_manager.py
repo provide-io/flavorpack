@@ -139,7 +139,8 @@ class PyPaPipManager:
             # For Linux builds, explicitly request manylinux wheels for maximum compatibility
             # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
             arch = get_arch_name()
-            logger.trace(f"Linux build detected, arch={arch}, requesting {self.MANYLINUX_TAG} wheels")
+            if logger.is_trace_enabled():
+                logger.trace(f"Linux build detected, arch={arch}, requesting {self.MANYLINUX_TAG} wheels")
 
             # Use manylinux2014 format for maximum compatibility
             # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
