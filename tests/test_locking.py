@@ -115,6 +115,7 @@ class TestLockManager:
         lock_file = tmp_path / "test_lock.lock"
 
         import contextlib
+
         with contextlib.suppress(ValueError), manager.lock("test_lock"):
             assert lock_file in manager.held_locks
             raise ValueError("Test exception")
