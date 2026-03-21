@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
 """
 Memray analysis utilities.
 
@@ -117,7 +114,9 @@ def compare_allocations(baseline: Path, current: Path) -> dict[str, Any]:
     baseline_size = baseline.stat().st_size
     current_size = current.stat().st_size
 
-    size_increase = ((current_size - baseline_size) / baseline_size * 100) if baseline_size > 0 else 0
+    size_increase = (
+        ((current_size - baseline_size) / baseline_size * 100) if baseline_size > 0 else 0
+    )
 
     if size_increase > 10:  # More than 10% increase
         comparison["regression_detected"] = True
@@ -166,49 +165,47 @@ def generate_analysis_report(output_dir: Path) -> str:
 
         report_lines.append("")
 
-    report_lines.extend(
-        [
-            "## Key Patterns to Watch",
-            "",
-            "1. **Operation chain packing** (`memray_operations_stress`):",
-            "   - `pack_operations()` bit-shifting allocation",
-            "   - `unpack_operations()` list creation per call",
-            "   - Watch for list allocation overhead in tight loops",
-            "",
-            "2. **XOR encode/decode** (`memray_xor_stress`):",
-            "   - Per-byte allocation pattern across payload sizes",
-            "   - Bytes object creation per encode/decode call",
-            "   - Memory scaling: 1KB vs 1MB payload cost ratio",
-            "",
-            "3. **Slot descriptor serialization** (`memray_slot_descriptor_stress`):",
-            "   - `struct.pack()` / `struct.unpack()` allocation",
-            "   - attrs class instantiation overhead in `unpack()`",
-            "   - Binary buffer allocation per pack cycle",
-            "",
-            "4. **Builder pipeline** (`memray_builder_stress`):",
-            "   - Immutable builder chain (each method creates new PSPFBuilder)",
-            "   - Temp file creation for slot data",
-            "   - Metadata assembly + gzip compression allocation",
-            "   - Key generation per build cycle",
-            "",
-            "5. **Reader pipeline** (`memray_reader_stress`):",
-            "   - Backend creation/teardown per read cycle",
-            "   - Index parsing and checksum verification",
-            "   - Slot descriptor deserialization",
-            "   - Gzip decompression allocation for slot data",
-            "",
-            "## Next Steps",
-            "",
-            "```bash",
-            "# Generate flamegraphs for visual inspection",
-            "uv run python scripts/memray/memray_analysis.py",
-            "",
-            "# Compare against baseline after optimization",
-            "# (save current as baseline first, then re-run after changes)",
-            "```",
-            "",
-        ]
-    )
+    report_lines.extend([
+        "## Key Patterns to Watch",
+        "",
+        "1. **Operation chain packing** (`memray_operations_stress`):",
+        "   - `pack_operations()` bit-shifting allocation",
+        "   - `unpack_operations()` list creation per call",
+        "   - Watch for list allocation overhead in tight loops",
+        "",
+        "2. **XOR encode/decode** (`memray_xor_stress`):",
+        "   - Per-byte allocation pattern across payload sizes",
+        "   - Bytes object creation per encode/decode call",
+        "   - Memory scaling: 1KB vs 1MB payload cost ratio",
+        "",
+        "3. **Slot descriptor serialization** (`memray_slot_descriptor_stress`):",
+        "   - `struct.pack()` / `struct.unpack()` allocation",
+        "   - attrs class instantiation overhead in `unpack()`",
+        "   - Binary buffer allocation per pack cycle",
+        "",
+        "4. **Builder pipeline** (`memray_builder_stress`):",
+        "   - Immutable builder chain (each method creates new PSPFBuilder)",
+        "   - Temp file creation for slot data",
+        "   - Metadata assembly + gzip compression allocation",
+        "   - Key generation per build cycle",
+        "",
+        "5. **Reader pipeline** (`memray_reader_stress`):",
+        "   - Backend creation/teardown per read cycle",
+        "   - Index parsing and checksum verification",
+        "   - Slot descriptor deserialization",
+        "   - Gzip decompression allocation for slot data",
+        "",
+        "## Next Steps",
+        "",
+        "```bash",
+        "# Generate flamegraphs for visual inspection",
+        "uv run python scripts/memray/memray_analysis.py",
+        "",
+        "# Compare against baseline after optimization",
+        "# (save current as baseline first, then re-run after changes)",
+        "```",
+        "",
+    ])
 
     return "\n".join(report_lines)
 
