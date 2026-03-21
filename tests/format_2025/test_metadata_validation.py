@@ -255,7 +255,6 @@ class TestBuildSpecValidation:
     """Tests for validate_spec, validate_slots, validate_key_config, validate_build_options."""
 
     def _make_slot(self, tmp_path: object = None, **kwargs: object) -> object:
-
         from flavor.psp.format_2025.slots import SlotMetadata
 
         # Create a real temp file for source path (validator checks existence)

@@ -163,8 +163,16 @@ class TestValidateMetadataHypothesis:
     """Property-based tests: validate_metadata is stable on known-good structures."""
 
     @given(
-        name=st.text(min_size=1, max_size=50, alphabet=st.characters(whitelist_categories=("Ll", "Lu", "Nd"), whitelist_characters="-_")),
-        version=st.text(min_size=1, max_size=20, alphabet=st.characters(whitelist_categories=("Nd",), whitelist_characters=".")),
+        name=st.text(
+            min_size=1,
+            max_size=50,
+            alphabet=st.characters(whitelist_categories=("Ll", "Lu", "Nd"), whitelist_characters="-_"),
+        ),
+        version=st.text(
+            min_size=1,
+            max_size=20,
+            alphabet=st.characters(whitelist_categories=("Nd",), whitelist_characters="."),
+        ),
     )
     def test_valid_metadata_always_passes(self, name: str, version: str) -> None:
         """Well-formed metadata always passes validate_metadata."""
