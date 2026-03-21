@@ -17,6 +17,7 @@ from provide.foundation.platform import get_arch_name, get_os_name, get_platform
 from provide.foundation.utils import get_version
 
 from flavor.psp.format_2025.spec import BuildSpec
+from flavor.psp.format_2025.validation import extract_package_metadata
 from flavor.psp.metadata.paths import validate_metadata_dict
 
 # Default version for launcher when extraction fails
@@ -252,7 +253,7 @@ def assemble_metadata(spec: BuildSpec, slots: list[Any], launcher_info: dict[str
     metadata = {
         "format": "PSPF/2025",
         "format_version": "1.0.0",
-        "package": spec.metadata.get("package", {}),
+        "package": extract_package_metadata(spec.metadata),
         "slots": [slot.metadata.to_dict() for slot in slots],
         "execution": spec.metadata.get("execution", {}),
         "verification": create_verification_metadata(spec),

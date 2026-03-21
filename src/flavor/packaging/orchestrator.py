@@ -230,14 +230,18 @@ class PackagingOrchestrator:
             pout("🔐 Setting up package signing keys...")
             if self.key_seed:
                 builder = builder.with_keys(seed=self.key_seed)
-            elif self.package_integrity_key_path and self.public_key_path:
+            elif self.package_integrity_key_path:
                 from flavor.packaging.keys import (
+                    derive_public_key_raw,
                     load_private_key_raw,
                     load_public_key_raw,
                 )
 
                 private_key = load_private_key_raw(Path(self.package_integrity_key_path))
-                public_key = load_public_key_raw(Path(self.public_key_path))
+                if self.public_key_path:
+                    public_key = load_public_key_raw(Path(self.public_key_path))
+                else:
+                    public_key = derive_public_key_raw(Path(self.package_integrity_key_path))
                 builder = builder.with_keys(private=private_key, public=public_key)
 
             pout("✍️  Writing PSPF package file...")
