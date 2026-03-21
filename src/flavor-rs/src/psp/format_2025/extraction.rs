@@ -332,14 +332,6 @@ pub fn extract_tarball(data: &[u8], dest_dir: &Path) -> Result<()> {
             continue;
         }
 
-        if entry_type.is_symlink() || entry_type.is_hard_link() {
-            return Err(FlavorError::Generic(format!(
-                "tar entry {path:?} uses unsupported link type"
-            )));
-        }
-
-        let dest_path = resolve_in_workenv(dest_dir, &path)?;
-
         // Create parent directories if needed
         if let Some(parent) = dest_path.parent() {
             if !parent.exists() {
