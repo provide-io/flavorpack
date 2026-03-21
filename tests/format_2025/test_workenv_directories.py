@@ -220,9 +220,7 @@ class TestWorkenvDirectories:
             # Should create subdir in the real directory
             assert (real_dir / "subdir").exists()
 
-    @pytest.mark.skipif(
-        not hasattr(os, "getuid") or os.getuid() == 0, reason="root or Windows bypasses permission checks"
-    )
+    @pytest.mark.skipif(os.getuid() == 0, reason="root bypasses permission checks")
     def test_permission_error_handling(self) -> None:
         """Test handling of permission errors during directory creation."""
         with tempfile.TemporaryDirectory() as tmpdir:

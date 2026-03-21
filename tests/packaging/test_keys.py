@@ -23,29 +23,6 @@ from flavor.packaging.keys import (
 )
 
 
-def _serialize_private_key(key: Any) -> bytes:
-    """Serialize a private key to PEM bytes (works around incomplete type stubs)."""
-    return cast(
-        bytes,
-        key.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.PKCS8,
-            encryption_algorithm=serialization.NoEncryption(),
-        ),
-    )
-
-
-def _serialize_public_key(key: Any) -> bytes:
-    """Serialize a public key to PEM bytes (works around incomplete type stubs)."""
-    return cast(
-        bytes,
-        key.public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo,
-        ),
-    )
-
-
 @pytest.mark.unit
 class TestGenerateKeyPair:
     """Test Ed25519 key pair generation."""
