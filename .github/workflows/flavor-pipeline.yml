@@ -38,9 +38,7 @@ jobs:
       psp_test_matrix: ${{ steps.build_matrix.outputs.psp_test_matrix }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v6
-        with:
-          persist-credentials: false
+        uses: actions/checkout@v4
 
       - name: 🔧 Ensure gh CLI available
         run: type gh >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq gh)
@@ -149,21 +147,9 @@ jobs:
       - name: 🧪 Run tests
         run: |
           source workenv/bin/activate
-          EXTRA_ARGS=""
-          if [ "${{ matrix.parity_report }}" = "true" ]; then
-            EXTRA_ARGS="--parity-report"
-          fi
-          ci/run-tests.sh "${{ matrix.marker }}" "${{ matrix.path }}" "${{ inputs.test_filter }}" "$EXTRA_ARGS"
+          .github/scripts/run-tests.sh "${{ matrix.marker }}" "${{ matrix.path }}" "${{ inputs.test_filter }}"
         env:
           FLAVOR_REQUIRE_HELPERS: "1"
-
-      - name: 📊 Upload parity report
-        if: matrix.parity_report == true && always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: parity-report-${{ github.run_id }}
-          path: reports/parity-report.md
-        continue-on-error: true
 
       - name: 📊 Collect Test Metadata
         if: always()
