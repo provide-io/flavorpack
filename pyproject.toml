@@ -41,6 +41,7 @@ Homepage = "https://github.com/provide-io/flavor"
 [dependency-groups]
 dev = [
     "provide-testkit[all]",
+    "memray>=1.0; sys_platform != 'emscripten'",
 ]
 docs = [
     "provide-testkit[docs]",
@@ -158,11 +159,12 @@ markers = [
     "cross_language: Tests involving Go/Rust/Python interaction",
     "stress: Stress and hypothesis-based property tests",
     "requires_helpers: Tests that need Go/Rust helpers built",
+    "memray: memory profiling stress tests (run with -m memray)",
 ]
 
 [tool.mutmut]
 paths_to_mutate = ["src/flavor"]
-tests_dir = "tests"
+tests_dir = ["tests"]
 runner = "pytest"
 exclude = ["*/generated/*", "*_pb2.py", "*_pb2.pyi", "*/tests/*", "*/test_*"]
 dict_synonyms = ["dict", "OrderedDict", "defaultdict"]
