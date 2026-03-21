@@ -7,15 +7,6 @@ resolution-markers = [
 ]
 
 [[package]]
-name = "aiofiles"
-version = "25.1.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/41/c3/534eac40372d8ee36ef40df62ec129bee4fdb5ad9706e58a29be53b2c970/aiofiles-25.1.0.tar.gz", hash = "sha256:a8d728f0a29de45dc521f18f07297428d56992a742f0cd2701ba86e44d23d5b2", size = 46354, upload-time = "2025-10-09T20:51:04.358Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/bc/8a/340a1555ae33d7354dbca4faa54948d76d89a27ceef032c8c3bc661d003e/aiofiles-25.1.0-py3-none-any.whl", hash = "sha256:abe311e527c862958650f9438e859c1fa7568a141b22abcd015e120e86a85695", size = 14668, upload-time = "2025-10-09T20:51:03.174Z" },
-]
-
-[[package]]
 name = "anyio"
 version = "4.11.0"
 source = { registry = "https://pypi.org/simple" }
@@ -348,14 +339,14 @@ wheels = [
 
 [[package]]
 name = "click"
-version = "8.3.0"
+version = "8.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/46/61/de6cd827efad202d7057d93e0fed9294b96952e188f7384832791c7b2254/click-8.3.0.tar.gz", hash = "sha256:e7b8232224eba16f4ebe410c25ced9f7875cb5f3263ffc93cc3e8da705e229c4", size = 276943, upload-time = "2025-09-18T17:32:23.696Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/3d/fa/656b739db8587d7b5dfa22e22ed02566950fbfbcdc20311993483657a5c0/click-8.3.1.tar.gz", hash = "sha256:12ff4785d337a1bb490bb7e9c2b1ee5da3112e94a8622f26a6c77f5d2fc6842a", size = 295065, upload-time = "2025-11-15T20:45:42.706Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/db/d3/9dcc0f5797f070ec8edf30fbadfb200e71d9db6b84d211e3b2085a7589a0/click-8.3.0-py3-none-any.whl", hash = "sha256:9b9f285302c6e3064f4330c05f05b81945b2a39544279343e6e7c5f27a9baddc", size = 107295, upload-time = "2025-09-18T17:32:22.42Z" },
+    { url = "https://files.pythonhosted.org/packages/98/78/01c019cdb5d6498122777c1a43056ebb3ebfeef2076d9d026bfe15583b2b/click-8.3.1-py3-none-any.whl", hash = "sha256:981153a64e25f12d547d3426c367a4857371575ee7ad18df2a6183ab0545b2a6", size = 108274, upload-time = "2025-11-15T20:45:41.139Z" },
 ]
 
 [[package]]
@@ -645,7 +636,7 @@ docs = [
 [package.metadata]
 requires-dist = [
     { name = "pip", specifier = ">=25.2" },
-    { name = "provide-foundation", extras = ["all"] },
+    { name = "provide-foundation", extras = ["all"], specifier = ">=0.3.21,<0.4" },
     { name = "setuptools", specifier = ">=68.0.0" },
     { name = "uv", specifier = ">=0.9.6" },
 ]
@@ -2228,17 +2219,16 @@ wheels = [
 
 [[package]]
 name = "provide-foundation"
-version = "0.0.1026"
+version = "0.3.21"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "aiofiles" },
     { name = "attrs" },
     { name = "structlog" },
     { name = "tomli-w" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c1/66/25d912f271c19df2fe1afa31b05d55aea7db70b3d1b3cb3039f3110a1b6d/provide_foundation-0.0.1026.tar.gz", hash = "sha256:209034c7e039aa5da06df5fde665873b3faa855c38ef93d1f22a0a90a6f0a1b0", size = 410986, upload-time = "2025-10-27T01:34:35.953Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/3b/78/0b8bdfed16c2d03eff9bf27f4a4f42d7d027a30ac3bd285152b59f83da7a/provide_foundation-0.3.21.tar.gz", hash = "sha256:4f1c7b243ae3291bfa0492dba32ade8b30387852add1be9a83f82e72572d717f", size = 417231, upload-time = "2026-03-21T23:25:04.438Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/be/fa/d1adcf5e66fca1751b68675503e5c0cf6a60918ac8ba3941bf6551059e32/provide_foundation-0.0.1026-py3-none-any.whl", hash = "sha256:b40949afd0707b26a914bd1a721e7f189a056029d7cf90263b575bf95caf266f", size = 615246, upload-time = "2025-10-27T01:34:34.177Z" },
+    { url = "https://files.pythonhosted.org/packages/7c/6a/4a0ab8711d55fc1d4134cb0d138c6e2eb2b07569c5d8a7ac1e2be435c166/provide_foundation-0.3.21-py3-none-any.whl", hash = "sha256:50ad183bfc7e33d100d37b579796c95dcfca1ca0bd552daa8ef640d4d440e089", size = 613949, upload-time = "2026-03-21T23:25:05.713Z" },
 ]
 
 [package.optional-dependencies]
