@@ -47,6 +47,9 @@ jobs:
       - name: 🔧 Ensure gh CLI available
         run: type gh >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq gh)
 
+      - name: 🔧 Ensure gh CLI available
+        run: type gh >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq gh)
+
       - name: 🔍 Determine version
         id: version
         run: |
@@ -585,14 +588,8 @@ jobs:
 
       - name: 🧪 Test 8 - Bootstrap and cache regression coverage
         run: |
-          source ${{ matrix.activate }}
+          source workenv/bin/activate
           cd tests/taster
-
-          # exec-test uses Rust launcher internally; Rust launcher crashes on Windows
-          if [[ "${{ matrix.platform }}" == "windows_"* ]]; then
-            echo "⚠️ exec-test uses Rust launcher which is not supported on Windows, skipping"
-            exit 0
-          fi
 
           echo "=== Testing bootstrap and cache reuse ==="
           ./taster-bundled.psp exec-test --verbose
