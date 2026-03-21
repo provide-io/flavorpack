@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
 """
 Memray stress test: Operation chain pack/unpack hot path.
 
@@ -29,11 +26,11 @@ from flavor.psp.format_2025.operations import (
 
 # 5 different operation chains to exercise various code paths
 OPERATION_CHAINS = [
-    [OP_TAR, OP_GZIP],  # tar.gz (most common)
-    [OP_TAR, OP_ZSTD],  # tar.zst
-    [OP_TAR, OP_XZ],  # tar.xz
-    [OP_TAR, OP_BZIP2],  # tar.bz2
-    [OP_GZIP],  # gzip only
+    [OP_TAR, OP_GZIP],       # tar.gz (most common)
+    [OP_TAR, OP_ZSTD],       # tar.zst
+    [OP_TAR, OP_XZ],         # tar.xz
+    [OP_TAR, OP_BZIP2],      # tar.bz2
+    [OP_GZIP],               # gzip only
 ]
 
 
