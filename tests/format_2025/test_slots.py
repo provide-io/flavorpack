@@ -200,11 +200,19 @@ class TestSlotMetadata:
         """from_dict silently ignores unknown keys via field filtering."""
         # from_dict filters out keys not in the class attrs
         # Build a dict with an extra unknown key
-        raw = {"index": 0, "id": "s", "source": "x", "target": "x",
-               "size": 0, "checksum": "abc", "unknown_field": "ignored"}
+        raw = {
+            "index": 0,
+            "id": "s",
+            "source": "x",
+            "target": "x",
+            "size": 0,
+            "checksum": "abc",
+            "unknown_field": "ignored",
+        }
         # from_dict will attempt Path conversion on source/target strings
         # which may fail; check that it at least filters extra keys
         import contextlib
+
         with contextlib.suppress(TypeError):
             m2 = SlotMetadata.from_dict(raw)
             assert not hasattr(m2, "unknown_field")

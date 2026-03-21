@@ -232,9 +232,7 @@ class TestBundleExecutorUnit:
 
     def test_substitute_slots_in_range(self) -> None:
         """_substitute_slots replaces {slot:N} with workenv path."""
-        executor = self._make_executor(
-            slots=[{"target": "app.py", "id": "main", "name": "main"}]
-        )
+        executor = self._make_executor(slots=[{"target": "app.py", "id": "main", "name": "main"}])
         result = executor._substitute_slots("{slot:0}")
         assert "{slot:0}" not in result
         assert "app.py" in result
