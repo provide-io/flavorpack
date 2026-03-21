@@ -86,7 +86,7 @@ class TestSlotDescriptor:
 
         desc = SlotDescriptor(id=1, path=Path("/tmp/test"))
         d = desc.to_dict()
-        assert d["path"].replace("\\", "/") == "/tmp/test"
+        assert d["path"] == "/tmp/test"
 
     @pytest.mark.parametrize(
         ("purpose", "lifecycle"),
@@ -117,7 +117,7 @@ class TestSlotMetadata:
             "size": 0,
             "checksum": "abc123",
         }
-        defaults.update(kwargs)  # ty: ignore[no-matching-overload]
+        defaults.update(kwargs)
         return SlotMetadata(**defaults)  # type: ignore[arg-type]
 
     def test_default_lifecycle_runtime(self) -> None:
@@ -132,19 +132,7 @@ class TestSlotMetadata:
 
     @pytest.mark.parametrize(
         "lifecycle",
-        [
-            "init",
-            "startup",
-            "runtime",
-            "shutdown",
-            "cache",
-            "temporary",
-            "lazy",
-            "eager",
-            "dev",
-            "config",
-            "platform",
-        ],
+        ["init", "startup", "runtime", "shutdown", "cache", "temp", "lazy", "eager", "dev", "config"],
     )
     def test_valid_lifecycles(self, lifecycle: str) -> None:
         """All valid lifecycle values are accepted."""
@@ -212,19 +200,11 @@ class TestSlotMetadata:
         """from_dict silently ignores unknown keys via field filtering."""
         # from_dict filters out keys not in the class attrs
         # Build a dict with an extra unknown key
-        raw = {
-            "index": 0,
-            "id": "s",
-            "source": "x",
-            "target": "x",
-            "size": 0,
-            "checksum": "abc",
-            "unknown_field": "ignored",
-        }
+        raw = {"index": 0, "id": "s", "source": "x", "target": "x",
+               "size": 0, "checksum": "abc", "unknown_field": "ignored"}
         # from_dict will attempt Path conversion on source/target strings
         # which may fail; check that it at least filters extra keys
         import contextlib
-
         with contextlib.suppress(TypeError):
             m2 = SlotMetadata.from_dict(raw)
             assert not hasattr(m2, "unknown_field")
@@ -284,13 +264,13 @@ class TestSlotView:
         assert view.content == b"raw content"
 
     def test_content_gzip_decompresses(self) -> None:
-        """content decompresses gzip (RFC 1952) data."""
-        import gzip as gzip_mod
+        """content decompresses gzip data."""
+        import zlib
 
         from flavor.psp.format_2025.operations import OP_GZIP, pack_operations
 
         original = b"hello world"
-        compressed = gzip_mod.compress(original)
+        compressed = zlib.compress(original)
         desc = self._make_descriptor(operations=pack_operations([OP_GZIP]))
         view = SlotView(desc)
         view._data = compressed

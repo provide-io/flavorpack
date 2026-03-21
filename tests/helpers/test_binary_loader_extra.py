@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-import sys
 from unittest.mock import Mock, patch
 
 import pytest
@@ -294,7 +293,6 @@ class TestHelperMethods:
             result = loader._search_helper_locations("nonexistent")
             assert result is None
 
-    @pytest.mark.skipif(sys.platform == "win32", reason="POSIX executable bits not enforced on Windows")
     @patch("flavor.helpers.binary_loader.get_platform_string")
     def test_ensure_executable_not_executable(self, mock_get_platform: Mock, tmp_path: Path) -> None:
         """Test _ensure_executable makes file executable."""

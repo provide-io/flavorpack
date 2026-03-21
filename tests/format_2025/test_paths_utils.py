@@ -118,17 +118,23 @@ class TestValidateMetadataDict:
     def test_workenv_env_values_normalized(self) -> None:
         """workenv.env values are recursed via validate_metadata_dict."""
         # "command" is in PATH_KEYS so it gets normalized even inside env
-        result = validate_metadata_dict({"workenv": {"env": {"command": "bin/app"}}})
+        result = validate_metadata_dict(
+            {"workenv": {"env": {"command": "bin/app"}}}
+        )
         assert result["workenv"]["env"]["command"] == "{workenv}/bin/app"
 
     def test_list_of_dicts_recurses(self) -> None:
         """Lists containing dicts are recursed into."""
-        result = validate_metadata_dict({"slots": [{"command": "bin/app"}]})
+        result = validate_metadata_dict(
+            {"slots": [{"command": "bin/app"}]}
+        )
         assert result["slots"][0]["command"] == "{workenv}/bin/app"
 
     def test_enumerate_pattern_path_normalized(self) -> None:
         """'enumerate' key with 'path' sub-key gets path normalized."""
-        result = validate_metadata_dict({"enumerate": {"path": "bin/tools", "other": "x"}})
+        result = validate_metadata_dict(
+            {"enumerate": {"path": "bin/tools", "other": "x"}}
+        )
         assert result["enumerate"]["path"] == "{workenv}/bin/tools"
         assert result["enumerate"]["other"] == "x"
 
@@ -272,16 +278,13 @@ class TestParseMode:
         with pytest.raises(ValueError):
             parse_mode("xyz")
 
-    @pytest.mark.parametrize(
-        "mode_str,expected",
-        [
-            ("755", 0o755),
-            ("644", 0o644),
-            ("0o700", 0o700),
-            ("777", 0o777),
-            ("000", 0o000),
-        ],
-    )
+    @pytest.mark.parametrize("mode_str,expected", [
+        ("755", 0o755),
+        ("644", 0o644),
+        ("0o700", 0o700),
+        ("777", 0o777),
+        ("000", 0o000),
+    ])
     def test_parametrized_modes(self, mode_str: str, expected: int) -> None:
         """Parametrized mode parsing."""
         assert parse_mode(mode_str) == expected
