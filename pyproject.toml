@@ -31,7 +31,7 @@ classifiers = [
     "Topic :: System :: Archiving :: Packaging",
 ]
 dependencies = [
-    "provide-foundation[all]>=0.3.21,<0.4",
+    "provide-foundation[all]>=0.3.21",
     "pip>=25.2",
     "uv>=0.9.6",
     "setuptools==82.0.1",  # Pinned to match build-backends group; checked by _ensure_no_isolation_build_backend
