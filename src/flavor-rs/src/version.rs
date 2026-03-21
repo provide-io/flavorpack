@@ -4,7 +4,7 @@
 //! Version information for Flavor binaries
 
 /// Current version of Flavor Rust implementation
-pub const VERSION: &str = "0.3.25";
+pub const VERSION: &str = "0.3.21";
 
 /// Build timestamp (set at compile time)
 pub const BUILD_TIME: Option<&str> = option_env!("BUILD_TIME");
