@@ -306,6 +306,53 @@ class TestCleanupLifecycleSlots:
         # Should NOT remove (defaults to runtime)
         assert slot_dir.exists()
 
+    def test_cleanup_refuses_to_remove_workenv_root(self, tmp_path: Path) -> None:
+        """Guard: init slot whose path IS the workenv root must not be deleted."""
+        mock_reader = Mock()
+        manager = WorkEnvManager(mock_reader)
+
+        metadata = {"slots": [{"id": "init", "lifecycle": "init"}]}
+        # slot_path IS the workenv root — the guard must prevent deletion
+        extracted_slots = {0: tmp_path}
+
+        manager._cleanup_lifecycle_slots(tmp_path, metadata, extracted_slots)
+
+        assert tmp_path.exists()  # root must survive
+
+
+@pytest.mark.unit
+class TestRunEnumerateExecuteCommand:
+    """Regression tests for _run_enumerate_execute_command nested enumerate schema."""
+
+    def test_enumerate_command_reads_nested_enumerate_key(self, tmp_path: Path) -> None:
+        """Runtime must read enumerate.path and enumerate.pattern from nested key."""
+        mock_reader = Mock()
+        manager = WorkEnvManager(mock_reader)
+
+        cmd = {
+            "type": "enumerate_and_execute",
+            "command": "echo {file}",
+            "enumerate": {"path": str(tmp_path), "pattern": "*.txt"},
+        }
+        (tmp_path / "foo.txt").write_text("x")
+        metadata = {"package": {"name": "test", "version": "1.0"}}
+
+        with patch("flavor.psp.format_2025.workenv.run") as mock_run:
+            mock_run.return_value = Mock(returncode=0)
+            # Should not raise — nested enumerate schema is correct
+            manager._run_enumerate_execute_command(cmd, tmp_path, metadata, {})
+
+    def test_enumerate_command_missing_enumerate_raises(self, tmp_path: Path) -> None:
+        """Missing enumerate key must raise RuntimeError."""
+        mock_reader = Mock()
+        manager = WorkEnvManager(mock_reader)
+
+        cmd = {"type": "enumerate_and_execute", "command": "echo {file}", "pattern": "*.whl"}
+        metadata = {"package": {"name": "test", "version": "1.0"}}
+
+        with pytest.raises(RuntimeError):
+            manager._run_enumerate_execute_command(cmd, tmp_path, metadata, {})
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

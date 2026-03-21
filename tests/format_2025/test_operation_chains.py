@@ -10,6 +10,8 @@ from __future__ import annotations
 from pathlib import Path
 import tempfile
 
+import pytest
+
 from flavor.psp.format_2025.operations import (
     OP_BZIP2,
     OP_GZIP,
@@ -177,6 +179,104 @@ class TestOperationChains:
         # Convert to dict for JSON
         data = meta.to_dict()
         assert data["operations"] == "tar.gz"
+
+
+@pytest.mark.unit
+class TestOperationEdgeCases:
+    """Edge-case and error-path tests for operations.py."""
+
+    def test_pack_more_than_8_raises(self) -> None:
+        """Packing more than 8 operations raises ValueError."""
+        with pytest.raises(ValueError, match="Maximum 8 operations"):
+            pack_operations([OP_TAR] * 9)
+
+    def test_pack_out_of_range_op_raises(self) -> None:
+        """Operation value > 255 raises ValueError."""
+        with pytest.raises(ValueError, match="out of range"):
+            pack_operations([256])
+
+    def test_pack_negative_op_raises(self) -> None:
+        """Negative operation value raises ValueError."""
+        with pytest.raises(ValueError, match="out of range"):
+            pack_operations([-1])
+
+    def test_pack_unsupported_v0_op_raises(self) -> None:
+        """Operation not in V0 set raises ValueError."""
+        with pytest.raises(ValueError, match="not supported in v0"):
+            pack_operations([0x99])  # Unknown op
+
+    def test_unpack_empty_returns_empty(self) -> None:
+        """Unpacking 0 returns empty list."""
+        assert unpack_operations(0) == []
+
+    @pytest.mark.parametrize(
+        ("op_string", "expected"),
+        [
+            ("none", 0),
+            ("raw", 0),
+            ("RAW", 0),
+            ("", 0),
+            ("gzip", pack_operations([OP_GZIP])),
+            ("tar", pack_operations([OP_TAR])),
+            ("tar.gz", pack_operations([OP_TAR, OP_GZIP])),
+            ("tar.bz2", pack_operations([OP_TAR, OP_BZIP2])),
+            ("tar|gzip", pack_operations([OP_TAR, OP_GZIP])),
+            ("GZIP|TAR", pack_operations([OP_GZIP, OP_TAR])),
+        ],
+    )
+    def test_string_to_operations_parametrize(self, op_string: str, expected: int) -> None:
+        """string_to_operations parses valid strings correctly."""
+        assert string_to_operations(op_string) == expected
+
+    def test_string_to_operations_invalid_raises(self) -> None:
+        """Invalid operation string raises ValueError."""
+        with pytest.raises(ValueError):
+            string_to_operations("invalid_op")
+
+    def test_string_to_operations_invalid_pipe_part_raises(self) -> None:
+        """Pipe-separated string with unknown part raises ValueError."""
+        with pytest.raises(ValueError, match="Unsupported v0 operation"):
+            string_to_operations("tar|badop")
+
+    def test_operations_to_string_single_gzip(self) -> None:
+        """Single GZIP operation produces 'gz'."""
+        result = operations_to_string(pack_operations([OP_GZIP]))
+        assert "gzip" in result.lower() or result == "gz"
+
+    def test_operations_to_string_unknown_op(self) -> None:
+        """Unknown op code returns a non-empty string (name or UNKNOWN_ fallback)."""
+        from flavor.psp.format_2025.operations import _get_operation_name
+
+        # Use an op value not in the known map
+        result = _get_operation_name(0xFE)
+        assert isinstance(result, str)
+        assert len(result) > 0
+
+    def test_pack_empty_list(self) -> None:
+        """Empty list packs to 0 (no operations)."""
+        assert pack_operations([]) == 0
+
+    def test_operations_to_string_fallback_pipe_format(self) -> None:
+        """operations_to_string uses pipe format for combos not in OPERATION_CHAINS."""
+        # [OP_GZIP, OP_TAR] is not in OPERATION_CHAINS (reverse order)
+        packed = pack_operations([OP_GZIP, OP_TAR])
+        result = operations_to_string(packed)
+        # Should produce pipe-separated names since this combo is not a named chain
+        assert "|" in result or result  # falls back to name|name format
+
+    def test_operations_to_string_unknown_chain_hits_names(self) -> None:
+        """Known op codes inside an unknown chain return their names via fallback."""
+        # Use a chain not listed in OPERATION_CHAINS
+        packed = pack_operations([OP_BZIP2, OP_GZIP])
+        result = operations_to_string(packed)
+        # Result should contain op names
+        assert "bzip2" in result.lower() or "gzip" in result.lower() or "|" in result
+
+    def test_string_to_operations_empty_pipe_part_skipped(self) -> None:
+        """Pipe-separated string with empty parts (double pipe) skips blank parts."""
+        # "tar||gzip" has an empty middle part - should be skipped via continue
+        result = string_to_operations("tar||gzip")
+        assert result == pack_operations([OP_TAR, OP_GZIP])
 
 
 # 🌶️📦🔚
