@@ -118,7 +118,7 @@ jobs:
       
       - name: 🔧 Extract helpers
         run: |
-          ci/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_arm64"
+          .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_arm64"
 
           # List available helpers
           ls -la helpers/bin/
@@ -218,9 +218,8 @@ jobs:
             runner: windows-2025
             python_platform: win_amd64
           - platform: windows_arm64
-            runner: windows-11-arm
+            runner: windows-2022-arm
             python_platform: win_arm64
-    continue-on-error: ${{ matrix.continue_on_error == true }}
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
@@ -397,10 +396,9 @@ jobs:
           - platform: windows_amd64
             runner: windows-2025
             python_platform: win_amd64
-          # Temporarily disabled windows_arm64 until support is complete
-          # - platform: windows_arm64
-          #   runner: windows-11-arm
-          #   python_platform: win_arm64
+          - platform: windows_arm64
+            runner: windows-2022-arm
+            python_platform: win_arm64
 
     steps:
       - name: 📥 Checkout
