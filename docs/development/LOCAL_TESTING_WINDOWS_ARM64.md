@@ -31,16 +31,15 @@ python -m pytest tests/ -v
 Before running any tests, ensure you have completed the Windows 11 ARM64 build setup:
 
 - ✅ Python 3.11+ installed and in PATH
-- ✅ Go 1.26+ installed and in PATH
+- ✅ Go 1.23+ installed and in PATH
 - ✅ Rust 1.86+ with `aarch64-pc-windows-msvc` target
 - ✅ Git Bash (or WSL2/MSYS2) for running shell scripts
 - ✅ Helpers built in `dist/bin/` (via `./build.sh`)
 
 **Verify setup:**
-
 ```bash
 python --version     # Should be 3.11+
-go version          # Should be 1.26+
+go version          # Should be 1.23+
 rustc --version     # Should be 1.86+
 ls dist/bin/flavor-*windows_arm64.exe  # Should show 4 files
 ```
@@ -77,7 +76,6 @@ ls -la dist/bin/
 **If build fails:**
 
 Check Go compilation:
-
 ```bash
 cd src/flavor-go
 GOOS=windows GOARCH=arm64 CGO_ENABLED=0 go build -o flavor-go-builder.exe ./cmd/builder
@@ -85,7 +83,6 @@ GOOS=windows GOARCH=arm64 CGO_ENABLED=0 go build -o flavor-go-launcher.exe ./cmd
 ```
 
 Check Rust compilation:
-
 ```bash
 cd src/flavor-rs
 cargo build --release --target aarch64-pc-windows-msvc
@@ -219,7 +216,6 @@ make direct-test
 #### Issue: Rust Launcher Crashes (Signal 9)
 
 **Symptom:**
-
 ```
 Error: launcher killed by signal 9
 Rust launcher-windows_arm64.exe exited with code -1
@@ -228,7 +224,6 @@ Rust launcher-windows_arm64.exe exited with code -1
 **Cause:** Rust launcher has platform-specific issues on Windows ARM64 (being investigated)
 
 **Workaround:** Use Go launcher instead
-
 ```bash
 # The Makefile automatically falls back to Go launcher
 # Tests will pass if Go launcher works
@@ -240,7 +235,6 @@ Rust launcher-windows_arm64.exe exited with code -1
 #### Issue: UTF-8 Encoding Errors
 
 **Symptom:**
-
 ```
 UnicodeDecodeError: 'utf-8' codec can't decode byte...
 ```
@@ -248,7 +242,6 @@ UnicodeDecodeError: 'utf-8' codec can't decode byte...
 **Cause:** Missing or incorrect UTF-8 environment variables
 
 **Solution:**
-
 ```bash
 export PYTHONUTF8=1
 export PYTHONIOENCODING=utf-8
@@ -261,7 +254,6 @@ setx PYTHONIOENCODING utf-8
 #### Issue: Helpers Not Found
 
 **Symptom:**
-
 ```
 Error: flavor-go-builder-windows_arm64.exe not found
 ```
@@ -269,7 +261,6 @@ Error: flavor-go-builder-windows_arm64.exe not found
 **Cause:** Helpers not built or in wrong location
 
 **Solution:**
-
 ```bash
 cd C:\code\provide-io\flavorpack
 ./build.sh
@@ -297,7 +288,7 @@ unzip -l packages/*.psp
 
 ## Part 5: Run Taster Tests
 
-Taster is a **self-contained test application** that validates all Flavorpack functionality through a comprehensive test suite.
+Taster is a **self-contained test application** that validates all FlavorPack functionality through a comprehensive test suite.
 
 ### What Taster Tests
 
@@ -429,7 +420,6 @@ exit $(( $PRETASTER_RESULT + $TASTER_RESULT ))
 ### Problem: Tests Skip Due to Missing Helpers
 
 **Symptoms:**
-
 ```
 SKIPPED [0%] - Helpers not found
 ```
@@ -437,7 +427,6 @@ SKIPPED [0%] - Helpers not found
 **Cause:** conftest.py can't find launcher binaries
 
 **Solution:**
-
 ```bash
 # Build helpers
 ./build.sh
@@ -453,7 +442,6 @@ python -m pytest tests/ -v
 ### Problem: PE Header Validation Failures
 
 **Symptoms:**
-
 ```
 Error: Windows PE loader validation failed
 PE Header Offset: 0xE0 (expected 0x3C)
@@ -462,7 +450,6 @@ PE Header Offset: 0xE0 (expected 0x3C)
 **Cause:** Windows binaries have invalid PE structure (rare)
 
 **Solution:**
-
 ```bash
 # Rebuild binaries
 cd src/flavor-go && make clean && make build
@@ -475,7 +462,6 @@ file dist/bin/flavor-go-launcher-windows_arm64.exe
 ### Problem: "Architecture Mismatch" Errors
 
 **Symptoms:**
-
 ```
 Error: Binary architecture (x86_64) doesn't match system (arm64)
 ```
@@ -483,7 +469,6 @@ Error: Binary architecture (x86_64) doesn't match system (arm64)
 **Cause:** Built binaries are wrong architecture
 
 **Check:**
-
 ```bash
 # Verify build system detects ARM64 correctly
 rustc -vV | grep host
@@ -497,14 +482,12 @@ export GOOS=windows GOARCH=arm64
 ### Problem: Workenv Cache Issues
 
 **Symptoms:**
-
 ```
 Error: Workenv validation failed
 Checksum mismatch in cache
 ```
 
 **Solution:**
-
 ```bash
 # Clear workenv cache
 rm -rf ~/.cache/flavor/workenv
@@ -517,13 +500,11 @@ python -m pytest tests/ -v
 ### Problem: "Signal 9" from Rust Launcher
 
 **Symptoms:**
-
 ```
 Rust launcher killed by signal 9
 ```
 
 **This is a known issue on Windows ARM64.** Workaround:
-
 ```bash
 # Tests automatically fall back to Go launcher
 # If you see this error, tests should still pass
@@ -546,7 +527,6 @@ After running tests, verify success:
 - [ ] Taster: Cache/workenv tests passed
 
 **Success indicators:**
-
 ```
 Pretaster: 12/12 tests passed ✅
 Taster: 45+ tests passed ✅
@@ -558,10 +538,10 @@ Overall: Ready for development/contribution
 After successful local testing:
 
 1. **Understand test failures** - Read test output and KNOWN_ISSUES.md
-1. **Contribute fixes** - Use test suite to validate changes
-1. **Add new tests** - Follow existing patterns in tests/
-1. **Build packages** - Use `flavor pack` with tested helpers
-1. **Report issues** - Use Windows ARM64 as test platform for bug reports
+2. **Contribute fixes** - Use test suite to validate changes
+3. **Add new tests** - Follow existing patterns in tests/
+4. **Build packages** - Use `flavor pack` with tested helpers
+5. **Report issues** - Use Windows ARM64 as test platform for bug reports
 
 ## References
 
@@ -571,6 +551,9 @@ After successful local testing:
 - `docs/development/WINDOWS_ARM64_BUILD.md` - Build setup guide
 - `tests/conftest.py` - Shared test infrastructure
 
-______________________________________________________________________
+---
 
-**Last Updated**: 2026-03-21 **Target Platform**: Windows 11 ARM64 **Test Suites**: Pretaster (cross-language), Taster (comprehensive)
+**Last Updated**: 2026-03-21
+**Target Platform**: Windows 11 ARM64
+**Test Suites**: Pretaster (cross-language), Taster (comprehensive)
+
