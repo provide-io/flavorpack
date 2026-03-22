@@ -301,15 +301,19 @@ class WheelBuilder:
 
         ensure_dir(wheel_dir)
 
-        # Always use PyPA pip for wheel downloads to ensure manylinux compatibility
-        # UV pip doesn't handle platform tags as reliably
+        # Primary: PyPA pip for reliable wheel downloads (handles manylinux platform tags).
+        # Fallback: UV offline download from its local cache (no network, uses uv tool install cache).
         logger.debug("Using PyPA pip for reliable wheel downloads")
 
         try:
             self.pypapip.download_wheels_from_requirements(python_exe, requirements_file, wheel_dir)
         except RuntimeError as e:
-            logger.error(f"❌ Failed to download dependencies: {e}")
-            raise
+            logger.warning(f"pip download failed, trying UV offline cache: {e}")
+            if self.uv.download_wheels_offline(requirements_file, wheel_dir):
+                logger.info("✅ UV offline cache fallback succeeded")
+            else:
+                logger.error(f"❌ Both pip and UV offline download failed: {e}")
+                raise
 
         # Return list of downloaded wheels
         wheel_files = list(wheel_dir.glob("*.whl"))
