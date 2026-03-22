@@ -335,9 +335,16 @@ class UVManager(BaseToolManager):
             no_dev: Whether to exclude dev dependencies (default True)
         """
         uv_exe = self.get_uv_executable()
-        cmd = [str(uv_exe), "export", "--frozen", "--output-file", str(output_file)]
+        cmd = [str(uv_exe), "export", "--frozen", "--no-hashes", "--output-file", str(output_file)]
         if no_dev:
             cmd.append("--no-dev")
+        # --no-hashes: hash annotations in requirements.txt cause uv pip download to
+        # enter strict hash-checking mode, which fails when packages aren't pre-cached
+        # at the exact pinned version (e.g. Windows GHA: uv tool install caches
+        # anyio==4.12.1 but uv.lock pins anyio==4.11.0). Omitting hashes lets all
+        # three download methods (pip, uv offline, uv network) work with plain
+        # version-pinned requirements without hash verification overhead.
+        #
         # Note: --no-project was added in uv 0.6+; older versions (0.10.x in GHA)
         # don't have it. Instead we post-process the output to strip editable/local
         # entries (file:// lines) which represent the root project itself.
