@@ -511,9 +511,10 @@ class PythonEnvironmentBuilder:
         import sys
 
         # Calculate actual on-disk size (following symlinks/hardlinks) for diagnostic
-        # Note: Path.is_file() already follows symlinks by default; no follow_symlinks kwarg
         raw_size = sum(
-            f.stat(follow_symlinks=True).st_size for f in python_install_dir.rglob("*") if f.is_file()
+            f.stat(follow_symlinks=True).st_size
+            for f in python_install_dir.rglob("*")
+            if f.is_file(follow_symlinks=True)
         )
         print(
             f"[flavor-python] Creating Python tarball from {python_install_dir} "
@@ -530,7 +531,9 @@ class PythonEnvironmentBuilder:
         # Must be passed to open(), not add() — it's a TarFile constructor param.
         with tarfile.open(python_tgz, "w:gz", compresslevel=9, dereference=True) as tar:
             filter_func = self._create_tarball_filter(stats)
-            tar.add(python_install_dir, arcname=".", filter=filter_func)
+            # dereference=True: follow symlinks and hard links so the tarball is
+            # self-contained even when the installation uses links to UV_CACHE_DIR
+            tar.add(python_install_dir, arcname=".", filter=filter_func, dereference=True)
             logger.info(
                 f"📊 Added {stats['files_added']} files ({stats['bytes_added']:,} bytes) to Python tarball"
             )
