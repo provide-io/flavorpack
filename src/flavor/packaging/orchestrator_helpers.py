@@ -188,8 +188,7 @@ def create_builder_manifest(
             if value
         }
         if manifest_runtime_env:
-            if logger.is_debug_enabled():
-                logger.debug(f"Adding user-specified runtime config (no isolation): {manifest_runtime_env}")
+            logger.debug(f"Adding user-specified runtime config (no isolation): {manifest_runtime_env}")
             manifest["runtime"] = {"env": manifest_runtime_env}
     else:
         # Apply default isolation (safe by default)
@@ -201,7 +200,7 @@ def create_builder_manifest(
         seen = set(DEFAULT_ENV_ISOLATION_UNSET)
         merged_unset = DEFAULT_ENV_ISOLATION_UNSET + [var for var in user_unset if var not in seen]
 
-        if user_unset and logger.is_debug_enabled():
+        if user_unset:
             logger.debug(f"Merging user unset vars {user_unset} with defaults")
             logger.debug(f"Final merged unset list: {merged_unset}")
 
@@ -403,8 +402,7 @@ def create_python_builder_metadata(
             if value
         }
         if manifest_runtime_env:
-            if logger.is_debug_enabled():
-                logger.debug(f"Adding user-specified runtime config (no isolation): {manifest_runtime_env}")
+            logger.debug(f"Adding user-specified runtime config (no isolation): {manifest_runtime_env}")
             metadata["runtime"] = {"env": manifest_runtime_env}
     else:
         # Apply default isolation (safe by default)
@@ -416,7 +414,7 @@ def create_python_builder_metadata(
         seen = set(DEFAULT_ENV_ISOLATION_UNSET)
         merged_unset = DEFAULT_ENV_ISOLATION_UNSET + [var for var in user_unset if var not in seen]
 
-        if user_unset and logger.is_debug_enabled():
+        if user_unset:
             logger.debug(f"Merging user unset vars {user_unset} with defaults")
             logger.debug(f"Final merged unset list: {merged_unset}")
 
