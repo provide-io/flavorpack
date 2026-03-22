@@ -387,11 +387,32 @@ class UVManager(BaseToolManager):
         cmd = [str(uv_exe), "export", "--frozen", "--output-file", str(output_file)]
         if no_dev:
             cmd.append("--no-dev")
-        # Note: --no-project is not available in uv <0.6; uv export already excludes
-        # the root project from output by default, so no flag needed.
+        # Note: --no-project was added in uv 0.6+; older versions (0.10.x in GHA)
+        # don't have it. Instead we post-process the output to strip editable/local
+        # entries (file:// lines) which represent the root project itself.
 
         logger.debug("💻 Exporting requirements from uv.lock (offline)", command=" ".join(cmd))
         run(cmd, check=True, capture_output=True, cwd=project_dir)
+
+        # Strip editable installs and local file:// requirements — these are the
+        # root project itself, which is built from source and must not be downloaded.
+        self._strip_local_requirements(output_file)
+
+    def _strip_local_requirements(self, requirements_file: Path) -> None:
+        """Remove editable/local file:// entries from a requirements.txt.
+
+        uv export includes the root project as a local path entry like:
+          -e file:///path/to/project
+          project @ file:///path/to/project
+        These cannot be pip-downloaded and represent the root project which
+        is always built from local source separately.
+        """
+        lines = requirements_file.read_text(encoding="utf-8").splitlines(keepends=True)
+        kept = [ln for ln in lines if "file://" not in ln and not ln.startswith("-e ")]
+        if len(kept) != len(lines):
+            removed = len(lines) - len(kept)
+            logger.debug(f"Stripped {removed} local/editable line(s) from requirements export")
+            requirements_file.write_text("".join(kept), encoding="utf-8")
 
     def download_wheels_offline(self, requirements_file: Path, dest_dir: Path) -> bool:
         """
