@@ -365,7 +365,9 @@ class UVManager(BaseToolManager):
         logger.debug("💻 Compiling requirements with UV", command=" ".join(compile_cmd))
         run(compile_cmd, check=True, capture_output=True)
 
-    def export_requirements(self, project_dir: Path, output_file: Path, no_dev: bool = True) -> None:
+    def export_requirements(
+        self, project_dir: Path, output_file: Path, no_dev: bool = True, no_project: bool = True
+    ) -> None:
         """
         Export pinned requirements from an existing uv.lock file (no network needed).
 
@@ -373,173 +375,23 @@ class UVManager(BaseToolManager):
         making any PyPI/DNS calls. Preferred over compile_requirements when a
         lock file is already present.
 
-        uv export excludes the root project itself from output by default, so
-        only transitive runtime dependencies are listed.
-
         Args:
             project_dir: Project directory containing uv.lock
             output_file: Output requirements.txt file
             no_dev: Whether to exclude dev dependencies (default True)
+            no_project: Whether to exclude the project itself (default True).
+                The project wheel is always built from local source separately,
+                so it must not be downloaded from PyPI.
         """
         uv_exe = self.get_uv_executable()
-        cmd = [uv_exe.as_posix(), "export", "--frozen", "--no-hashes", "--output-file", output_file.as_posix()]
+        cmd = [str(uv_exe), "export", "--frozen", "--output-file", str(output_file)]
         if no_dev:
             cmd.append("--no-dev")
-        # --no-hashes: hash annotations in requirements.txt cause uv pip download to
-        # enter strict hash-checking mode, which fails when packages aren't pre-cached
-        # at the exact pinned version (e.g. Windows GHA: uv tool install caches
-        # anyio==4.12.1 but uv.lock pins anyio==4.11.0). Omitting hashes lets all
-        # three download methods (pip, uv offline, uv network) work with plain
-        # version-pinned requirements without hash verification overhead.
-        #
-        # Note: --no-project was added in uv 0.6+; older versions (0.10.x in GHA)
-        # don't have it. Instead we post-process the output to strip editable/local
-        # entries (file:// lines) which represent the root project itself.
+        if no_project:
+            cmd.append("--no-project")
 
         logger.debug("💻 Exporting requirements from uv.lock (offline)", command=" ".join(cmd))
         run(cmd, check=True, capture_output=True, cwd=project_dir)
-
-        # Strip editable installs and local file:// requirements — these are the
-        # root project itself, which is built from source and must not be downloaded.
-        self._strip_local_requirements(output_file)
-
-    def _strip_local_requirements(self, requirements_file: Path) -> None:
-        """Remove editable/local file:// entries from a requirements.txt.
-
-        uv export includes the root project as a local path entry like:
-          -e file:///path/to/project
-          project @ file:///path/to/project
-        These cannot be pip-downloaded and represent the root project which
-        is always built from local source separately.
-        """
-        lines = requirements_file.read_text(encoding="utf-8").splitlines(keepends=True)
-        kept = [ln for ln in lines if "file://" not in ln and not ln.startswith("-e ")]
-        if len(kept) != len(lines):
-            removed = len(lines) - len(kept)
-            logger.debug(f"Stripped {removed} local/editable line(s) from requirements export")
-            requirements_file.write_text("".join(kept), encoding="utf-8")
-
-    def download_wheels_offline(self, requirements_file: Path, dest_dir: Path) -> bool:
-        """
-        Attempt to download wheels from a pre-warmed local wheel cache (no network).
-
-        Checks the FLAVOR_WHEEL_CACHE environment variable for a directory containing
-        pre-downloaded .whl files (populated by the CI pre-warm step or equivalent).
-        Uses `pip download --no-index --find-links` to copy matching wheels from that
-        local directory into dest_dir without any network access.
-
-        Note: `uv pip download` does not exist as a UV subcommand. This function
-        uses standard pip with --no-index to ensure zero network activity.
-
-        Args:
-            requirements_file: Path to requirements.txt file
-            dest_dir: Directory to download wheels to
-
-        Returns:
-            True if all wheels were found in local cache, False otherwise
-        """
-        import os
-        import sys
-
-        wheel_cache_dir = os.environ.get(ENV_WHEEL_CACHE)
-        if not wheel_cache_dir:
-            logger.warning(f"💻 {ENV_WHEEL_CACHE} not set, skipping offline wheel strategy")
-            return False
-
-        cache_path = Path(wheel_cache_dir)
-        whl_count = len(list(cache_path.glob("*.whl"))) if cache_path.exists() else 0
-        if not cache_path.exists() or whl_count == 0:
-            logger.warning(f"💻 {ENV_WHEEL_CACHE} dir empty or missing: {cache_path} ({whl_count} wheels)")
-            return False
-
-        logger.warning(f"💻 Offline wheel copy from {ENV_WHEEL_CACHE}: {cache_path} ({whl_count} wheels)")
-        python_exe = Path(sys.executable)
-        cmd = [
-            str(python_exe),
-            "-m",
-            "pip",
-            "download",
-            "--no-index",
-            "--find-links",
-            str(cache_path),
-            "--dest",
-            str(dest_dir),
-            "-r",
-            str(requirements_file),
-            "--quiet",
-        ]
-        result = run(cmd, check=False, capture_output=True, env=_windows_system_env() or None)
-        if result.returncode == 0:
-            logger.warning(f"✅ Copied wheels from {ENV_WHEEL_CACHE} (offline)")
-            return True
-        logger.warning(
-            f"{ENV_WHEEL_CACHE} copy failed (rc={result.returncode}): {result.stderr.strip()[:400]}"
-        )
-        return False
-
-    def download_wheels_network(self, requirements_file: Path, dest_dir: Path) -> bool:
-        """
-        Download wheels via UV's HTTP client using install+cache collection.
-
-        Note: `uv pip download` does not exist as a UV subcommand.
-        Strategy: install into an isolated --target dir with a private
-        --cache-dir, then collect the .whl files that UV wrote into its
-        wheel cache during the install.
-
-        This works where pip fails because UV uses its own Rust HTTP client
-        (reqwest) which succeeds on Windows GHA where Python urllib3 gets
-        [Errno 11001] getaddrinfo failed.
-
-        Args:
-            requirements_file: Path to requirements.txt file (no hashes)
-            dest_dir: Directory to collect wheel files into
-
-        Returns:
-            True if wheels were collected, False otherwise
-        """
-        import shutil as _shutil
-        import tempfile
-
-        uv_exe = self.get_uv_executable()
-
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            tmp_path = Path(tmp_dir)
-            uv_cache = tmp_path / "uv_cache"
-            install_target = tmp_path / "target"
-            uv_cache.mkdir()
-            install_target.mkdir()
-
-            # Install with isolated cache so we can find exactly which wheels
-            # UV downloaded.  UV caches .whl files under cache/wheels/**/*.whl.
-            cmd = [
-                uv_exe.as_posix(),
-                "pip",
-                "install",
-                "--cache-dir",
-                uv_cache.as_posix(),
-                "--target",
-                install_target.as_posix(),
-                "-r",
-                requirements_file.as_posix(),
-            ]
-            logger.warning(f"💻 UV pip install (network fallback): {' '.join(cmd)}")
-            result = run(cmd, check=False, capture_output=True)
-            if result.returncode != 0:
-                logger.warning(
-                    f"UV pip install failed (rc={result.returncode}): {result.stderr.strip()[:400]}"
-                )
-                return False
-
-            # Collect .whl files from UV's isolated wheel cache
-            whl_files = list(uv_cache.glob("**/*.whl"))
-            if not whl_files:
-                logger.warning("UV pip install succeeded but no .whl files found in UV cache")
-                return False
-
-            for whl in whl_files:
-                _shutil.copy2(str(whl), str(dest_dir / whl.name))
-            logger.info(f"✅ Collected {len(whl_files)} wheels from UV pip install cache")
-            return True
 
     @retry(
         ConnectionError,
