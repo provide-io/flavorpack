@@ -366,7 +366,7 @@ class UVManager(BaseToolManager):
         run(compile_cmd, check=True, capture_output=True)
 
     def export_requirements(
-        self, project_dir: Path, output_file: Path, no_dev: bool = True, no_project: bool = True
+        self, project_dir: Path, output_file: Path, no_dev: bool = True
     ) -> None:
         """
         Export pinned requirements from an existing uv.lock file (no network needed).
@@ -375,20 +375,20 @@ class UVManager(BaseToolManager):
         making any PyPI/DNS calls. Preferred over compile_requirements when a
         lock file is already present.
 
+        uv export excludes the root project itself from output by default, so
+        only transitive runtime dependencies are listed.
+
         Args:
             project_dir: Project directory containing uv.lock
             output_file: Output requirements.txt file
             no_dev: Whether to exclude dev dependencies (default True)
-            no_project: Whether to exclude the project itself (default True).
-                The project wheel is always built from local source separately,
-                so it must not be downloaded from PyPI.
         """
         uv_exe = self.get_uv_executable()
         cmd = [str(uv_exe), "export", "--frozen", "--output-file", str(output_file)]
         if no_dev:
             cmd.append("--no-dev")
-        if no_project:
-            cmd.append("--no-project")
+        # Note: --no-project is not available in uv <0.6; uv export already excludes
+        # the root project from output by default, so no flag needed.
 
         logger.debug("💻 Exporting requirements from uv.lock (offline)", command=" ".join(cmd))
         run(cmd, check=True, capture_output=True, cwd=project_dir)
