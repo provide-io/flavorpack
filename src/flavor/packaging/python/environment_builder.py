@@ -421,11 +421,12 @@ class PythonEnvironmentBuilder:
         # Use mutable container for tracking stats
         stats = {"files_added": 0, "bytes_added": 0}
 
-        with tarfile.open(python_tgz, "w:gz", compresslevel=9) as tar:
+        # dereference=True: follow symlinks and hard links so the tarball is
+        # self-contained even when the installation uses links to UV_CACHE_DIR.
+        # Must be passed to open(), not add() — it's a TarFile constructor param.
+        with tarfile.open(python_tgz, "w:gz", compresslevel=9, dereference=True) as tar:
             filter_func = self._create_tarball_filter(stats)
-            # dereference=True: follow symlinks and hard links so the tarball is
-            # self-contained even when the installation uses links to UV_CACHE_DIR
-            tar.add(python_install_dir, arcname=".", filter=filter_func, dereference=True)
+            tar.add(python_install_dir, arcname=".", filter=filter_func)
             logger.info(
                 f"📊 Added {stats['files_added']} files ({stats['bytes_added']:,} bytes) to Python tarball"
             )
