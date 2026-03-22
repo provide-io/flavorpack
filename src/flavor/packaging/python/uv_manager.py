@@ -447,51 +447,78 @@ class UVManager(BaseToolManager):
             "-r",
             str(requirements_file),
         ]
-        logger.warning(f"💻 UV offline download cmd: {' '.join(cmd)}")
+        logger.debug("💻 Attempting offline wheel download from UV cache", command=" ".join(cmd))
         result = run(cmd, check=False, capture_output=True)
         if result.returncode == 0:
             logger.info("✅ Downloaded all wheels from UV cache (offline)")
             return True
-        logger.warning(f"UV offline download failed (rc={result.returncode}): {result.stderr.strip()[:500]}")
+        if logger.is_debug_enabled():
+            logger.debug(f"Offline download failed (rc={result.returncode}): {result.stderr.strip()[:200]}")
         return False
 
     def download_wheels_network(self, requirements_file: Path, dest_dir: Path) -> bool:
         """
-        Download wheels using UV's HTTP client (bypasses Python urllib3).
+        Download wheels via UV's HTTP client using install+cache collection.
 
-        Uses `uv pip download` with network access.  UV's Rust-based HTTP client
-        works in environments where Python urllib3 fails (e.g. Windows GHA where
-        DNS resolves for UV but not for pip's urllib3).
+        `uv pip download` was added in uv 0.11+; older runners (0.10.x on GHA)
+        only have `uv pip install`.  Strategy: install into an isolated --target
+        dir with a private --cache-dir, then collect the .whl files that UV
+        wrote into its wheel cache during the install.
 
-        This is the last-resort fallback: pip download failed AND UV offline cache
-        missed (version mismatch between uv.lock pins and what uv tool install cached).
+        This works where pip fails because UV uses its own Rust HTTP client
+        (reqwest) which succeeds on Windows GHA where Python urllib3 gets
+        [Errno 11001] getaddrinfo failed.
 
         Args:
-            requirements_file: Path to requirements.txt file
-            dest_dir: Directory to download wheels to
+            requirements_file: Path to requirements.txt file (no hashes)
+            dest_dir: Directory to collect wheel files into
 
         Returns:
-            True if all wheels were downloaded successfully, False otherwise
+            True if wheels were collected, False otherwise
         """
+        import shutil as _shutil
+        import tempfile
+
         uv_exe = self.get_uv_executable()
-        cmd = [
-            str(uv_exe),
-            "pip",
-            "download",
-            "--only-binary",
-            ":all:",
-            "--dest",
-            str(dest_dir),
-            "-r",
-            str(requirements_file),
-        ]
-        logger.warning(f"💻 UV network download cmd: {' '.join(cmd)}")
-        result = run(cmd, check=False, capture_output=True)
-        if result.returncode == 0:
-            logger.info("✅ Downloaded wheels via UV HTTP client")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            uv_cache = tmp_path / "uv_cache"
+            install_target = tmp_path / "target"
+            uv_cache.mkdir()
+            install_target.mkdir()
+
+            # Install with isolated cache so we can find exactly which wheels
+            # UV downloaded.  UV caches .whl files under cache/wheels/**/*.whl.
+            cmd = [
+                str(uv_exe),
+                "pip",
+                "install",
+                "--cache-dir",
+                str(uv_cache),
+                "--target",
+                str(install_target),
+                "-r",
+                str(requirements_file),
+            ]
+            logger.warning(f"💻 UV pip install (network fallback): {' '.join(cmd)}")
+            result = run(cmd, check=False, capture_output=True)
+            if result.returncode != 0:
+                logger.warning(
+                    f"UV pip install failed (rc={result.returncode}): {result.stderr.strip()[:400]}"
+                )
+                return False
+
+            # Collect .whl files from UV's isolated wheel cache
+            whl_files = list(uv_cache.glob("**/*.whl"))
+            if not whl_files:
+                logger.warning("UV pip install succeeded but no .whl files found in UV cache")
+                return False
+
+            for whl in whl_files:
+                _shutil.copy2(str(whl), str(dest_dir / whl.name))
+            logger.info(f"✅ Collected {len(whl_files)} wheels from UV pip install cache")
             return True
-        logger.warning(f"UV network download failed (rc={result.returncode}): {result.stderr.strip()[:500]}")
-        return False
 
     @retry(
         ConnectionError,
