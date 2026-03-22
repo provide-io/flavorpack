@@ -141,8 +141,7 @@ class UVManager(BaseToolManager):
 
         system_uv = shutil.which("uv")
         if system_uv:
-            if logger.is_debug_enabled():
-                logger.debug(f"Found system UV: {system_uv}")
+            logger.debug(f"Found system UV: {system_uv}")
             return Path(system_uv)
 
         logger.debug("No system UV found")
@@ -382,8 +381,7 @@ class UVManager(BaseToolManager):
                 uv_wheel = None
                 for file in temp_path.glob("uv-*.whl"):
                     uv_wheel = file
-                    if logger.is_debug_enabled():
-                        logger.debug(f"Found UV wheel: {uv_wheel.name}")
+                    logger.debug(f"Found UV wheel: {uv_wheel.name}")
                     break
 
                 if not uv_wheel:
@@ -396,8 +394,7 @@ class UVManager(BaseToolManager):
                         if name.endswith("/uv") or name == "uv":
                             uv_path = dest_dir / "uv"
 
-                            if logger.is_debug_enabled():
-                                logger.debug(f"Extracting UV binary from {name}")
+                            logger.debug(f"Extracting UV binary from {name}")
                             with (
                                 wheel_zip.open(name) as src,
                                 uv_path.open("wb") as dst,

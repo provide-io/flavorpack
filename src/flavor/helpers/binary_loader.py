@@ -104,8 +104,7 @@ class BinaryLoader:
             binary_path = self.manager.helpers_bin / binary_name
 
             if binary_path.exists() and not force:
-                if logger.is_debug_enabled():
-                    logger.debug(f"Go {component} already exists: {binary_path}")
+                logger.debug(f"Go {component} already exists: {binary_path}")
                 built_binaries.append(binary_path)
                 continue
 
@@ -152,8 +151,7 @@ class BinaryLoader:
             binary_path = self.manager.helpers_bin / binary_name
 
             if binary_path.exists() and not force:
-                if logger.is_debug_enabled():
-                    logger.debug(f"Rust {component} already exists: {binary_path}")
+                logger.debug(f"Rust {component} already exists: {binary_path}")
                 built_binaries.append(binary_path)
                 continue
 
@@ -341,30 +339,26 @@ class BinaryLoader:
         embedded_path = Path(__file__).parent / "bin" / specific_name
         if embedded_path.exists():
             self._ensure_executable(embedded_path)
-            if logger.is_debug_enabled():
-                logger.debug(f"Found helper at: {embedded_path}")
+            logger.debug(f"Found helper at: {embedded_path}")
             return embedded_path
 
         # 2. Check bundled with package (for PyPI wheels - old location)
         bundled_path = Path(__file__).parent / "helpers" / self.current_platform / specific_name
         if bundled_path.exists():
-            if logger.is_debug_enabled():
-                logger.debug(f"Found helper at: {bundled_path}")
+            logger.debug(f"Found helper at: {bundled_path}")
             return bundled_path
 
         # 3. Check installed helper cache
         installed_path = self.manager.installed_helpers_bin / specific_name
         if installed_path.exists():
             self._ensure_executable(installed_path)
-            if logger.is_debug_enabled():
-                logger.debug(f"Found helper at: {installed_path}")
+            logger.debug(f"Found helper at: {installed_path}")
             return installed_path
 
         # 4. Check local development helpers
         local_path = self.manager.helpers_bin / specific_name
         if local_path.exists():
-            if logger.is_debug_enabled():
-                logger.debug(f"Found helper at: {local_path}")
+            logger.debug(f"Found helper at: {local_path}")
             return local_path
 
         return None

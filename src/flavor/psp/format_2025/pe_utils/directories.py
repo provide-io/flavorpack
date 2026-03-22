@@ -146,8 +146,7 @@ def update_debug_directory(data: bytearray, padding_size: int) -> None:
 
     # Calculate number of debug directory entries (each is 28 bytes)
     num_debug_entries = debug_dir_size // 28
-    if logger.is_debug_enabled():
-        logger.debug(f"Debug directory entry count: {num_debug_entries}")
+    logger.debug(f"Debug directory entry count: {num_debug_entries}")
 
     # Update each debug directory entry's PointerToRawData field
     # IMAGE_DEBUG_DIRECTORY structure:
@@ -189,5 +188,5 @@ def update_debug_directory(data: bytearray, padding_size: int) -> None:
             )
             updated_count += 1
 
-    if updated_count > 0 and logger.is_debug_enabled():
+    if updated_count > 0:
         logger.debug(f"Updated {updated_count}/{num_debug_entries} debug directory entries")
