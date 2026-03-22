@@ -393,6 +393,41 @@ class UVManager(BaseToolManager):
         logger.debug("💻 Exporting requirements from uv.lock (offline)", command=" ".join(cmd))
         run(cmd, check=True, capture_output=True, cwd=project_dir)
 
+    def download_wheels_offline(self, requirements_file: Path, dest_dir: Path) -> bool:
+        """
+        Attempt to download wheels from UV's local cache without network access.
+
+        Uses `uv pip download --offline` which only reads from UV's wheel cache.
+        If a previous `uv tool install` or `uv sync` has run, the packages should
+        already be cached, making this a zero-network operation.
+
+        Args:
+            requirements_file: Path to requirements.txt file
+            dest_dir: Directory to download wheels to
+
+        Returns:
+            True if all wheels were downloaded from cache, False otherwise
+        """
+        uv_exe = self.get_uv_executable()
+        cmd = [
+            str(uv_exe),
+            "pip",
+            "download",
+            "--offline",
+            "--dest",
+            str(dest_dir),
+            "-r",
+            str(requirements_file),
+        ]
+        logger.debug("💻 Attempting offline wheel download from UV cache", command=" ".join(cmd))
+        result = run(cmd, check=False, capture_output=True)
+        if result.returncode == 0:
+            logger.info("✅ Downloaded all wheels from UV cache (offline)")
+            return True
+        if logger.is_debug_enabled():
+            logger.debug(f"Offline download failed (cache miss?): {result.stderr.strip()[:200]}")
+        return False
+
     @retry(
         ConnectionError,
         TimeoutError,
