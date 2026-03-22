@@ -387,16 +387,24 @@ class WheelBuilder:
         # Resolve and download dependency wheels from PyPI
         dependency_wheels = []
         if requirements_file or all_packages:
-            logger.info(
-                f"🌐 Resolving {len(all_packages)} runtime dependencies from PyPI "
-                "(only runtime deps, not the project itself)"
-            )
-            locked_requirements = self.resolve_dependencies(
-                python_exe=python_exe,
-                requirements_file=requirements_file,
-                packages=all_packages if all_packages else None,
-                output_dir=deps_dir,
-            )
+            # Prefer uv export --frozen when a lock file exists: no network calls needed.
+            # Falls back to uv pip compile (network) when no lock file is present.
+            lock_file = project_dir / "uv.lock"
+            if lock_file.exists() and not requirements_file:
+                logger.info("🔒 Using uv.lock for offline dependency resolution (no PyPI needed)")
+                locked_requirements = deps_dir / "requirements.txt"
+                self.uv.export_requirements(project_dir, locked_requirements)
+            else:
+                logger.info(
+                    f"🌐 Resolving {len(all_packages)} runtime dependencies from PyPI "
+                    "(only runtime deps, not the project itself)"
+                )
+                locked_requirements = self.resolve_dependencies(
+                    python_exe=python_exe,
+                    requirements_file=requirements_file,
+                    packages=all_packages if all_packages else None,
+                    output_dir=deps_dir,
+                )
 
             # Download dependency wheels
             dependency_wheels = self.download_wheels_for_resolved_deps(

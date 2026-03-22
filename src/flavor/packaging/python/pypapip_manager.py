@@ -94,7 +94,7 @@ class PyPaPipManager:
         return cmd
 
     # ⚠️ CRITICAL: This method handles manylinux platform tags - DO NOT REMOVE! ⚠️
-    def _get_pypapip_download_cmd(  # noqa: C901
+    def _get_pypapip_download_cmd(
         self,
         python_exe: Path,
         dest_dir: Path,
