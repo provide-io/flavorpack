@@ -291,7 +291,8 @@ def _load_slot_data(slot: SlotMetadata) -> bytes:
         # Priority: 1. FLAVOR_WORKENV_BASE env var, 2. Current working directory
         base_dir = os.environ.get("FLAVOR_WORKENV_BASE", str(Path.cwd()))
         slot_path = Path(str(slot_path).replace("{workenv}", base_dir))
-        logger.debug(f"📍 Resolved slot path: {slot.source} -> {slot_path} (base: {base_dir})")
+        if logger.is_debug_enabled():
+            logger.debug(f"📍 Resolved slot path: {slot.source} -> {slot_path} (base: {base_dir})")
 
     if not slot_path.exists():
         raise BuildError(f"Slot path does not exist: {slot_path}")

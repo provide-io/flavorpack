@@ -47,21 +47,25 @@ class BundleExecutor:
         Returns:
             str: Prepared command ready for execution
         """
-        logger.debug(f"🔍 prepare_command input: {base_command}")
+        if logger.is_debug_enabled():
+            logger.debug(f"🔍 prepare_command input: {base_command}")
 
         # Primary slot substitution
         command = self._substitute_primary(base_command)
-        logger.debug(f"🔍 after primary substitution: {command}")
+        if logger.is_debug_enabled():
+            logger.debug(f"🔍 after primary substitution: {command}")
 
         # Slot substitution - {slot:N} references
         command = self._substitute_slots(command)
-        logger.debug(f"🔍 after slot substitution: {command}")
+        if logger.is_debug_enabled():
+            logger.debug(f"🔍 after slot substitution: {command}")
 
         # Basic substitutions - only {workenv}, {package_name}, and {version} as per spec
         command = command.replace("{workenv}", str(self.workenv_dir))
         command = command.replace("{package_name}", self.package_name)
         command = command.replace("{version}", self.package_version)
-        logger.debug(f"🔍 after basic substitutions: {command}")
+        if logger.is_debug_enabled():
+            logger.debug(f"🔍 after basic substitutions: {command}")
 
         # Append user arguments
         if args:
@@ -87,9 +91,11 @@ class BundleExecutor:
 
         if primary_slot < len(slots):
             # Use "target" field for actual file path, fallback to "id" or "name"
-            slot_name = slots[primary_slot].get(
-                "target",
-                slots[primary_slot].get("id", slots[primary_slot].get("name", f"slot_{primary_slot}")),
+            slot_name = self._normalize_slot_target(
+                slots[primary_slot].get(
+                    "target",
+                    slots[primary_slot].get("id", slots[primary_slot].get("name", f"slot_{primary_slot}")),
+                )
             )
             # For tarballs, use {workenv} placeholder
             if slot_name.endswith(".tar.gz") or slot_name.endswith(".tgz"):
@@ -98,7 +104,8 @@ class BundleExecutor:
                 # For non-tarballs, use relative path
                 primary_path = slot_name
             command = command.replace("{primary}", str(primary_path))
-            logger.trace(f"🔄 Substituted {{primary}} -> {primary_path}")
+            if logger.is_trace_enabled():
+                logger.trace(f"🔄 Substituted {{primary}} -> {primary_path}")
         else:
             logger.warning(f"⚠️ Primary slot {primary_slot} not found")
 
@@ -120,9 +127,11 @@ class BundleExecutor:
 
             if slot_idx < len(slots):
                 # Use "target" field for actual file path, fallback to "id" or "name"
-                slot_name = slots[slot_idx].get(
-                    "target",
-                    slots[slot_idx].get("id", slots[slot_idx].get("name", f"slot_{slot_idx}")),
+                slot_name = self._normalize_slot_target(
+                    slots[slot_idx].get(
+                        "target",
+                        slots[slot_idx].get("id", slots[slot_idx].get("name", f"slot_{slot_idx}")),
+                    )
                 )
                 # Build the path to the extracted slot
                 slot_path = self.workenv_dir / slot_name
@@ -133,6 +142,14 @@ class BundleExecutor:
 
         # Replace all {slot:N} patterns
         return re.sub(r"\{slot:(\d+)\}", replace_slot, command)
+
+    def _normalize_slot_target(self, slot_target: str) -> str:
+        """Normalize slot target metadata to a path relative to the workenv."""
+        if slot_target == "{workenv}":
+            return "{workenv}"
+        if slot_target.startswith("{workenv}/"):
+            return slot_target.removeprefix("{workenv}/")
+        return slot_target
 
     def prepare_environment(self) -> dict[str, str]:
         """Prepare environment variables for execution.
@@ -176,7 +193,8 @@ class BundleExecutor:
             execution_env=execution_env,
         )
 
-        logger.debug(f"🧹 Prepared isolated execution environment ({len(env)} vars)")
+        if logger.is_debug_enabled():
+            logger.debug(f"🧹 Prepared isolated execution environment ({len(env)} vars)")
         return env
 
     def execute(self, args: list[str] | None = None) -> dict[str, Any]:
@@ -219,7 +237,7 @@ class BundleExecutor:
                 pass
             else:
                 logger.warning(f"⚠️ Execution completed with exit code: {result.returncode}")
-                if result.stderr:
+                if result.stderr and logger.is_debug_enabled():
                     logger.debug(f"📝 stderr: {result.stderr[:500]}")  # Log first 500 chars
 
             crashed = result.returncode < 0  # Negative return codes often indicate a crash due to a signal

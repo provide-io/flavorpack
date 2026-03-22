@@ -15,6 +15,20 @@ from flavor.psp.format_2025.slots import SlotMetadata
 from flavor.psp.format_2025.spec import BuildSpec
 
 
+def extract_package_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
+    """Return canonical package identity metadata."""
+    package = metadata.get("package")
+    if isinstance(package, dict):
+        return package
+
+    normalized: dict[str, Any] = {}
+    if "name" in metadata:
+        normalized["name"] = metadata["name"]
+    if "version" in metadata:
+        normalized["version"] = metadata["version"]
+    return normalized
+
+
 def validate_spec(spec: BuildSpec) -> list[str]:
     """
     Validate a complete build specification.
@@ -38,7 +52,7 @@ def validate_spec(spec: BuildSpec) -> list[str]:
     return errors
 
 
-def validate_metadata(metadata: dict[str, Any]) -> list[str]:  # noqa: C901
+def validate_metadata(metadata: dict[str, Any]) -> list[str]:
     """
     Validate package metadata.
 
@@ -46,31 +60,16 @@ def validate_metadata(metadata: dict[str, Any]) -> list[str]:  # noqa: C901
     """
     errors = []
 
-    # Check for package name (required)
-    has_name = False
-    name = None
+    package = extract_package_metadata(metadata)
+    name = package.get("name")
 
-    # Check various possible locations for name
-    if "name" in metadata:
-        has_name = True
-        name = metadata["name"]
-    elif "package" in metadata and isinstance(metadata["package"], dict):
-        if "name" in metadata["package"]:
-            has_name = True
-            name = metadata["package"]["name"]
-
-    if not has_name:
+    if name is None:
         errors.append("📛 Package name is required but not found in metadata")
     elif not name or not str(name).strip():
         errors.append("📛 Package name cannot be empty")
 
     # Validate version if present
-    version = None
-    if "version" in metadata:
-        version = metadata["version"]
-    elif "package" in metadata and isinstance(metadata["package"], dict) and "version" in metadata["package"]:
-        version = metadata["package"]["version"]
-
+    version = package.get("version")
     if version and not str(version).strip():
         errors.append("🏷️ Package version cannot be empty if provided")
 

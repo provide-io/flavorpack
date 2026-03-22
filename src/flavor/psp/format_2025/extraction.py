@@ -82,7 +82,8 @@ class SlotExtractor:
         """
         try:
             descriptors = self.reader.read_slot_descriptors()
-            logger.debug(f"Verifying checksums for {len(descriptors)} slots")
+            if logger.is_debug_enabled():
+                logger.debug(f"Verifying checksums for {len(descriptors)} slots")
 
             for i, descriptor in enumerate(descriptors):
                 # Read raw slot data (before decompression) using backend directly
