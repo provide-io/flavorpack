@@ -118,6 +118,8 @@ class PythonEnvironmentBuilder:
         Retries:
             Up to 3 attempts with exponential backoff for network errors
         """
+        import sys
+
         uv_cmd = self.find_uv_command()
         if uv_cmd is None:
             logger.error("UV command not found")
@@ -125,62 +127,50 @@ class PythonEnvironmentBuilder:
 
         self._log_uv_environment()
 
-        # On Windows ARM64, request the native aarch64 build explicitly — uv defaults
-        # to x86_64 because ARM64 support is labelled "not yet mature" upstream.
-        python_spec = self._resolve_uv_python_spec()
-        if python_spec != self.python_version:
-            logger.info(
-                "Windows ARM64 detected — requesting native Python",
-                python_spec=python_spec,
-            )
-
         # Strategy 1: install to custom dir
-        cmd_custom = [uv_cmd, "python", "install", python_spec, "--install-dir", uv_install_dir]
+        cmd_custom = [uv_cmd, "python", "install", self.python_version, "--install-dir", uv_install_dir]
         logger.debug("💻🚀📋 Running command", command=" ".join(cmd_custom))
-        try:
-            result = run(cmd_custom, capture_output=True, env=_windows_system_env() or None)
-            logger.debug(
-                "uv python install (custom-dir) completed",
-                exit_code=result.returncode,
-                stderr=result.stderr.strip()[:120] if result.stderr else "",
-            )
+        result = run(cmd_custom, capture_output=True)
+        print(
+            f"[flavor-python] uv python install (custom-dir) exit={result.returncode} "
+            f"stderr={result.stderr.strip()!r:.120}",
+            flush=True,
+            file=sys.stdout,
+        )
 
-            python_path = self._find_python_installation(uv_install_dir, uv_cmd)
-            if python_path:
-                return python_path
-        except Exception as e:
-            logger.debug(f"Strategy 1 failed: {e}")
+        python_path = self._find_python_installation(uv_install_dir, uv_cmd)
+        if python_path:
+            return python_path
 
         # Strategy 2: install to uv's default managed location, then find it
         logger.debug("💻🚀📋 Strategy 2: installing to default managed location")
-        try:
-            cmd_default = [uv_cmd, "python", "install", python_spec]
-            result2 = run(cmd_default, capture_output=True, env=_windows_system_env() or None)
-            logger.debug(
-                "uv python install (default) completed",
-                exit_code=result2.returncode,
-                stderr=result2.stderr.strip()[:120] if result2.stderr else "",
-            )
+        cmd_default = [uv_cmd, "python", "install", self.python_version]
+        result2 = run(cmd_default, capture_output=True)
+        print(
+            f"[flavor-python] uv python install (default) exit={result2.returncode} "
+            f"stderr={result2.stderr.strip()!r:.120}",
+            flush=True,
+            file=sys.stdout,
+        )
 
-            find_cmd = [uv_cmd, "python", "find", python_spec, "--python-preference", "only-managed"]
-            result3 = run(find_cmd, capture_output=True, env=_windows_system_env() or None)
-            python_bin_str = result3.stdout.strip()
-            logger.debug(
-                "uv python find completed",
-                exit_code=result3.returncode,
-                path=python_bin_str[:200] if python_bin_str else "",
-            )
+        find_cmd = [uv_cmd, "python", "find", self.python_version, "--python-preference", "only-managed"]
+        result3 = run(find_cmd, capture_output=True)
+        python_bin_str = result3.stdout.strip()
+        print(
+            f"[flavor-python] uv python find exit={result3.returncode} path={python_bin_str!r:.200}",
+            flush=True,
+            file=sys.stdout,
+        )
 
-            if result3.returncode == 0 and python_bin_str:
-                python_bin = Path(python_bin_str)
-                logger.info(f"Found Python via uv python find: {python_bin}")
-                return self._validate_python_installation(python_bin)
-        except Exception as e:
-            logger.debug(f"Strategy 2 failed: {e}")
+        if result3.returncode == 0 and python_bin_str:
+            python_bin = Path(python_bin_str)
+            logger.info(f"Found Python via uv python find: {python_bin}")
+            return self._validate_python_installation(python_bin)
 
-        logger.info(
-            "Both strategies failed to locate Python",
-            python_version=self.python_version,
+        print(
+            f"[flavor-python] Both strategies failed to locate Python {self.python_version}",
+            flush=True,
+            file=sys.stdout,
         )
         return None
 
