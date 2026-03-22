@@ -138,7 +138,8 @@ class PSPFLauncher(PSPFReader):
         try:
             for slot_entry in slot_table:
                 slot_idx = slot_entry["index"]
-                logger.debug(f"🔄 Extracting slot {slot_idx}")
+                if logger.is_debug_enabled():
+                    logger.debug(f"🔄 Extracting slot {slot_idx}")
                 slot_path = self.extract_slot(slot_idx, workenv_dir)
                 extracted_paths[slot_idx] = slot_path
 
@@ -198,7 +199,8 @@ class PSPFLauncher(PSPFReader):
         elif slot_entry["operations"] == 0x01:  # tar
             data = slot_data  # Tar archives are extracted later
         elif slot_entry["operations"] == 0x10:  # gzip
-            logger.debug(f"🗜️ Decompressing slot {slot_index} with gzip")
+            if logger.is_debug_enabled():
+                logger.debug(f"🗜️ Decompressing slot {slot_index} with gzip")
             import gzip
 
             data = gzip.decompress(slot_data)
@@ -211,33 +213,40 @@ class PSPFLauncher(PSPFReader):
         # Get slot name from metadata - use target for extraction path
         metadata = self.read_metadata()
         slot_name = f"slot_{slot_index}"
+        slot_meta: dict[str, Any] = {}
         if "slots" in metadata and slot_index < len(metadata["slots"]):
             slot_meta = metadata["slots"][slot_index]
             # Use "target" field for extraction path, fallback to "id" or "name"
             slot_name = slot_meta.get("target", slot_meta.get("id", slot_meta.get("name", slot_name)))
-        logger.debug(f"📝 Slot {slot_index} name: {slot_name}")
+        slot_name = self._normalize_slot_target(str(slot_name))
+        if logger.is_debug_enabled():
+            logger.debug(f"📝 Slot {slot_index} name: {slot_name}")
 
         # NOTE: Tarball extraction logic matches Go's tar extraction
         # Check if it's a tarball that needs extraction (by content, not just name)
+        import contextlib
+
         is_tarball = False
-        try:
-            # Try to open as tarball
-            with tarfile.open(fileobj=io.BytesIO(data), mode="r:*") as tar:
-                # If we can open it, it's a tarball
-                is_tarball = True
-        except (tarfile.TarError, EOFError, OSError):
-            pass
+        with (
+            contextlib.suppress(tarfile.TarError, EOFError, OSError),
+            tarfile.open(fileobj=io.BytesIO(data), mode="r:*"),
+        ):
+            # If we can open it, it's a tarball
+            is_tarball = True
 
         if is_tarball or slot_name.endswith(".tar.gz") or slot_name.endswith(".tgz"):
-            logger.debug(f"📤 Extracting tarball {slot_name} to {workenv_dir}")
+            if logger.is_debug_enabled():
+                logger.debug(f"📤 Extracting tarball {slot_name} to {workenv_dir}")
             try:
                 with tarfile.open(fileobj=io.BytesIO(data), mode="r:*") as tar:
                     # Use the filter parameter to avoid Python 3.14 deprecation warning
                     tar.extractall(path=workenv_dir, filter="data")
 
-                # Return the base directory
-                return workenv_dir
-            except (OSError, PermissionError, tarfile.ReadError) as e:
+                if slot_name in {".", "{workenv}"}:
+                    return workenv_dir
+
+                return workenv_dir / slot_name
+            except (OSError, tarfile.ReadError) as e:
                 logger.error(f"❌ Disk or tarball error extracting slot {slot_index} to {workenv_dir}: {e}")
                 raise  # Re-raise the exception
         else:
@@ -246,10 +255,30 @@ class PSPFLauncher(PSPFReader):
             try:
                 ensure_parent_dir(output_path)
                 atomic_write(output_path, data)
+                self._apply_slot_permissions(output_path, slot_meta)
                 return output_path
-            except (OSError, PermissionError) as e:
+            except OSError as e:
                 logger.error(f"❌ Disk error writing slot {slot_index} to {output_path}: {e}")
                 raise  # Re-raise the exception
+
+    def _apply_slot_permissions(self, output_path: Path, slot_meta: dict[str, Any]) -> None:
+        """Apply metadata-driven permissions after single-file extraction."""
+        permissions = slot_meta.get("permissions")
+        if not permissions:
+            return
+
+        try:
+            output_path.chmod(int(str(permissions), 8))
+        except (OSError, ValueError) as e:
+            logger.warning(f"⚠️ Failed to apply slot permissions to {output_path}: {e}")
+
+    def _normalize_slot_target(self, slot_target: str) -> str:
+        """Normalize slot target metadata to a path relative to the workenv."""
+        if slot_target == "{workenv}":
+            return "{workenv}"
+        if slot_target.startswith("{workenv}/"):
+            return slot_target.removeprefix("{workenv}/")
+        return slot_target
 
     def setup_workenv(self) -> Path:
         """Setup work environment for bundle execution."""
@@ -288,8 +317,9 @@ class PSPFLauncher(PSPFReader):
             # Use the executor for actual process execution
             from flavor.psp.format_2025.executor import BundleExecutor
 
-            logger.debug(f"🔍 Metadata command: {metadata.get('execution', {}).get('command', 'N/A')}")
-            logger.debug(f"🔍 Workenv dir: {workenv_dir}")
+            if logger.is_debug_enabled():
+                logger.debug(f"🔍 Metadata command: {metadata.get('execution', {}).get('command', 'N/A')}")
+                logger.debug(f"🔍 Workenv dir: {workenv_dir}")
             executor = BundleExecutor(metadata, workenv_dir)
 
             # Execute and return result

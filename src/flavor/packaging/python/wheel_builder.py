@@ -50,7 +50,57 @@ class WheelBuilder:
         self.pypapip = PyPaPipManager(python_version=python_version)
         self.uv = UVManager()  # UV manager for performance where appropriate
 
-        logger.debug(f"Initialized WheelBuilder for Python {python_version}")
+        if logger.is_debug_enabled():
+            logger.debug(f"Initialized WheelBuilder for Python {python_version}")
+
+    def _ensure_pip_available(self, python_exe: Path) -> None:
+        """Ensure the target Python can run PyPA pip commands."""
+        pip_version_cmd = [str(python_exe), "-m", "pip", "--version"]
+        try:
+            logger.debug("🔍 Checking pip availability", python_exe=str(python_exe))
+            run(pip_version_cmd, check=True, capture_output=True)
+            return
+        except Exception:
+            logger.warning("⚠️ pip not available; attempting bootstrap", python_exe=str(python_exe))
+
+        ensurepip_cmd = [str(python_exe), "-m", "ensurepip", "--default-pip"]
+        try:
+            logger.debug("🛠️ Bootstrapping pip with ensurepip", python_exe=str(python_exe))
+            run(ensurepip_cmd, check=True, capture_output=True)
+            return
+        except Exception as ensurepip_error:
+            logger.warning(
+                f"⚠️ ensurepip failed for {python_exe}; falling back to UV pip install: {ensurepip_error}"
+            )
+
+        uv_install_cmd = self.uv._get_uv_pip_install_cmd(python_exe, ["pip"])
+        try:
+            logger.debug("🛠️ Bootstrapping pip with UV", command=" ".join(uv_install_cmd))
+            run(uv_install_cmd, check=True, capture_output=True)
+        except Exception as uv_error:
+            raise RuntimeError(f"Unable to bootstrap pip for {python_exe}: {uv_error}") from uv_error
+
+    def _ensure_no_isolation_build_backend(self, python_exe: Path) -> None:
+        """Ensure setuptools and wheel are available for no-isolation builds."""
+        backend_check_cmd = [str(python_exe), "-c", "import setuptools, wheel"]
+        try:
+            logger.debug("🔍 Checking no-isolation build backend", python_exe=str(python_exe))
+            run(backend_check_cmd, check=True, capture_output=True)
+            return
+        except Exception:
+            logger.warning(
+                "⚠️ Missing setuptools/wheel for no-isolation build; installing build backend",
+                python_exe=str(python_exe),
+            )
+
+        install_cmd = self.pypapip._get_pypapip_install_cmd(python_exe, ["setuptools", "wheel"])
+        try:
+            logger.debug("🛠️ Installing no-isolation build backend", command=" ".join(install_cmd))
+            run(install_cmd, check=True, capture_output=True)
+        except Exception as backend_error:
+            raise RuntimeError(
+                f"Unable to install no-isolation build backend for {python_exe}: {backend_error}"
+            ) from backend_error
 
     def build_wheel_from_source(
         self,
@@ -73,6 +123,9 @@ class WheelBuilder:
         Returns:
             Path to the built wheel file
         """
+        self._ensure_pip_available(python_exe)
+        if not use_isolation:
+            self._ensure_no_isolation_build_backend(python_exe)
 
         # Use PyPA pip for wheel building (more reliable than UV for complex builds)
         wheel_cmd = self.pypapip._get_pypapip_wheel_cmd(

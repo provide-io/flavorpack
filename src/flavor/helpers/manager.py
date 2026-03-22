@@ -181,7 +181,7 @@ class HelperManager:
         """Get file size, return None if file can't be accessed."""
         try:
             return path.stat().st_size
-        except (OSError, FileNotFoundError):
+        except OSError:
             return None
 
     def _calculate_checksum(self, path: Path, size: int) -> str | None:
@@ -199,7 +199,7 @@ class HelperManager:
             result = run([str(path), "--version"], check=False, capture_output=True, text=True)
             if result.returncode == 0 and result.stdout:
                 return self._parse_version_output(result.stdout.strip())
-        except (OSError, Exception):
+        except Exception:
             pass
         return None
 

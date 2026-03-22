@@ -21,7 +21,21 @@ def xor_encode(data: bytes, key: bytes = XOR_KEY) -> bytes:
     Returns:
         XOR encoded bytes
     """
-    return bytes(data[i] ^ key[i % len(key)] for i in range(len(data)))
+    n = len(data)
+    if n == 0:
+        return b""
+    key_len = len(key)
+    key_int = int.from_bytes(key, "little")
+    result = bytearray(n)
+    # XOR key_len bytes at a time as integers
+    aligned = n - (n % key_len)
+    for i in range(0, aligned, key_len):
+        chunk = int.from_bytes(data[i : i + key_len], "little")
+        result[i : i + key_len] = (chunk ^ key_int).to_bytes(key_len, "little")
+    # Handle remaining bytes
+    for i in range(aligned, n):
+        result[i] = data[i] ^ key[i % key_len]
+    return bytes(result)
 
 
 def xor_decode(data: bytes, key: bytes = XOR_KEY) -> bytes:

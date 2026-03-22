@@ -31,19 +31,22 @@ def get_cache_dir() -> Path:
     # Check FLAVOR_CACHE override first
     cache_dir = get_str("FLAVOR_CACHE")
     if cache_dir:
-        log.trace(f"🗂️ Using FLAVOR_CACHE: {cache_dir}")
+        if log.is_trace_enabled():
+            log.trace(f"🗂️ Using FLAVOR_CACHE: {cache_dir}")
         return Path(cache_dir)
 
     # Use XDG_CACHE_HOME if set (respects XDG Base Directory standard)
     xdg_cache = get_str("XDG_CACHE_HOME")
     if xdg_cache:
         result = Path(xdg_cache) / "flavor" / "workenv"
-        log.trace(f"🗂️ Using XDG_CACHE_HOME: {result}")
+        if log.is_trace_enabled():
+            log.trace(f"🗂️ Using XDG_CACHE_HOME: {result}")
         return result
 
     # Default to ~/.cache/flavor/workenv
     default = Path.home() / ".cache" / "flavor" / "workenv"
-    log.trace(f"🗂️ Using default cache: {default}")
+    if log.is_trace_enabled():
+        log.trace(f"🗂️ Using default cache: {default}")
     return default
 
 

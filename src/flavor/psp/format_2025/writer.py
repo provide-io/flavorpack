@@ -139,10 +139,12 @@ def _create_launcher_info(launcher_data: bytes) -> dict[str, Any]:
 def _write_metadata(f: BinaryIO, metadata_compressed: bytes, index: PSPFIndex) -> None:
     """Write compressed metadata and update index."""
     metadata_offset = f.tell()
-    logger.debug(f"Metadata offset: {metadata_offset}, size: {len(metadata_compressed)}")
+    if logger.is_debug_enabled():
+        logger.debug(f"Metadata offset: {metadata_offset}, size: {len(metadata_compressed)}")
 
     f.write(metadata_compressed)
-    logger.debug(f"Position after metadata: {f.tell()}")
+    if logger.is_debug_enabled():
+        logger.debug(f"Position after metadata: {f.tell()}")
 
     # Update index
     index.metadata_offset = metadata_offset
@@ -259,7 +261,8 @@ def _write_slots(f: BinaryIO, slots: list[PreparedSlot], spec: BuildSpec, index:
 def _write_trailer(f: BinaryIO, index: PSPFIndex) -> None:
     """Write magic trailer with index."""
     current_pos = f.tell()
-    logger.debug(f"Position before MagicTrailer: {current_pos}")
+    if logger.is_debug_enabled():
+        logger.debug(f"Position before MagicTrailer: {current_pos}")
 
     # Update package size
     index.package_size = current_pos + DEFAULT_MAGIC_TRAILER_SIZE
@@ -267,7 +270,8 @@ def _write_trailer(f: BinaryIO, index: PSPFIndex) -> None:
     # Write trailer: start marker + index + end marker
     f.write(TRAILER_START_MAGIC)
     index_data = index.pack()
-    logger.debug(f"Writing index with format_version: 0x{index.format_version:08x}")
+    if logger.is_debug_enabled():
+        logger.debug(f"Writing index with format_version: 0x{index.format_version:08x}")
     f.write(index_data)
     f.write(TRAILER_END_MAGIC)
 

@@ -141,7 +141,8 @@ class UVManager(BaseToolManager):
 
         system_uv = shutil.which("uv")
         if system_uv:
-            logger.debug(f"Found system UV: {system_uv}")
+            if logger.is_debug_enabled():
+                logger.debug(f"Found system UV: {system_uv}")
             return Path(system_uv)
 
         logger.debug("No system UV found")
@@ -325,7 +326,7 @@ class UVManager(BaseToolManager):
         backoff=BackoffStrategy.EXPONENTIAL,
         jitter=True,
     )
-    def download_uv_binary(self, dest_dir: Path, python_exe: Path | None = None) -> Path | None:
+    def download_uv_binary(self, dest_dir: Path, python_exe: Path | None = None) -> Path | None:  # noqa: C901
         """
         Download UV binary for packaging (manylinux2014 on Linux).
 
@@ -381,7 +382,8 @@ class UVManager(BaseToolManager):
                 uv_wheel = None
                 for file in temp_path.glob("uv-*.whl"):
                     uv_wheel = file
-                    logger.debug(f"Found UV wheel: {uv_wheel.name}")
+                    if logger.is_debug_enabled():
+                        logger.debug(f"Found UV wheel: {uv_wheel.name}")
                     break
 
                 if not uv_wheel:
@@ -394,7 +396,8 @@ class UVManager(BaseToolManager):
                         if name.endswith("/uv") or name == "uv":
                             uv_path = dest_dir / "uv"
 
-                            logger.debug(f"Extracting UV binary from {name}")
+                            if logger.is_debug_enabled():
+                                logger.debug(f"Extracting UV binary from {name}")
                             with (
                                 wheel_zip.open(name) as src,
                                 uv_path.open("wb") as dst,
