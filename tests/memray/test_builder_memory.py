@@ -1,4 +1,5 @@
 """Memory profiling tests for PSPF builder."""
+
 from __future__ import annotations
 
 from pathlib import Path

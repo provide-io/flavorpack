@@ -195,7 +195,7 @@ jobs:
             runner: ubuntu-24.04-arm
             python_platform: manylinux2014_aarch64
           - platform: darwin_amd64
-            runner: macos-13
+            runner: macos-15-intel
             python_platform: macosx_10_9_x86_64
           - platform: darwin_arm64
             runner: macos-15
@@ -349,7 +349,7 @@ jobs:
             runner: ubuntu-24.04-arm
             python_platform: manylinux2014_aarch64
           - platform: darwin_amd64
-            runner: macos-13  # Intel Mac
+            runner: macos-15-intel  # Intel Mac
             python_platform: macosx_10_9_x86_64
           - platform: darwin_arm64
             runner: macos-15  # M1 Mac
@@ -476,7 +476,7 @@ jobs:
           - platform: linux_arm64
             runner: ubuntu-24.04-arm
           - platform: darwin_amd64
-            runner: macos-13
+            runner: macos-15-intel
           - platform: darwin_arm64
             runner: macos-15
           # Windows re-enabled
