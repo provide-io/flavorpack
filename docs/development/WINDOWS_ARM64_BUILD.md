@@ -5,7 +5,6 @@ This guide covers building Flavorpack on Windows 11 ARM64 locally. As of v0.3.21
 ## Overview
 
 Windows ARM64 support was added in v0.3.21. The build process targets:
-
 - **Platform**: `windows_arm64`
 - **Wheel tag**: `win_arm64`
 - **Runner**: `windows-2022-arm` (CI) or any Windows 11 ARM64 machine (local)
@@ -17,45 +16,39 @@ Windows ARM64 support was added in v0.3.21. The build process targets:
 You must have the following installed on your Windows 11 ARM64 machine:
 
 1. **Python 3.11 or later**
-
    ```cmd
    python --version
    ```
-
    If not installed: [Download from python.org](https://www.python.org/downloads/) - ensure you download the **ARM64** version
 
-1. **Go Compiler 1.26+**
-
+2. **Go Compiler 1.23+**
    ```cmd
    go version
    ```
+   Required for building `flavor-go-builder` and `flavor-go-launcher`
+   Download: [golang.org/dl](https://golang.org/dl/) - get the `windows-arm64` release
 
-   Required for building `flavor-go-builder` and `flavor-go-launcher` Download: [golang.org/dl](https://golang.org/dl/) - get the `windows-arm64` release
-
-1. **Rust Toolchain 1.86+**
-
+3. **Rust Toolchain 1.86+**
    ```cmd
    rustc --version
    cargo --version
    ```
+   Required for building `flavor-rs-builder` and `flavor-rs-launcher`
+   Install: [rustup.rs](https://rustup.rs/) - will auto-detect ARM64
+   Verify target: `rustc --print sysroot` should show `aarch64-pc-windows-msvc`
 
-   Required for building `flavor-rs-builder` and `flavor-rs-launcher` Install: [rustup.rs](https://rustup.rs/) - will auto-detect ARM64 Verify target: `rustc --print sysroot` should show `aarch64-pc-windows-msvc`
-
-1. **Git Bash / WSL2 / MSYS2**
-
+4. **Git Bash / WSL2 / MSYS2**
    - Required to run `build.sh` (Unix shell script)
    - **Recommended**: Git Bash (included with [Git for Windows](https://git-scm.com/download/win) ARM64 version)
    - **Alternative**: WSL2 with Linux distribution
    - **Alternative**: MSYS2
 
-1. **Build Tools**
-
+5. **Build Tools**
    ```cmd
    pip install setuptools>=68.0.0 wheel
    ```
 
-1. **Optional: twine** (for PyPI uploads)
-
+6. **Optional: twine** (for PyPI uploads)
    ```cmd
    pip install twine
    ```
@@ -82,7 +75,6 @@ rustc --print sysroot | grep aarch64 && echo "✅ Rust ARM64 target available" |
 ### Method 1: Git Bash (Recommended for Windows)
 
 **Why Git Bash?**
-
 - Native Windows, no virtualization overhead
 - Full compatibility with build.sh
 - Fastest builds on ARM64 hardware
@@ -91,19 +83,16 @@ rustc --print sysroot | grep aarch64 && echo "✅ Rust ARM64 target available" |
 **Steps:**
 
 1. **Install Git for Windows (ARM64 version)**
-
    - Download from: https://git-scm.com/download/win
    - Ensure you get the **ARM64** or **portable** version
 
-1. **Clone and navigate to flavorpack**
-
+2. **Clone and navigate to flavorpack**
    ```bash
-   git clone https://github.com/provide-io/flavorpack.git
-   cd flavorpack
+   git clone https://github.com/provide-io/flavor.git
+   cd flavor
    ```
 
-1. **Build helper binaries**
-
+3. **Build helper binaries**
    ```bash
    # Run from Git Bash
    ./build.sh
@@ -113,28 +102,24 @@ rustc --print sysroot | grep aarch64 && echo "✅ Rust ARM64 target available" |
    ```
 
    Expected output: 8 files
-
    - `flavor-go-builder-*-windows_arm64.exe`
    - `flavor-go-launcher-*-windows_arm64.exe`
    - `flavor-rs-builder-*-windows_arm64.exe`
    - `flavor-rs-launcher-*-windows_arm64.exe`
 
-1. **Build the Python wheel**
-
+4. **Build the Python wheel**
    ```bash
    python tools/build_wheel.py --platform windows_arm64
    ```
 
    Expected output: `flavorpack-0.3.21-py311-none-win_arm64.whl` in `dist/`
 
-1. **Validate the wheel**
-
+5. **Validate the wheel**
    ```bash
    python tools/validate_wheel.py --all --full
    ```
 
    This will:
-
    - Verify helpers are present and executable
    - Test installation in a fresh venv
    - Verify `flavor --version` works
@@ -142,7 +127,6 @@ rustc --print sysroot | grep aarch64 && echo "✅ Rust ARM64 target available" |
 ### Method 2: WSL2 (Linux Subsystem for Windows)
 
 **Why WSL2?**
-
 - Full Linux environment
 - May be easier if you're familiar with Linux
 - Requires virtualization
@@ -150,7 +134,6 @@ rustc --print sysroot | grep aarch64 && echo "✅ Rust ARM64 target available" |
 **Steps:**
 
 1. **Install WSL2 with Ubuntu**
-
    ```cmd
    # From Windows cmd/PowerShell (as Administrator)
    wsl --install -d Ubuntu
@@ -159,8 +142,7 @@ rustc --print sysroot | grep aarch64 && echo "✅ Rust ARM64 target available" |
    wsl --set-default Ubuntu
    ```
 
-1. **Inside WSL2**
-
+2. **Inside WSL2**
    ```bash
    # Update packages
    sudo apt update && sudo apt upgrade
@@ -169,20 +151,18 @@ rustc --print sysroot | grep aarch64 && echo "✅ Rust ARM64 target available" |
    sudo apt install golang-go rust git python3 python3-pip
 
    # Clone and build
-   git clone https://github.com/provide-io/flavorpack.git
-   cd flavorpack
+   git clone https://github.com/provide-io/flavor.git
+   cd flavor
    ./build.sh
    python3 tools/build_wheel.py --platform windows_arm64
    ```
 
-1. **Copy wheel back to Windows**
-
+3. **Copy wheel back to Windows**
    ```bash
    cp dist/*.whl /mnt/c/Users/<YourUsername>/Downloads/
    ```
 
 **Note**: WSL2 builds target Linux ARM64 by default. To build Windows ARM64:
-
 ```bash
 export GOOS=windows GOARCH=arm64
 export RUSTFLAGS="--target aarch64-pc-windows-msvc"
@@ -192,7 +172,6 @@ export RUSTFLAGS="--target aarch64-pc-windows-msvc"
 ### Method 3: PowerShell (Native Windows)
 
 **Why PowerShell?**
-
 - No Git Bash required
 - Requires porting build.sh to PowerShell
 
@@ -226,12 +205,12 @@ python tools/build_wheel.py --platform windows_arm64
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/provide-io/flavorpack.git
-cd flavorpack
+git clone https://github.com/provide-io/flavor.git
+cd flavor
 
 # 2. Verify prerequisites
 python --version      # Should be 3.11+
-go version            # Should be 1.26+
+go version            # Should be 1.23+
 rustc --version       # Should be 1.86+
 
 # 3. Build helper binaries
@@ -270,7 +249,6 @@ flavor --version  # Should print version number
 **Cause**: Not running in Git Bash or bash-compatible shell
 
 **Solution**:
-
 - Ensure you're using Git Bash (not Windows cmd or PowerShell)
 - Or use WSL2 with Linux
 
@@ -285,7 +263,6 @@ cd /c/path/to/flavor
 **Cause**: Go not installed or not in PATH
 
 **Solution**:
-
 ```bash
 # Verify installation
 go version
@@ -301,7 +278,6 @@ export PATH=$PATH:/c/Program\ Files/Go/bin
 **Cause**: ARM64 Rust target not installed
 
 **Solution**:
-
 ```bash
 # Install the ARM64 target
 rustup target add aarch64-pc-windows-msvc
@@ -315,7 +291,6 @@ rustc --print sysroot | grep aarch64
 **Cause**: Old pip version
 
 **Solution**:
-
 ```bash
 python -m pip install --upgrade pip
 pip install setuptools>=68.0.0 wheel
@@ -326,7 +301,6 @@ pip install setuptools>=68.0.0 wheel
 **Cause**: `./build.sh` didn't complete successfully
 
 **Solution**:
-
 ```bash
 # 1. Verify helpers were built
 ls -la dist/bin/
@@ -344,7 +318,6 @@ cd src/flavor-rs && cargo build --release && cd ../..
 **Cause**: File permissions not set correctly
 
 **Solution**:
-
 ```bash
 # Fix permissions (Git Bash)
 chmod +x dist/bin/*
@@ -359,7 +332,6 @@ python tools/validate_wheel.py --all --full
 **Cause**: Newly compiled binaries may be flagged by SmartScreen
 
 **Solution**:
-
 ```bash
 # If prompted during first run, click "More info" → "Run anyway"
 # Or allow in Windows Defender settings
@@ -461,10 +433,9 @@ Windows ARM64 is now fully integrated into the CI/CD pipeline:
 
 - **Helper Build**: `01-helper-prep.yml` - builds on `windows-2022-arm` runner
 - **Wheel Build**: `03-flavor-pipeline.yml` - builds on `windows-2022-arm` runner
-- **Release**: `release.yml` - includes `win_arm64.whl` in releases
+- **Release**: `release-pipeline.yml` - includes `win_arm64.whl` in releases
 
 To trigger a build:
-
 ```bash
 git push origin <your-branch>
 # GitHub Actions will automatically build for Windows ARM64
@@ -475,30 +446,26 @@ git push origin <your-branch>
 ### Build Times (Approximate)
 
 On Windows 11 ARM64 hardware:
-
 - Go helpers: 1-2 minutes
-- Rust helpers: 3-5 minutes (first build), \<30s (incremental)
+- Rust helpers: 3-5 minutes (first build), <30s (incremental)
 - Python wheel: 1-2 minutes
 - **Total**: 5-10 minutes (first build)
 
 ### Optimization Tips
 
 1. **Use incremental builds**
-
    ```bash
    # After first build, only changed code recompiles
    ./build.sh
    ```
 
-1. **Cache Rust artifacts**
-
+2. **Cache Rust artifacts**
    ```bash
    # Cargo caches in ~/.cargo/registry/
    # Keep this directory between builds
    ```
 
-1. **Parallel builds**
-
+3. **Parallel builds**
    ```bash
    # Go and Rust can build in parallel if you modify build.sh
    ./build.sh &
@@ -509,9 +476,9 @@ On Windows 11 ARM64 hardware:
 After building:
 
 1. **Test with real applications**: Package an app and test the PSP
-1. **Submit to PyPI**: `pip install flavorpack==0.3.21` should work
-1. **File issues**: Report any ARM64-specific problems to [GitHub Issues](https://github.com/provide-io/flavorpack/issues)
-1. **Contribute**: Help improve ARM64 support!
+2. **Submit to PyPI**: `pip install flavorpack==0.3.21` should work
+3. **File issues**: Report any ARM64-specific problems to [GitHub Issues](https://github.com/provide-io/flavor/issues)
+4. **Contribute**: Help improve ARM64 support!
 
 ## References
 
@@ -520,6 +487,9 @@ After building:
 - [Architecture Guide](./architecture.md)
 - [Contributing](../../CONTRIBUTING.md)
 
-______________________________________________________________________
+---
 
-**Last Updated**: 2026-03-21 **Version**: 0.3.21+ **Platforms**: Windows 11 ARM64 and equivalent systems
+**Last Updated**: 2026-03-21
+**Version**: 0.3.21+
+**Platforms**: Windows 11 ARM64 and equivalent systems
+
