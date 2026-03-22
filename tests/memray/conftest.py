@@ -1,4 +1,5 @@
 """Memray test fixtures and runner stub (replaces wrknv.memray dependency)."""
+
 from __future__ import annotations
 
 import json
@@ -13,6 +14,7 @@ import pytest
 # ---------------------------------------------------------------------------
 # Runner implementation
 # ---------------------------------------------------------------------------
+
 
 def _run_memray_stress(
     script: str,

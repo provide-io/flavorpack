@@ -1,4 +1,5 @@
 """Logging level guards for avoiding expensive f-string evaluation."""
+
 from __future__ import annotations
 
 import logging
