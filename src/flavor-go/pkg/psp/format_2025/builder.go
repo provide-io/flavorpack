@@ -571,9 +571,9 @@ func doBuild(logger *slog.Logger, manifestPath, outputPath, launcherBin, private
 	// ⚠️ CRITICAL: Close the file BEFORE PE resource embedding on Windows
 	// On Windows ARM64, file locks prevent atomic replacement if file is still open
 	// This prevents "Access is denied" errors during PE resource embedding
-	if err := outCloseFn(out); err != nil {
+	if err := out.Close(); err != nil {
 		logger.Error("Failed to close output file before PE embedding", "error", err)
-		buildExitFn(1)
+		os.Exit(1)
 	}
 	logger.Debug("Closed output file before PE embedding")
 
