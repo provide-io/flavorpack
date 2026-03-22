@@ -293,8 +293,10 @@ class WheelBuilder:
 
         ensure_dir(wheel_dir)
 
-        # Primary: PyPA pip for reliable wheel downloads (handles manylinux platform tags).
-        # Fallback: UV offline download from its local cache (no network, uses uv tool install cache).
+        # Download strategy (in priority order):
+        # 1. PyPA pip  — reliable manylinux platform-tag handling on Linux
+        # 2. UV offline — zero-network from UV's wheel cache (fast but requires prior uv tool install)
+        # 3. UV network — UV's Rust HTTP client works where Python urllib3 fails (e.g. Windows GHA)
         logger.debug("Using PyPA pip for reliable wheel downloads")
 
         try:
@@ -303,8 +305,10 @@ class WheelBuilder:
             logger.warning(f"pip download failed, trying UV offline cache: {e}")
             if self.uv.download_wheels_offline(requirements_file, wheel_dir):
                 logger.info("✅ UV offline cache fallback succeeded")
+            elif self.uv.download_wheels_network(requirements_file, wheel_dir):
+                logger.info("✅ UV network download fallback succeeded")
             else:
-                logger.error(f"❌ Both pip and UV offline download failed: {e}")
+                logger.error(f"❌ All download methods failed: {e}")
                 raise
 
         # Return list of downloaded wheels
