@@ -12,6 +12,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from flavor import build_package_from_manifest
+from flavor.package import _setup_key_paths
 
 
 @pytest.fixture
@@ -81,6 +82,63 @@ my-test-package = "my_app.main:cli"
 
     with pytest.raises(ValueError, match="Project version must be defined"):
         build_package_from_manifest(pyproject_path)
+
+
+@patch("flavor.package.generate_key_pair")
+@patch("flavor.packaging.orchestrator.PackagingOrchestrator.build_package")
+def test_build_package_from_manifest_does_not_generate_keys_by_default(
+    mock_build: Mock,
+    mock_generate_keys: Mock,
+    pyproject_factory: Callable[[str], Path],
+) -> None:
+    """Default builds should not create repo-local signing keys."""
+    pyproject_content = """
+[project]
+name = "my-test-package"
+version = "1.2.3"
+
+[project.scripts]
+my-test-package = "my_app.main:cli"
+"""
+    pyproject_path = pyproject_factory(pyproject_content)
+
+    build_package_from_manifest(pyproject_path)
+
+    mock_build.assert_called_once()
+    mock_generate_keys.assert_not_called()
+
+
+def test_setup_key_paths_rejects_public_key_without_private_key(tmp_path: Path) -> None:
+    """Packaging should reject public-only signing configuration."""
+    public_key_path = tmp_path / "public.pem"
+    public_key_path.write_text("public")
+
+    with pytest.raises(ValueError, match="Public key path requires a private key path"):
+        _setup_key_paths(None, public_key_path, tmp_path, None)
+
+
+@patch("flavor.packaging.orchestrator.PackagingOrchestrator.build_package")
+def test_build_package_from_manifest_accepts_private_key_without_public_key(
+    mock_build: Mock,
+    pyproject_factory: Callable[[str], Path],
+    tmp_path: Path,
+) -> None:
+    """Packaging should allow explicit private-key-only signing input."""
+    pyproject_content = """
+[project]
+name = "my-test-package"
+version = "1.2.3"
+
+[project.scripts]
+my-test-package = "my_app.main:cli"
+"""
+    pyproject_path = pyproject_factory(pyproject_content)
+    private_key_path = tmp_path / "private.pem"
+    private_key_path.write_text("private")
+
+    build_package_from_manifest(pyproject_path, private_key_path=private_key_path)
+
+    mock_build.assert_called_once()
 
 
 # 🌶️📦🔚

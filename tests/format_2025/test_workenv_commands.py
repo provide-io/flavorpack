@@ -62,12 +62,34 @@ class TestRunSetupCommands:
         workenv_dir.mkdir()
 
         metadata = {"package": {"name": "testpkg", "version": "1.0.0"}}
-        setup_commands = [{"type": "enumerate_and_execute", "pattern": "*.sh", "command": "chmod +x {file}"}]
+        setup_commands = [
+            {
+                "type": "enumerate_and_execute",
+                "command": "chmod +x",
+                "enumerate": {"path": "{workenv}", "pattern": "*.sh"},
+            }
+        ]
 
         with patch.object(manager, "_run_enumerate_execute_command") as mock_enum:
             manager._run_setup_commands(setup_commands, workenv_dir, metadata)
 
             mock_enum.assert_called_once()
+
+    def test_run_setup_commands_chmod(self, tmp_path: Path) -> None:
+        """Test running chmod setup command."""
+        mock_reader = Mock()
+        manager = WorkEnvManager(mock_reader)
+
+        workenv_dir = tmp_path / "workenv"
+        workenv_dir.mkdir()
+
+        metadata = {"package": {"name": "testpkg", "version": "1.0.0"}}
+        setup_commands = [{"type": "chmod", "path": "{workenv}/*.sh", "mode": "755"}]
+
+        with patch.object(manager, "_run_chmod_command") as mock_chmod:
+            manager._run_setup_commands(setup_commands, workenv_dir, metadata)
+
+            mock_chmod.assert_called_once()
 
     def test_run_setup_commands_unknown_type(self, tmp_path: Path) -> None:
         """Test handling of unknown setup command type."""
@@ -222,14 +244,20 @@ class TestRunEnumerateExecuteCommand:
         file2 = workenv_dir / "test2.sh"
         file1.write_text("#!/bin/bash")
         file2.write_text("#!/bin/bash")
+        metadata = {"package": {"name": "testpkg", "version": "1.0.0"}}
         env = {"PATH": "/bin"}  # Test environment
 
-        cmd = {"pattern": "*.sh", "command": "chmod +x {file}"}
+        cmd = {
+            "command": "chmod +x",
+            "enumerate": {"path": "{workenv}", "pattern": "*.sh"},
+        }
 
-        manager._run_enumerate_execute_command(cmd, workenv_dir, env)
+        manager._run_enumerate_execute_command(cmd, workenv_dir, metadata, env)
 
         # Should execute for both files
         assert mock_run.call_count == 2
+        assert mock_run.call_args_list[0].args[0][-1] == str(file1)
+        assert mock_run.call_args_list[1].args[0][-1] == str(file2)
 
     @patch("flavor.psp.format_2025.workenv.run")
     def test_enumerate_execute_no_matches(self, mock_run: Mock, tmp_path: Path) -> None:
@@ -239,14 +267,42 @@ class TestRunEnumerateExecuteCommand:
 
         workenv_dir = tmp_path / "workenv"
         workenv_dir.mkdir()
+        metadata = {"package": {"name": "testpkg", "version": "1.0.0"}}
         env = {"PATH": "/bin"}  # Test environment
 
-        cmd = {"pattern": "*.nonexistent", "command": "echo {file}"}
+        cmd = {
+            "command": "echo",
+            "enumerate": {"path": "{workenv}", "pattern": "*.nonexistent"},
+        }
 
-        manager._run_enumerate_execute_command(cmd, workenv_dir, env)
+        manager._run_enumerate_execute_command(cmd, workenv_dir, metadata, env)
 
         # Should not execute any commands
         mock_run.assert_not_called()
+
+    @patch("flavor.psp.format_2025.workenv.run")
+    def test_enumerate_execute_with_file_placeholder(self, mock_run: Mock, tmp_path: Path) -> None:
+        """Test enumerate command with explicit {file} placeholder."""
+        mock_reader = Mock()
+        manager = WorkEnvManager(mock_reader)
+
+        workenv_dir = tmp_path / "workenv"
+        workenv_dir.mkdir()
+
+        file1 = workenv_dir / "test.sh"
+        file1.write_text("#!/bin/bash")
+        metadata = {"package": {"name": "testpkg", "version": "1.0.0"}}
+        env = {"PATH": "/bin"}
+
+        cmd = {
+            "command": "echo {file}",
+            "enumerate": {"path": "{workenv}", "pattern": "*.sh"},
+        }
+
+        manager._run_enumerate_execute_command(cmd, workenv_dir, metadata, env)
+
+        assert mock_run.call_count == 1
+        assert mock_run.call_args.args[0][-1] == str(file1)
 
     @patch("flavor.psp.format_2025.workenv.run")
     def test_enumerate_execute_command_failure(self, mock_run: Mock, tmp_path: Path) -> None:
@@ -259,16 +315,42 @@ class TestRunEnumerateExecuteCommand:
 
         file1 = workenv_dir / "test.sh"
         file1.write_text("#!/bin/bash")
+        metadata = {"package": {"name": "testpkg", "version": "1.0.0"}}
         env = {"PATH": "/bin"}  # Test environment
 
-        cmd = {"pattern": "*.sh", "command": "false"}
+        cmd = {
+            "command": "false",
+            "enumerate": {"path": "{workenv}", "pattern": "*.sh"},
+        }
 
         mock_run.side_effect = Exception("Command failed")
 
-        # Should continue despite error (doesn't raise)
-        manager._run_enumerate_execute_command(cmd, workenv_dir, env)
+        with pytest.raises(RuntimeError, match="Enumerated setup command failed"):
+            manager._run_enumerate_execute_command(cmd, workenv_dir, metadata, env)
 
         mock_run.assert_called_once()
+
+
+class TestRunChmodCommand:
+    """Test _run_chmod_command method."""
+
+    def test_run_chmod_command_updates_permissions(self, tmp_path: Path) -> None:
+        """Test chmod command applies the requested permissions."""
+        mock_reader = Mock()
+        manager = WorkEnvManager(mock_reader)
+
+        workenv_dir = tmp_path / "workenv"
+        workenv_dir.mkdir()
+        script_path = workenv_dir / "run.sh"
+        script_path.write_text("#!/bin/sh\nexit 0\n")
+        script_path.chmod(0o644)
+
+        metadata = {"package": {"name": "testpkg", "version": "1.0.0"}}
+        cmd = {"path": "{workenv}/*.sh", "mode": "755"}
+
+        manager._run_chmod_command(cmd, workenv_dir, metadata)
+
+        assert oct(script_path.stat().st_mode & 0o777) == "0o755"
 
 
 class TestSubstitutePlaceholders:
@@ -312,7 +394,7 @@ class TestSubstituteSlotReferences:
         mock_reader = Mock()
         metadata = {
             "package": {"name": "testpkg", "version": "1.0.0"},
-            "slots": [{"id": "runtime"}, {"id": "app"}],
+            "slots": [{"id": "runtime", "target": "python-runtime"}, {"id": "app", "target": "app.py"}],
         }
         mock_reader.read_metadata.return_value = metadata
 
@@ -323,8 +405,8 @@ class TestSubstituteSlotReferences:
 
         result = manager.substitute_slot_references(command, workenv_dir)
 
-        expected_slot0 = workenv_dir / "runtime"
-        expected_slot1 = workenv_dir / "app"
+        expected_slot0 = workenv_dir / "python-runtime"
+        expected_slot1 = workenv_dir / "app.py"
         expected = f"python {expected_slot0}/bin/python {expected_slot1}/app.py"
 
         assert result == expected

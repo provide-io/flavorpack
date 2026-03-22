@@ -13,7 +13,12 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import dsa, ec, ed25519, rsa
 import pytest
 
-from flavor.packaging.keys import generate_key_pair, load_private_key_raw, load_public_key_raw
+from flavor.packaging.keys import (
+    derive_public_key_raw,
+    generate_key_pair,
+    load_private_key_raw,
+    load_public_key_raw,
+)
 
 
 @pytest.mark.unit
@@ -119,6 +124,16 @@ class TestGenerateKeyPair:
         # Should have secure permissions set
         assert private_mode <= 0o600  # At most owner read/write
         assert public_mode <= 0o644  # Public key can be slightly more open
+
+    def test_derive_public_key_raw_from_private_key(self, tmp_path: Path) -> None:
+        """Test public key derivation for private-key-only signing."""
+        keys_dir = tmp_path / "keys"
+        private_path, public_path = generate_key_pair(keys_dir)
+
+        derived_public = derive_public_key_raw(private_path)
+        stored_public = load_public_key_raw(public_path)
+
+        assert derived_public == stored_public
 
 
 @pytest.mark.unit
@@ -370,6 +385,43 @@ class TestKeyPairIntegration:
         # Should be identical
         assert private1 == private2
         assert public1 == public2
+
+
+@pytest.mark.unit
+class TestSetupKeyPaths:
+    """Regression tests for _setup_key_paths in flavor.package."""
+
+    def test_no_keys_returns_none_pair_without_side_effects(self, tmp_path: Path) -> None:
+        """No key_seed + no key paths → (None, None), no file creation."""
+        from flavor.package import _setup_key_paths
+
+        before = list(tmp_path.iterdir())
+        result = _setup_key_paths(None, None, tmp_path, key_seed=None)
+        assert result == (None, None)
+        assert list(tmp_path.iterdir()) == before  # no files written
+
+    def test_public_without_private_raises(self, tmp_path: Path) -> None:
+        """Public key path without private key → ValueError."""
+        from flavor.package import _setup_key_paths
+
+        with pytest.raises(ValueError, match="private key"):
+            _setup_key_paths(None, tmp_path / "pub.key", tmp_path, key_seed=None)
+
+    def test_private_only_returns_private_none_public(self, tmp_path: Path) -> None:
+        """Private key path set, no public → returns (private_path, None)."""
+        from flavor.package import _setup_key_paths
+
+        priv = tmp_path / "private.key"
+        priv.write_bytes(b"x")
+        result = _setup_key_paths(priv, None, tmp_path, key_seed=None)
+        assert result == (priv, None)
+
+    def test_key_seed_returns_paths_as_is(self, tmp_path: Path) -> None:
+        """key_seed set → returns paths as-is without generating files."""
+        from flavor.package import _setup_key_paths
+
+        result = _setup_key_paths(None, None, tmp_path, key_seed="test-seed")
+        assert result == (None, None)
 
 
 # 🌶️📦🔚
