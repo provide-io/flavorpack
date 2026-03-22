@@ -1,0 +1,7 @@
+{
+  "builder_total_allocations": 1245682,
+  "operations_total_allocations": 622874,
+  "reader_total_allocations": 1374963,
+  "slot_descriptor_total_allocations": 625354,
+  "xor_total_allocations": 650855
+}

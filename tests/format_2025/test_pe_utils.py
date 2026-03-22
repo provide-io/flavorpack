@@ -18,15 +18,7 @@ from flavor.psp.format_2025.pe_utils import (
 
 
 def create_minimal_pe(dos_stub_size: int = 0x80, num_sections: int = 2) -> bytes:
-    """Create a minimal valid PE executable for testing.
-
-    Args:
-        dos_stub_size: Size of DOS stub (PE header offset)
-        num_sections: Number of sections to include
-
-    Returns:
-        Minimal PE executable as bytes
-    """
+    """Create a minimal valid PE executable for testing."""
     data = bytearray(4096)
 
     # MZ header
@@ -38,8 +30,8 @@ def create_minimal_pe(dos_stub_size: int = 0x80, num_sections: int = 2) -> bytes
 
     # COFF header
     coff_offset = dos_stub_size + 4
-    data[coff_offset : coff_offset + 2] = struct.pack("<H", 0x8664)  # Machine: AMD64
-    data[coff_offset + 2 : coff_offset + 4] = struct.pack("<H", num_sections)  # Number of sections
+    data[coff_offset : coff_offset + 2] = struct.pack("<H", 0x8664)  # AMD64
+    data[coff_offset + 2 : coff_offset + 4] = struct.pack("<H", num_sections)
     data[coff_offset + 16 : coff_offset + 18] = struct.pack("<H", 224)  # Optional header size
 
     # Optional header magic (PE32+)
@@ -49,30 +41,19 @@ def create_minimal_pe(dos_stub_size: int = 0x80, num_sections: int = 2) -> bytes
     # Section table (after COFF + optional headers)
     section_table_offset = opt_hdr_offset + 224
 
-    # Create sections with realistic file offsets
     for i in range(num_sections):
         section_offset = section_table_offset + (i * 40)
-        # Section name
         names = [b".text\x00\x00\x00", b".data\x00\x00\x00", b".rdata\x00\x00"]
         data[section_offset : section_offset + 8] = names[i % len(names)]
-        # PointerToRawData (file offset to section data)
-        raw_ptr = 0x400 + (i * 0x400)  # Sections at 0x400, 0x800, etc.
+        raw_ptr = 0x400 + (i * 0x400)
         data[section_offset + 20 : section_offset + 24] = struct.pack("<I", raw_ptr)
-        # SizeOfRawData
         data[section_offset + 16 : section_offset + 20] = struct.pack("<I", 0x200)
 
     return bytes(data)
 
 
 def read_section_offsets(data: bytes) -> list[int]:
-    """Read PointerToRawData values from all sections.
-
-    Args:
-        data: PE executable data
-
-    Returns:
-        List of section file offsets
-    """
+    """Read PointerToRawData values from all sections."""
     pe_offset = struct.unpack("<I", data[0x3C:0x40])[0]
     coff_offset = pe_offset + 4
     num_sections = struct.unpack("<H", data[coff_offset + 2 : coff_offset + 4])[0]
@@ -133,7 +114,6 @@ class TestDOSStubExpansion:
         original = create_minimal_pe(dos_stub_size=0x80)
         expanded = expand_dos_stub(original)
 
-        # Verify e_lfanew was updated
         new_pe_offset = get_pe_header_offset(expanded)
         assert new_pe_offset == 0xF0, f"Expected PE offset 0xF0, got 0x{new_pe_offset:x}"
 
@@ -147,20 +127,13 @@ class TestDOSStubExpansion:
         assert pe_sig == b"PE\x00\x00"
 
     def test_expand_dos_stub_updates_section_offsets(self) -> None:
-        """Test that section PointerToRawData values are updated.
-
-        This is the CRITICAL test that catches the bug where section offsets
-        weren't being updated, causing Windows to read section data from
-        wrong file offsets.
-        """
+        """Test that section PointerToRawData values are updated."""
         original = create_minimal_pe(dos_stub_size=0x80, num_sections=3)
         original_offsets = read_section_offsets(original)
 
-        # Expand DOS stub
         expanded = expand_dos_stub(original)
         expanded_offsets = read_section_offsets(expanded)
 
-        # Verify all section offsets were shifted by padding size (0x70)
         padding_size = 0xF0 - 0x80
         for i, (orig, exp) in enumerate(zip(original_offsets, expanded_offsets, strict=False)):
             expected = orig + padding_size
@@ -178,11 +151,8 @@ class TestDOSStubExpansion:
 
     def test_expand_dos_stub_no_op_for_adequate_stub(self) -> None:
         """Test that binaries with adequate DOS stub are unchanged."""
-        # Create binary with DOS stub >= target size (0xF0)
         rust_binary = create_minimal_pe(dos_stub_size=0x100)  # 256 bytes, > 0xF0
         result = expand_dos_stub(rust_binary)
-
-        # Should return unchanged
         assert result == rust_binary
 
     def test_expand_dos_stub_invalid_pe(self) -> None:
@@ -197,22 +167,17 @@ class TestSectionOffsetCorrection:
 
     def test_section_data_remains_accessible(self) -> None:
         """Test that section data can still be read at correct offset after expansion."""
-        # Create PE with known data in sections
         original = create_minimal_pe(dos_stub_size=0x80, num_sections=2)
 
-        # Write marker data at first section location (0x400)
         original_bytes = bytearray(original)
         marker = b"SECTION_DATA_MARKER"
         original_bytes[0x400 : 0x400 + len(marker)] = marker
 
-        # Expand
         expanded = expand_dos_stub(bytes(original_bytes))
 
-        # Read section offset from expanded file
         section_offsets = read_section_offsets(expanded)
         first_section_offset = section_offsets[0]
 
-        # Verify marker data is at the NEW section offset
         read_marker = expanded[first_section_offset : first_section_offset + len(marker)]
         assert read_marker == marker, f"Section data not found at offset 0x{first_section_offset:x}"
 
@@ -224,9 +189,10 @@ class TestSectionOffsetCorrection:
         expanded = expand_dos_stub(original)
         expanded_offsets = read_section_offsets(expanded)
 
-        # Calculate shifts for each section
         shifts = [exp - orig for orig, exp in zip(original_offsets, expanded_offsets, strict=False)]
 
-        # All shifts should be identical (0x70)
         assert all(shift == shifts[0] for shift in shifts), f"Inconsistent shifts: {[hex(s) for s in shifts]}"
         assert shifts[0] == 0x70, f"Expected shift of 0x70, got {hex(shifts[0])}"
+
+
+# 🌶️📦🔚

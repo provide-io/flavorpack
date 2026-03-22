@@ -22,21 +22,22 @@ class TestCrossLanguageOperations:
     def test_operations_serialization_compatibility(self) -> None:
         """Test that operations field is serialized consistently across languages."""
         # Test various operation chain combinations
+        # Input format accepts both pipe and dot notation; output is normalized lowercase dot format
         test_operations = [
-            "RAW",
-            "GZIP",
-            "TAR",
-            "TAR|GZIP",
-            "GZIP|TAR",  # Different order to test chain handling
+            ("RAW", "raw"),
+            ("GZIP", "gzip"),
+            ("TAR", "tar"),
+            ("TAR|GZIP", "tar.gz"),
+            ("GZIP|TAR", "gzip|tar"),  # Different order — no common chain name, uses pipe
         ]
 
-        for ops_string in test_operations:
+        for ops_input, expected_output in test_operations:
             # Test Python operations encoding/decoding
-            packed_ops = string_to_operations(ops_string)
+            packed_ops = string_to_operations(ops_input)
             unpacked_ops = operations_to_string(packed_ops)
 
-            # Verify round-trip consistency
-            assert unpacked_ops == ops_string, f"Round-trip failed for {ops_string}: got {unpacked_ops}"
+            # Verify round-trip produces normalized form
+            assert unpacked_ops == expected_output, f"Round-trip failed for {ops_input}: got {unpacked_ops}"
 
             # Verify packed value is a valid 64-bit integer
             assert isinstance(packed_ops, int), f"Packed operations should be int, got {type(packed_ops)}"
@@ -78,16 +79,17 @@ class TestCrossLanguageOperations:
         from flavor.psp.format_2025.slots import SlotDescriptor
 
         # Test various operations values
+        # Input → expected normalized output
         test_cases = [
-            ("RAW", 0),  # RAW should be 0
-            ("GZIP", string_to_operations("GZIP")),
-            ("TAR|GZIP", string_to_operations("TAR|GZIP")),
+            ("RAW", "raw"),
+            ("GZIP", "gzip"),
+            ("TAR|GZIP", "tar.gz"),
         ]
 
-        for ops_string, _expected_packed in test_cases:
+        for ops_input, expected_output in test_cases:
             descriptor = SlotDescriptor(
                 id=1,
-                operations=string_to_operations(ops_string),
+                operations=string_to_operations(ops_input),
                 size=1024,
                 original_size=2048,
                 checksum=0x12345678,
@@ -102,7 +104,7 @@ class TestCrossLanguageOperations:
 
             # Verify operations can be converted back to string
             restored_ops = operations_to_string(unpacked_descriptor.operations)
-            assert restored_ops == ops_string
+            assert restored_ops == expected_output
 
     @pytest.mark.requires_helpers
     def test_cross_language_package_verification(self) -> None:
@@ -147,15 +149,15 @@ class TestCrossLanguageOperations:
         # Convert to descriptor
         descriptor = metadata.to_descriptor()
 
-        # Verify operations field is properly converted
+        # Verify operations field is properly converted (normalized to lowercase dot)
         ops_string = operations_to_string(descriptor.operations)
-        assert ops_string == "TAR|GZIP"
+        assert ops_string == "tar.gz"
 
         # Verify descriptor serialization works
         packed_bytes = descriptor.pack()
         unpacked_descriptor = SlotDescriptor.unpack(packed_bytes)
         restored_ops = operations_to_string(unpacked_descriptor.operations)
-        assert restored_ops == "TAR|GZIP"
+        assert restored_ops == "tar.gz"
 
     def test_operations_error_handling(self) -> None:
         """Test that invalid operations are handled gracefully."""
@@ -167,7 +169,7 @@ class TestCrossLanguageOperations:
         ]
 
         for invalid_op in invalid_operations:
-            with pytest.raises(ValueError, match=r"Unknown operation|Invalid operations"):
+            with pytest.raises(ValueError, match=r"[Uu]n(known|supported).*operation"):
                 string_to_operations(invalid_op)
 
 

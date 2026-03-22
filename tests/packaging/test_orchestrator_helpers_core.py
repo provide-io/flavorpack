@@ -342,6 +342,28 @@ class TestCreatePythonSlotTarballs:
             assert members[0].name == "wheels/package1-1.0.0-py3-none-any.whl"
 
 
+class TestCreatePythonBuilderMetadata:
+    """Regression tests for create_python_builder_metadata enumerate schema."""
+
+    @patch("flavor.packaging.orchestrator_helpers.is_windows")
+    def test_builder_emits_nested_enumerate_structure(self, mock_is_windows: Mock) -> None:
+        """Builder must emit enumerate as a nested dict with path+pattern, not top-level keys."""
+        mock_is_windows.return_value = False
+
+        from flavor.packaging.orchestrator_helpers import create_python_builder_metadata
+
+        metadata = create_python_builder_metadata("mypkg", "1.0.0", {})
+        setup_commands = metadata.get("setup_commands", [])
+        enum_cmds = [c for c in setup_commands if c.get("type") == "enumerate_and_execute"]
+
+        assert len(enum_cmds) >= 1
+        for cmd in enum_cmds:
+            assert isinstance(cmd.get("enumerate"), dict), "enumerate must be a nested dict"
+            assert "path" in cmd["enumerate"]
+            assert "pattern" in cmd["enumerate"]
+            assert "pattern" not in cmd  # must NOT be at top level
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
 

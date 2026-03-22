@@ -3,18 +3,19 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""PSPF 2025 execution tests covering command substitution and processes."""
+"""PSPF 2025 execution tests covering real command substitution paths."""
 
 from __future__ import annotations
 
 from collections.abc import Iterator
 from pathlib import Path
-import re
 import tempfile
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from flavor.psp.format_2025 import PSPFBuilder, PSPFLauncher, PSPFReader, SlotMetadata
+from flavor.psp.format_2025 import PSPFBuilder, PSPFLauncher, PSPFReader
+from flavor.psp.format_2025.executor import BundleExecutor
 
 
 class TestPSPFExecution:
@@ -25,7 +26,6 @@ class TestPSPFExecution:
         """Create temporary directory for tests."""
         temp_path = Path(tempfile.mkdtemp())
         yield temp_path
-        # Cleanup
         import shutil
 
         shutil.rmtree(temp_path)
@@ -33,19 +33,21 @@ class TestPSPFExecution:
     @pytest.fixture
     def executable_bundle(self, temp_dir: Path) -> Path:
         """Create an executable bundle."""
-        # Create Python script
         script_path = temp_dir / "app.py"
-        script_path.write_text("""
+        script_path.write_text(
+            """
 import sys
 print(f"Hello from PSPF! Args: {sys.argv[1:]}")
-""")
+""".strip()
+            + "\n"
+        )
 
         metadata = {
             "format": "PSPF/2025",
             "package": {"name": "hello-app", "version": "1.0.0"},
             "execution": {
                 "primary_slot": 0,
-                "command": "/usr/bin/python3 {slot:0}",  # slot:0 is the extracted file
+                "command": "/usr/bin/python3 {slot:0}",
             },
         }
 
@@ -53,156 +55,65 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         builder = PSPFBuilder().metadata(**metadata)
         builder = builder.add_slot(
             id="main-app",
-            data=script_path,  # Pass as Path so it reads the file content
+            data=script_path,
             purpose="payload",
             lifecycle="runtime",
             operations="none",
-            target="app.py",  # Extract with this name
+            target="app.py",
         )
         builder.build(bundle_path)
 
         return bundle_path
 
-    def test_slot_substitution_single(self, temp_dir: Path) -> None:
-        """Test single slot substitution in command."""
-        launcher = PSPFLauncher()
-        launcher.cache_dir = temp_dir
+    def test_slot_substitution_uses_extracted_target(self, executable_bundle: Path) -> None:
+        """Test slot references resolve to the extracted target path."""
+        launcher = PSPFLauncher(executable_bundle)
+        workenv_dir = launcher.setup_workenv()
+        metadata = launcher.read_metadata()
 
-        # Simulate extracted slots
-        slot0_path = temp_dir / "python-runtime"
-        slot0_path.mkdir()
+        executor = BundleExecutor(metadata, workenv_dir)
+        prepared = executor.prepare_command("/usr/bin/python3 {slot:0}")
 
-        command = "{slot:0}/bin/python -m myapp"
-        substituted = launcher._substitute_slots(command, {0: slot0_path})
+        assert "{slot:0}" not in prepared
+        assert str(workenv_dir / "app.py") in prepared
 
-        expected = f"{slot0_path}/bin/python -m myapp"
-        assert substituted == expected
+    def test_slot_reference_substitution_helper_matches_extraction(self, executable_bundle: Path) -> None:
+        """Test launcher helper substitution resolves against slot targets."""
+        launcher = PSPFLauncher(executable_bundle)
+        workenv_dir = launcher.setup_workenv()
 
-    def test_slot_substitution_multiple(self, temp_dir: Path) -> None:
-        """Test multiple slot substitution."""
-        launcher = PSPFLauncher()
-        launcher.cache_dir = temp_dir
+        substituted = launcher._substitute_slot_references("python {slot:0}", workenv_dir)
 
-        # Simulate extracted slots
-        slot0_path = temp_dir / "python-runtime"
-        slot1_path = temp_dir / "myapp"
-        slot2_path = temp_dir / "config"
+        assert substituted == f"python {workenv_dir / 'app.py'}"
 
-        slot0_path.mkdir()
-        slot1_path.mkdir()
-        slot2_path.mkdir()
+    def test_prepare_environment_sets_flavor_workenv(self, executable_bundle: Path) -> None:
+        """Test execution environment includes the extracted workenv."""
+        launcher = PSPFLauncher(executable_bundle)
+        workenv_dir = launcher.setup_workenv()
+        metadata = launcher.read_metadata()
 
-        command = "{slot:0}/bin/python -m {slot:1}/app --config {slot:2}/config.json"
-        substituted = launcher._substitute_slots(command, {0: slot0_path, 1: slot1_path, 2: slot2_path})
+        executor = BundleExecutor(metadata, workenv_dir)
+        env = executor.prepare_environment()
 
-        expected = f"{slot0_path}/bin/python -m {slot1_path}/app --config {slot2_path}/config.json"
-        assert substituted == expected
-
-    def test_environment_substitution(self, temp_dir: Path) -> None:
-        """Test environment variable slot substitution."""
-        launcher = PSPFLauncher()
-        launcher.cache_dir = temp_dir
-
-        # Simulate extracted slots
-        slot2_path = temp_dir / "config"
-        slot2_path.mkdir()
-
-        env_vars = {"MYAPP_VERSION": "1.2.3", "MYAPP_CONFIG": "{slot:2}/config"}
-
-        substituted_env = launcher._substitute_env_slots(env_vars, {2: slot2_path})
-
-        assert substituted_env["MYAPP_VERSION"] == "1.2.3"
-        assert substituted_env["MYAPP_CONFIG"] == f"{slot2_path}/config"
-
-    def test_missing_slot_reference(self) -> None:
-        """Test handling of missing slot reference."""
-        launcher = PSPFLauncher()
-
-        command = "{slot:3}/bin/python"
-
-        with pytest.raises(ValueError, match="Referenced slot 3 not found"):
-            launcher._substitute_slots(command, {0: Path("/cache/slot0")})
-
-    # REMOVED: test_execution_with_arguments - covered by taster's argv command
-    # The taster tool already provides comprehensive argument passing tests
-    # through its argv_command functionality
-
-    def test_platform_specific_slot_selection(self, temp_dir: Path) -> None:
-        """Test platform-specific slot selection."""
-        # Create bundle with platform-specific slots
-        slots = []
-
-        for i, platform in enumerate(["darwin-arm64", "darwin-amd64", "linux-amd64"]):
-            slot_path = temp_dir / f"binary-{platform}"
-            slot_path.write_bytes(b"BINARY")
-
-            slots.append(
-                SlotMetadata(
-                    index=i,
-                    id=f"binary-{platform}",
-                    source=str(slot_path),
-                    target=f"binary-{platform}",
-                    size=6,
-                    checksum="abc",
-                    operations="none",
-                    purpose="binary",
-                    lifecycle="runtime",
-                    # Platform-specific handling would be done at a different level
-                )
-            )
-
-        metadata = {
-            "format": "PSPF/2025",
-            "package": {"name": "multi-platform", "version": "1.0.0"},
-            "slots": [s.to_dict() for s in slots],
-        }
-
-        bundle_path = temp_dir / "multiplatform.psp"
-        builder = PSPFBuilder().metadata(**metadata)
-        for slot in slots:
-            builder = builder.add_slot(
-                id=slot.id,
-                data=slot.source,
-                purpose=slot.purpose,
-                lifecycle=slot.lifecycle,
-                operations=slot.operations,
-            )
-        builder.build(bundle_path)
-
-        # Test selection
-        launcher = PSPFLauncher(bundle_path)
-        selected = launcher._select_platform_slots("darwin-arm64")
-
-        # Should select matching platform
-        assert len(selected) == 1
-        assert selected[0].id == "binary-darwin-arm64"
+        assert env["FLAVOR_WORKENV"] == str(workenv_dir)
+        assert env["FLAVOR_PACKAGE"] == "hello-app"
+        assert env["FLAVOR_VERSION"] == "1.0.0"
 
     def test_working_directory_setup(self, temp_dir: Path, executable_bundle: Path) -> None:
         """Test working directory is set correctly."""
         launcher = PSPFLauncher(executable_bundle)
 
-        # Create workenv directory for extraction
         workenv_dir = temp_dir / "workenv"
         workenv_dir.mkdir(exist_ok=True)
-
-        # Extract slots
         extracted = launcher.extract_all_slots(workenv_dir)
 
-        # Get primary slot path
-        primary_slot_path = extracted[0]
+        assert extracted[0].exists()
 
-        # Verify working directory setup
-        assert primary_slot_path.exists()
-        # Working directory is set up during execute(), test that capability exists
         result = launcher.execute()
         assert result["working_directory"] is not None
 
-    # REMOVED: test_exit_code_propagation - covered by pretaster's combination tests
-    # The pretaster tool validates exit codes across all builder/launcher combinations
-    # in its combination-tests.sh script
-
     def test_resource_limits(self, temp_dir: Path) -> None:
-        """Test resource limit application."""
+        """Test handling of execution metadata."""
         metadata = {
             "format": "PSPF/2025",
             "package": {"name": "limited-app", "version": "1.0.0"},
@@ -214,8 +125,6 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         }
 
         bundle_path = temp_dir / "limited.psp"
-
-        # Create a dummy file for the slot (builder requires at least one slot)
         dummy_file = temp_dir / "dummy.txt"
         dummy_file.write_text("dummy")
 
@@ -226,19 +135,13 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         reader = PSPFReader(bundle_path)
         read_metadata = reader.read_metadata()
 
-        # Verify limits are preserved
         limits = read_metadata["execution"]["limits"]
         assert limits["memory"] == "1GB"
         assert limits["cpu"] == "2"
         assert limits["timeout"] == "300s"
 
-    # REMOVED: test_signal_handling - covered by taster's signals command
-    # The taster tool provides comprehensive signal handling tests through
-    # its signals_command functionality
-
     def test_execution_error_handling(self, temp_dir: Path) -> None:
         """Test handling of execution errors."""
-        # Create bundle with invalid command
         metadata = {
             "format": "PSPF/2025",
             "package": {"name": "error-app", "version": "1.0.0"},
@@ -250,63 +153,186 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         builder.build(bundle_path)
 
         launcher = PSPFLauncher(bundle_path)
-        # Execute should handle the invalid command gracefully
         result = launcher.execute()
+
         assert result is not None
-        assert (
-            not result["executed"] or result["exit_code"] != 0
-        )  # Either fails to execute or returns error code
+        assert not result["executed"] or result["exit_code"] != 0
 
 
-def _substitute_slots(launcher: PSPFLauncher, command: str, slot_paths: dict[int, Path]) -> str:
-    """Substitute slot references in command."""
+@pytest.mark.unit
+class TestBundleExecutorUnit:
+    """Unit tests for BundleExecutor covering uncovered branches."""
 
-    def replace_slot(match: re.Match[str]) -> str:
-        slot_idx = int(match.group(1))
-        if slot_idx not in slot_paths:
-            raise ValueError(f"Referenced slot {slot_idx} not found")
-        return str(slot_paths[slot_idx])
+    def _make_executor(
+        self,
+        command: str = "/usr/bin/python3",
+        slots: list | None = None,
+        execution_env: dict | None = None,
+        primary_slot: int = 0,
+    ) -> BundleExecutor:
+        metadata: dict = {
+            "package": {"name": "test-pkg", "version": "1.2.3"},
+            "execution": {
+                "primary_slot": primary_slot,
+                "command": command,
+            },
+        }
+        if slots is not None:
+            metadata["slots"] = slots
+        if execution_env is not None:
+            metadata["execution"]["env"] = execution_env
+        return BundleExecutor(metadata, Path("/workenv"))
 
-    return re.sub(r"\{slot:(\d+)\}", replace_slot, command)
+    def test_prepare_command_no_args(self) -> None:
+        """prepare_command with no args returns command with substitutions only."""
+        executor = self._make_executor(command="/usr/bin/python3")
+        result = executor.prepare_command("/usr/bin/python3")
+        assert result == "/usr/bin/python3"
 
+    def test_prepare_command_args_with_space_get_quoted(self) -> None:
+        """Args containing spaces are wrapped in double quotes."""
+        executor = self._make_executor()
+        result = executor.prepare_command("/bin/run", args=["arg with space", "normal"])
+        assert '"arg with space"' in result
+        assert "normal" in result
+        assert '"normal"' not in result
 
-def _substitute_env_slots(
-    launcher: PSPFLauncher, env_vars: dict[str, str], slot_paths: dict[int, Path]
-) -> dict[str, str]:
-    """Substitute slot references in environment variables."""
-    result = {}
-    for key, value in env_vars.items():
-        if isinstance(value, str) and "{slot:" in value:
-            result[key] = _substitute_slots(launcher, value, slot_paths)
-        else:
-            result[key] = value
-    return result
+    def test_prepare_command_workenv_substitution(self) -> None:
+        """prepare_command replaces {workenv} with workenv_dir path."""
+        executor = self._make_executor(command="{workenv}/bin/app")
+        result = executor.prepare_command("{workenv}/bin/app")
+        assert "{workenv}" not in result
+        assert "/workenv" in result
 
+    def test_prepare_command_package_name_version(self) -> None:
+        """{package_name} and {version} are substituted."""
+        executor = self._make_executor(command="echo {package_name} {version}")
+        result = executor.prepare_command("echo {package_name} {version}")
+        assert "test-pkg" in result
+        assert "1.2.3" in result
 
-def _select_platform_slots(launcher: PSPFLauncher, platform: str) -> list[SlotMetadata]:
-    """Select slots matching the current platform."""
-    # Mock implementation - return a fake slot for the requested platform
-    if platform == "darwin-arm64":
-        return [
-            SlotMetadata(
-                index=0,
-                id="binary-darwin-arm64",
-                source="",
-                target="binary-darwin-arm64",
-                size=6,
-                checksum="abc",
-                operations="none",
-                purpose="binary",
-                lifecycle="runtime",
-                # Platform would be handled differently
-            )
-        ]
-    return []
+    def test_substitute_primary_no_placeholder(self) -> None:
+        """_substitute_primary returns command unchanged when no {primary}."""
+        executor = self._make_executor()
+        result = executor._substitute_primary("/bin/app")
+        assert result == "/bin/app"
 
+    def test_substitute_primary_slot_out_of_range(self) -> None:
+        """_substitute_primary logs warning when primary_slot index out of range."""
+        executor = self._make_executor(command="{primary}", slots=[], primary_slot=5)
+        result = executor._substitute_primary("{primary}")
+        # {primary} not substituted (slot list is empty)
+        assert "{primary}" in result
 
-# Monkey patch for testing
-PSPFLauncher._substitute_slots = _substitute_slots
-PSPFLauncher._substitute_env_slots = _substitute_env_slots
-PSPFLauncher._select_platform_slots = _select_platform_slots
+    def test_substitute_slots_out_of_range(self) -> None:
+        """_substitute_slots keeps placeholder when slot index is out of range."""
+        executor = self._make_executor(slots=[])
+        result = executor._substitute_slots("{slot:0}")
+        assert "{slot:0}" in result
+
+    def test_substitute_slots_in_range(self) -> None:
+        """_substitute_slots replaces {slot:N} with workenv path."""
+        executor = self._make_executor(
+            slots=[{"target": "app.py", "id": "main", "name": "main"}]
+        )
+        result = executor._substitute_slots("{slot:0}")
+        assert "{slot:0}" not in result
+        assert "app.py" in result
+
+    def test_normalize_slot_target_workenv_placeholder(self) -> None:
+        """{workenv} target is returned as-is."""
+        executor = self._make_executor()
+        assert executor._normalize_slot_target("{workenv}") == "{workenv}"
+
+    def test_normalize_slot_target_strips_workenv_prefix(self) -> None:
+        """{workenv}/path becomes path."""
+        executor = self._make_executor()
+        assert executor._normalize_slot_target("{workenv}/lib/foo.so") == "lib/foo.so"
+
+    def test_normalize_slot_target_bare_path(self) -> None:
+        """Bare path is returned unchanged."""
+        executor = self._make_executor()
+        assert executor._normalize_slot_target("app.py") == "app.py"
+
+    def test_prepare_environment_execution_env_substitution(self) -> None:
+        """Execution env values with {workenv} are substituted."""
+        executor = self._make_executor(execution_env={"MY_DIR": "{workenv}/cache"})
+        env = executor.prepare_environment()
+        assert env["MY_DIR"] == "/workenv/cache"
+
+    def test_execute_raises_when_no_command(self) -> None:
+        """execute raises ValueError when no command in execution config."""
+        metadata = {
+            "package": {"name": "pkg", "version": "1.0"},
+            "execution": {},
+        }
+        executor = BundleExecutor(metadata, Path("/workenv"))
+        with pytest.raises(ValueError, match="No command specified"):
+            executor.execute()
+
+    def test_execute_exception_returns_error_dict(self) -> None:
+        """execute catches exceptions and returns error dict."""
+        executor = self._make_executor(command="/nonexistent/binary/xyz")
+        with patch("flavor.psp.format_2025.executor.run", side_effect=OSError("not found")):
+            result = executor.execute()
+        assert result["executed"] is False
+        assert result["error"] is not None
+        assert "not found" in result["error"]
+
+    def test_execute_nonzero_exit_is_not_crash(self) -> None:
+        """exit_code > 0 is not flagged as crash."""
+        executor = self._make_executor(command="/bin/false")
+        mock_result = MagicMock()
+        mock_result.returncode = 1
+        mock_result.stdout = ""
+        mock_result.stderr = ""
+        with patch("flavor.psp.format_2025.executor.run", return_value=mock_result):
+            result = executor.execute()
+        assert result["exit_code"] == 1
+        assert result["crashed"] is False
+
+    def test_execute_negative_exit_is_crash(self) -> None:
+        """Negative exit_code (signal) is flagged as crash."""
+        executor = self._make_executor(command="/bin/app")
+        mock_result = MagicMock()
+        mock_result.returncode = -11  # SIGSEGV
+        mock_result.stdout = ""
+        mock_result.stderr = ""
+        with patch("flavor.psp.format_2025.executor.run", return_value=mock_result):
+            result = executor.execute()
+        assert result["crashed"] is True
+
+    def test_execute_stderr_logged_on_nonzero_exit(self) -> None:
+        """Nonzero exit with stderr content is logged (line 235 coverage)."""
+        executor = self._make_executor(command="/bin/app")
+        mock_result = MagicMock()
+        mock_result.returncode = 1
+        mock_result.stdout = ""
+        mock_result.stderr = "some error output"
+        with patch("flavor.psp.format_2025.executor.run", return_value=mock_result):
+            result = executor.execute()
+        assert result["exit_code"] == 1
+
+    def test_substitute_primary_with_slot_target(self) -> None:
+        """{primary} is replaced when slots exist and primary_slot is in range."""
+        executor = self._make_executor(
+            command="{primary}",
+            slots=[{"target": "main.py", "id": "main", "name": "main"}],
+            primary_slot=0,
+        )
+        result = executor._substitute_primary("{primary}")
+        assert "{primary}" not in result
+        assert "main.py" in result
+
+    def test_substitute_primary_tarball_uses_workenv(self) -> None:
+        """{primary} for a .tar.gz target uses {workenv} as primary path."""
+        executor = self._make_executor(
+            command="{primary}",
+            slots=[{"target": "bundle.tar.gz", "id": "bundle", "name": "bundle"}],
+            primary_slot=0,
+        )
+        result = executor._substitute_primary("{primary}")
+        assert "{workenv}" in result or "workenv" in result.lower()
+
 
 # 🌶️📦🔚

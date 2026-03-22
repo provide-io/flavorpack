@@ -21,6 +21,7 @@ from flavor.psp.format_2025.metadata import (
     get_launcher_info,
 )
 from flavor.psp.format_2025.spec import BuildSpec, KeyConfig
+from flavor.psp.format_2025.validation import extract_package_metadata, validate_metadata
 
 
 class TestBuildMetadata:
@@ -211,6 +212,41 @@ class TestMetadataAssembly:
         # Compatibility section
         assert "compatibility" in metadata
         assert metadata["compatibility"]["min_format_version"] == "1.0.0"
+
+    def test_assemble_metadata_normalizes_top_level_package_identity(
+        self, mock_launcher_info: dict[str, Any]
+    ) -> None:
+        """Top-level name/version inputs should be carried into package metadata."""
+        spec = BuildSpec().with_metadata(
+            name="top-level-app",
+            version="2.0.0",
+            execution={"command": "{workenv}/bin/app"},
+        )
+
+        metadata = assemble_metadata(spec, [], mock_launcher_info)
+
+        assert metadata["package"]["name"] == "top-level-app"
+        assert metadata["package"]["version"] == "2.0.0"
+
+    def test_validate_metadata_matches_assembly_shape(self) -> None:
+        """Validation should accept the same package identity shape assembly emits."""
+        metadata = {
+            "name": "normalized-app",
+            "version": "3.0.0",
+            "execution": {"command": "{workenv}/bin/app"},
+        }
+
+        assert validate_metadata(metadata) == []
+
+    def test_validate_and_assemble_agree_on_shape(self) -> None:
+        """Validated nested-package input must survive extract_package_metadata without losing fields."""
+        meta = {"package": {"name": "testpkg", "version": "0.1.0"}}
+        errors = validate_metadata(meta)
+        assert not errors
+        # extract_package_metadata must find the nested package dict
+        assembled_package = extract_package_metadata(meta)
+        assert assembled_package.get("name") == "testpkg"
+        assert assembled_package.get("version") == "0.1.0"
 
     def test_assemble_metadata_with_optional_sections(
         self, basic_spec: BuildSpec, mock_launcher_info: dict[str, Any]

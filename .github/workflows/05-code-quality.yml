@@ -541,8 +541,10 @@ jobs:
       - name: 📦 Install Rust Quality Tools
         if: steps.cache-rust-tools.outputs.cache-hit != 'true'
         run: |
-          # Use cargo-binstall for faster installation when possible
-          cargo install cargo-binstall --quiet || true
+          # Install cargo-binstall from prebuilt binary (avoids compiling aws-lc-sys from source)
+          curl -L --proto '=https' --tlsv1.2 -sSf \
+            https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh \
+            | bash || cargo install cargo-binstall --quiet || true
 
           # Try binstall first, fallback to cargo install
           cargo binstall --no-confirm cargo-audit || cargo install cargo-audit --quiet
