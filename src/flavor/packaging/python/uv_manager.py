@@ -316,6 +316,34 @@ class UVManager(BaseToolManager):
         logger.debug("💻 Compiling requirements with UV", command=" ".join(compile_cmd))
         run(compile_cmd, check=True, capture_output=True)
 
+    def export_requirements(
+        self, project_dir: Path, output_file: Path, no_dev: bool = True, no_project: bool = True
+    ) -> None:
+        """
+        Export pinned requirements from an existing uv.lock file (no network needed).
+
+        Uses `uv export --frozen` which reads the committed lock file without
+        making any PyPI/DNS calls. Preferred over compile_requirements when a
+        lock file is already present.
+
+        Args:
+            project_dir: Project directory containing uv.lock
+            output_file: Output requirements.txt file
+            no_dev: Whether to exclude dev dependencies (default True)
+            no_project: Whether to exclude the project itself (default True).
+                The project wheel is always built from local source separately,
+                so it must not be downloaded from PyPI.
+        """
+        uv_exe = self.get_uv_executable()
+        cmd = [str(uv_exe), "export", "--frozen", "--output-file", str(output_file)]
+        if no_dev:
+            cmd.append("--no-dev")
+        if no_project:
+            cmd.append("--no-project")
+
+        logger.debug("💻 Exporting requirements from uv.lock (offline)", command=" ".join(cmd))
+        run(cmd, check=True, capture_output=True, cwd=project_dir)
+
     @retry(
         ConnectionError,
         TimeoutError,
@@ -325,7 +353,7 @@ class UVManager(BaseToolManager):
         backoff=BackoffStrategy.EXPONENTIAL,
         jitter=True,
     )
-    def download_uv_binary(self, dest_dir: Path, python_exe: Path | None = None) -> Path | None:  # noqa: C901
+    def download_uv_binary(self, dest_dir: Path, python_exe: Path | None = None) -> Path | None:
         """
         Download UV binary for packaging (manylinux2014 on Linux).
 
