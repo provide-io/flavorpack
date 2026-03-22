@@ -400,6 +400,45 @@ class UVManager(BaseToolManager):
             logger.debug(f"Offline download failed (cache miss?): {result.stderr.strip()[:200]}")
         return False
 
+    def download_wheels_network(self, requirements_file: Path, dest_dir: Path) -> bool:
+        """
+        Download wheels using UV's HTTP client (bypasses Python urllib3).
+
+        Uses `uv pip download` with network access.  UV's Rust-based HTTP client
+        works in environments where Python urllib3 fails (e.g. Windows GHA where
+        DNS resolves for UV but not for pip's urllib3).
+
+        This is the last-resort fallback: pip download failed AND UV offline cache
+        missed (version mismatch between uv.lock pins and what uv tool install cached).
+
+        Args:
+            requirements_file: Path to requirements.txt file
+            dest_dir: Directory to download wheels to
+
+        Returns:
+            True if all wheels were downloaded successfully, False otherwise
+        """
+        uv_exe = self.get_uv_executable()
+        cmd = [
+            str(uv_exe),
+            "pip",
+            "download",
+            "--only-binary",
+            ":all:",
+            "--dest",
+            str(dest_dir),
+            "-r",
+            str(requirements_file),
+        ]
+        logger.debug("💻 Attempting wheel download via UV HTTP client", command=" ".join(cmd))
+        result = run(cmd, check=False, capture_output=True)
+        if result.returncode == 0:
+            logger.info("✅ Downloaded wheels via UV HTTP client")
+            return True
+        if logger.is_debug_enabled():
+            logger.debug(f"UV network download failed: {result.stderr.strip()[:200]}")
+        return False
+
     @retry(
         ConnectionError,
         TimeoutError,
