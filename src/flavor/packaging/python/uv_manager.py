@@ -447,13 +447,12 @@ class UVManager(BaseToolManager):
             "-r",
             str(requirements_file),
         ]
-        logger.debug("💻 Attempting offline wheel download from UV cache", command=" ".join(cmd))
+        logger.warning(f"💻 UV offline download cmd: {' '.join(cmd)}")
         result = run(cmd, check=False, capture_output=True)
         if result.returncode == 0:
             logger.info("✅ Downloaded all wheels from UV cache (offline)")
             return True
-        if logger.is_debug_enabled():
-            logger.debug(f"Offline download failed (cache miss?): {result.stderr.strip()[:200]}")
+        logger.warning(f"UV offline download failed (rc={result.returncode}): {result.stderr.strip()[:500]}")
         return False
 
     def download_wheels_network(self, requirements_file: Path, dest_dir: Path) -> bool:
@@ -486,13 +485,12 @@ class UVManager(BaseToolManager):
             "-r",
             str(requirements_file),
         ]
-        logger.debug("💻 Attempting wheel download via UV HTTP client", command=" ".join(cmd))
+        logger.warning(f"💻 UV network download cmd: {' '.join(cmd)}")
         result = run(cmd, check=False, capture_output=True)
         if result.returncode == 0:
             logger.info("✅ Downloaded wheels via UV HTTP client")
             return True
-        if logger.is_debug_enabled():
-            logger.debug(f"UV network download failed: {result.stderr.strip()[:200]}")
+        logger.warning(f"UV network download failed (rc={result.returncode}): {result.stderr.strip()[:500]}")
         return False
 
     @retry(
