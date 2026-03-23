@@ -97,9 +97,15 @@ class PythonEnvironmentBuilder:
     def _install_python_with_uv(self, uv_install_dir: str) -> Path | None:
         """Install Python using UV and return installation directory.
 
+        Tries two strategies:
+        1. Install to custom --install-dir and scan for the directory
+        2. Install to uv's default managed location and locate via `uv python find`
+
         Retries:
             Up to 3 attempts with exponential backoff for network errors
         """
+        import sys
+
         uv_cmd = self.find_uv_command()
         if uv_cmd is None:
             logger.error("UV command not found")
@@ -107,24 +113,52 @@ class PythonEnvironmentBuilder:
 
         self._log_uv_environment()
 
-        # Install Python with UV
-        cmd = [
-            uv_cmd,
-            "python",
-            "install",
-            self.python_version,
-            "--install-dir",
-            uv_install_dir,
-        ]
-        logger.debug("💻🚀📋 Running command", command=" ".join(cmd))
+        # Strategy 1: install to custom dir
+        cmd_custom = [uv_cmd, "python", "install", self.python_version, "--install-dir", uv_install_dir]
+        logger.debug("💻🚀📋 Running command", command=" ".join(cmd_custom))
+        result = run(cmd_custom, capture_output=True)
+        print(
+            f"[flavor-python] uv python install (custom-dir) exit={result.returncode} "
+            f"stderr={result.stderr.strip()!r:.120}",
+            flush=True,
+            file=sys.stdout,
+        )
 
-        result = run(cmd, check=True, capture_output=True)
-        if result.stdout and logger.is_trace_enabled():
-            logger.trace(f"UV install stdout: {result.stdout.strip()}")
-        if result.stderr and logger.is_trace_enabled():
-            logger.trace(f"UV install stderr: {result.stderr.strip()}")
+        python_path = self._find_python_installation(uv_install_dir, uv_cmd)
+        if python_path:
+            return python_path
 
-        return self._find_python_installation(uv_install_dir, uv_cmd)
+        # Strategy 2: install to uv's default managed location, then find it
+        logger.debug("💻🚀📋 Strategy 2: installing to default managed location")
+        cmd_default = [uv_cmd, "python", "install", self.python_version]
+        result2 = run(cmd_default, capture_output=True)
+        print(
+            f"[flavor-python] uv python install (default) exit={result2.returncode} "
+            f"stderr={result2.stderr.strip()!r:.120}",
+            flush=True,
+            file=sys.stdout,
+        )
+
+        find_cmd = [uv_cmd, "python", "find", self.python_version, "--python-preference", "only-managed"]
+        result3 = run(find_cmd, capture_output=True)
+        python_bin_str = result3.stdout.strip()
+        print(
+            f"[flavor-python] uv python find exit={result3.returncode} path={python_bin_str!r:.200}",
+            flush=True,
+            file=sys.stdout,
+        )
+
+        if result3.returncode == 0 and python_bin_str:
+            python_bin = Path(python_bin_str)
+            logger.info(f"Found Python via uv python find: {python_bin}")
+            return self._validate_python_installation(python_bin)
+
+        print(
+            f"[flavor-python] Both strategies failed to locate Python {self.python_version}",
+            flush=True,
+            file=sys.stdout,
+        )
+        return None
 
     def _log_uv_environment(self) -> None:
         """Log UV environment variables that might affect behavior."""
@@ -330,13 +364,23 @@ class PythonEnvironmentBuilder:
         On Linux, raises an error because a placeholder tarball will cause the
         packaged application to fail at runtime (bin/python3 won't exist).
         """
+        import sys
+
+        os_name = get_os_name()
+        arch_name = get_arch_name()
+        print(
+            f"[flavor-python] FALLBACK TRIGGERED: Python install failed "
+            f"os={os_name} arch={arch_name} version={self.python_version}",
+            flush=True,
+            file=sys.stdout,
+        )
         logger.error(
             "❌ Failed to obtain Python distribution — all install/find methods exhausted",
             python_version=self.python_version,
-            os=get_os_name(),
-            arch=get_arch_name(),
+            os=os_name,
+            arch=arch_name,
         )
-        if get_os_name() == "linux":
+        if os_name == "linux":
             raise FileNotFoundError(
                 f"Could not obtain a Python {self.python_version} distribution for Linux. "
                 "uv python install and uv python find both failed. "
@@ -358,11 +402,29 @@ class PythonEnvironmentBuilder:
 
     def _create_python_tarball(self, python_install_dir: Path, python_tgz: Path) -> None:
         """Create the Python tarball from installation directory."""
+        import sys
+
+        # Calculate actual on-disk size (following symlinks/hardlinks) for diagnostic
+        # Note: Path.is_file() already follows symlinks by default; no follow_symlinks kwarg
+        raw_size = sum(
+            f.stat(follow_symlinks=True).st_size
+            for f in python_install_dir.rglob("*")
+            if f.is_file()
+        )
+        print(
+            f"[flavor-python] Creating Python tarball from {python_install_dir} "
+            f"raw_size={raw_size:,} bytes ({raw_size // 1024 // 1024}MB)",
+            flush=True,
+            file=sys.stdout,
+        )
 
         # Use mutable container for tracking stats
         stats = {"files_added": 0, "bytes_added": 0}
 
-        with tarfile.open(python_tgz, "w:gz", compresslevel=9) as tar:
+        # dereference=True: follow symlinks and hard links so the tarball is
+        # self-contained even when the installation uses links to UV_CACHE_DIR.
+        # Must be passed to open(), not add() — it's a TarFile constructor param.
+        with tarfile.open(python_tgz, "w:gz", compresslevel=9, dereference=True) as tar:
             filter_func = self._create_tarball_filter(stats)
             tar.add(python_install_dir, arcname=".", filter=filter_func)
             logger.info(
