@@ -42,6 +42,10 @@ if [ -n "$USER_FILTER" ]; then
     TEST_CMD="$TEST_CMD $USER_FILTER"
 fi
 
+if [ "$MARKER" = "integration" ] || [ "$MARKER" = "security" ] || [ "$MARKER" = "cross_language" ] || [[ "$PATH_FILTER" == "tests/format_2025" ]]; then
+    export FLAVOR_REQUIRE_HELPERS=1
+fi
+
 # Create output directory for logs
 mkdir -p test-outputs
 

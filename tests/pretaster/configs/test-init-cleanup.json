@@ -1,0 +1,39 @@
+{
+  "name": "pretaster-init-cleanup",
+  "version": "1.0.0",
+  "description": "Init tar lifecycle cleanup test",
+  "package": {
+    "name": "pretaster-init-cleanup",
+    "version": "1.0.0",
+    "description": "Init tar lifecycle cleanup test"
+  },
+  "format": "PSPF/2025",
+  "slots": [
+    {
+      "slot": 0,
+      "id": "init-cleanup-check",
+      "source": "scripts/init_cleanup_check.sh",
+      "target": "scripts/init_cleanup_check.sh",
+      "purpose": "payload",
+      "lifecycle": "cache",
+      "operations": "raw",
+      "permissions": "0755"
+    },
+    {
+      "slot": 1,
+      "id": "init-data",
+      "source": "slots/init-data.tar.gz",
+      "target": "init-data",
+      "purpose": "payload",
+      "lifecycle": "init",
+      "operations": "tgz"
+    }
+  ],
+  "command": "/bin/bash {workenv}/scripts/init_cleanup_check.sh",
+  "execution": {
+    "command": "/bin/bash {workenv}/scripts/init_cleanup_check.sh",
+    "args": [],
+    "env": {},
+    "primary_slot": 0
+  }
+}

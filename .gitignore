@@ -66,3 +66,13 @@ docs/.shared-theme/
 # MkDocs generated site
 site/
 bf-*.txt
+
+# Local act secrets (never commit)
+.act.secrets
+
+# Memray profiling output
+memray-output/
+
+# Generated test artifacts
+coverage.json
+tests/pretaster/logs/

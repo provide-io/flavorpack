@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 import hashlib
+import os
 from pathlib import Path
 import tarfile
 import tempfile
@@ -159,6 +160,7 @@ class TestWorkEnvironment:
         """Create a bundle with setup commands."""
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir = Path(tmpdir)
+            package_version = tmpdir.name
 
             # Create a Python runtime tarball
             runtime_dir = tmpdir / "python_runtime"
@@ -187,10 +189,10 @@ class TestWorkEnvironment:
 
             builder = PSPFBuilder.create().metadata(
                 format="PSPF/2025",
-                package={"name": "setup-test", "version": "1.0.0"},
+                package={"name": "setup-test", "version": package_version},
                 cache_validation={
                     "check_file": "{workenv}/python_runtime/.extracted",
-                    "expected_content": "1.0.0",
+                    "expected_content": package_version,
                 },
                 setup_commands=[
                     {
@@ -236,6 +238,7 @@ class TestWorkEnvironment:
     def test_cache_validation(self, bundle_with_setup_commands: Path) -> None:
         """Test that cache validation works correctly."""
         launcher = PSPFLauncher(bundle_with_setup_commands)
+        expected_version = launcher.read_metadata()["package"]["version"]
 
         # First setup should extract and run setup commands
         workenv_dir = launcher.setup_workenv()
@@ -243,7 +246,7 @@ class TestWorkEnvironment:
         # Check that validation file was created
         validation_file = workenv_dir / "python_runtime" / ".extracted"
         assert validation_file.exists()
-        assert validation_file.read_text() == "1.0.0"
+        assert validation_file.read_text() == expected_version
 
         # Second setup should skip extraction (cache is valid)
         launcher2 = PSPFLauncher(bundle_with_setup_commands)
@@ -261,14 +264,12 @@ class TestWorkEnvironment:
         # Check that write_file command worked
         validation_file = workenv_dir / "python_runtime" / ".extracted"
         assert validation_file.exists()
-        assert validation_file.read_text() == "1.0.0"
+        assert validation_file.read_text() == launcher.read_metadata()["package"]["version"]
 
         # Check that chmod command worked (file should be executable)
-        workenv_dir / "python_runtime" / "python"
-        # Skip chmod check for now - write_file is the main functionality being tested
-        # The chmod command execution depends on platform-specific behavior
-        # if python_file.exists():
-        #     assert os.access(python_file, os.X_OK)
+        python_file = workenv_dir / "python_runtime" / "python"
+        assert python_file.exists()
+        assert os.access(python_file, os.X_OK)
 
 
 @pytest.mark.taster

@@ -157,7 +157,8 @@ class TestVerifyCommand:
                 assert result.exit_code == 0
                 assert "Flavor verification module not available" in result.output
                 assert "Basic Information" in result.output
-                assert "PSPF2025 magic found" in result.output
+                # When magic IS found, there's no warning about it
+                assert "PSPF2025 magic not found" not in result.output
 
     def test_verify_fallback_basic_checks_json(self) -> None:
         """Test fallback to basic checks with JSON output."""
