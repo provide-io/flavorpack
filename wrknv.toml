@@ -37,6 +37,14 @@ browse = "mutmut browse"
 clean = "rm -rf .mutmut-cache html/"
 
 # ==============================================================================
+# 🧠 Memory Profiling
+# ==============================================================================
+
+[tasks.memray]
+_default = "pytest tests/memray/ -m memray -v --no-cov"
+baseline = "MEMRAY_UPDATE_BASELINE=1 pytest tests/memray/ -m memray -v --no-cov"
+
+# ==============================================================================
 # 🔍 Code Quality
 # ==============================================================================
 

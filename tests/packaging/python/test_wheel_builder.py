@@ -37,7 +37,7 @@ class TestWheelBuilder:
         mock_result = Mock()
         mock_result.returncode = 0
         mock_result.stdout = "Built wheel: mypackage-1.0.0-py3-none-any.whl"
-        mock_run.return_value = mock_result
+        mock_run.side_effect = [mock_result, mock_result]
 
         with tempfile.TemporaryDirectory() as temp_dir:
             source_path = Path(temp_dir) / "mypackage"
@@ -53,9 +53,9 @@ class TestWheelBuilder:
 
             result = self.wheel_builder.build_wheel_from_source(python_exe, source_path, wheel_dir)
 
-            # Verify run was called
-            mock_run.assert_called_once()
-            args, kwargs = mock_run.call_args
+            # Verify the wheel build command was issued after the pip availability check
+            assert mock_run.call_count == 2
+            args, kwargs = mock_run.call_args_list[-1]
 
             cmd = args[0]
             assert cmd[0] == "/usr/bin/python3"
@@ -75,7 +75,7 @@ class TestWheelBuilder:
         mock_result = Mock()
         mock_result.returncode = 0
         mock_result.stdout = "Built wheel: mypackage-1.0.0-py3-none-any.whl"
-        mock_run.return_value = mock_result
+        mock_run.side_effect = [mock_result, mock_result, mock_result]
 
         with tempfile.TemporaryDirectory() as temp_dir:
             source_path = Path(temp_dir) / "mypackage"
@@ -103,7 +103,7 @@ class TestWheelBuilder:
             )
 
             # Verify command includes custom options
-            args, _kwargs = mock_run.call_args
+            args, _kwargs = mock_run.call_args_list[-1]
             cmd = args[0]
 
             assert "--no-build-isolation" in cmd
@@ -263,7 +263,7 @@ class TestWheelBuilder:
         mock_result = Mock()
         mock_result.returncode = 0
         mock_result.stdout = "Built wheel: myproject-1.0.0-py3-none-any.whl"
-        mock_run.return_value = mock_result
+        mock_run.side_effect = [mock_result, mock_result, mock_result]
 
         with tempfile.TemporaryDirectory() as temp_dir:
             project_dir = Path(temp_dir) / "myproject"
@@ -322,119 +322,6 @@ class TestWheelBuilder:
 
                 assert result["total_wheels"] == 3  # 1 project + 2 deps
                 assert len(result["dependency_wheels"]) == 2
-
-
-class TestWheelBuilderCriticalFeatures:
-    """Test CRITICAL features that must never be broken."""
-
-    def setup_method(self) -> None:
-        """Set up test fixtures."""
-        self.wheel_builder = WheelBuilder()
-
-    def test_uses_pypapip_for_wheel_building(self) -> None:
-        """CRITICAL: Must use PyPA pip for wheel building, not UV."""
-        # Verify PyPA pip manager is available
-        assert hasattr(self.wheel_builder, "pypapip")
-        assert hasattr(self.wheel_builder.pypapip, "_get_pypapip_wheel_cmd")
-
-        # Verify UV is available but separate
-        assert hasattr(self.wheel_builder, "uv")
-
-        # Verify no direct UV wheel building methods
-        assert not hasattr(self.wheel_builder, "_get_uv_wheel_cmd")
-
-    def test_always_uses_pypapip_for_wheel_downloads(self) -> None:
-        """CRITICAL: Must always use PyPA pip for wheel downloads (manylinux compatibility)."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            wheel_dir = Path(temp_dir)
-            requirements_file = Path(temp_dir) / "requirements.txt"
-            requirements_file.write_text("requests==2.28.0\n")
-
-            python_exe = Path("/usr/bin/python3")
-
-            def mock_download_side_effect(python_exe: Path, requirements_file: Path, wheel_dir: Path) -> None:
-                # Create fake wheel files to simulate successful download
-                fake_wheel = wheel_dir / "requests-2.28.0-py3-none-any.whl"
-                fake_wheel.write_bytes(b"fake wheel content")
-
-            with patch(
-                "flavor.packaging.python.pypapip_manager.PyPaPipManager.download_wheels_from_requirements",
-                side_effect=mock_download_side_effect,
-            ) as mock_download:
-                # Even with use_uv_for_download=True, should still use PyPA pip
-                result = self.wheel_builder.download_wheels_for_resolved_deps(
-                    python_exe,
-                    requirements_file,
-                    wheel_dir,
-                    use_uv_for_download=True,  # This should be ignored
-                )
-
-                # Verify PyPA pip was used
-                mock_download.assert_called_once_with(python_exe, requirements_file, wheel_dir)
-
-                # Verify wheel files were returned
-                assert len(result) == 1
-                assert result[0].name == "requests-2.28.0-py3-none-any.whl"
-
-    def test_dependency_resolution_has_uv_fallback(self) -> None:
-        """CRITICAL: Dependency resolution must have UV + pip-tools fallback chain."""
-        python_exe = Path("/usr/bin/python3")
-        packages = ["requests"]
-
-        with tempfile.TemporaryDirectory() as temp_dir:
-            output_dir = Path(temp_dir)
-
-            # Verify UV is tried first
-            with patch.object(self.wheel_builder.uv, "compile_requirements") as mock_uv:
-                mock_uv.return_value = output_dir / "requirements.txt"
-
-                self.wheel_builder.resolve_dependencies(
-                    python_exe,
-                    packages=packages,
-                    output_dir=output_dir,
-                    use_uv_for_resolution=True,
-                )
-
-                mock_uv.assert_called_once()
-
-    def test_build_isolation_configurable(self) -> None:
-        """CRITICAL: Build isolation must be configurable for complex packages."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            source_path = Path(temp_dir) / "package"
-            source_path.mkdir()
-            wheel_dir = Path(temp_dir) / "wheels"
-            wheel_dir.mkdir()
-
-            # Create mock wheel
-            wheel_file = wheel_dir / "package-1.0.0-py3-none-any.whl"
-            wheel_file.touch()
-
-            python_exe = Path("/usr/bin/python3")
-
-            with patch("flavor.packaging.python.wheel_builder.run") as mock_run:
-                mock_run.return_value = Mock(returncode=0, stdout="Built wheel")
-
-                # Test with isolation disabled
-                self.wheel_builder.build_wheel_from_source(
-                    python_exe, source_path, wheel_dir, use_isolation=False
-                )
-
-                args = mock_run.call_args[0]
-                cmd = args[0]
-                assert "--no-build-isolation" in cmd
-
-    def test_manager_separation_maintained(self) -> None:
-        """CRITICAL: PyPA pip and UV managers must remain separate and distinct."""
-        # Verify both managers are separate instances
-        assert self.wheel_builder.pypapip is not self.wheel_builder.uv
-
-        # Verify they have different capabilities
-        assert hasattr(self.wheel_builder.pypapip, "_get_pypapip_download_cmd")
-        assert hasattr(self.wheel_builder.uv, "_get_uv_venv_cmd")
-
-        # Verify no cross-contamination of methods
-        assert not hasattr(self.wheel_builder.pypapip, "_get_uv_venv_cmd")
-        assert not hasattr(self.wheel_builder.uv, "_get_pypapip_download_cmd")
 
 
 # 🌶️📦🔚

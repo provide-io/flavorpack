@@ -29,13 +29,16 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
-      
+
+      - name: 🔧 Ensure gh CLI available
+        run: type gh >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq gh)
+
       - name: 🔍 Determine version
         id: version
         run: |
           VERSION=$(cat VERSION)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-      
+
       - name: 🔍 Get Helper prep run
         id: helpers
         run: |

@@ -18,6 +18,10 @@ from flavor.package import (
     verify_package,
 )
 
+# Apply logger level-guard patches (is_debug_enabled / is_trace_enabled)
+# Must run before any other flavor module that uses these guards.
+from flavor.utils import log_guards as _log_guards  # noqa: F401
+
 __version__ = get_version("flavorpack", caller_file=__file__)
 
 __all__ = [

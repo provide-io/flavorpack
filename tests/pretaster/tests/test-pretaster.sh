@@ -59,6 +59,10 @@ if [ -d slots/scripts ]; then
     tar czf slots/scripts.tar.gz -C slots scripts/
     echo "  ✅ Created slots/scripts.tar.gz"
 fi
+if [ -d slots/init-data ]; then
+    tar czf slots/init-data.tar.gz -C slots init-data/
+    echo "  ✅ Created slots/init-data.tar.gz"
+fi
 
 echo ""
 echo "📦 Building test packages..."
@@ -126,6 +130,22 @@ $HELPERS_DIR/bin/flavor-rs-builder-$PLATFORM$EXT \
     --output dist/orchestrate-test.psp \
     --key-seed test123
 
+# Test 5: Single-file executable permission retention
+echo "5️⃣ Building permissions test package (Go builder + Rust launcher)..."
+$HELPERS_DIR/bin/flavor-go-builder-$PLATFORM$EXT \
+    --manifest configs/test-permissions.json \
+    --launcher-bin $HELPERS_DIR/bin/flavor-rs-launcher-$PLATFORM$EXT \
+    --output dist/permissions-test.psp \
+    --key-seed test123
+
+# Test 6: Init tar lifecycle cleanup
+echo "6️⃣ Building init cleanup test package (Rust builder + Rust launcher)..."
+$HELPERS_DIR/bin/flavor-rs-builder-$PLATFORM$EXT \
+    --manifest configs/test-init-cleanup.json \
+    --launcher-bin $HELPERS_DIR/bin/flavor-rs-launcher-$PLATFORM$EXT \
+    --output dist/init-cleanup-test.psp \
+    --key-seed test123
+
 echo ""
 echo "🚀 Running test packages..."
 echo ""
@@ -164,6 +184,14 @@ run_test "3️⃣ Running environment test (Rust launcher)..." \
 # Run orchestration test
 run_test "4️⃣ Running orchestration test (Rust launcher)..." \
     "FLAVOR_LOG_LEVEL=info ./dist/orchestrate-test.psp"
+
+# Run permission retention test
+run_test "5️⃣ Running permissions test (Rust launcher)..." \
+    "FLAVOR_LOG_LEVEL=info ./dist/permissions-test.psp | grep -q permission-test-ok"
+
+# Run init lifecycle cleanup test
+run_test "6️⃣ Running init cleanup test (Rust launcher)..." \
+    "FLAVOR_LOG_LEVEL=info ./dist/init-cleanup-test.psp | grep -q init-cleanup-ok"
 
 echo "✅ Test suite completed!"
 

@@ -30,6 +30,30 @@ MOCK_LAUNCHER_SIZE = 124  # Simplified for unit tests
 MOCK_LAUNCHER_DATA = b"FAKE_LAUNCHER_FOR_TEST" + b"\x00" * (MOCK_LAUNCHER_SIZE - 22)
 
 
+def _check_binaries_available() -> bool:
+    """Check if launcher binaries are available on disk."""
+    binary_paths = [
+        Path("dist/bin/flavor-rs-launcher-darwin_arm64"),
+        Path("dist/bin/flavor-rs-launcher"),
+        Path("helpers/bin/flavor-rs-launcher"),
+        Path.cwd() / "dist" / "bin" / "flavor-rs-launcher-darwin_arm64",
+        Path.cwd() / "dist" / "bin" / "flavor-rs-launcher",
+    ]
+    for search_dir in (Path("helpers/bin"), Path.cwd() / "helpers" / "bin"):
+        if search_dir.is_dir():
+            binary_paths.extend(search_dir.glob("flavor-rs-launcher*"))
+
+    env_launcher = os.environ.get("FLAVOR_LAUNCHER_BIN")
+    if env_launcher:
+        binary_paths.insert(0, Path(env_launcher))
+
+    return any(p.exists() for p in binary_paths)
+
+
+# Module-level flag so fixtures can reference it
+binaries_available: bool = _check_binaries_available()
+
+
 def pytest_configure(config: pytest.Config) -> None:
     """Register custom markers."""
     config.addinivalue_line(
@@ -43,29 +67,18 @@ def pytest_configure(config: pytest.Config) -> None:
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
     """Auto-skip tests marked requires_helpers if binaries not found."""
-    # Check if launcher binaries are available
-    binary_paths = [
-        Path("dist/bin/flavor-rs-launcher-darwin_arm64"),
-        Path("dist/bin/flavor-rs-launcher"),
-        Path("helpers/bin/flavor-rs-launcher"),
-        Path("helpers/bin/flavor-rs-launcher"),
-        Path.cwd() / "dist" / "bin" / "flavor-rs-launcher-darwin_arm64",
-        Path.cwd() / "dist" / "bin" / "flavor-rs-launcher",
-    ]
-
-    # Check environment variable
-    env_launcher = os.environ.get("FLAVOR_LAUNCHER_BIN")
-    if env_launcher:
-        binary_paths.insert(0, Path(env_launcher))
-
-    binaries_available = any(p.exists() for p in binary_paths)
-
     if not binaries_available:
+        require_helpers = os.environ.get("FLAVOR_REQUIRE_HELPERS", "").lower() in {"1", "true", "yes"}
+        if require_helpers:
+            raise pytest.UsageError(
+                "Helper-backed test suites require launcher binaries, but none were found. "
+                "Run 'make build-helpers' locally or make sure Helper Prep artifacts were downloaded in CI."
+            )
+
         skip_helpers = pytest.mark.skip(
             reason=(
                 "Launcher binaries not found. "
-                "Run 'make build-helpers' or set FLAVOR_LAUNCHER_BIN environment variable. "
-                f"Searched: {', '.join(str(p) for p in binary_paths[:3])}..."
+                "Run 'make build-helpers' or set FLAVOR_LAUNCHER_BIN environment variable."
             )
         )
         skipped_count = 0
@@ -101,15 +114,52 @@ def reset_foundation_logging() -> Iterator[None]:
 
 
 @pytest.fixture(autouse=True)
+def clear_platform_caches() -> Iterator[None]:
+    """Clear platform detection LRU caches before and after each test.
+
+    Prevents test pollution when platform detection functions (which use LRU
+    caching) are mocked by earlier tests that don't clear caches on teardown.
+    """
+    try:
+        from provide.foundation.platform.detection import (
+            get_arch_name,
+            get_os_name,
+            get_platform_string,
+        )
+
+        get_os_name.cache_clear()
+        get_arch_name.cache_clear()
+        get_platform_string.cache_clear()
+    except (ImportError, AttributeError):
+        pass
+
+    yield
+
+    try:
+        from provide.foundation.platform.detection import (
+            get_arch_name,
+            get_os_name,
+            get_platform_string,
+        )
+
+        get_os_name.cache_clear()
+        get_arch_name.cache_clear()
+        get_platform_string.cache_clear()
+    except (ImportError, AttributeError):
+        pass
+
+
+@pytest.fixture(autouse=True)
 def mock_launcher_loading(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> None:
     """Automatically mock launcher loading for non-integration tests.
 
-    Tests marked with @pytest.mark.integration will skip this mock
-    and require real launcher binaries.
+    Tests marked with @pytest.mark.integration will skip this mock only
+    when real launcher binaries are available. When binaries are absent,
+    integration tests also receive the mock to avoid FileNotFoundError.
     """
-    # Skip mocking for integration tests
-    if request.node.get_closest_marker("integration"):
-        return  # Let integration tests use real binaries
+    # Only skip mocking for integration tests when real binaries are present
+    if request.node.get_closest_marker("integration") and binaries_available:
+        return  # Real binaries exist — let integration tests use them
 
     def mock_load_launcher(launcher_type: str) -> bytes:
         return MOCK_LAUNCHER_DATA

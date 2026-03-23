@@ -68,6 +68,49 @@ pub fn unpack_operations(packed: u64) -> Vec<u8> {
 mod tests {
     use super::super::constants::{OP_GZIP, OP_TAR};
     use super::*;
+    use proptest::prelude::*;
+
+    // ── proptest strategies ──────────────────────────────────────────────────
+
+    /// Non-zero bytes only: zero is the sentinel meaning "no operation".
+    fn nonzero_byte() -> impl Strategy<Value = u8> {
+        1u8..=255u8
+    }
+
+    /// Up to 8 non-zero bytes (the pack/unpack capacity).
+    fn op_vec() -> impl Strategy<Value = Vec<u8>> {
+        proptest::collection::vec(nonzero_byte(), 0..=8)
+    }
+
+    proptest! {
+        /// pack→unpack is a perfect round-trip for any valid op sequence.
+        #[test]
+        fn prop_pack_unpack_roundtrip(ops in op_vec()) {
+            let packed = pack_operations(&ops);
+            let unpacked = unpack_operations(packed);
+            prop_assert_eq!(ops, unpacked);
+        }
+
+        /// unpack→pack→unpack is idempotent: a second pass must be stable.
+        #[test]
+        fn prop_unpack_pack_idempotent(packed in proptest::num::u64::ANY) {
+            let first = unpack_operations(packed);
+            let repacked = pack_operations(&first);
+            let second = unpack_operations(repacked);
+            prop_assert_eq!(first, second);
+        }
+
+        /// pack always produces a value whose high bytes beyond the op count are zero.
+        #[test]
+        fn prop_pack_high_bytes_zero(ops in op_vec()) {
+            let packed = pack_operations(&ops);
+            // Bytes above ops.len() must all be zero
+            for i in ops.len()..8 {
+                let byte = ((packed >> (i * 8)) & 0xFF) as u8;
+                prop_assert_eq!(byte, 0, "byte {} should be zero (ops={:?} packed={:#018x})", i, ops, packed);
+            }
+        }
+    }
 
     #[test]
     fn test_pack_single_operation() {

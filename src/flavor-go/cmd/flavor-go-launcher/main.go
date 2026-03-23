@@ -9,7 +9,7 @@ import (
 	"github.com/provide-io/flavor/go/flavor/pkg/psp/format_2025"
 )
 
-const version = "0.3.0"
+const version = "0.3.21"
 
 // Phase 19 cache invalidation: Force rebuild with CGO enabled for Windows (2025-10-31)
 

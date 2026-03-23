@@ -321,6 +321,13 @@ pub fn extract_tarball(data: &[u8], dest_dir: &Path) -> Result<()> {
 
         trace!("📄 Extracting: {path:?}");
 
+        // Skip the root "." entry — dest_dir already exists; unpacking a symlink
+        // entry named "." onto an existing directory fails with EISDIR (arm64
+        // python-build-standalone distributions include this entry).
+        if path.as_os_str() == "." {
+            continue;
+        }
+
         // Create parent directories if needed
         if let Some(parent) = dest_path.parent() {
             if !parent.exists() {
