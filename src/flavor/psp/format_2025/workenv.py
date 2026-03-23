@@ -104,8 +104,7 @@ class WorkEnvManager:
             check_file = check_file.replace("{version}", package_version)
 
             check_path = Path(check_file)
-            if logger.is_debug_enabled():
-                logger.debug(f"🔍 Checking cache validity: {check_path}")
+            logger.debug(f"🔍 Checking cache validity: {check_path}")
 
             if check_path.exists():
                 actual_content = check_path.read_text().strip()
@@ -116,8 +115,7 @@ class WorkEnvManager:
                         f"❌ Cache content mismatch: expected '{expected_content}', got '{actual_content}'"
                     )
             else:
-                if logger.is_debug_enabled():
-                    logger.debug(f"❌ Cache validation file not found: {check_path}")
+                logger.debug(f"❌ Cache validation file not found: {check_path}")
 
         return cache_valid
 
@@ -142,8 +140,7 @@ class WorkEnvManager:
                 # Handle different lifecycle values
                 if lifecycle == "init":
                     # 'init' lifecycle: remove after initialization
-                    if logger.is_debug_enabled():
-                        logger.debug(f"🗑️ Removing 'init' lifecycle slot {slot_idx}: {slot_path}")
+                    logger.debug(f"🗑️ Removing 'init' lifecycle slot {slot_idx}: {slot_path}")
                     if slot_path.resolve() == workenv_dir.resolve():
                         logger.warning(
                             "⚠️ Refusing to remove workenv root during init-slot cleanup",
@@ -158,8 +155,7 @@ class WorkEnvManager:
                             slot_path.unlink(missing_ok=True)
                 elif lifecycle == "temp":
                     # 'temp' lifecycle: mark for cleanup after session
-                    if logger.is_debug_enabled():
-                        logger.debug(f"🕐 Slot {slot_idx} marked as 'temp' - will be cleaned after session")
+                    logger.debug(f"🕐 Slot {slot_idx} marked as 'temp' - will be cleaned after session")
 
     def _prepare_setup_environment(self, workenv_dir: Path, runtime_env: dict[str, Any]) -> dict[str, str]:
         """Prepare isolated environment for setup command execution.
@@ -313,8 +309,7 @@ class WorkEnvManager:
         # Find matching files
         matches = sorted(Path(enum_path).glob(pattern))
 
-        if logger.is_debug_enabled():
-            logger.debug(f"📂 Found {len(matches)} files matching {pattern} in {enum_path}")
+        logger.debug(f"📂 Found {len(matches)} files matching {pattern} in {enum_path}")
 
         for file_path in matches:
             if "{file}" in command_template:
@@ -348,8 +343,7 @@ class WorkEnvManager:
         path_pattern_path = Path(path_pattern)
         matched_paths = sorted(path_pattern_path.parent.glob(path_pattern_path.name))
         if not matched_paths:
-            if logger.is_debug_enabled():
-                logger.debug(f"⚠️ chmod matched no files for pattern: {path_pattern}")
+            logger.debug(f"⚠️ chmod matched no files for pattern: {path_pattern}")
             return
 
         for matched_path in matched_paths:
@@ -403,8 +397,7 @@ class WorkEnvManager:
                 slot_name = self._normalize_slot_target(slot.get("target", slot.get("id", f"slot_{i}")))
                 slot_path = workenv_dir if slot_name in {".", "{workenv}"} else workenv_dir / slot_name
                 command = command.replace(placeholder, str(slot_path))
-                if logger.is_debug_enabled():
-                    logger.debug(f"🔄 Substituted {placeholder} -> {slot_path}")
+                logger.debug(f"🔄 Substituted {placeholder} -> {slot_path}")
 
         return command
 

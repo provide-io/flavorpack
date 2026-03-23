@@ -47,25 +47,21 @@ class BundleExecutor:
         Returns:
             str: Prepared command ready for execution
         """
-        if logger.is_debug_enabled():
-            logger.debug(f"🔍 prepare_command input: {base_command}")
+        logger.debug(f"🔍 prepare_command input: {base_command}")
 
         # Primary slot substitution
         command = self._substitute_primary(base_command)
-        if logger.is_debug_enabled():
-            logger.debug(f"🔍 after primary substitution: {command}")
+        logger.debug(f"🔍 after primary substitution: {command}")
 
         # Slot substitution - {slot:N} references
         command = self._substitute_slots(command)
-        if logger.is_debug_enabled():
-            logger.debug(f"🔍 after slot substitution: {command}")
+        logger.debug(f"🔍 after slot substitution: {command}")
 
         # Basic substitutions - only {workenv}, {package_name}, and {version} as per spec
         command = command.replace("{workenv}", str(self.workenv_dir))
         command = command.replace("{package_name}", self.package_name)
         command = command.replace("{version}", self.package_version)
-        if logger.is_debug_enabled():
-            logger.debug(f"🔍 after basic substitutions: {command}")
+        logger.debug(f"🔍 after basic substitutions: {command}")
 
         # Append user arguments
         if args:
