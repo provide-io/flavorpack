@@ -301,15 +301,23 @@ class WheelBuilder:
 
         ensure_dir(wheel_dir)
 
-        # Always use PyPA pip for wheel downloads to ensure manylinux compatibility
-        # UV pip doesn't handle platform tags as reliably
+        # Download strategy (in priority order):
+        # 1. PyPA pip  — reliable manylinux platform-tag handling on Linux
+        # 2. UV offline — zero-network from UV's wheel cache (fast but requires prior uv tool install)
+        # 3. UV network — UV's Rust HTTP client works where Python urllib3 fails (e.g. Windows GHA)
         logger.debug("Using PyPA pip for reliable wheel downloads")
 
         try:
             self.pypapip.download_wheels_from_requirements(python_exe, requirements_file, wheel_dir)
         except RuntimeError as e:
-            logger.error(f"❌ Failed to download dependencies: {e}")
-            raise
+            logger.warning(f"pip download failed, trying UV offline cache: {e}")
+            if self.uv.download_wheels_offline(requirements_file, wheel_dir):
+                logger.info("✅ UV offline cache fallback succeeded")
+            elif self.uv.download_wheels_network(requirements_file, wheel_dir):
+                logger.info("✅ UV network download fallback succeeded")
+            else:
+                logger.error(f"❌ All download methods failed: {e}")
+                raise
 
         # Return list of downloaded wheels
         wheel_files = list(wheel_dir.glob("*.whl"))
@@ -387,16 +395,24 @@ class WheelBuilder:
         # Resolve and download dependency wheels from PyPI
         dependency_wheels = []
         if requirements_file or all_packages:
-            logger.info(
-                f"🌐 Resolving {len(all_packages)} runtime dependencies from PyPI "
-                "(only runtime deps, not the project itself)"
-            )
-            locked_requirements = self.resolve_dependencies(
-                python_exe=python_exe,
-                requirements_file=requirements_file,
-                packages=all_packages if all_packages else None,
-                output_dir=deps_dir,
-            )
+            # Prefer uv export --frozen when a lock file exists: no network calls needed.
+            # Falls back to uv pip compile (network) when no lock file is present.
+            lock_file = project_dir / "uv.lock"
+            if lock_file.exists() and not requirements_file:
+                logger.info("🔒 Using uv.lock for offline dependency resolution (no PyPI needed)")
+                locked_requirements = deps_dir / "requirements.txt"
+                self.uv.export_requirements(project_dir, locked_requirements)
+            else:
+                logger.info(
+                    f"🌐 Resolving {len(all_packages)} runtime dependencies from PyPI "
+                    "(only runtime deps, not the project itself)"
+                )
+                locked_requirements = self.resolve_dependencies(
+                    python_exe=python_exe,
+                    requirements_file=requirements_file,
+                    packages=all_packages if all_packages else None,
+                    output_dir=deps_dir,
+                )
 
             # Download dependency wheels
             dependency_wheels = self.download_wheels_for_resolved_deps(
