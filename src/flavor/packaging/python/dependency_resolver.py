@@ -60,8 +60,7 @@ class DependencyResolver:
         # Check if UV is in PATH
         uv_path = shutil.which("uv")
         if uv_path:
-            if logger.is_debug_enabled():
-                logger.debug(f"Found UV in PATH: {uv_path}")
+            logger.debug(f"Found UV in PATH: {uv_path}")
             try:
                 result = run([uv_path, "--version"], capture_output=True, timeout=10)
                 if result.returncode == 0:
@@ -280,8 +279,7 @@ class DependencyResolver:
             logger.trace(f"Files in temp dir: {[f.name for f in all_files]}")
 
         for file in Path(temp_dir).glob("uv-*.whl"):
-            if logger.is_debug_enabled():
-                logger.debug(f"Found UV wheel: {file.name}")
+            logger.debug(f"Found UV wheel: {file.name}")
             self._validate_manylinux_wheel(file)
             return file
 
@@ -292,8 +290,7 @@ class DependencyResolver:
         """Validate that UV wheel is manylinux2014 compatible."""
         if "manylinux" in uv_wheel.name:
             if "manylinux2014" in uv_wheel.name or "manylinux_2_17" in uv_wheel.name:
-                if logger.is_debug_enabled():
-                    logger.debug(f"✅ UV wheel is manylinux2014 compatible: {uv_wheel.name}")
+                logger.debug(f"✅ UV wheel is manylinux2014 compatible: {uv_wheel.name}")
             else:
                 logger.warning(f"⚠️ UV wheel is not manylinux2014: {uv_wheel.name}")
 
@@ -318,8 +315,7 @@ class DependencyResolver:
                     if name.endswith("/uv") or name == "uv":
                         uv_path = dest_dir / "uv"
 
-                        if logger.is_debug_enabled():
-                            logger.debug(f"Extracting UV binary from {name}")
+                        logger.debug(f"Extracting UV binary from {name}")
                         with (
                             wheel_zip.open(name) as src,
                             uv_path.open("wb") as dst,

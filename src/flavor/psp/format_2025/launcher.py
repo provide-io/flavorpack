@@ -138,8 +138,7 @@ class PSPFLauncher(PSPFReader):
         try:
             for slot_entry in slot_table:
                 slot_idx = slot_entry["index"]
-                if logger.is_debug_enabled():
-                    logger.debug(f"🔄 Extracting slot {slot_idx}")
+                logger.debug(f"🔄 Extracting slot {slot_idx}")
                 slot_path = self.extract_slot(slot_idx, workenv_dir)
                 extracted_paths[slot_idx] = slot_path
 
@@ -199,8 +198,7 @@ class PSPFLauncher(PSPFReader):
         elif slot_entry["operations"] == 0x01:  # tar
             data = slot_data  # Tar archives are extracted later
         elif slot_entry["operations"] == 0x10:  # gzip
-            if logger.is_debug_enabled():
-                logger.debug(f"🗜️ Decompressing slot {slot_index} with gzip")
+            logger.debug(f"🗜️ Decompressing slot {slot_index} with gzip")
             import gzip
 
             data = gzip.decompress(slot_data)
@@ -219,8 +217,7 @@ class PSPFLauncher(PSPFReader):
             # Use "target" field for extraction path, fallback to "id" or "name"
             slot_name = slot_meta.get("target", slot_meta.get("id", slot_meta.get("name", slot_name)))
         slot_name = self._normalize_slot_target(str(slot_name))
-        if logger.is_debug_enabled():
-            logger.debug(f"📝 Slot {slot_index} name: {slot_name}")
+        logger.debug(f"📝 Slot {slot_index} name: {slot_name}")
 
         # NOTE: Tarball extraction logic matches Go's tar extraction
         # Check if it's a tarball that needs extraction (by content, not just name)
@@ -235,8 +232,7 @@ class PSPFLauncher(PSPFReader):
             is_tarball = True
 
         if is_tarball or slot_name.endswith(".tar.gz") or slot_name.endswith(".tgz"):
-            if logger.is_debug_enabled():
-                logger.debug(f"📤 Extracting tarball {slot_name} to {workenv_dir}")
+            logger.debug(f"📤 Extracting tarball {slot_name} to {workenv_dir}")
             try:
                 with tarfile.open(fileobj=io.BytesIO(data), mode="r:*") as tar:
                     # Use the filter parameter to avoid Python 3.14 deprecation warning

@@ -50,8 +50,7 @@ class WheelBuilder:
         self.pypapip = PyPaPipManager(python_version=python_version)
         self.uv = UVManager()  # UV manager for performance where appropriate
 
-        if logger.is_debug_enabled():
-            logger.debug(f"Initialized WheelBuilder for Python {python_version}")
+        logger.debug(f"Initialized WheelBuilder for Python {python_version}")
 
     def _ensure_pip_available(self, python_exe: Path) -> None:
         """Ensure the target Python can run PyPA pip commands."""

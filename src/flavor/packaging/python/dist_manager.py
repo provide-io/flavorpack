@@ -59,8 +59,7 @@ class PythonDistManager:
         self.uv = UVManager() if use_uv_for_venv else None
         self.wheel_builder = WheelBuilder(python_version=python_version)
 
-        if logger.is_debug_enabled():
-            logger.debug(f"Initialized PythonDistManager for Python {python_version}")
+        logger.debug(f"Initialized PythonDistManager for Python {python_version}")
 
     def create_python_environment(
         self,
@@ -85,8 +84,7 @@ class PythonDistManager:
 
         # Remove existing venv if present
         if venv_path.exists():
-            if logger.is_debug_enabled():
-                logger.debug(f"Removing existing venv: {venv_path}")
+            logger.debug(f"Removing existing venv: {venv_path}")
             safe_rmtree(venv_path, missing_ok=False)
 
         ensure_parent_dir(venv_path)
@@ -210,8 +208,7 @@ class PythonDistManager:
             site_packages: Site-packages directory to compile
             optimization_level: Bytecode optimization level
         """
-        if logger.is_debug_enabled():
-            logger.debug(f"Compiling Python files with optimization level {optimization_level}")
+        logger.debug(f"Compiling Python files with optimization level {optimization_level}")
 
         compile_cmd = [
             str(venv_python),
@@ -265,11 +262,9 @@ class PythonDistManager:
                         path.unlink()
                         files_removed += 1
                 except Exception as e:
-                    if logger.is_debug_enabled():
-                        logger.debug(f"Failed to remove {path}: {e}")
+                    logger.debug(f"Failed to remove {path}: {e}")
 
-        if logger.is_debug_enabled():
-            logger.debug(f"Cleanup complete: removed {files_removed} files, {dirs_removed} directories")
+        logger.debug(f"Cleanup complete: removed {files_removed} files, {dirs_removed} directories")
 
     def create_standalone_distribution(
         self,

@@ -25,17 +25,13 @@ def xor_encode(data: bytes, key: bytes = XOR_KEY) -> bytes:
     if n == 0:
         return b""
     key_len = len(key)
-    key_int = int.from_bytes(key, "little")
-    result = bytearray(n)
-    # XOR key_len bytes at a time as integers
-    aligned = n - (n % key_len)
-    for i in range(0, aligned, key_len):
-        chunk = int.from_bytes(data[i : i + key_len], "little")
-        result[i : i + key_len] = (chunk ^ key_int).to_bytes(key_len, "little")
-    # Handle remaining bytes
-    for i in range(aligned, n):
-        result[i] = data[i] ^ key[i % key_len]
-    return bytes(result)
+    # Extend key to cover all data in one pass
+    full_key = key * (n // key_len) + key[: n % key_len]
+    # Single large-int XOR — zero per-chunk allocations
+    data_int = int.from_bytes(data, "little")
+    key_int = int.from_bytes(full_key, "little")
+    result_int = data_int ^ key_int
+    return result_int.to_bytes(n, "little")
 
 
 def xor_decode(data: bytes, key: bytes = XOR_KEY) -> bytes:
