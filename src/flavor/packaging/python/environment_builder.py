@@ -97,9 +97,15 @@ class PythonEnvironmentBuilder:
     def _install_python_with_uv(self, uv_install_dir: str) -> Path | None:
         """Install Python using UV and return installation directory.
 
+        Tries two strategies:
+        1. Install to custom --install-dir and scan for the directory
+        2. Install to uv's default managed location and locate via `uv python find`
+
         Retries:
             Up to 3 attempts with exponential backoff for network errors
         """
+        import sys
+
         uv_cmd = self.find_uv_command()
         if uv_cmd is None:
             logger.error("UV command not found")
@@ -107,24 +113,52 @@ class PythonEnvironmentBuilder:
 
         self._log_uv_environment()
 
-        # Install Python with UV
-        cmd = [
-            uv_cmd,
-            "python",
-            "install",
-            self.python_version,
-            "--install-dir",
-            uv_install_dir,
-        ]
-        logger.debug("💻🚀📋 Running command", command=" ".join(cmd))
+        # Strategy 1: install to custom dir
+        cmd_custom = [uv_cmd, "python", "install", self.python_version, "--install-dir", uv_install_dir]
+        logger.debug("💻🚀📋 Running command", command=" ".join(cmd_custom))
+        result = run(cmd_custom, capture_output=True)
+        print(
+            f"[flavor-python] uv python install (custom-dir) exit={result.returncode} "
+            f"stderr={result.stderr.strip()!r:.120}",
+            flush=True,
+            file=sys.stdout,
+        )
 
-        result = run(cmd, check=True, capture_output=True)
-        if result.stdout and logger.is_trace_enabled():
-            logger.trace(f"UV install stdout: {result.stdout.strip()}")
-        if result.stderr and logger.is_trace_enabled():
-            logger.trace(f"UV install stderr: {result.stderr.strip()}")
+        python_path = self._find_python_installation(uv_install_dir, uv_cmd)
+        if python_path:
+            return python_path
 
-        return self._find_python_installation(uv_install_dir, uv_cmd)
+        # Strategy 2: install to uv's default managed location, then find it
+        logger.debug("💻🚀📋 Strategy 2: installing to default managed location")
+        cmd_default = [uv_cmd, "python", "install", self.python_version]
+        result2 = run(cmd_default, capture_output=True)
+        print(
+            f"[flavor-python] uv python install (default) exit={result2.returncode} "
+            f"stderr={result2.stderr.strip()!r:.120}",
+            flush=True,
+            file=sys.stdout,
+        )
+
+        find_cmd = [uv_cmd, "python", "find", self.python_version, "--python-preference", "only-managed"]
+        result3 = run(find_cmd, capture_output=True)
+        python_bin_str = result3.stdout.strip()
+        print(
+            f"[flavor-python] uv python find exit={result3.returncode} path={python_bin_str!r:.200}",
+            flush=True,
+            file=sys.stdout,
+        )
+
+        if result3.returncode == 0 and python_bin_str:
+            python_bin = Path(python_bin_str)
+            logger.info(f"Found Python via uv python find: {python_bin}")
+            return self._validate_python_installation(python_bin)
+
+        print(
+            f"[flavor-python] Both strategies failed to locate Python {self.python_version}",
+            flush=True,
+            file=sys.stdout,
+        )
+        return None
 
     def _log_uv_environment(self) -> None:
         """Log UV environment variables that might affect behavior."""
@@ -139,10 +173,43 @@ class PythonEnvironmentBuilder:
         """Find the Python installation directory after UV install."""
         install_path = Path(uv_install_dir)
 
-        # Find the cpython directory
+        # Log what's actually in the install dir for diagnostics
+        all_contents = list(install_path.iterdir()) if install_path.exists() else []
+        logger.debug(
+            "🔍 UV install dir contents",
+            path=uv_install_dir,
+            contents=[p.name for p in all_contents],
+        )
+
+        # Find the cpython directory (primary pattern)
         cpython_dirs = list(install_path.glob("cpython-*"))
         if not cpython_dirs:
-            logger.warning("Could not find UV-installed Python at expected location")
+            # Try any directory — different uv versions use different naming conventions
+            all_dirs = [p for p in all_contents if p.is_dir()]
+            if all_dirs:
+                logger.warning(
+                    "cpython-* not found in install dir, trying all subdirectories",
+                    dirs=[d.name for d in all_dirs],
+                )
+                for candidate in all_dirs:
+                    python_bin = self._find_python_binary(candidate, uv_install_dir, uv_cmd)
+                    if python_bin:
+                        return self._validate_python_installation(python_bin)
+
+            # Last resort: ask uv where it put Python (ignores --install-dir constraint)
+            logger.warning(
+                "No Python directory found in install dir, falling back to uv python find",
+                install_dir=uv_install_dir,
+            )
+            python_bin = self._fallback_find_python(uv_cmd, uv_install_dir)
+            if python_bin:
+                return self._validate_python_installation(python_bin)
+
+            logger.error(
+                "Could not locate UV-installed Python via any method",
+                install_dir=uv_install_dir,
+                contents=[p.name for p in all_contents],
+            )
             return None
 
         python_install_dir = cpython_dirs[0]
@@ -177,10 +244,6 @@ class PythonEnvironmentBuilder:
 
     def _fallback_find_python(self, uv_cmd: str, uv_install_dir: str) -> Path | None:
         """Fall back to UV python find if direct search fails."""
-        env = os.environ.copy()
-        env["UV_PYTHON_INSTALL_DIR"] = uv_install_dir
-        env["UV_PYTHON_PREFERENCE"] = "only-managed"
-
         find_cmd = [
             uv_cmd,
             "python",
@@ -189,17 +252,53 @@ class PythonEnvironmentBuilder:
             "--python-preference",
             "only-managed",
         ]
+
+        # First try: restrict to our custom install dir
+        env = os.environ.copy()
+        env["UV_PYTHON_INSTALL_DIR"] = uv_install_dir
+        env["UV_PYTHON_PREFERENCE"] = "only-managed"
         logger.debug(
-            "🔍🚀📋 Falling back to UV python find",
+            "🔍🚀📋 Falling back to UV python find (restricted)",
             command=" ".join(find_cmd),
             UV_PYTHON_INSTALL_DIR=uv_install_dir,
-            UV_PYTHON_PREFERENCE="only-managed",
         )
+        try:
+            result = run(find_cmd, capture_output=True, env=env)
+            if result.returncode == 0 and result.stdout:
+                python_path = result.stdout.strip()
+                logger.debug(f"Found Python via uv python find (restricted): {python_path}")
+                return Path(python_path)
+            logger.debug(
+                "uv python find (restricted) found nothing",
+                returncode=result.returncode,
+                stderr=result.stderr.strip() if result.stderr else "",
+            )
+        except Exception as e:
+            logger.debug(f"uv python find (restricted) failed: {e}")
 
-        result = run(find_cmd, check=True, capture_output=True, env=env)
-        if result.stdout:
-            python_path = result.stdout.strip()
-            return Path(python_path)
+        # Second try: unrestricted search — Python may have been installed to uv's
+        # default managed location rather than our custom --install-dir
+        logger.debug(
+            "🔍🚀📋 Falling back to UV python find (unrestricted)",
+            command=" ".join(find_cmd),
+        )
+        try:
+            result = run(find_cmd, capture_output=True)
+            if result.returncode == 0 and result.stdout:
+                python_path = result.stdout.strip()
+                logger.info(
+                    f"Found Python via uv python find (unrestricted): {python_path} "
+                    f"(note: not in custom install dir {uv_install_dir})"
+                )
+                return Path(python_path)
+            logger.warning(
+                "uv python find (unrestricted) also found nothing",
+                returncode=result.returncode,
+                stderr=result.stderr.strip() if result.stderr else "",
+            )
+        except Exception as e:
+            logger.warning(f"uv python find (unrestricted) failed: {e}")
+
         return None
 
     def _validate_python_installation(self, python_bin: Path) -> Path | None:
@@ -260,8 +359,37 @@ class PythonEnvironmentBuilder:
         )
 
     def _create_fallback_python_tarball(self, python_tgz: Path) -> None:
-        """Create a fallback Python tarball when installation fails."""
-        logger.warning("Could not find UV-installed Python at expected location")
+        """Create a fallback Python tarball when installation fails.
+
+        On Linux, raises an error because a placeholder tarball will cause the
+        packaged application to fail at runtime (bin/python3 won't exist).
+        """
+        import sys
+
+        os_name = get_os_name()
+        arch_name = get_arch_name()
+        print(
+            f"[flavor-python] FALLBACK TRIGGERED: Python install failed "
+            f"os={os_name} arch={arch_name} version={self.python_version}",
+            flush=True,
+            file=sys.stdout,
+        )
+        logger.error(
+            "❌ Failed to obtain Python distribution — all install/find methods exhausted",
+            python_version=self.python_version,
+            os=os_name,
+            arch=arch_name,
+        )
+        if os_name == "linux":
+            raise FileNotFoundError(
+                f"Could not obtain a Python {self.python_version} distribution for Linux. "
+                "uv python install and uv python find both failed. "
+                "A placeholder tarball would cause silent runtime failures."
+            )
+        logger.warning(
+            "Creating placeholder Python tarball (non-Linux build only)",
+            python_version=self.python_version,
+        )
         with tempfile.TemporaryDirectory() as temp_dir:
             python_dir = Path(temp_dir) / "python"
             ensure_dir(python_dir)
@@ -274,11 +402,29 @@ class PythonEnvironmentBuilder:
 
     def _create_python_tarball(self, python_install_dir: Path, python_tgz: Path) -> None:
         """Create the Python tarball from installation directory."""
+        import sys
+
+        # Calculate actual on-disk size (following symlinks/hardlinks) for diagnostic
+        # Note: Path.is_file() already follows symlinks by default; no follow_symlinks kwarg
+        raw_size = sum(
+            f.stat(follow_symlinks=True).st_size
+            for f in python_install_dir.rglob("*")
+            if f.is_file()
+        )
+        print(
+            f"[flavor-python] Creating Python tarball from {python_install_dir} "
+            f"raw_size={raw_size:,} bytes ({raw_size // 1024 // 1024}MB)",
+            flush=True,
+            file=sys.stdout,
+        )
 
         # Use mutable container for tracking stats
         stats = {"files_added": 0, "bytes_added": 0}
 
-        with tarfile.open(python_tgz, "w:gz", compresslevel=9) as tar:
+        # dereference=True: follow symlinks and hard links so the tarball is
+        # self-contained even when the installation uses links to UV_CACHE_DIR.
+        # Must be passed to open(), not add() — it's a TarFile constructor param.
+        with tarfile.open(python_tgz, "w:gz", compresslevel=9, dereference=True) as tar:
             filter_func = self._create_tarball_filter(stats)
             tar.add(python_install_dir, arcname=".", filter=filter_func)
             logger.info(

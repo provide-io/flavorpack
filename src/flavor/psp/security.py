@@ -82,8 +82,7 @@ class PSPFIntegrityVerifier:
         Returns:
             IntegrityResult dictionary with verification status
         """
-        if logger.is_debug_enabled():
-            logger.debug(f"🔐 Verifying package integrity: {bundle_path}")
+        logger.debug(f"🔐 Verifying package integrity: {bundle_path}")
 
         # Get current validation level
         validation_level = get_validation_level()
@@ -147,8 +146,7 @@ class PSPFIntegrityVerifier:
 
                                 verifier = Ed25519Verifier(index.public_key)
                                 signature_valid = verifier.verify(metadata_json, ed25519_signature)
-                                if logger.is_debug_enabled():
-                                    logger.debug(f"🔐 Signature validation result: {signature_valid}")
+                                logger.debug(f"🔐 Signature validation result: {signature_valid}")
 
                             except Exception as e:
                                 # Handle signature validation failure based on level
@@ -214,8 +212,7 @@ class PSPFIntegrityVerifier:
                                         logger.warning(f"⚠️ Slot {i} integrity check failed")
                                         logger.warning("⚠️ Continuing due to relaxed validation")
                                 else:
-                                    if logger.is_debug_enabled():
-                                        logger.debug(f"🔐 Slot {slot_id} integrity valid")
+                                    logger.debug(f"🔐 Slot {slot_id} integrity valid")
                             except Exception as e:
                                 if validation_level == ValidationLevel.STRICT:
                                     logger.error(f"❌ Slot {slot_id} integrity check error: {e}")
@@ -260,10 +257,9 @@ class PSPFIntegrityVerifier:
                     "tamper_detected": tamper_detected,
                 }
 
-                if logger.is_debug_enabled():
-                    logger.debug(
-                        f"🔐 Integrity verification complete: {result} (level: {validation_level.name})"
-                    )
+                logger.debug(
+                    f"🔐 Integrity verification complete: {result} (level: {validation_level.name})"
+                )
                 return result
 
         except Exception as e:

@@ -69,8 +69,7 @@ def update_section_offsets(data: bytearray, padding_size: int) -> None:
             )
             updated_count += 1
 
-    if logger.is_debug_enabled():
-        logger.debug(f"Updated {updated_count}/{num_sections} section offset(s)")
+    logger.debug(f"Updated {updated_count}/{num_sections} section offset(s)")
 
 
 def update_size_of_headers(data: bytearray, padding_size: int) -> None:

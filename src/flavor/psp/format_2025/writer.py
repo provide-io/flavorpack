@@ -41,6 +41,17 @@ from flavor.psp.format_2025.pe_utils import process_launcher_for_pspf
 from flavor.psp.format_2025.slots import SlotDescriptor
 from flavor.psp.format_2025.spec import BuildSpec, PreparedSlot
 
+# Cache Ed25519Signer instances by private key bytes to avoid
+# repeated Ed25519PrivateKey.from_private_bytes() calls across builds.
+_signer_cache: dict[bytes, Ed25519Signer] = {}
+
+
+def _get_or_create_signer(private_key: bytes) -> Ed25519Signer:
+    """Return a cached Ed25519Signer for the given private key bytes."""
+    if private_key not in _signer_cache:
+        _signer_cache[private_key] = Ed25519Signer(private_key=private_key)
+    return _signer_cache[private_key]
+
 
 def write_package(
     spec: BuildSpec,
@@ -87,8 +98,8 @@ def write_package(
     metadata_json = json_dumps(metadata, indent=2).encode("utf-8")
     metadata_compressed = gzip.compress(metadata_json, mtime=0)
 
-    # Sign metadata
-    signer = Ed25519Signer(private_key=private_key)
+    # Sign metadata (signer is cached to avoid rebuilding key objects)
+    signer = _get_or_create_signer(private_key)
     signature = signer.sign(metadata_json)
     padded_signature = signature + b"\x00" * (512 - 64)
     index.integrity_signature = padded_signature
@@ -139,12 +150,10 @@ def _create_launcher_info(launcher_data: bytes) -> dict[str, Any]:
 def _write_metadata(f: BinaryIO, metadata_compressed: bytes, index: PSPFIndex) -> None:
     """Write compressed metadata and update index."""
     metadata_offset = f.tell()
-    if logger.is_debug_enabled():
-        logger.debug(f"Metadata offset: {metadata_offset}, size: {len(metadata_compressed)}")
+    logger.debug(f"Metadata offset: {metadata_offset}, size: {len(metadata_compressed)}")
 
     f.write(metadata_compressed)
-    if logger.is_debug_enabled():
-        logger.debug(f"Position after metadata: {f.tell()}")
+    logger.debug(f"Position after metadata: {f.tell()}")
 
     # Update index
     index.metadata_offset = metadata_offset
@@ -261,8 +270,7 @@ def _write_slots(f: BinaryIO, slots: list[PreparedSlot], spec: BuildSpec, index:
 def _write_trailer(f: BinaryIO, index: PSPFIndex) -> None:
     """Write magic trailer with index."""
     current_pos = f.tell()
-    if logger.is_debug_enabled():
-        logger.debug(f"Position before MagicTrailer: {current_pos}")
+    logger.debug(f"Position before MagicTrailer: {current_pos}")
 
     # Update package size
     index.package_size = current_pos + DEFAULT_MAGIC_TRAILER_SIZE
@@ -270,8 +278,7 @@ def _write_trailer(f: BinaryIO, index: PSPFIndex) -> None:
     # Write trailer: start marker + index + end marker
     f.write(TRAILER_START_MAGIC)
     index_data = index.pack()
-    if logger.is_debug_enabled():
-        logger.debug(f"Writing index with format_version: 0x{index.format_version:08x}")
+    logger.debug(f"Writing index with format_version: 0x{index.format_version:08x}")
     f.write(index_data)
     f.write(TRAILER_END_MAGIC)
 
