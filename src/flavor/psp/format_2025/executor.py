@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 import re
 import shlex
+import sys
 from typing import Any
 
 from provide.foundation import logger
@@ -37,6 +38,19 @@ class BundleExecutor:
         self.package_version = metadata.get("package", {}).get("version", "")
         self.execution_config = metadata.get("execution", {})
 
+    def _platform_vars(self) -> tuple[str, str, str]:
+        """Return (bin_dir, python_exe, python_bin_path) for the current platform.
+
+        - bin_dir:     'Scripts' on Windows, 'bin' on Unix  → {bin}
+        - python_exe:  'python.exe' on Windows, 'python3' on Unix  → {python}
+        - python_bin:  full path to Python executable in workenv  → {python_bin}
+        """
+        is_win = sys.platform == "win32"
+        bin_dir = "Scripts" if is_win else "bin"
+        python_exe = "python.exe" if is_win else "python3"
+        python_bin = str(self.workenv_dir / bin_dir / python_exe)
+        return bin_dir, python_exe, python_bin
+
     def prepare_command(self, base_command: str, args: list[str] | None = None) -> str:
         """Prepare command with substitutions and arguments.
 
@@ -57,10 +71,17 @@ class BundleExecutor:
         command = self._substitute_slots(command)
         logger.debug(f"🔍 after slot substitution: {command}")
 
-        # Basic substitutions - only {workenv}, {package_name}, and {version} as per spec
+        # Basic substitutions - {workenv}, {package_name}, {version}, and platform helpers
         command = command.replace("{workenv}", str(self.workenv_dir))
         command = command.replace("{package_name}", self.package_name)
         command = command.replace("{version}", self.package_version)
+
+        # Platform-specific substitutions (runtime, no hardcoding needed in configs)
+        _bin_dir, _python_exe, _python_bin = self._platform_vars()
+
+        command = command.replace("{bin}", _bin_dir)
+        command = command.replace("{python}", _python_exe)
+        command = command.replace("{python_bin}", _python_bin)
         logger.debug(f"🔍 after basic substitutions: {command}")
 
         # Append user arguments
@@ -173,12 +194,16 @@ class BundleExecutor:
         }
 
         # Prepare execution-specific environment variables from metadata
+        _bin_dir, _python_exe, _python_bin = self._platform_vars()
         execution_env = {}
         if "env" in self.execution_config:
             for key, value in self.execution_config["env"].items():
                 value = str(value).replace("{workenv}", str(self.workenv_dir))
                 value = value.replace("{package_name}", self.package_name)
                 value = value.replace("{version}", self.package_version)
+                value = value.replace("{bin}", _bin_dir)
+                value = value.replace("{python}", _python_exe)
+                value = value.replace("{python_bin}", _python_bin)
                 execution_env[key] = value
 
         # Apply all environment layers with proper isolation
