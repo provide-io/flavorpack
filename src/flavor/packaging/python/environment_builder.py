@@ -116,42 +116,56 @@ class PythonEnvironmentBuilder:
         # Strategy 1: install to custom dir
         cmd_custom = [uv_cmd, "python", "install", self.python_version, "--install-dir", uv_install_dir]
         logger.debug("💻🚀📋 Running command", command=" ".join(cmd_custom))
-        result = run(cmd_custom, capture_output=True)
-        print(
-            f"[flavor-python] uv python install (custom-dir) exit={result.returncode} "
-            f"stderr={result.stderr.strip()!r:.120}",
-            flush=True,
-            file=sys.stdout,
-        )
+        try:
+            result = run(cmd_custom, capture_output=True)
+            print(
+                f"[flavor-python] uv python install (custom-dir) exit={result.returncode} "
+                f"stderr={result.stderr.strip()!r:.120}",
+                flush=True,
+                file=sys.stdout,
+            )
 
-        python_path = self._find_python_installation(uv_install_dir, uv_cmd)
-        if python_path:
-            return python_path
+            python_path = self._find_python_installation(uv_install_dir, uv_cmd)
+            if python_path:
+                return python_path
+        except Exception as e:
+            print(
+                f"[flavor-python] Strategy 1 failed: {e}",
+                flush=True,
+                file=sys.stdout,
+            )
 
         # Strategy 2: install to uv's default managed location, then find it
         logger.debug("💻🚀📋 Strategy 2: installing to default managed location")
-        cmd_default = [uv_cmd, "python", "install", self.python_version]
-        result2 = run(cmd_default, capture_output=True)
-        print(
-            f"[flavor-python] uv python install (default) exit={result2.returncode} "
-            f"stderr={result2.stderr.strip()!r:.120}",
-            flush=True,
-            file=sys.stdout,
-        )
+        try:
+            cmd_default = [uv_cmd, "python", "install", self.python_version]
+            result2 = run(cmd_default, capture_output=True)
+            print(
+                f"[flavor-python] uv python install (default) exit={result2.returncode} "
+                f"stderr={result2.stderr.strip()!r:.120}",
+                flush=True,
+                file=sys.stdout,
+            )
 
-        find_cmd = [uv_cmd, "python", "find", self.python_version, "--python-preference", "only-managed"]
-        result3 = run(find_cmd, capture_output=True)
-        python_bin_str = result3.stdout.strip()
-        print(
-            f"[flavor-python] uv python find exit={result3.returncode} path={python_bin_str!r:.200}",
-            flush=True,
-            file=sys.stdout,
-        )
+            find_cmd = [uv_cmd, "python", "find", self.python_version, "--python-preference", "only-managed"]
+            result3 = run(find_cmd, capture_output=True)
+            python_bin_str = result3.stdout.strip()
+            print(
+                f"[flavor-python] uv python find exit={result3.returncode} path={python_bin_str!r:.200}",
+                flush=True,
+                file=sys.stdout,
+            )
 
-        if result3.returncode == 0 and python_bin_str:
-            python_bin = Path(python_bin_str)
-            logger.info(f"Found Python via uv python find: {python_bin}")
-            return self._validate_python_installation(python_bin)
+            if result3.returncode == 0 and python_bin_str:
+                python_bin = Path(python_bin_str)
+                logger.info(f"Found Python via uv python find: {python_bin}")
+                return self._validate_python_installation(python_bin)
+        except Exception as e:
+            print(
+                f"[flavor-python] Strategy 2 failed: {e}",
+                flush=True,
+                file=sys.stdout,
+            )
 
         print(
             f"[flavor-python] Both strategies failed to locate Python {self.python_version}",
