@@ -438,12 +438,16 @@ jobs:
           bash .github/scripts/prewarm-wheel-cache.sh "$GITHUB_WORKSPACE/.flavor-wheel-cache"
         continue-on-error: true
 
-      - name: 🔨 Build Flavor PSP using itself (with retry)
-        uses: Wandalen/wretry.action@v3.5.0
-        with:
-          attempt_limit: 5
-          attempt_delay: 15000  # 15 seconds between retries
-          command: bash -c 'export PATH="$HOME/.local/bin:$PATH" && export PIP_RETRIES=10 && export PIP_TIMEOUT=120 && export PYTHONIOENCODING=utf-8 && export PYTHONUTF8=1 && export FLAVOR_LOG_LEVEL=trace && .github/scripts/build-flavor-self.sh "${{ matrix.platform }}" "${{ needs.setup.outputs.helper_version }}" "${{ steps.prepare.outputs.wheel }}" "${{ steps.prepare.outputs.launcher }}"'
+      - name: 🔨 Build Flavor PSP using itself
+        shell: bash
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          export PIP_RETRIES=10
+          export PIP_TIMEOUT=120
+          export PYTHONIOENCODING=utf-8
+          export PYTHONUTF8=1
+          export FLAVOR_LOG_LEVEL=trace
+          .github/scripts/build-flavor-self.sh "${{ matrix.platform }}" "${{ needs.setup.outputs.helper_version }}" "${{ steps.prepare.outputs.wheel }}" "${{ steps.prepare.outputs.launcher }}"
       
       - name: 📤 Upload Flavor package
         uses: actions/upload-artifact@v4
