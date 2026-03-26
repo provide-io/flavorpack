@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import sys
 from unittest.mock import Mock, patch
 
 import pytest
@@ -223,7 +224,7 @@ class TestRunExecuteCommand:
         manager._run_execute_command(cmd, workenv_dir, metadata, env)
 
         mock_run.assert_called_once()
-        assert mock_run.call_args[0][0][1] == str(workenv_dir)
+        assert mock_run.call_args[0][0][1].replace("\\", "/") == workenv_dir.as_posix()
         assert mock_run.call_args[0][0][2] == "1.0.0"
 
 
@@ -256,8 +257,8 @@ class TestRunEnumerateExecuteCommand:
 
         # Should execute for both files
         assert mock_run.call_count == 2
-        assert mock_run.call_args_list[0].args[0][-1] == str(file1)
-        assert mock_run.call_args_list[1].args[0][-1] == str(file2)
+        assert mock_run.call_args_list[0].args[0][-1].replace("\\", "/") == str(file1).replace("\\", "/")
+        assert mock_run.call_args_list[1].args[0][-1].replace("\\", "/") == str(file2).replace("\\", "/")
 
     @patch("flavor.psp.format_2025.workenv.run")
     def test_enumerate_execute_no_matches(self, mock_run: Mock, tmp_path: Path) -> None:
@@ -302,7 +303,7 @@ class TestRunEnumerateExecuteCommand:
         manager._run_enumerate_execute_command(cmd, workenv_dir, metadata, env)
 
         assert mock_run.call_count == 1
-        assert mock_run.call_args.args[0][-1] == str(file1)
+        assert mock_run.call_args.args[0][-1] == file1.as_posix()
 
     @patch("flavor.psp.format_2025.workenv.run")
     def test_enumerate_execute_command_failure(self, mock_run: Mock, tmp_path: Path) -> None:
@@ -334,6 +335,7 @@ class TestRunEnumerateExecuteCommand:
 class TestRunChmodCommand:
     """Test _run_chmod_command method."""
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="POSIX file permissions not enforced on Windows")
     def test_run_chmod_command_updates_permissions(self, tmp_path: Path) -> None:
         """Test chmod command applies the requested permissions."""
         mock_reader = Mock()
@@ -369,7 +371,7 @@ class TestSubstitutePlaceholders:
         result = manager._substitute_placeholders(text, workenv_dir, metadata)
 
         expected = f"Path: {workenv_dir}, Name: testpkg, Version: 1.0.0"
-        assert result == expected
+        assert result.replace("\\", "/") == expected.replace("\\", "/")
 
     def test_substitute_placeholders_partial(self, tmp_path: Path) -> None:
         """Test substitution with only some placeholders."""
@@ -397,7 +399,7 @@ class TestSubstitutePlaceholders:
             result = manager._substitute_placeholders("{workenv}/{bin}/tools", workenv_dir, metadata)
 
         assert "{bin}" not in result
-        assert str(workenv_dir / "bin" / "tools") == result
+        assert (workenv_dir / "bin" / "tools").as_posix() == result
 
     def test_substitute_placeholders_bin_windows(self, tmp_path: Path) -> None:
         """{bin} expands to 'Scripts' on Windows."""
@@ -411,7 +413,7 @@ class TestSubstitutePlaceholders:
             result = manager._substitute_placeholders("{workenv}/{bin}/tools", workenv_dir, metadata)
 
         assert "{bin}" not in result
-        assert str(workenv_dir) + "/Scripts/tools" == result
+        assert (str(workenv_dir) + "/Scripts/tools").replace("\\", "/") == result.replace("\\", "/")
 
     def test_substitute_placeholders_python_linux(self, tmp_path: Path) -> None:
         """{python} expands to 'python3' on Linux."""
@@ -452,7 +454,7 @@ class TestSubstitutePlaceholders:
 
         assert "{python_bin}" not in result
         expected_python = str(workenv_dir / "bin" / "python3")
-        assert result == f"{expected_python} -m app"
+        assert result.replace("\\", "/") == f"{expected_python} -m app".replace("\\", "/")
 
     def test_substitute_placeholders_python_bin_windows(self, tmp_path: Path) -> None:
         """{python_bin} expands to full python.exe path on Windows."""
@@ -467,7 +469,7 @@ class TestSubstitutePlaceholders:
 
         assert "{python_bin}" not in result
         expected_python = str(workenv_dir / "Scripts" / "python.exe")
-        assert result == f"{expected_python} -m app"
+        assert result.replace("\\", "/") == f"{expected_python} -m app".replace("\\", "/")
 
 
 class TestSubstituteSlotReferences:

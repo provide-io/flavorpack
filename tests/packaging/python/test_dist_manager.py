@@ -7,6 +7,7 @@
 
 import os
 from pathlib import Path
+import sys
 import tempfile
 from typing import Any
 from unittest.mock import Mock, patch
@@ -44,21 +45,24 @@ class TestPythonDistManager:
             venv_path = Path(temp_dir) / "test_venv"
             python_exe = Path("/usr/bin/python3")
 
-            # Mock UV create_venv to succeed
-            with patch.object(self.dist_manager.uv, "create_venv") as mock_uv_create:
-                # Mock the venv structure
-                venv_path.mkdir(parents=True)
-                venv_python = venv_path / "bin" / "python"
-                venv_python.parent.mkdir(parents=True)
-                venv_python.touch()
+            # Mock UV create_venv to succeed and create venv structure
+            if sys.platform == "win32":
+                expected_python = venv_path / "Scripts" / "python.exe"
+            else:
+                expected_python = venv_path / "bin" / "python"
 
+            def _mock_uv_create(path: Path, **kwargs: Any) -> None:
+                expected_python.parent.mkdir(parents=True, exist_ok=True)
+                expected_python.touch()
+
+            with patch.object(self.dist_manager.uv, "create_venv", side_effect=_mock_uv_create) as mock_uv_create:
                 result = self.dist_manager.create_python_environment(venv_path, python_exe)
 
                 # Verify UV was used
                 mock_uv_create.assert_called_once_with(venv_path, python_version="3.11")
 
                 # Verify result
-                assert result == venv_python
+                assert result == expected_python
                 assert result.exists()
 
     @patch("flavor.packaging.python.dist_manager.run")
@@ -76,10 +80,17 @@ class TestPythonDistManager:
             with patch.object(self.dist_manager.uv, "create_venv") as mock_uv_create:
                 mock_uv_create.side_effect = Exception("UV failed")
 
-                # Mock the venv structure
+                # Mock the venv structure using OS-appropriate layout
+                if sys.platform == "win32":
+                    expected_python_name = "python.exe"
+                    expected_python_subdir = "Scripts"
+                else:
+                    expected_python_name = "python"
+                    expected_python_subdir = "bin"
+
                 def mock_venv_creation(*args: Any, **kwargs: Any) -> Any:
                     venv_path.mkdir(parents=True)
-                    venv_python = venv_path / "bin" / "python"
+                    venv_python = venv_path / expected_python_subdir / expected_python_name
                     venv_python.parent.mkdir(parents=True)
                     venv_python.touch()
                     return mock_result
@@ -96,10 +107,10 @@ class TestPythonDistManager:
                 args = mock_run.call_args[0]
                 cmd = args[0]
                 assert cmd[0] == "/usr/bin/python3"
-                assert cmd[1:4] == ["-m", "venv", str(venv_path)]
+                assert cmd[1:4] == ["-m", "venv", venv_path.as_posix()]
 
                 # Verify result
-                assert result.name == "python"
+                assert result.name == expected_python_name
 
     def test_get_venv_python_path_unix(self) -> None:
         """Test getting venv Python path on Unix systems."""
@@ -146,11 +157,11 @@ class TestPythonDistManager:
             args, kwargs = mock_run.call_args
 
             cmd = args[0]
-            assert cmd[0] == str(venv_python)
+            assert cmd[0] == venv_python.as_posix()
             assert cmd[1:4] == ["-m", "pip", "install"]
             assert "--no-deps" in cmd
-            assert str(wheel_files[0]) in cmd
-            assert str(wheel_files[1]) in cmd
+            assert wheel_files[0].as_posix() in cmd
+            assert wheel_files[1].as_posix() in cmd
 
             # Verify error handling enabled
             assert kwargs["check"] is True
@@ -175,7 +186,10 @@ class TestPythonDistManager:
         with tempfile.TemporaryDirectory() as temp_dir:
             venv_path = Path(temp_dir) / "venv"
             venv_python = venv_path / "bin" / "python"
-            site_packages = venv_path / "lib" / "python3.11" / "site-packages"
+            if os.name == "nt":
+                site_packages = venv_path / "Lib" / "site-packages"
+            else:
+                site_packages = venv_path / "lib" / "python3.11" / "site-packages"
 
             # Create mock site-packages structure
             site_packages.mkdir(parents=True)
@@ -195,10 +209,10 @@ class TestPythonDistManager:
             mock_run.assert_called()
             args = mock_run.call_args[0]
             cmd = args[0]
-            assert cmd[0] == str(venv_python)
+            assert cmd[0] == venv_python.as_posix()
             assert cmd[1:3] == ["-m", "compileall"]
             assert "-b" in cmd
-            assert str(site_packages) in cmd
+            assert site_packages.as_posix() in cmd
 
             # Verify result
             assert result == site_packages
@@ -217,12 +231,12 @@ class TestPythonDistManager:
 
                 args = mock_run.call_args[0]
                 cmd = args[0]
-                assert cmd[0] == str(venv_python)
+                assert cmd[0] == venv_python.as_posix()
                 assert cmd[1:3] == ["-m", "compileall"]
                 assert "-b" in cmd
                 assert "-O2" in cmd
                 assert f"-j{os.cpu_count() or 1}" in cmd
-                assert str(site_packages) in cmd
+                assert site_packages.as_posix() in cmd
 
     def test_cleanup_site_packages(self) -> None:
         """Test site-packages cleanup."""

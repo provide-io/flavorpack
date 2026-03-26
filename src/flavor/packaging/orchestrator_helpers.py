@@ -262,7 +262,7 @@ def find_builder_executable(builder_bin: str | None) -> Path:
     if env_bin:
         path = Path(env_bin)
         if not path.exists():
-            raise BuildError(f"Builder binary not found: {path}")
+            raise BuildError(f"Builder binary not found: {path.as_posix()}")
         logger.info(f"Using builder from FLAVOR_BUILDER_BIN: {path}")
         return path
 
@@ -287,7 +287,7 @@ def find_builder_executable(builder_bin: str | None) -> Path:
                 "   • --builder-bin /path/to/builder   (command line)\n"
                 "   • FLAVOR_BUILDER_BIN=/path/to/builder (environment variable)\n"
                 "\n"
-                f"🔍 Searched locations: {manager.helpers_bin}, {manager.installed_helpers_bin}"
+                f"🔍 Searched locations: {manager.helpers_bin.as_posix()}, {manager.installed_helpers_bin.as_posix()}"
             ) from e
 
 
@@ -327,7 +327,7 @@ def find_launcher_executable(launcher_bin: str | None) -> Path:
                 "   • --launcher-bin /path/to/launcher (command line)\n"
                 "   • FLAVOR_LAUNCHER_BIN=/path/to/launcher (environment variable)\n"
                 "\n"
-                f"🔍 Searched locations: {manager.helpers_bin}, {manager.installed_helpers_bin}"
+                f"🔍 Searched locations: {manager.helpers_bin.as_posix()}, {manager.installed_helpers_bin.as_posix()}"
             ) from e
 
 

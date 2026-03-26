@@ -76,7 +76,7 @@ class PyPaPipManager:
         CRITICAL: Must use ACTUAL pip3 NOT uv pip - uv pip is incomplete/broken
         DO NOT CHANGE THIS TO uv pip - IT WILL BREAK DEPENDENCY RESOLUTION
         """
-        return [str(python_exe), "-m", "pip", "install", *packages]
+        return [python_exe.as_posix(), "-m", "pip", "install", *packages]
 
     def _get_pypapip_wheel_cmd(
         self, python_exe: Path, wheel_dir: Path, source: Path, no_deps: bool = False
@@ -87,12 +87,12 @@ class PyPaPipManager:
         CRITICAL: Must use ACTUAL pip3 NOT uv pip - uv pip is incomplete/broken
         DO NOT CHANGE THIS TO uv pip - IT WILL BREAK DEPENDENCY RESOLUTION
         """
-        cmd = [str(python_exe), "-m", "pip", "wheel", "--wheel-dir", str(wheel_dir)]
+        cmd = [python_exe.as_posix(), "-m", "pip", "wheel", "--wheel-dir", wheel_dir.as_posix()]
         if no_deps:
             cmd.append("--no-deps")
         # Note: pip wheel doesn't support --platform flag (that's for download only)
         # Wheels built locally will automatically use the current platform
-        cmd.append(str(source))
+        cmd.append(source.as_posix())
         return cmd
 
     # ⚠️ CRITICAL: This method handles manylinux platform tags - DO NOT REMOVE! ⚠️
@@ -119,7 +119,7 @@ class PyPaPipManager:
             binary_only: Whether to download only binary wheels
             platform_tag: Optional platform tag to use (e.g., "manylinux2014_x86_64")
         """
-        cmd = [str(python_exe), "-m", "pip", "download", "--dest", str(dest_dir)]
+        cmd = [python_exe.as_posix(), "-m", "pip", "download", "--dest", dest_dir.as_posix()]
         if binary_only:
             cmd.extend(["--only-binary", ":all:"])
 
@@ -156,7 +156,7 @@ class PyPaPipManager:
                 logger.warning("⚠️ grpcio on CentOS 7 ARM64 may have C++ ABI issues")
 
         if requirements_file:
-            cmd.extend(["-r", str(requirements_file)])
+            cmd.extend(["-r", requirements_file.as_posix()])
         if packages:
             cmd.extend(packages)
         return cmd

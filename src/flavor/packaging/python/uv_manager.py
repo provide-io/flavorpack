@@ -221,7 +221,7 @@ class UVManager(BaseToolManager):
         """
         uv_exe = self.get_uv_executable()
 
-        cmd = [str(uv_exe), "venv", str(venv_path)]
+        cmd = [uv_exe.as_posix(), "venv", venv_path.as_posix()]
 
         if python_version:
             cmd.extend(["--python", python_version])
@@ -247,10 +247,10 @@ class UVManager(BaseToolManager):
         """
         uv_exe = self.get_uv_executable()
 
-        cmd = [str(uv_exe), "pip", "install", "--python", str(venv_python)]
+        cmd = [uv_exe.as_posix(), "pip", "install", "--python", venv_python.as_posix()]
 
         if requirements_file:
-            cmd.extend(["-r", str(requirements_file)])
+            cmd.extend(["-r", requirements_file.as_posix()])
 
         if packages:
             cmd.extend(packages)
@@ -274,12 +274,12 @@ class UVManager(BaseToolManager):
         uv_exe = self.get_uv_executable()
 
         cmd = [
-            str(uv_exe),
+            uv_exe.as_posix(),
             "pip",
             "compile",
-            str(input_file),
+            input_file.as_posix(),
             "--output-file",
-            str(output_file),
+            output_file.as_posix(),
         ]
 
         # Include extras in resolution to properly handle packages like provide-foundation[all]
@@ -368,7 +368,7 @@ class UVManager(BaseToolManager):
             no_dev: Whether to exclude dev dependencies (default True)
         """
         uv_exe = self.get_uv_executable()
-        cmd = [str(uv_exe), "export", "--frozen", "--no-hashes", "--output-file", str(output_file)]
+        cmd = [uv_exe.as_posix(), "export", "--frozen", "--no-hashes", "--output-file", output_file.as_posix()]
         if no_dev:
             cmd.append("--no-dev")
         # --no-hashes: hash annotations in requirements.txt cause uv pip download to
@@ -496,15 +496,15 @@ class UVManager(BaseToolManager):
             # Install with isolated cache so we can find exactly which wheels
             # UV downloaded.  UV caches .whl files under cache/wheels/**/*.whl.
             cmd = [
-                str(uv_exe),
+                uv_exe.as_posix(),
                 "pip",
                 "install",
                 "--cache-dir",
-                str(uv_cache),
+                uv_cache.as_posix(),
                 "--target",
-                str(install_target),
+                install_target.as_posix(),
                 "-r",
-                str(requirements_file),
+                requirements_file.as_posix(),
             ]
             logger.warning(f"💻 UV pip install (network fallback): {' '.join(cmd)}")
             result = run(cmd, check=False, capture_output=True)

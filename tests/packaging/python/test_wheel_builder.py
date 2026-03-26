@@ -61,9 +61,9 @@ class TestWheelBuilder:
             assert cmd[0] == "/usr/bin/python3"
             assert cmd[1:4] == ["-m", "pip", "wheel"]
             assert "--wheel-dir" in cmd
-            assert str(wheel_dir) in cmd
+            assert wheel_dir.as_posix() in cmd
             assert "--no-deps" in cmd
-            assert str(source_path) in cmd
+            assert source_path.as_posix() in cmd
 
             # Verify result
             assert result.name == "mypackage-1.0.0-py3-none-any.whl"
