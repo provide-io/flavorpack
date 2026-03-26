@@ -432,10 +432,10 @@ class UVManager(BaseToolManager):
         """
         Download wheels via UV's HTTP client using install+cache collection.
 
-        `uv pip download` was added in uv 0.11+; older runners (0.10.x on GHA)
-        only have `uv pip install`.  Strategy: install into an isolated --target
-        dir with a private --cache-dir, then collect the .whl files that UV
-        wrote into its wheel cache during the install.
+        Note: `uv pip download` does not exist as a UV subcommand.
+        Strategy: install into an isolated --target dir with a private
+        --cache-dir, then collect the .whl files that UV wrote into its
+        wheel cache during the install.
 
         This works where pip fails because UV uses its own Rust HTTP client
         (reqwest) which succeeds on Windows GHA where Python urllib3 gets
