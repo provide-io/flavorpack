@@ -17,6 +17,8 @@ from provide.foundation.platform import get_arch_name, get_os_name
 from provide.foundation.process import run
 from provide.foundation.resilience.types import BackoffStrategy
 
+from flavor.packaging.python.uv_manager import _windows_system_env
+
 
 class PyPaPipManager:
     """
@@ -196,7 +198,7 @@ class PyPaPipManager:
         )
 
         logger.debug("💻 Downloading requirements", command=" ".join(download_cmd))
-        result = run(download_cmd, check=False, capture_output=True)
+        result = run(download_cmd, check=False, capture_output=True, env=_windows_system_env() or None)
 
         if result.returncode != 0:
             error_msg = f"Failed to download required wheels: {result.stderr}"
@@ -240,7 +242,7 @@ class PyPaPipManager:
         )
 
         logger.debug("💻 Downloading packages", command=" ".join(download_cmd))
-        result = run(download_cmd, check=False, capture_output=True)
+        result = run(download_cmd, check=False, capture_output=True, env=_windows_system_env() or None)
 
         if result.returncode != 0:
             error_msg = f"Failed to download required packages: {result.stderr}"
@@ -269,7 +271,7 @@ class PyPaPipManager:
         )
 
         logger.debug("💻 Building wheel", command=" ".join(wheel_cmd))
-        result = run(wheel_cmd, check=True, capture_output=True)
+        result = run(wheel_cmd, check=True, capture_output=True, env=_windows_system_env() or None)
 
         if result.stdout:
             # Look for the wheel filename in output
@@ -295,7 +297,7 @@ class PyPaPipManager:
         install_cmd = self._get_pypapip_install_cmd(python_exe, packages)
 
         logger.debug("💻 Installing packages", command=" ".join(install_cmd))
-        run(install_cmd, check=True, capture_output=True)
+        run(install_cmd, check=True, capture_output=True, env=_windows_system_env() or None)
 
         logger.info("✅ Successfully installed packages")
 
