@@ -225,6 +225,7 @@ jobs:
           - `flavorpack-${{ needs.prepare.outputs.version }}-py3-none-macosx_10_9_x86_64.whl` - macOS Intel
           - `flavorpack-${{ needs.prepare.outputs.version }}-py3-none-macosx_11_0_arm64.whl` - macOS Apple Silicon
           - `flavorpack-${{ needs.prepare.outputs.version }}-py3-none-win_amd64.whl` - Windows x86_64
+          - `flavorpack-${{ needs.prepare.outputs.version }}-py3-none-win_arm64.whl` - Windows ARM64
           
           ### Self-Contained PSP Packages
           Ready-to-run executables (no Python required):
@@ -233,6 +234,7 @@ jobs:
           - `flavor-${{ needs.prepare.outputs.version }}-darwin_amd64.psp` - macOS Intel
           - `flavor-${{ needs.prepare.outputs.version }}-darwin_arm64.psp` - macOS Apple Silicon
           - `flavor-${{ needs.prepare.outputs.version }}-windows_amd64.psp` - Windows x86_64
+          - `flavor-${{ needs.prepare.outputs.version }}-windows_arm64.psp` - Windows ARM64
           
           ### Test Packages
           - `taster-${{ needs.prepare.outputs.version }}-*.psp` - Comprehensive test suite
