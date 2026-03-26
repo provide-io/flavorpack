@@ -443,10 +443,11 @@ class TestCreatePythonBuilderMetadata:
             build_config={},
         )
 
-        assert metadata["execution"]["command"] == "{workenv}/Scripts/testpkg.exe"
-        # Check that UV command uses uv.exe
+        assert metadata["execution"]["command"] == "{workenv}/python.exe -m testpkg"
+        # On Windows, setup uses python.exe -m pip (not uv.exe) because uv trampolines
+        # embed stale paths after the workenv is moved to its final location.
         uv_command = metadata["setup_commands"][0]["command"]
-        assert "uv.exe" in uv_command
+        assert "python.exe -m pip install" in uv_command
 
     @patch("flavor.packaging.orchestrator_helpers.is_windows", return_value=False)
     def test_create_python_builder_metadata_with_cli_scripts(self, mock_is_windows: Path) -> None:

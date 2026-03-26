@@ -71,6 +71,13 @@ class PSPFReader:
         """Context manager exit."""
         self.close()
 
+    def __del__(self) -> None:
+        """Ensure backend is closed when object is garbage collected (important on Windows)."""
+        try:
+            self.close()
+        except Exception:
+            pass
+
     def open(self) -> None:
         """Open the bundle with appropriate backend."""
         if self._backend is None:

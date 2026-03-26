@@ -92,11 +92,17 @@ class MMapBackend(Backend):
         self.file = path.open("rb")
 
         # Create read-only memory map
-        self.mmap = mmap.mmap(
-            self.file.fileno(),
-            0,  # Map entire file
-            access=mmap.ACCESS_READ,
-        )
+        try:
+            self.mmap = mmap.mmap(
+                self.file.fileno(),
+                0,  # Map entire file
+                access=mmap.ACCESS_READ,
+            )
+        except (ValueError, OSError):
+            # Close file handle before re-raising to avoid Windows file-lock leaks
+            self.file.close()
+            self.file = None
+            raise
 
         # Platform-specific optimizations
         if hasattr(mmap, "MADV_SEQUENTIAL"):

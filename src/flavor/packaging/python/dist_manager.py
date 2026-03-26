@@ -113,7 +113,7 @@ class PythonDistManager:
 
         # Fallback to standard venv module
         logger.debug("Using standard venv module")
-        venv_cmd = [str(python_exe), "-m", "venv", str(venv_path)]
+        venv_cmd = [python_exe.as_posix(), "-m", "venv", venv_path.as_posix()]
 
         if copy_python:
             venv_cmd.append("--copies")
@@ -158,7 +158,7 @@ class PythonDistManager:
             return
 
         # Build install command
-        wheel_paths = [str(wheel) for wheel in wheel_files]
+        wheel_paths = [wheel.as_posix() for wheel in wheel_files]
         install_cmd = self.pypapip._get_pypapip_install_cmd(venv_python, wheel_paths)
 
         if force_reinstall:
@@ -211,12 +211,12 @@ class PythonDistManager:
         logger.debug(f"Compiling Python files with optimization level {optimization_level}")
 
         compile_cmd = [
-            str(venv_python),
+            venv_python.as_posix(),
             "-m",
             "compileall",
             "-b",  # Write bytecode files
             f"-j{os.cpu_count() or 1}",  # Use multiple processes
-            str(site_packages),
+            site_packages.as_posix(),
         ]
 
         if optimization_level > 0:
