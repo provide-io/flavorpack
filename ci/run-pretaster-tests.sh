@@ -254,22 +254,16 @@ if [[ "$PLATFORM" == *"windows"* ]]; then
   IS_WINDOWS=true
 fi
 
-# Pass HELPERS_DIR to make if helpers/bin/ exists (CI downloads helpers there)
-MAKE_HELPERS=""
-if [ -d "../../helpers/bin" ]; then
-  MAKE_HELPERS="HELPERS_DIR=../../helpers"
-fi
-
 case "$TEST_SUITE" in
   all)
     if [[ "$IS_WINDOWS" == "true" ]]; then
       echo "🚀 Running COMBO-ONLY tests on Windows (Rust not supported in core tests)..."
       echo "════════════════════════════════════════════════════════════════"
-      ${MAKE_CMD} ${MAKE_SHELL:+SHELL="$MAKE_SHELL"} ${MAKE_HELPERS} test-combo
+      make test-combo
     else
       echo "🚀 Running ALL test suites via Make..."
       echo "════════════════════════════════════════════════════════════════"
-      ${MAKE_CMD} ${MAKE_SHELL:+SHELL="$MAKE_SHELL"} ${MAKE_HELPERS} test
+      make test
     fi
     EXIT_CODE=$?
     ;;
@@ -283,11 +277,11 @@ case "$TEST_SUITE" in
     if [[ "$IS_WINDOWS" == "true" ]]; then
       echo "⚠️ Skipping CORE tests on Windows (Rust not supported) — running COMBO instead..."
       echo "════════════════════════════════════════════════════════════════"
-      ${MAKE_CMD} ${MAKE_SHELL:+SHELL="$MAKE_SHELL"} ${MAKE_HELPERS} test-combo
+      make test-combo
     else
       echo "🚀 Running CORE tests via Make..."
       echo "════════════════════════════════════════════════════════════════"
-      ${MAKE_CMD} ${MAKE_SHELL:+SHELL="$MAKE_SHELL"} ${MAKE_HELPERS} test-core
+      make test-core
     fi
     EXIT_CODE=$?
     ;;
