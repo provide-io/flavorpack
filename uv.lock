@@ -2,9 +2,12 @@ version = 1
 revision = 3
 requires-python = ">=3.11"
 resolution-markers = [
-    "python_full_version >= '3.14'",
-    "python_full_version == '3.13.*'",
-    "python_full_version < '3.13'",
+    "(python_full_version >= '3.14' and platform_machine != 'ARM64') or (python_full_version >= '3.14' and sys_platform != 'win32')",
+    "python_full_version >= '3.14' and platform_machine == 'ARM64' and sys_platform == 'win32'",
+    "(python_full_version == '3.13.*' and platform_machine != 'ARM64') or (python_full_version == '3.13.*' and sys_platform != 'win32')",
+    "python_full_version == '3.13.*' and platform_machine == 'ARM64' and sys_platform == 'win32'",
+    "(python_full_version < '3.13' and platform_machine != 'ARM64') or (python_full_version < '3.13' and sys_platform != 'win32')",
+    "python_full_version < '3.13' and platform_machine == 'ARM64' and sys_platform == 'win32'",
 ]
 
 [manifest]
@@ -773,7 +776,9 @@ name = "flavorpack"
 source = { editable = "." }
 dependencies = [
     { name = "pip" },
-    { name = "provide-foundation", extra = ["all"] },
+    { name = "provide-foundation" },
+    { name = "provide-foundation", extra = ["all"], marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "provide-foundation", extra = ["cli", "compression", "crypto", "extended", "transport"], marker = "platform_machine == 'ARM64' and sys_platform == 'win32'" },
     { name = "setuptools" },
     { name = "uv" },
 ]
@@ -791,7 +796,8 @@ docs = [
 [package.metadata]
 requires-dist = [
     { name = "pip", specifier = ">=25.2" },
-    { name = "provide-foundation", extras = ["all"], specifier = ">=0.3.21" },
+    { name = "provide-foundation", extras = ["all"], marker = "platform_machine != 'ARM64' or sys_platform != 'win32'", specifier = ">=0.3.21" },
+    { name = "provide-foundation", extras = ["cli", "compression", "crypto", "extended", "transport"], marker = "platform_machine == 'ARM64' and sys_platform == 'win32'", specifier = ">=0.3.21" },
     { name = "setuptools", specifier = ">=68.0.0" },
     { name = "uv", specifier = ">=0.9.6" },
 ]
@@ -859,7 +865,7 @@ name = "googleapis-common-protos"
 version = "1.73.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "protobuf" },
+    { name = "protobuf", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/99/96/a0205167fa0154f4a542fd6925bdc63d039d88dab3588b875078107e6f06/googleapis_common_protos-1.73.0.tar.gz", hash = "sha256:778d07cd4fbeff84c6f7c72102f0daf98fa2bfd3fa8bea426edc545588da0b5a", size = 147323, upload-time = "2026-03-06T21:53:09.727Z" }
 wheels = [
@@ -1218,7 +1224,7 @@ name = "importlib-metadata"
 version = "8.7.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "zipp" },
+    { name = "zipp", marker = "python_full_version < '3.13' or platform_machine != 'ARM64' or sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/f3/49/3b30cad09e7771a4982d9975a8cbf64f00d4a1ececb53297f1d9a7be1b10/importlib_metadata-8.7.1.tar.gz", hash = "sha256:49fef1ae6440c182052f407c8d34a68f72efc36db9ca90dc0113398f2fdde8bb", size = 57107, upload-time = "2025-12-21T10:00:19.278Z" }
 wheels = [
@@ -2329,8 +2335,8 @@ name = "opentelemetry-api"
 version = "1.40.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "importlib-metadata" },
-    { name = "typing-extensions" },
+    { name = "importlib-metadata", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "typing-extensions", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/2c/1d/4049a9e8698361cc1a1aa03a6c59e4fa4c71e0c0f94a30f988a6876a2ae6/opentelemetry_api-1.40.0.tar.gz", hash = "sha256:159be641c0b04d11e9ecd576906462773eb97ae1b657730f0ecf64d32071569f", size = 70851, upload-time = "2026-03-04T14:17:21.555Z" }
 wheels = [
@@ -2342,7 +2348,7 @@ name = "opentelemetry-exporter-otlp-proto-common"
 version = "1.40.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "opentelemetry-proto" },
+    { name = "opentelemetry-proto", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/51/bc/1559d46557fe6eca0b46c88d4c2676285f1f3be2e8d06bb5d15fbffc814a/opentelemetry_exporter_otlp_proto_common-1.40.0.tar.gz", hash = "sha256:1cbee86a4064790b362a86601ee7934f368b81cd4cc2f2e163902a6e7818a0fa", size = 20416, upload-time = "2026-03-04T14:17:23.801Z" }
 wheels = [
@@ -2354,13 +2360,13 @@ name = "opentelemetry-exporter-otlp-proto-grpc"
 version = "1.40.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "googleapis-common-protos" },
-    { name = "grpcio" },
-    { name = "opentelemetry-api" },
-    { name = "opentelemetry-exporter-otlp-proto-common" },
-    { name = "opentelemetry-proto" },
-    { name = "opentelemetry-sdk" },
-    { name = "typing-extensions" },
+    { name = "googleapis-common-protos", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "grpcio", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "opentelemetry-api", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "opentelemetry-exporter-otlp-proto-common", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "opentelemetry-proto", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "opentelemetry-sdk", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "typing-extensions", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/8f/7f/b9e60435cfcc7590fa87436edad6822240dddbc184643a2a005301cc31f4/opentelemetry_exporter_otlp_proto_grpc-1.40.0.tar.gz", hash = "sha256:bd4015183e40b635b3dab8da528b27161ba83bf4ef545776b196f0fb4ec47740", size = 25759, upload-time = "2026-03-04T14:17:24.4Z" }
 wheels = [
@@ -2372,13 +2378,13 @@ name = "opentelemetry-exporter-otlp-proto-http"
 version = "1.40.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "googleapis-common-protos" },
-    { name = "opentelemetry-api" },
-    { name = "opentelemetry-exporter-otlp-proto-common" },
-    { name = "opentelemetry-proto" },
-    { name = "opentelemetry-sdk" },
-    { name = "requests" },
-    { name = "typing-extensions" },
+    { name = "googleapis-common-protos", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "opentelemetry-api", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "opentelemetry-exporter-otlp-proto-common", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "opentelemetry-proto", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "opentelemetry-sdk", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "requests", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "typing-extensions", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/2e/fa/73d50e2c15c56be4d000c98e24221d494674b0cc95524e2a8cb3856d95a4/opentelemetry_exporter_otlp_proto_http-1.40.0.tar.gz", hash = "sha256:db48f5e0f33217588bbc00274a31517ba830da576e59503507c839b38fa0869c", size = 17772, upload-time = "2026-03-04T14:17:25.324Z" }
 wheels = [
@@ -2390,7 +2396,7 @@ name = "opentelemetry-proto"
 version = "1.40.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "protobuf" },
+    { name = "protobuf", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/4c/77/dd38991db037fdfce45849491cb61de5ab000f49824a00230afb112a4392/opentelemetry_proto-1.40.0.tar.gz", hash = "sha256:03f639ca129ba513f5819810f5b1f42bcb371391405d99c168fe6937c62febcd", size = 45667, upload-time = "2026-03-04T14:17:31.194Z" }
 wheels = [
@@ -2402,9 +2408,9 @@ name = "opentelemetry-sdk"
 version = "1.40.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "opentelemetry-api" },
-    { name = "opentelemetry-semantic-conventions" },
-    { name = "typing-extensions" },
+    { name = "opentelemetry-api", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "opentelemetry-semantic-conventions", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "typing-extensions", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/58/fd/3c3125b20ba18ce2155ba9ea74acb0ae5d25f8cd39cfd37455601b7955cc/opentelemetry_sdk-1.40.0.tar.gz", hash = "sha256:18e9f5ec20d859d268c7cb3c5198c8d105d073714db3de50b593b8c1345a48f2", size = 184252, upload-time = "2026-03-04T14:17:31.87Z" }
 wheels = [
@@ -2416,8 +2422,8 @@ name = "opentelemetry-semantic-conventions"
 version = "0.61b0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "opentelemetry-api" },
-    { name = "typing-extensions" },
+    { name = "opentelemetry-api", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "typing-extensions", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/6d/c0/4ae7973f3c2cfd2b6e321f1675626f0dab0a97027cc7a297474c9c8f3d04/opentelemetry_semantic_conventions-0.61b0.tar.gz", hash = "sha256:072f65473c5d7c6dc0355b27d6c9d1a679d63b6d4b4b16a9773062cb7e31192a", size = 145755, upload-time = "2026-03-04T14:17:32.664Z" }
 wheels = [
@@ -2637,17 +2643,34 @@ wheels = [
 
 [package.optional-dependencies]
 all = [
-    { name = "click" },
-    { name = "cryptography" },
-    { name = "httpx" },
-    { name = "opentelemetry-api" },
-    { name = "opentelemetry-exporter-otlp-proto-grpc" },
-    { name = "opentelemetry-exporter-otlp-proto-http" },
-    { name = "opentelemetry-sdk" },
-    { name = "psutil" },
-    { name = "py-cpuinfo" },
-    { name = "setproctitle" },
-    { name = "zstandard" },
+    { name = "click", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "cryptography", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "httpx", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "opentelemetry-api", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "opentelemetry-exporter-otlp-proto-grpc", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "opentelemetry-exporter-otlp-proto-http", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "opentelemetry-sdk", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "psutil", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "py-cpuinfo", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "setproctitle", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "zstandard", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+]
+cli = [
+    { name = "click", marker = "platform_machine == 'ARM64' and sys_platform == 'win32'" },
+]
+compression = [
+    { name = "zstandard", marker = "platform_machine == 'ARM64' and sys_platform == 'win32'" },
+]
+crypto = [
+    { name = "cryptography", marker = "platform_machine == 'ARM64' and sys_platform == 'win32'" },
+]
+extended = [
+    { name = "psutil", marker = "platform_machine == 'ARM64' and sys_platform == 'win32'" },
+    { name = "py-cpuinfo", marker = "platform_machine == 'ARM64' and sys_platform == 'win32'" },
+    { name = "setproctitle", marker = "platform_machine == 'ARM64' and sys_platform == 'win32'" },
+]
+transport = [
+    { name = "httpx", marker = "platform_machine == 'ARM64' and sys_platform == 'win32'" },
 ]
 
 [[package]]
@@ -3658,8 +3681,8 @@ name = "secretstorage"
 version = "3.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cryptography" },
-    { name = "jeepney" },
+    { name = "cryptography", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "jeepney", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/1c/03/e834bcd866f2f8a49a85eaff47340affa3bfa391ee9912a952a1faa68c7b/secretstorage-3.5.0.tar.gz", hash = "sha256:f04b8e4689cbce351744d5537bf6b1329c6fc68f91fa666f60a380edddcd11be", size = 19884, upload-time = "2025-11-23T19:02:53.191Z" }
 wheels = [

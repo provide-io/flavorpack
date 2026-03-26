@@ -28,7 +28,12 @@ classifiers = [
     "Topic :: System :: Archiving :: Packaging",
 ]
 dependencies = [
-    "provide-foundation[all]>=0.3.21",
+    # grpcio has no win_arm64 binary wheel; building from source requires
+    # C++/CMake/gRPC and hangs CI. Use all extras minus opentelemetry on
+    # windows_arm64 — grpcio is only used for OTLP gRPC telemetry export in
+    # provide.foundation, and all imports are wrapped in lazy try/except.
+    "provide-foundation[all]>=0.3.21; sys_platform != 'win32' or platform_machine != 'ARM64'",
+    "provide-foundation[cli,compression,crypto,transport,extended]>=0.3.21; sys_platform == 'win32' and platform_machine == 'ARM64'",
     "pip>=25.2",
     "uv>=0.9.6",
     "setuptools>=68.0.0",  # Required for building wheels at runtime
