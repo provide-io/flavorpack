@@ -423,37 +423,58 @@ class UVManager(BaseToolManager):
 
     def download_wheels_offline(self, requirements_file: Path, dest_dir: Path) -> bool:
         """
-        Attempt to download wheels from UV's local cache without network access.
+        Attempt to download wheels from a pre-warmed local wheel cache (no network).
 
-        Uses `uv pip download --offline` which only reads from UV's wheel cache.
-        If a previous `uv tool install` or `uv sync` has run, the packages should
-        already be cached, making this a zero-network operation.
+        Checks the FLAVOR_WHEEL_CACHE environment variable for a directory containing
+        pre-downloaded .whl files (populated by the CI pre-warm step or equivalent).
+        Uses `pip download --no-index --find-links` to copy matching wheels from that
+        local directory into dest_dir without any network access.
+
+        Note: `uv pip download` does not exist as a UV subcommand. This function
+        uses standard pip with --no-index to ensure zero network activity.
 
         Args:
             requirements_file: Path to requirements.txt file
             dest_dir: Directory to download wheels to
 
         Returns:
-            True if all wheels were downloaded from cache, False otherwise
+            True if all wheels were found in local cache, False otherwise
         """
-        uv_exe = self.get_uv_executable()
+        import os
+        import sys
+
+        wheel_cache_dir = os.environ.get("FLAVOR_WHEEL_CACHE")
+        if not wheel_cache_dir:
+            logger.debug("💻 FLAVOR_WHEEL_CACHE not set, skipping offline wheel strategy")
+            return False
+
+        cache_path = Path(wheel_cache_dir)
+        if not cache_path.exists():
+            logger.debug(f"💻 FLAVOR_WHEEL_CACHE dir does not exist: {cache_path}")
+            return False
+
+        python_exe = Path(sys.executable)
         cmd = [
-            str(uv_exe),
+            str(python_exe),
+            "-m",
             "pip",
             "download",
-            "--offline",
+            "--no-index",
+            "--find-links",
+            str(cache_path),
             "--dest",
             str(dest_dir),
             "-r",
             str(requirements_file),
+            "--quiet",
         ]
-        logger.debug("💻 Attempting offline wheel download from UV cache", command=" ".join(cmd))
+        logger.debug(f"💻 Offline wheel copy from FLAVOR_WHEEL_CACHE: {cache_path}")
         result = run(cmd, check=False, capture_output=True)
         if result.returncode == 0:
-            logger.info("✅ Downloaded all wheels from UV cache (offline)")
+            logger.info("✅ Copied wheels from FLAVOR_WHEEL_CACHE (offline)")
             return True
         if logger.is_debug_enabled():
-            logger.debug(f"Offline download failed (rc={result.returncode}): {result.stderr.strip()[:200]}")
+            logger.debug(f"FLAVOR_WHEEL_CACHE copy failed (rc={result.returncode}): {result.stderr.strip()[:200]}")
         return False
 
     def download_wheels_network(self, requirements_file: Path, dest_dir: Path) -> bool:
