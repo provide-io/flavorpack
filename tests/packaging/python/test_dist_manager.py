@@ -55,9 +55,7 @@ class TestPythonDistManager:
                 expected_python.parent.mkdir(parents=True, exist_ok=True)
                 expected_python.touch()
 
-            with patch.object(
-                self.dist_manager.uv, "create_venv", side_effect=_mock_uv_create
-            ) as mock_uv_create:
+            with patch.object(self.dist_manager.uv, "create_venv", side_effect=_mock_uv_create) as mock_uv_create:
                 result = self.dist_manager.create_python_environment(venv_path, python_exe)
 
                 # Verify UV was used

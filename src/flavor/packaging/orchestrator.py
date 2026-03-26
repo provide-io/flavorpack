@@ -350,12 +350,16 @@ class PackagingOrchestrator:
             launcher_executable.as_posix(),
         ]
 
-        if self.key_seed:
-            build_cmd_args.extend(["--key-seed", self.key_seed])
-        elif self.package_integrity_key_path:
-            build_cmd_args.extend(["--private-key", self.package_integrity_key_path])
-            if self.public_key_path:
-                build_cmd_args.extend(["--public-key", self.public_key_path])
+            # Build command
+            build_cmd_args = [
+                packager_executable.as_posix(),
+                "--manifest",
+                manifest_path.as_posix(),
+                "--output",
+                self.output_flavor_path,
+                "--launcher-bin",
+                launcher_executable.as_posix(),
+            ]
 
         logger.info("Building package...")
         run(build_cmd_args, check=True, capture_output=True, cwd=self.manifest_dir)

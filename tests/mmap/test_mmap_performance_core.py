@@ -37,8 +37,10 @@ def _safe_unlink(path: Path) -> None:
     except PermissionError:
         if sys.platform == "win32":
             gc.collect()
-            with contextlib.suppress(PermissionError):
+            try:
                 path.unlink(missing_ok=True)
+            except PermissionError:
+                pass  # Best-effort; temp file will be cleaned on next run
         else:
             raise
 
