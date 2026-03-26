@@ -361,9 +361,6 @@ jobs:
           - platform: windows_arm64
             runner: windows-11-arm
             python_platform: win_arm64
-            # Python on Windows ARM runs as x64 (amd64 emulation); native Python
-            # ARM64 wheels are rare. Use x64 Python so uv resolves amd64 packages.
-            python_arch: x64
 
     continue-on-error: ${{ matrix.continue_on_error == true }}
     steps:
@@ -394,25 +391,11 @@ jobs:
           .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "${{ matrix.platform }}"
           ls -la helpers/bin/
       
-      - name: 🐍 Setup Python x64 (Windows ARM — Python runs as amd64)
-        if: ${{ matrix.python_arch == 'x64' }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          architecture: x64
-
       - name: 📦 Install Flavor from wheel
         shell: bash
         run: |
           export PATH="$HOME/.local/bin:$PATH"
-          # On windows_arm64 (python_arch=x64), pass the x64 Python so uv
-          # resolves amd64 packages. Other platforms pass no explicit Python.
-          PYTHON_EXE=""
-          if [ -n "${{ matrix.python_arch }}" ]; then
-            PYTHON_EXE=$(python3 -c "import sys; print(sys.executable)" 2>/dev/null \
-                         || python -c "import sys; print(sys.executable)")
-          fi
-          bash .github/scripts/install-flavor-wheel.sh wheel-dist "${PYTHON_EXE}"
+          bash .github/scripts/install-flavor-wheel.sh wheel-dist "${{ matrix.platform }}"
       
       - name: 🔧 Prepare Flavor build
         id: prepare
