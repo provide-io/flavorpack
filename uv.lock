@@ -778,7 +778,7 @@ dependencies = [
     { name = "pip" },
     { name = "provide-foundation" },
     { name = "provide-foundation", extra = ["all"], marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
-    { name = "provide-foundation", extra = ["cli", "compression", "crypto", "extended", "transport"], marker = "platform_machine == 'ARM64' and sys_platform == 'win32'" },
+    { name = "provide-foundation", extra = ["cli", "compression", "crypto", "platform", "transport"], marker = "platform_machine == 'ARM64' and sys_platform == 'win32'" },
     { name = "setuptools" },
     { name = "uv" },
 ]
@@ -797,7 +797,7 @@ docs = [
 requires-dist = [
     { name = "pip", specifier = ">=25.2" },
     { name = "provide-foundation", extras = ["all"], marker = "platform_machine != 'ARM64' or sys_platform != 'win32'", specifier = ">=0.3.21" },
-    { name = "provide-foundation", extras = ["cli", "compression", "crypto", "extended", "transport"], marker = "platform_machine == 'ARM64' and sys_platform == 'win32'", specifier = ">=0.3.21" },
+    { name = "provide-foundation", extras = ["cli", "compression", "crypto", "platform", "transport"], marker = "platform_machine == 'ARM64' and sys_platform == 'win32'", specifier = ">=0.3.21" },
     { name = "setuptools", specifier = ">=68.0.0" },
     { name = "uv", specifier = ">=0.9.6" },
 ]
@@ -2664,10 +2664,9 @@ compression = [
 crypto = [
     { name = "cryptography", marker = "platform_machine == 'ARM64' and sys_platform == 'win32'" },
 ]
-extended = [
+platform = [
     { name = "psutil", marker = "platform_machine == 'ARM64' and sys_platform == 'win32'" },
     { name = "py-cpuinfo", marker = "platform_machine == 'ARM64' and sys_platform == 'win32'" },
-    { name = "setproctitle", marker = "platform_machine == 'ARM64' and sys_platform == 'win32'" },
 ]
 transport = [
     { name = "httpx", marker = "platform_machine == 'ARM64' and sys_platform == 'win32'" },
