@@ -500,23 +500,7 @@ jobs:
         shell: bash
         run: |
           export PATH="$HOME/.local/bin:$PATH"
-          # flavor pack spawns subprocesses (pip/uv) that cannot reach PyPI on Windows
-          # runners (getaddrinfo fails in subprocess context). This step runs in the
-          # workflow context where network works, so we download all required wheels now.
-          # download_wheels_offline() reads from FLAVOR_WHEEL_CACHE using pip --no-index.
-          WHEEL_CACHE_DIR="$GITHUB_WORKSPACE/.flavor-wheel-cache"
-          mkdir -p "$WHEEL_CACHE_DIR"
-          # Export pinned requirements (no hashes, no dev deps) from lockfile
-          uv export --frozen --no-dev --no-hashes \
-            --output-file "$WHEEL_CACHE_DIR/requirements.txt" || true
-          # Download actual .whl files using pip (which has network here)
-          if [ -f "$WHEEL_CACHE_DIR/requirements.txt" ]; then
-            pip download \
-              -r "$WHEEL_CACHE_DIR/requirements.txt" \
-              --dest "$WHEEL_CACHE_DIR" \
-              --quiet || true
-          fi
-          echo "FLAVOR_WHEEL_CACHE=$WHEEL_CACHE_DIR" >> "$GITHUB_ENV"
+          bash .github/scripts/prewarm-wheel-cache.sh "$GITHUB_WORKSPACE/.flavor-wheel-cache"
         continue-on-error: true
 
       - name: 🔨 Build Flavor PSP using itself (with retry)
