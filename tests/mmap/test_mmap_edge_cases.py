@@ -5,7 +5,6 @@
 
 """Test mmap edge cases and corner scenarios."""
 
-import contextlib
 import gc
 import hashlib
 import os
@@ -34,8 +33,10 @@ def _safe_unlink(path: Path) -> None:
             # On Windows, mmap may still hold a lock briefly after close.
             # Force a second GC pass and try again.
             gc.collect()
-            with contextlib.suppress(PermissionError):
+            try:
                 path.unlink(missing_ok=True)
+            except PermissionError:
+                pass  # Best-effort; temp file will be cleaned on next run
         else:
             raise
 
