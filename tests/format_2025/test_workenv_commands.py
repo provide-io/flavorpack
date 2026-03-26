@@ -385,6 +385,90 @@ class TestSubstitutePlaceholders:
 
         assert result == "Version: 1.0.0"
 
+    def test_substitute_placeholders_bin_linux(self, tmp_path: Path) -> None:
+        """{bin} expands to 'bin' on Linux."""
+        mock_reader = Mock()
+        manager = WorkEnvManager(mock_reader)
+
+        workenv_dir = tmp_path / "workenv"
+        metadata = {"package": {"name": "testpkg", "version": "1.0.0"}}
+
+        with patch("sys.platform", "linux"):
+            result = manager._substitute_placeholders("{workenv}/{bin}/tools", workenv_dir, metadata)
+
+        assert "{bin}" not in result
+        assert str(workenv_dir / "bin" / "tools") == result
+
+    def test_substitute_placeholders_bin_windows(self, tmp_path: Path) -> None:
+        """{bin} expands to 'Scripts' on Windows."""
+        mock_reader = Mock()
+        manager = WorkEnvManager(mock_reader)
+
+        workenv_dir = tmp_path / "workenv"
+        metadata = {"package": {"name": "testpkg", "version": "1.0.0"}}
+
+        with patch("sys.platform", "win32"):
+            result = manager._substitute_placeholders("{workenv}/{bin}/tools", workenv_dir, metadata)
+
+        assert "{bin}" not in result
+        assert str(workenv_dir) + "/Scripts/tools" == result
+
+    def test_substitute_placeholders_python_linux(self, tmp_path: Path) -> None:
+        """{python} expands to 'python3' on Linux."""
+        mock_reader = Mock()
+        manager = WorkEnvManager(mock_reader)
+
+        workenv_dir = tmp_path / "workenv"
+        metadata = {"package": {"name": "testpkg", "version": "1.0.0"}}
+
+        with patch("sys.platform", "linux"):
+            result = manager._substitute_placeholders("run {python}", workenv_dir, metadata)
+
+        assert result == "run python3"
+
+    def test_substitute_placeholders_python_windows(self, tmp_path: Path) -> None:
+        """{python} expands to 'python.exe' on Windows."""
+        mock_reader = Mock()
+        manager = WorkEnvManager(mock_reader)
+
+        workenv_dir = tmp_path / "workenv"
+        metadata = {"package": {"name": "testpkg", "version": "1.0.0"}}
+
+        with patch("sys.platform", "win32"):
+            result = manager._substitute_placeholders("run {python}", workenv_dir, metadata)
+
+        assert result == "run python.exe"
+
+    def test_substitute_placeholders_python_bin_linux(self, tmp_path: Path) -> None:
+        """{python_bin} expands to full python3 path on Linux."""
+        mock_reader = Mock()
+        manager = WorkEnvManager(mock_reader)
+
+        workenv_dir = tmp_path / "workenv"
+        metadata = {"package": {"name": "testpkg", "version": "1.0.0"}}
+
+        with patch("sys.platform", "linux"):
+            result = manager._substitute_placeholders("{python_bin} -m app", workenv_dir, metadata)
+
+        assert "{python_bin}" not in result
+        expected_python = str(workenv_dir / "bin" / "python3")
+        assert result == f"{expected_python} -m app"
+
+    def test_substitute_placeholders_python_bin_windows(self, tmp_path: Path) -> None:
+        """{python_bin} expands to full python.exe path on Windows."""
+        mock_reader = Mock()
+        manager = WorkEnvManager(mock_reader)
+
+        workenv_dir = tmp_path / "workenv"
+        metadata = {"package": {"name": "testpkg", "version": "1.0.0"}}
+
+        with patch("sys.platform", "win32"):
+            result = manager._substitute_placeholders("{python_bin} -m app", workenv_dir, metadata)
+
+        assert "{python_bin}" not in result
+        expected_python = str(workenv_dir / "Scripts" / "python.exe")
+        assert result == f"{expected_python} -m app"
+
 
 class TestSubstituteSlotReferences:
     """Test substitute_slot_references method."""
