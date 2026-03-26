@@ -22,6 +22,14 @@ echo "Cache dir: ${WHEEL_CACHE_DIR}"
 
 mkdir -p "${WHEEL_CACHE_DIR}"
 
+# Export FLAVOR_WHEEL_CACHE FIRST so it's always set in GITHUB_ENV even if the
+# download step below fails partway through. download_wheels_offline will use
+# whatever wheels are present in the directory.
+if [ -n "${GITHUB_ENV:-}" ]; then
+  echo "FLAVOR_WHEEL_CACHE=${WHEEL_CACHE_DIR}" >> "${GITHUB_ENV}"
+  echo "Exported FLAVOR_WHEEL_CACHE to \$GITHUB_ENV"
+fi
+
 # Export pinned requirements from lockfile (no hashes, no dev deps)
 RAW_REQS="${WHEEL_CACHE_DIR}/requirements-raw.txt"
 REQS="${WHEEL_CACHE_DIR}/requirements.txt"
@@ -44,9 +52,3 @@ uv run --no-project --with pip python -m pip download \
 
 DOWNLOADED=$(ls "${WHEEL_CACHE_DIR}"/*.whl 2>/dev/null | wc -l)
 echo "✅ Downloaded ${DOWNLOADED} wheels to ${WHEEL_CACHE_DIR}"
-
-# Export the cache dir for flavor pack subprocess to find via FLAVOR_WHEEL_CACHE
-if [ -n "${GITHUB_ENV:-}" ]; then
-  echo "FLAVOR_WHEEL_CACHE=${WHEEL_CACHE_DIR}" >> "${GITHUB_ENV}"
-  echo "Exported FLAVOR_WHEEL_CACHE to \$GITHUB_ENV"
-fi
