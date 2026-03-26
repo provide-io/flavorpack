@@ -36,7 +36,7 @@ dependencies = [
     # windows_arm64 — grpcio is only used for OTLP gRPC telemetry export in
     # provide.foundation, and all imports are wrapped in lazy try/except.
     "provide-foundation[all]>=0.3.21; sys_platform != 'win32' or platform_machine != 'ARM64'",
-    "provide-foundation[cli,compression,crypto,transport,extended]>=0.3.21; sys_platform == 'win32' and platform_machine == 'ARM64'",
+    "provide-foundation[cli,compression,crypto,transport,platform]>=0.3.21; sys_platform == 'win32' and platform_machine == 'ARM64'",
     "pip>=25.2",
     "uv>=0.9.6",
     "setuptools==82.0.1",  # Pinned to match build-backends group; checked by _ensure_no_isolation_build_backend
