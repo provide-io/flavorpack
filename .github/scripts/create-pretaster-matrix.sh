@@ -1,8 +1,6 @@
 #!/bin/bash
 # Generate test matrix for pretaster
 # This defines which platforms to test on
-#
-# Note: windows-arm64 temporarily disabled until support is complete
 
 set -e
 
@@ -13,7 +11,8 @@ cat << 'EOF'
     {"name": "linux-arm64", "runner": "ubuntu-24.04-arm", "platform": "linux_arm64"},
     {"name": "darwin-amd64", "runner": "macos-15-intel", "platform": "darwin_amd64"},
     {"name": "darwin-arm64", "runner": "macos-15", "platform": "darwin_arm64"},
-    {"name": "windows-amd64", "runner": "windows-2025", "platform": "windows_amd64"}
+    {"name": "windows-amd64", "runner": "windows-2025", "platform": "windows_amd64"},
+    {"name": "windows-arm64", "runner": "windows-2022-arm", "platform": "windows_arm64"}
   ]
 }
 EOF

@@ -87,18 +87,25 @@ cd tests/pretaster
 mkdir -p "../../$OUTPUT_DIR"
 mkdir -p dist logs
 
+# Select launcher: Windows uses Go launcher only (Rust launcher not supported on Windows)
+# See tests/pretaster/KNOWN_ISSUES.md for details
+HELPERS_DIR="../../helpers/bin"
+if [[ "$PLATFORM" == *"windows"* ]]; then
+    LAUNCHER="${HELPERS_DIR}/flavor-go-launcher-${VERSION}-${PLATFORM}${EXE_EXT}"
+else
+    LAUNCHER="${HELPERS_DIR}/flavor-rs-launcher-${VERSION}-${PLATFORM}${EXE_EXT}"
+fi
+
 # Main build logic based on type
 case "$BUILD_TYPE" in
     simple|with-helpers)
         echo "📦 Building simple pretaster with test scripts..."
 
         # Find helpers
-        HELPERS_DIR="../../helpers/bin"
         GO_BUILDER="${HELPERS_DIR}/flavor-go-builder-${VERSION}-${PLATFORM}${EXE_EXT}"
-        RS_LAUNCHER="${HELPERS_DIR}/flavor-rs-launcher-${VERSION}-${PLATFORM}${EXE_EXT}"
 
         verify_file "$GO_BUILDER"
-        verify_file "$RS_LAUNCHER"
+        verify_file "$LAUNCHER"
 
         # Create test package in temp directory
         TEMP_DIR="$(mktemp -d)"
@@ -149,7 +156,7 @@ EOF
         # Build PSP
         "$GO_BUILDER" \
             --manifest pretaster-manifest.json \
-            --launcher-bin "$RS_LAUNCHER" \
+            --launcher-bin "$LAUNCHER" \
             --output "../../$OUTPUT_DIR/pretaster-${VERSION}-${PLATFORM}${PSP_EXT}" \
             --key-seed "pretaster-${VERSION}"
 
@@ -168,13 +175,11 @@ EOF
         verify_file "$TASTER_PSP"
         
         # Find helpers
-        HELPERS_DIR="../../helpers/bin"
         GO_BUILDER="${HELPERS_DIR}/flavor-go-builder-${VERSION}-${PLATFORM}${EXE_EXT}"
-        RS_LAUNCHER="${HELPERS_DIR}/flavor-rs-launcher-${VERSION}-${PLATFORM}${EXE_EXT}"
-        
+
         verify_file "$GO_BUILDER"
-        verify_file "$RS_LAUNCHER"
-        
+        verify_file "$LAUNCHER"
+
         # Create workenv with taster
         mkdir -p workenv/taster
         cp "$TASTER_PSP" workenv/taster/taster.psp
@@ -210,21 +215,19 @@ EOF
         # Build PSP
         "$GO_BUILDER" \
             --manifest pretaster-manifest.json \
-            --launcher-bin "$RS_LAUNCHER" \
+            --launcher-bin "$LAUNCHER" \
             --output "../../$OUTPUT_DIR/pretaster-${VERSION}-${PLATFORM}${PSP_EXT}" \
             --key-seed "pretaster-${VERSION}"
         ;;
-        
+
     with-flavor)
         echo "📦 Building pretaster using Flavor PSP..."
-        
+
         # Find Flavor PSP
         FLAVOR_PSP="../../$OUTPUT_DIR/flavor-${VERSION}-${PLATFORM}${PSP_EXT}"
         verify_file "$FLAVOR_PSP"
-        
-        # Find launcher
-        RS_LAUNCHER="../../helpers/bin/flavor-rs-launcher-${VERSION}-${PLATFORM}${EXE_EXT}"
-        verify_file "$RS_LAUNCHER"
+
+        verify_file "$LAUNCHER"
         
         # Setup workenv
         ../../.github/scripts/setup-pretaster-workenv.sh
@@ -233,7 +236,7 @@ EOF
         "$FLAVOR_PSP" package \
             --manifest configs/pretaster-with-taster.json \
             --output "../../$OUTPUT_DIR/pretaster-${VERSION}-${PLATFORM}${PSP_EXT}" \
-            --launcher-bin "$RS_LAUNCHER" \
+            --launcher-bin "$LAUNCHER" \
             --key-seed "pretaster-${VERSION}"
         ;;
         

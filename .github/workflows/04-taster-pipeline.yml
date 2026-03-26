@@ -96,7 +96,8 @@ jobs:
               {"name": "linux-arm64", "runner": "ubuntu-24.04-arm", "platform": "linux_arm64"},
               {"name": "darwin-amd64", "runner": "macos-15-intel", "platform": "darwin_amd64"},
               {"name": "darwin-arm64", "runner": "macos-15", "platform": "darwin_arm64"},
-              {"name": "windows-amd64", "runner": "windows-2025", "platform": "windows_amd64"}
+              {"name": "windows-amd64", "runner": "windows-2025", "platform": "windows_amd64"},
+              {"name": "windows-arm64", "runner": "windows-2022-arm", "platform": "windows_arm64"}
             ]
           }
           EOF
@@ -156,9 +157,17 @@ jobs:
           fi
 
           # Find the launcher for this platform
-          LAUNCHER="helpers/bin/flavor-rs-launcher-${{ needs.setup.outputs.version }}-${{ matrix.platform }}${EXT}"
-          if [ ! -f "$LAUNCHER" ]; then
-            LAUNCHER="helpers/bin/flavor-rs-launcher-${{ matrix.platform }}${EXT}"
+          # Windows: Rust launcher not supported — see tests/pretaster/KNOWN_ISSUES.md
+          if [[ "${{ matrix.platform }}" == "windows_"* ]]; then
+            LAUNCHER="helpers/bin/flavor-go-launcher-${{ needs.setup.outputs.version }}-${{ matrix.platform }}${EXT}"
+            if [ ! -f "$LAUNCHER" ]; then
+              LAUNCHER="helpers/bin/flavor-go-launcher-${{ matrix.platform }}${EXT}"
+            fi
+          else
+            LAUNCHER="helpers/bin/flavor-rs-launcher-${{ needs.setup.outputs.version }}-${{ matrix.platform }}${EXT}"
+            if [ ! -f "$LAUNCHER" ]; then
+              LAUNCHER="helpers/bin/flavor-rs-launcher-${{ matrix.platform }}${EXT}"
+            fi
           fi
 
           if [ ! -f "$LAUNCHER" ]; then
