@@ -445,14 +445,16 @@ class UVManager(BaseToolManager):
 
         wheel_cache_dir = os.environ.get("FLAVOR_WHEEL_CACHE")
         if not wheel_cache_dir:
-            logger.debug("💻 FLAVOR_WHEEL_CACHE not set, skipping offline wheel strategy")
+            logger.warning("💻 FLAVOR_WHEEL_CACHE not set, skipping offline wheel strategy")
             return False
 
         cache_path = Path(wheel_cache_dir)
-        if not cache_path.exists():
-            logger.debug(f"💻 FLAVOR_WHEEL_CACHE dir does not exist: {cache_path}")
+        whl_count = len(list(cache_path.glob("*.whl"))) if cache_path.exists() else 0
+        if not cache_path.exists() or whl_count == 0:
+            logger.warning(f"💻 FLAVOR_WHEEL_CACHE dir empty or missing: {cache_path} ({whl_count} wheels)")
             return False
 
+        logger.warning(f"💻 Offline wheel copy from FLAVOR_WHEEL_CACHE: {cache_path} ({whl_count} wheels)")
         python_exe = Path(sys.executable)
         cmd = [
             str(python_exe),
@@ -468,13 +470,11 @@ class UVManager(BaseToolManager):
             str(requirements_file),
             "--quiet",
         ]
-        logger.debug(f"💻 Offline wheel copy from FLAVOR_WHEEL_CACHE: {cache_path}")
         result = run(cmd, check=False, capture_output=True)
         if result.returncode == 0:
-            logger.info("✅ Copied wheels from FLAVOR_WHEEL_CACHE (offline)")
+            logger.warning("✅ Copied wheels from FLAVOR_WHEEL_CACHE (offline)")
             return True
-        if logger.is_debug_enabled():
-            logger.debug(f"FLAVOR_WHEEL_CACHE copy failed (rc={result.returncode}): {result.stderr.strip()[:200]}")
+        logger.warning(f"FLAVOR_WHEEL_CACHE copy failed (rc={result.returncode}): {result.stderr.strip()[:400]}")
         return False
 
     def download_wheels_network(self, requirements_file: Path, dest_dir: Path) -> bool:
