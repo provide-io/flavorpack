@@ -26,7 +26,6 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       helper_run_id: ${{ steps.helpers.outputs.run_id }}
       test_matrix: ${{ steps.matrix.outputs.matrix }}
-      crosslang_matrix: ${{ steps.matrix.outputs.crosslang_matrix }}
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -59,9 +58,6 @@ jobs:
           .github/scripts/create-pretaster-matrix.sh > matrix.json
           MATRIX=$(cat matrix.json | jq -c .)
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
-          # Cross-language matrix excludes Windows (Rust not supported on Windows)
-          CROSSLANG_MATRIX=$(cat matrix.json | jq -c '{include: [.include[] | select(.platform | startswith("windows") | not)]}')
-          echo "crosslang_matrix=$CROSSLANG_MATRIX" >> $GITHUB_OUTPUT
 
   build-pretaster:
     name: 🔨 Build Pretaster Packages
@@ -152,8 +148,7 @@ jobs:
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      # Windows excluded: Rust not supported on Windows — see tests/pretaster/KNOWN_ISSUES.md
-      matrix: ${{ fromJson(needs.setup.outputs.crosslang_matrix) }}
+      matrix: ${{ fromJson(needs.setup.outputs.test_matrix) }}
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
