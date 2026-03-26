@@ -162,11 +162,8 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		logger.Error("❌ Failed to create output file", "error", err)
 		os.Exit(1)
 	}
-	defer func() {
-		if err := out.Close(); err != nil {
-			logger.Error("Failed to close output file", "error", err)
-		}
-	}()
+	// Note: NOT using defer - we close explicitly before PE resource embedding
+	// to avoid file locking issues on Windows ARM64
 
 	// ✍️ Write launcher
 	logger.Debug("✍️ Writing launcher to output", "size", len(launcherData))
@@ -463,6 +460,15 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		os.Exit(1)
 	}
 	logger.Debug("🔧 Set executable permissions on output file")
+
+	// ⚠️ CRITICAL: Close the file BEFORE PE resource embedding on Windows
+	// On Windows ARM64, file locks prevent atomic replacement if file is still open
+	// This prevents "Access is denied" errors during PE resource embedding
+	if err := out.Close(); err != nil {
+		logger.Error("Failed to close output file before PE embedding", "error", err)
+		os.Exit(1)
+	}
+	logger.Debug("Closed output file before PE embedding")
 
 	// 🪟 Windows + Go Launcher: Convert append to resource embedding
 	// For Windows Go launchers, we need to embed PSPF as a PE resource instead of appending
