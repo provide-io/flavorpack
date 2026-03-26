@@ -51,9 +51,7 @@ class TestPackageSecurity:
         builder.build(package_path)
         # Package should have been signed (ephemeral keys generated automatically)
 
-    @pytest.mark.skipif(
-        sys.platform == "win32", reason="Atomic file replace fails on Windows with open file handles"
-    )
+    @pytest.mark.skipif(sys.platform == "win32", reason="Atomic file replace fails on Windows with open file handles")
     def test_tampered_package_detection(self) -> None:
         """Ensure tampered packages are detected."""
         # Create a valid signed package
@@ -172,9 +170,7 @@ class TestPackageSecurity:
         # would need to be implemented in the builder
         pass
 
-    @pytest.mark.skipif(
-        sys.platform == "win32", reason="Atomic file replace fails on Windows with open file handles"
-    )
+    @pytest.mark.skipif(sys.platform == "win32", reason="Atomic file replace fails on Windows with open file handles")
     def test_race_condition_prevention(self) -> None:
         """Ensure race conditions during extraction are handled."""
         import threading
@@ -243,9 +239,7 @@ class TestPackageSecurity:
         # to be implemented in the builder
         pass
 
-    @pytest.mark.skipif(
-        sys.platform == "win32", reason="Atomic file replace fails on Windows with open file handles"
-    )
+    @pytest.mark.skipif(sys.platform == "win32", reason="Atomic file replace fails on Windows with open file handles")
     def test_permission_preservation(self) -> None:
         """Ensure file permissions are not escalated."""
         # Create a test file with specific permissions
