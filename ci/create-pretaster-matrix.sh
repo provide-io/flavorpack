@@ -15,9 +15,7 @@ cat << 'EOF'
     {"name": "darwin-amd64", "runner": "macos-15-intel", "platform": "darwin_amd64"},
     {"name": "darwin-arm64", "runner": "macos-15", "platform": "darwin_arm64"},
     {"name": "windows-amd64", "runner": "windows-2025", "platform": "windows_amd64"},
-    {"name": "windows-arm64", "runner": "windows-11-arm", "platform": "windows_arm64"},
-    {"name": "freebsd-amd64", "runner": "ubuntu-24.04", "platform": "freebsd_amd64", "vm_arch": "x86-64"},
-    {"name": "freebsd-arm64", "runner": "ubuntu-24.04", "platform": "freebsd_arm64", "vm_arch": "arm64"}
+    {"name": "windows-arm64", "runner": "windows-11-arm", "platform": "windows_arm64"}
   ]
 }
 EOF
