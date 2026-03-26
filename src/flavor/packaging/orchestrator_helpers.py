@@ -89,6 +89,17 @@ def create_builder_manifest(
     # dir (not inside Scripts/).  On Unix it lives in bin/.
     python_path = "{workenv}/python.exe" if windows else "{workenv}/bin/python3"
     package_exe = get_cli_executable_name(package_name, build_config, windows)
+    # On Windows the runtime command uses python.exe -m <module> instead of the
+    # Scripts/*.exe distlib launcher.  The Rust launcher runs setup commands in
+    # the TEMP extraction directory and then moves the tree to the final workenv.
+    # pip embeds the temp python.exe path inside the distlib launcher at install
+    # time, so the launcher's embedded path is stale after the move.  Invoking
+    # python.exe directly avoids the stale-path problem entirely.
+    cli_module = package_exe[:-4] if package_exe.endswith(".exe") else package_exe
+    if windows:
+        runtime_command = f"{{workenv}}/python.exe -m {cli_module}"
+    else:
+        runtime_command = f"{{workenv}}/{bin_dir}/{package_exe}"
 
     manifest = {
         "name": package_name,
@@ -136,7 +147,7 @@ def create_builder_manifest(
                 "content": "{package_name}-{version}",
             },
         ],
-        "command": f"{{workenv}}/{bin_dir}/{package_exe}",
+        "command": runtime_command,
         "slots": [
             {
                 "id": "uv",
@@ -330,12 +341,23 @@ def create_python_builder_metadata(
     # dir (not inside Scripts/).  On Unix it lives in bin/.
     python_path = "{workenv}/python.exe" if windows else "{workenv}/bin/python3"
     package_exe = get_cli_executable_name(package_name, build_config, windows)
+    # On Windows the runtime command uses python.exe -m <module> instead of the
+    # Scripts/*.exe distlib launcher.  The Rust launcher runs setup commands in
+    # the TEMP extraction directory and then moves the tree to the final workenv.
+    # pip embeds the temp python.exe path inside the distlib launcher at install
+    # time, so the launcher's embedded path is stale after the move.  Invoking
+    # python.exe directly avoids the stale-path problem entirely.
+    cli_module = package_exe[:-4] if package_exe.endswith(".exe") else package_exe
+    if windows:
+        runtime_command = f"{{workenv}}/python.exe -m {cli_module}"
+    else:
+        runtime_command = f"{{workenv}}/{bin_dir}/{package_exe}"
 
     metadata = {
         "package": {"name": package_name, "version": version},
         "execution": {
             "primary_slot": 0,
-            "command": f"{{workenv}}/{bin_dir}/{package_exe}",
+            "command": runtime_command,
             "env": {},
         },
         "workenv": {
