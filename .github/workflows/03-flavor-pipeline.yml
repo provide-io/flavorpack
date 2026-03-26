@@ -446,6 +446,17 @@ jobs:
           echo "launcher=$LAUNCHER" >> $GITHUB_OUTPUT
           echo "wheel=$WHEEL" >> $GITHUB_OUTPUT
 
+      - name: 📦 Pre-warm UV wheel cache from lockfile
+        shell: bash
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          # Populate UV's global wheel cache with exact lockfile-pinned versions.
+          # flavor pack spawns subprocesses (pip/uv) that cannot reach PyPI on Windows
+          # runners, but this step runs in the workflow context where network works.
+          # download_wheels_offline() will then succeed without any network access.
+          uv sync --all-groups --dev --upgrade --all-extras 2>&1 | tail -5 || true
+        continue-on-error: true
+
       - name: 🔨 Build Flavor PSP using itself (with retry)
         uses: Wandalen/wretry.action@v3.5.0
         with:
