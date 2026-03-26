@@ -400,6 +400,9 @@ jobs:
           - platform: windows_arm64
             runner: windows-11-arm
             python_platform: win_arm64
+            # Python on Windows ARM runs as x64 (amd64 emulation); native Python
+            # ARM64 wheels are rare. Use x64 Python so uv resolves amd64 packages.
+            python_arch: x64
 
     continue-on-error: ${{ matrix.continue_on_error == true }}
     steps:
@@ -456,12 +459,43 @@ jobs:
           ci/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "${{ matrix.platform }}"
           ls -la helpers/bin/
       
+      - name: 🐍 Setup Python x64 (Windows ARM — Python runs as amd64)
+        if: ${{ matrix.python_arch == 'x64' }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          architecture: x64
+
       - name: 📦 Install Flavor from wheel
         shell: bash
         run: |
-          export PATH="$HOME/.local/bin:$PATH"
-          bash ci/install-flavor-wheel.sh wheel-dist "${{ matrix.platform }}"
+          # Find and install the flavor wheel
+          WHEEL=$(find wheel-dist -name "flavorpack-*.whl" | head -1)
 
+          if [ -z "$WHEEL" ]; then
+            echo "❌ Flavor wheel not found for ${{ matrix.platform }}"
+            exit 1
+          fi
+
+          echo "Installing Flavor from wheel: $WHEEL"
+          # On windows_arm64, Python runs as x64 (amd64 emulation). Use the x64
+          # Python so uv resolves amd64 binary wheels (e.g. cryptography).
+          if [ -n "${{ matrix.python_arch }}" ]; then
+            PYTHON_EXE=$(python3 -c "import sys; print(sys.executable)" 2>/dev/null \
+                         || python -c "import sys; print(sys.executable)")
+            echo "Using Python: $PYTHON_EXE"
+            uv tool install "$WHEEL" --python "$PYTHON_EXE"
+          else
+            uv tool install "$WHEEL"
+          fi
+
+          # Add uv tools to PATH
+          export PATH="$HOME/.local/bin:$PATH"
+
+          # Verify flavor is installed
+          which flavor
+          flavor --version
+      
       - name: 🔧 Prepare Flavor build
         id: prepare
         shell: bash
