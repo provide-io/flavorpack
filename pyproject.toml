@@ -49,8 +49,11 @@ Homepage = "https://github.com/provide-io/flavorpack"
 
 [dependency-groups]
 dev = [
-    "provide-testkit[all]",
-    "memray>=1.0; sys_platform != 'emscripten'",
+    # provide-testkit[all] includes memray which does not support win32
+    "provide-testkit[all]; sys_platform != 'win32'",
+    "provide-testkit; sys_platform == 'win32'",
+    "memray>=1.0; sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "hypothesis>=6.0",
 ]
 docs = [
     "provide-testkit[docs]",

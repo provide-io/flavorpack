@@ -306,7 +306,7 @@ def find_builder_executable(builder_bin: str | None) -> Path:
         path = Path(env_bin)
         if not path.exists():
             raise BuildError(f"Builder binary not found: {path.as_posix()}")
-        logger.info(f"Using builder from {ENV_BUILDER_BIN}: {path}")
+        logger.info(f"Using builder from FLAVOR_BUILDER_BIN: {path}")
         return path
 
     from flavor.helpers.manager import HelperManager

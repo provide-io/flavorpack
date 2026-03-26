@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+import os
 from pathlib import Path
 import tempfile
 from unittest.mock import MagicMock, patch
@@ -30,14 +31,15 @@ class TestPSPFExecution:
 
         temp_path = Path(tempfile.mkdtemp())
         yield temp_path
-        import shutil
+        # Force GC so PSPFReader.__del__ releases file handles (needed on Windows).
+        gc.collect()
 
         def _on_rmtree_error(func: object, path: str, exc_info: object) -> None:
             """Make read-only files writable before retrying delete (Windows)."""
             try:
-                Path(path).chmod(stat.S_IWRITE)
+                os.chmod(path, stat.S_IWRITE)
                 if callable(func):
-                    func(path)
+                    func(path)  # type: ignore[operator]
             except Exception:
                 pass
 
@@ -215,7 +217,7 @@ class TestBundleExecutorUnit:
         executor = self._make_executor(command="{workenv}/bin/app")
         result = executor.prepare_command("{workenv}/bin/app")
         assert "{workenv}" not in result
-        assert "/workenv" in result
+        assert "workenv" in result.replace("\\", "/")
 
     def test_prepare_command_package_name_version(self) -> None:
         """{package_name} and {version} are substituted."""
@@ -269,7 +271,7 @@ class TestBundleExecutorUnit:
         """Execution env values with {workenv} are substituted."""
         executor = self._make_executor(execution_env={"MY_DIR": "{workenv}/cache"})
         env = executor.prepare_environment()
-        assert env["MY_DIR"] == "/workenv/cache"
+        assert env["MY_DIR"].replace("\\", "/") == "/workenv/cache"
 
     def test_execute_raises_when_no_command(self) -> None:
         """execute raises ValueError when no command in execution config."""
@@ -344,6 +346,95 @@ class TestBundleExecutorUnit:
         )
         result = executor._substitute_primary("{primary}")
         assert "{workenv}" in result or "workenv" in result.lower()
+
+    # --- Platform substitution variable tests ({bin}, {python}, {python_bin}) ---
+
+    def test_prepare_command_bin_substitution_linux(self) -> None:
+        """{bin} expands to 'bin' on Linux."""
+        executor = self._make_executor(command="{workenv}/{bin}/app")
+        with patch("sys.platform", "linux"):
+            result = executor.prepare_command("{workenv}/{bin}/app")
+        assert "{bin}" not in result
+        assert "/workenv/bin/app" in result.replace("\\", "/")
+
+    def test_prepare_command_bin_substitution_windows(self) -> None:
+        """{bin} expands to 'Scripts' on Windows."""
+        executor = self._make_executor(command="{workenv}/{bin}/app")
+        with patch("sys.platform", "win32"):
+            result = executor.prepare_command("{workenv}/{bin}/app")
+        assert "{bin}" not in result
+        assert "/workenv/Scripts/app" in result.replace("\\", "/")
+
+    def test_prepare_command_python_substitution_linux(self) -> None:
+        """{python} expands to 'python3' on Linux."""
+        executor = self._make_executor(command="{python} -m myapp")
+        with patch("sys.platform", "linux"):
+            result = executor.prepare_command("{python} -m myapp")
+        assert "{python}" not in result
+        assert result.startswith("python3")
+
+    def test_prepare_command_python_substitution_windows(self) -> None:
+        """{python} expands to 'python.exe' on Windows."""
+        executor = self._make_executor(command="{python} -m myapp")
+        with patch("sys.platform", "win32"):
+            result = executor.prepare_command("{python} -m myapp")
+        assert "{python}" not in result
+        assert result.startswith("python.exe")
+
+    def test_prepare_command_python_bin_substitution_linux(self) -> None:
+        """{python_bin} expands to full python3 path on Linux."""
+        executor = self._make_executor(command="{python_bin} -m myapp")
+        with patch("sys.platform", "linux"):
+            result = executor.prepare_command("{python_bin} -m myapp")
+        assert "{python_bin}" not in result
+        assert "/workenv/bin/python3" in result.replace("\\", "/")
+
+    def test_prepare_command_python_bin_substitution_windows(self) -> None:
+        """{python_bin} expands to full python.exe path on Windows."""
+        executor = self._make_executor(command="{python_bin} -m myapp")
+        with patch("sys.platform", "win32"):
+            result = executor.prepare_command("{python_bin} -m myapp")
+        assert "{python_bin}" not in result
+        assert "/workenv/Scripts/python.exe" in result.replace("\\", "/")
+
+    def test_prepare_environment_bin_substitution(self) -> None:
+        """Env vars with {bin} are substituted in prepare_environment."""
+        executor = self._make_executor(execution_env={"MY_PATH": "{workenv}/{bin}/tools"})
+        with patch("sys.platform", "linux"):
+            env = executor.prepare_environment()
+        assert env["MY_PATH"].replace("\\", "/") == "/workenv/bin/tools"
+
+    def test_prepare_environment_python_bin_substitution(self) -> None:
+        """Env vars with {python_bin} are substituted in prepare_environment."""
+        executor = self._make_executor(execution_env={"PYTHON": "{python_bin}"})
+        with patch("sys.platform", "linux"):
+            env = executor.prepare_environment()
+        assert env["PYTHON"].replace("\\", "/") == "/workenv/bin/python3"
+
+    def test_prepare_environment_python_bin_windows(self) -> None:
+        """Env vars with {python_bin} expand to Windows path in prepare_environment."""
+        executor = self._make_executor(execution_env={"PYTHON": "{python_bin}"})
+        with patch("sys.platform", "win32"):
+            env = executor.prepare_environment()
+        assert env["PYTHON"].replace("\\", "/") == "/workenv/Scripts/python.exe"
+
+    def test_platform_vars_linux(self) -> None:
+        """_platform_vars returns correct tuple for Linux."""
+        executor = self._make_executor()
+        with patch("sys.platform", "linux"):
+            bin_dir, python_exe, python_bin = executor._platform_vars()
+        assert bin_dir == "bin"
+        assert python_exe == "python3"
+        assert python_bin.replace("\\", "/") == "/workenv/bin/python3"
+
+    def test_platform_vars_windows(self) -> None:
+        """_platform_vars returns correct tuple for Windows."""
+        executor = self._make_executor()
+        with patch("sys.platform", "win32"):
+            bin_dir, python_exe, python_bin = executor._platform_vars()
+        assert bin_dir == "Scripts"
+        assert python_exe == "python.exe"
+        assert python_bin.replace("\\", "/") == "/workenv/Scripts/python.exe"
 
 
 # 🌶️📦🔚
