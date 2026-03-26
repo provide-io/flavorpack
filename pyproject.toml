@@ -284,17 +284,6 @@ private_key_path = "keys/flavor-private.key"
 public_key_path = "keys/flavor-public.key"
 
 [tool.uv]
-# cryptography: win_arm64 binary wheels first appeared in 46.0.0;
-# 46.0.4+ dropped the win_arm64 wheel again (no OpenSSL for ARM64 on GHA).
-# Pin to 46.0.x range that has win_arm64 support.
-# cffi 1.x has no win_arm64 binary wheel; cffi 2.0.0+ provides win_arm64
-# wheels for native ARM64 Python.
-# FreeBSD: pkg only ships cryptography 45.x; exclude the >=46.0 floor there
-# so uv uses the pre-built system package instead of failing to build from source.
-constraint-dependencies = [
-    "cryptography>=46.0.0,<=46.0.3; sys_platform != 'freebsd'",
-    # FreeBSD pkg ships 45.x only; maturin can't build 46.x (SOABI mismatch).
-    # Cap below 46 so uv resolves to the pre-built system package.
-    "cryptography<46.0.0; sys_platform == 'freebsd'",
-    "cffi>=2.0.0",
-]
+# cryptography 46.0.4+ has no win_arm64 binary wheel; building from source
+# fails on GHA windows-11-arm runners (no OpenSSL). Pin to last known good.
+constraint-dependencies = ["cryptography<=46.0.3"]
