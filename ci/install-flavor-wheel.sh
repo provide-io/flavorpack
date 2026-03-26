@@ -29,14 +29,10 @@ if [[ "${PLATFORM}" == "windows_arm64" ]]; then
   # cryptography 46.0.4+ has no win_arm64 binary wheel and cannot be built from
   # source on GHA (no OpenSSL). Pin to 46.0.3 which ships a win_arm64 wheel.
   #
-  # grpcio has NO win_arm64 binary wheel (any version), and building from source
-  # requires C++/CMake/gRPC which hangs CI for 20+ minutes. Exclude it via an
-  # environment marker override — grpcio is only used for OTLP gRPC telemetry
-  # export in provide.foundation, and all imports are wrapped in try/except.
-  echo "Platform windows_arm64: pinning cryptography==46.0.3, excluding grpcio (no win_arm64 wheel)"
-  uv tool install "${WHEEL}" \
-    --with "cryptography==46.0.3" \
-    --override "grpcio>=0; sys_platform != 'win32' or platform_machine != 'ARM64'"
+  # grpcio (OTLP gRPC exporter) is excluded on windows_arm64 via a platform
+  # marker in flavorpack's pyproject.toml — the wheel metadata handles this.
+  echo "Platform windows_arm64: pinning cryptography==46.0.3 for binary wheel"
+  uv tool install "${WHEEL}" --with "cryptography==46.0.3"
 else
   uv tool install "${WHEEL}"
 fi
