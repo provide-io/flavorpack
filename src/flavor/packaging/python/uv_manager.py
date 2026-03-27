@@ -61,7 +61,12 @@ def _windows_system_env() -> dict[str, str]:
         "NUMBER_OF_PROCESSORS",
         "PROCESSOR_ARCHITECTURE",
     )
-    return {k: v for k, v in os.environ.items() if k in _WINDOWS_VARS}
+    env = {k: v for k, v in os.environ.items() if k in _WINDOWS_VARS}
+    # Disable pip's truststore SSL backend on Windows GHA runners; the
+    # bundled Python's truststore fails to initialize a context
+    # (ssl.SSLError: [SSL] unknown error) and aborts pip wheel/download.
+    env["PIP_NO_TRUSTSTORE"] = "1"
+    return env
 
 
 class UVManager(BaseToolManager):
