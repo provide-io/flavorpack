@@ -36,7 +36,8 @@ dependencies = [
     "provide-foundation[cli,compression,crypto,transport,platform]>=0.3.21; sys_platform == 'win32' and platform_machine == 'ARM64'",
     "pip>=25.2",
     "uv>=0.9.6",
-    "setuptools>=68.0.0",  # Required for building wheels at runtime
+    "setuptools==82.0.1",  # Pinned to match build-backends group; checked by _ensure_no_isolation_build_backend
+    "wheel==0.46.3",       # Required for building wheels; pinned to match build-backends group
 ]
 keywords = ["packaging", "pspf", "flavor", "executable", "bundle"]
 
