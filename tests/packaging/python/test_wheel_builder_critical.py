@@ -5,6 +5,7 @@
 
 """Tests for WheelBuilder - critical features."""
 
+import importlib.metadata
 from pathlib import Path
 import tempfile
 from unittest.mock import Mock, patch
@@ -199,6 +200,16 @@ class TestWheelBuilderCriticalFeatures:
             with patch("flavor.packaging.python.wheel_builder.run") as mock_run:
                 self.wheel_builder._ensure_no_isolation_build_backend(python_exe)
                 mock_run.assert_not_called()
+
+    def test_ensure_backend_raises_when_package_not_installed(self) -> None:
+        """CRITICAL: missing package must raise RuntimeError — never install."""
+        python_exe = Path("/usr/bin/python3")
+
+        with patch("flavor.packaging.python.wheel_builder.importlib_metadata") as mock_meta:
+            mock_meta.version.side_effect = importlib.metadata.PackageNotFoundError("setuptools")
+            mock_meta.PackageNotFoundError = importlib.metadata.PackageNotFoundError
+            with pytest.raises(RuntimeError, match="Build backend not found"):
+                self.wheel_builder._ensure_no_isolation_build_backend(python_exe)
 
     def test_manager_separation_maintained(self) -> None:
         """CRITICAL: PyPA pip and UV managers must remain separate and distinct."""
