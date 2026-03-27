@@ -1,0 +1,32 @@
+{
+  "name": "pretaster-echo",
+  "version": "1.0.0",
+  "description": "Simple echo test for PSPF (Windows: uses bash instead of python3)",
+  "command": "/bin/bash {workenv}/scripts/echo_test.sh",
+  "environment": {},
+  "package": {
+    "name": "pretaster-echo",
+    "version": "1.0.0",
+    "description": "Simple echo test for PSPF"
+  },
+  "format": "PSPF/2025",
+  "slots": [
+    {
+      "slot": 0,
+      "id": "echo-test-script",
+      "source": "scripts/echo_test.sh",
+      "target": "scripts/echo_test.sh",
+      "purpose": "payload",
+      "lifecycle": "cached",
+      "operations": "raw",
+      "permissions": "0755",
+      "resolution": "build"
+    }
+  ],
+  "execution": {
+    "command": "/bin/bash {workenv}/scripts/echo_test.sh",
+    "args": [],
+    "env": {},
+    "primary_slot": 0
+  }
+}

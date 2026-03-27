@@ -92,57 +92,69 @@ if [[ "$OS" == "windows" ]]; then
     EXT=".exe"
 fi
 
-# Test 1: Simple echo test (Go builder + Rust launcher)
-echo "1️⃣ Building echo test package (Go builder + Rust launcher)..."
+# Select launcher: on Windows use Go launcher (Rust launcher is not supported on Windows)
+# See tests/pretaster/KNOWN_ISSUES.md for details
+if [[ "$OS" == "windows" ]]; then
+    LAUNCHER_BIN="$HELPERS_DIR/bin/flavor-go-launcher-$PLATFORM$EXT"
+    ECHO_MANIFEST="configs/test-echo-windows.json"
+    ENV_MANIFEST="configs/test-env-windows.json"
+else
+    LAUNCHER_BIN="$HELPERS_DIR/bin/flavor-rs-launcher-$PLATFORM$EXT"
+    ECHO_MANIFEST="configs/test-echo.json"
+    ENV_MANIFEST="configs/test-env.json"
+fi
+
+# Test 1: Simple echo test (Go builder + launcher)
+echo "1️⃣ Building echo test package (Go builder + launcher)..."
 $HELPERS_DIR/bin/flavor-go-builder-$PLATFORM$EXT \
-    --manifest configs/test-echo.json \
-    --launcher-bin $HELPERS_DIR/bin/flavor-rs-launcher-$PLATFORM$EXT \
+    --manifest $ECHO_MANIFEST \
+    --launcher-bin $LAUNCHER_BIN \
     --output dist/echo-test.psp \
     --key-seed test123
 
-# Test 2: Shell script test (Rust builder + Rust launcher)
-echo "2️⃣ Building shell test package (Rust builder + Rust launcher)..."
+# Test 2: Shell script test (Rust builder + launcher)
+echo "2️⃣ Building shell test package (Rust builder + launcher)..."
 $HELPERS_DIR/bin/flavor-rs-builder-$PLATFORM$EXT \
     --manifest configs/test-shell.json \
-    --launcher-bin $HELPERS_DIR/bin/flavor-rs-launcher-$PLATFORM$EXT \
+    --launcher-bin $LAUNCHER_BIN \
     --output dist/shell-test.psp \
     --key-seed test123
 
-# Test 3: Environment variable test (Go builder + Rust launcher)
-echo "3️⃣ Building environment test package (Go builder + Rust launcher)..."
+# Test 3: Environment variable test (Go builder + launcher)
+echo "3️⃣ Building environment test package (Go builder + launcher)..."
 $HELPERS_DIR/bin/flavor-go-builder-$PLATFORM$EXT \
-    --manifest configs/test-env.json \
-    --launcher-bin $HELPERS_DIR/bin/flavor-rs-launcher-$PLATFORM$EXT \
+    --manifest $ENV_MANIFEST \
+    --launcher-bin $LAUNCHER_BIN \
     --output dist/env-test.psp \
     --key-seed test123
 
-# Test 4: Multi-slot orchestration test (Rust builder + Rust launcher)
+# Test 4: Multi-slot orchestration test (Rust builder + launcher)
 # Create platform-agnostic symlink for the manifest to reference
 # The manifest expects flavor-go-builder-darwin_arm64, so we'll create that symlink
 # pointing to our actual platform's binary (skip if we're already darwin_arm64)
-echo "4️⃣ Building orchestration test package (Rust builder + Rust launcher)..."
+echo "4️⃣ Building orchestration test package (Rust builder + launcher)..."
 if [[ "$PLATFORM" != "darwin_arm64" ]]; then
     ln -sf "$HELPERS_DIR/bin/flavor-go-builder-$PLATFORM$EXT" "$HELPERS_DIR/bin/flavor-go-builder-darwin_arm64"
 fi
 $HELPERS_DIR/bin/flavor-rs-builder-$PLATFORM$EXT \
     --manifest configs/test-orchestrate.json \
-    --launcher-bin $HELPERS_DIR/bin/flavor-rs-launcher-$PLATFORM$EXT \
+    --launcher-bin $LAUNCHER_BIN \
     --output dist/orchestrate-test.psp \
     --key-seed test123
 
 # Test 5: Single-file executable permission retention
-echo "5️⃣ Building permissions test package (Go builder + Rust launcher)..."
+echo "5️⃣ Building permissions test package (Go builder + launcher)..."
 $HELPERS_DIR/bin/flavor-go-builder-$PLATFORM$EXT \
     --manifest configs/test-permissions.json \
-    --launcher-bin $HELPERS_DIR/bin/flavor-rs-launcher-$PLATFORM$EXT \
+    --launcher-bin $LAUNCHER_BIN \
     --output dist/permissions-test.psp \
     --key-seed test123
 
 # Test 6: Init tar lifecycle cleanup
-echo "6️⃣ Building init cleanup test package (Rust builder + Rust launcher)..."
+echo "6️⃣ Building init cleanup test package (Rust builder + launcher)..."
 $HELPERS_DIR/bin/flavor-rs-builder-$PLATFORM$EXT \
     --manifest configs/test-init-cleanup.json \
-    --launcher-bin $HELPERS_DIR/bin/flavor-rs-launcher-$PLATFORM$EXT \
+    --launcher-bin $LAUNCHER_BIN \
     --output dist/init-cleanup-test.psp \
     --key-seed test123
 
@@ -154,11 +166,11 @@ echo ""
 run_test() {
     local test_name="$1"
     local test_cmd="$2"
-    
+
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo "$test_name"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    
+
     if eval "$test_cmd"; then
         echo "✅ Test passed"
     else
@@ -170,27 +182,37 @@ run_test() {
 }
 
 # Run echo test
-run_test "1️⃣ Running echo test (Rust launcher)..." \
+run_test "1️⃣ Running echo test..." \
     "FLAVOR_LOG_LEVEL=debug ./dist/echo-test.psp 'Test message from pretaster'"
 
 # Run shell test
-run_test "2️⃣ Running shell test (Rust launcher)..." \
+run_test "2️⃣ Running shell test..." \
     "FLAVOR_LOG_LEVEL=debug ./dist/shell-test.psp"
 
 # Run env test
-run_test "3️⃣ Running environment test (Rust launcher)..." \
+run_test "3️⃣ Running environment test..." \
     "FLAVOR_LOG_LEVEL=info ./dist/env-test.psp"
 
 # Run orchestration test
-run_test "4️⃣ Running orchestration test (Rust launcher)..." \
+run_test "4️⃣ Running orchestration test..." \
     "FLAVOR_LOG_LEVEL=info ./dist/orchestrate-test.psp"
 
 # Run permission retention test
-run_test "5️⃣ Running permissions test (Rust launcher)..." \
-    "FLAVOR_LOG_LEVEL=info ./dist/permissions-test.psp | grep -q permission-test-ok"
+# On Windows: shell scripts are not Win32 executables; skip this test
+if [[ "$OS" == "windows" ]]; then
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "5️⃣ Running permissions test..."
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "⚠️  Skipped on Windows: shell script payloads are not Win32 executables"
+    echo "   See tests/pretaster/KNOWN_ISSUES.md for details"
+    echo ""
+else
+    run_test "5️⃣ Running permissions test..." \
+        "FLAVOR_LOG_LEVEL=info ./dist/permissions-test.psp | grep -q permission-test-ok"
+fi
 
 # Run init lifecycle cleanup test
-run_test "6️⃣ Running init cleanup test (Rust launcher)..." \
+run_test "6️⃣ Running init cleanup test..." \
     "FLAVOR_LOG_LEVEL=info ./dist/init-cleanup-test.psp | grep -q init-cleanup-ok"
 
 echo "✅ Test suite completed!"
