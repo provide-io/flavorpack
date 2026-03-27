@@ -19,6 +19,10 @@ dependencies = [
     # grpcio has no win_arm64 binary wheel; use reduced extras on that platform
     "provide-foundation[all]; sys_platform != 'win32' or platform_machine != 'ARM64'",
     "provide-foundation[cli,compression,crypto,transport,platform]; sys_platform == 'win32' and platform_machine == 'ARM64'",
+    # exec-test calls build_package_from_manifest() which requires these pinned build
+    # backends in the workenv via importlib_metadata (must match flavorpack's pins)
+    "setuptools==82.0.1",
+    "wheel==0.46.3",
 ]
 
 [project.scripts]
