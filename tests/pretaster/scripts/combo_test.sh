@@ -1,8 +1,9 @@
-#!/bin/sh
+#!/bin/bash
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
-# POSIX sh combo test script — no host dependencies beyond tastesh.
+# Windows-compatible combo test script (bash port of combo_test.py)
+# Used by test-combination-windows.json
 
 CMD="${1:-}"
 shift || true
