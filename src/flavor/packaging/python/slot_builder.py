@@ -385,14 +385,14 @@ class PythonSlotBuilder:
                 "export",
                 "--frozen",
                 "--only-group", "build-backends",
+                "--hashes",
                 "--output-file", req_file.as_posix(),
             ]
             logger.debug("Exporting build-backends from uv.lock", command=" ".join(export_cmd))
             run(export_cmd, check=True, capture_output=True, cwd=self.manifest_dir)
 
-            download_cmd = [
-                sys.executable,
-                "-m", "pip", "download",
+            download_cmd = _pip_base_cmd(Path(sys.executable)) + [
+                "download",
                 "--require-hashes",
                 "-r", req_file.as_posix(),
                 "-d", wheels_dir.as_posix(),
