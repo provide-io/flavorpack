@@ -39,6 +39,14 @@ uv export --frozen --no-dev --no-hashes --output-file "${RAW_REQS}"
 # Strip editable (-e .) and local file:// lines — pip install doesn't support them
 grep -v '^-e \|file://' "${RAW_REQS}" > "${REQS}" || true
 
+# Also include build-backends dependency group (setuptools, wheel) for hermetic slot builds.
+# _bundle_build_backends() in slot_builder.py uses FLAVOR_WHEEL_CACHE for offline installs.
+BB_RAW="${WHEEL_CACHE_DIR}/build-backends-raw.txt"
+if uv export --frozen --only-group build-backends --no-hashes --output-file "${BB_RAW}" 2>/dev/null; then
+  grep -v '^-e \|file://' "${BB_RAW}" >> "${REQS}" || true
+  echo "Added build-backends group to requirements"
+fi
+
 WHEEL_COUNT=$(wc -l < "${REQS}")
 echo "Requirements: ${WHEEL_COUNT} lines"
 
