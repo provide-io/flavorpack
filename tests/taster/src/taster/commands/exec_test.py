@@ -288,7 +288,7 @@ def _build_env(mode: str, verbose: bool) -> dict[str, str]:
     # Pass through essential vars so the inner PSP can bootstrap (locate cache
     # dir, find uv, write temp files). Without HOME the Rust launcher uses a
     # fallback path that differs from what Path.home() returns in the test.
-    for var in ("HOME", "PATH", "USER", "TEMP", "TMP", "TMPDIR"):
+    for var in ("HOME", "PATH", "USER", "TEMP", "TMP", "TMPDIR", "FLAVOR_CACHE"):
         if val := os.environ.get(var):
             env[var] = val
     return env
