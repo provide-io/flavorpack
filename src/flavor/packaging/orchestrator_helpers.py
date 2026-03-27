@@ -364,7 +364,7 @@ def create_python_builder_metadata(
         "setup_commands": [
             {
                 "type": "enumerate_and_execute",
-                "command": f"{{workenv}}/{bin_dir}/{'uv.exe' if windows else 'uv'} pip install --python {python_path} --no-deps",
+                "command": f"{{workenv}}/bin/uv pip install --python {python_path} --no-deps",
                 "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
             },
             {
