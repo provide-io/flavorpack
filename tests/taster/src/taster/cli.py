@@ -31,7 +31,7 @@ if sys.platform == "win32":
         os.environ["PYTHONIOENCODING"] = "utf-8"
     if not os.environ.get("PYTHONUTF8"):
         os.environ["PYTHONUTF8"] = "1"
-    # Reconfigure stdout/stderr to UTF-8 - PYTHONIOENCODING only takes effect
+    # Reconfigure stdout/stderr to UTF-8 — PYTHONIOENCODING only takes effect
     # at process startup; reconfigure() fixes encoding for the current process.
     try:
         if hasattr(sys.stdout, "reconfigure"):
