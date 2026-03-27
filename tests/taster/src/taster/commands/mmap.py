@@ -176,7 +176,8 @@ def _psutil_bundle_indicators(bundle_path: Path) -> list[str]:
             if bundle_path.name in mmap_region.path:
                 indicators.append(f"🗺️ Bundle is memory-mapped: {mmap_region.path}")
                 indicators.append(f"  • Size: {mmap_region.rss / 1024 / 1024:.2f} MB")
-                indicators.append(f"  • Permissions: {mmap_region.perms}")
+                perms = getattr(mmap_region, "perms", "N/A")
+                indicators.append(f"  • Permissions: {perms}")
 
     return indicators
 
