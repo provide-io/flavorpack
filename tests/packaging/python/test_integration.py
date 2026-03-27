@@ -122,9 +122,10 @@ version = "1.0.0"
         result = self.uv_manager.find_system_uv()
         assert result == Path("/usr/local/bin/uv")
 
-        # Test when UV is not found
+        # Test when UV is not found (also suppress the next-to-Python fallback)
         mock_which.return_value = None
-        result = self.uv_manager.find_system_uv()
+        with patch("sys.executable", "/nonexistent/python.exe"):
+            result = self.uv_manager.find_system_uv()
         assert result is None
 
     def test_archive_utils_deterministic_output(self) -> None:

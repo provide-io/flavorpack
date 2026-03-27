@@ -129,7 +129,7 @@ class UVManager(BaseToolManager):
             else:
                 raise ToolNotFoundError(f"Unsupported Linux architecture: {arch}")
         elif platform == "windows":
-            if arch == "amd64":
+            if arch == "amd64" or arch == "arm64":
                 platform_suffix = "pc-windows-msvc"
             else:
                 raise ToolNotFoundError(f"Unsupported Windows architecture: {arch}")
@@ -161,7 +161,7 @@ class UVManager(BaseToolManager):
         """
         # For now, return a static list of known good versions
         # In a full implementation, this would query GitHub API
-        return ["0.1.45", "0.1.44", "0.1.43", "0.1.42"]
+        return ["0.6.6", "0.6.5", "0.6.4", "0.5.29"]
 
     def find_system_uv(self) -> Path | None:
         """
@@ -171,11 +171,22 @@ class UVManager(BaseToolManager):
             Path to UV executable if found, None otherwise
         """
         import shutil
+        import sys
 
         system_uv = shutil.which("uv")
         if system_uv:
             logger.debug(f"Found system UV: {system_uv}")
             return Path(system_uv)
+
+        # Also look next to the current Python executable.
+        # Inside a Flavor PSP workenv the workenv's Scripts/bin directory may
+        # not be in PATH, but uv is always installed as a sibling of python.exe.
+        python_dir = Path(sys.executable).parent
+        for name in ("uv.exe", "uv"):
+            candidate = python_dir / name
+            if candidate.exists():
+                logger.debug(f"Found UV next to Python executable: {candidate}")
+                return candidate
 
         logger.debug("No system UV found")
         return None
