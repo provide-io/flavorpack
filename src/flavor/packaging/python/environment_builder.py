@@ -237,7 +237,17 @@ class PythonEnvironmentBuilder:
     def _find_python_binary(self, python_install_dir: Path, uv_install_dir: str, uv_cmd: str) -> Path | None:
         """Find the Python binary within the installation directory."""
         if self.is_windows:
-            python_bin = python_install_dir / "Scripts" / "python.exe"
+            # cpython-build-standalone for Windows puts python.exe at the root of the
+            # install directory (not in Scripts/).  Scripts/ only contains pip and other
+            # tools.  Check the root first, fall back to Scripts/ for venv layouts.
+            candidates = [
+                python_install_dir / "python.exe",
+                python_install_dir / "Scripts" / "python.exe",
+            ]
+            python_bin = next((p for p in candidates if p.exists()), None)
+            if python_bin:
+                return python_bin
+            return self._fallback_find_python(uv_cmd, uv_install_dir)
         else:
             # Try different possible locations
             possible_bins = [
@@ -330,8 +340,15 @@ class PythonEnvironmentBuilder:
             if str(target).startswith("/usr") or str(target).startswith("/System"):
                 logger.error("🔗🚫❌ Python is a system symlink, not standalone!")
 
-        # Go up from bin/python{version} to the installation root
-        python_install_dir = python_bin.parent.parent
+        # Go up to the installation root.
+        # On Unix, python lives in bin/ so we need two levels up.
+        # On Windows standalone (cpython-build-standalone), python.exe is at the
+        # root of the install dir so only one level up is needed.
+        python_parent = python_bin.parent
+        if python_parent.name in ("bin", "Scripts"):
+            python_install_dir = python_parent.parent
+        else:
+            python_install_dir = python_parent
 
         self._log_installation_contents(python_install_dir)
         return python_install_dir
