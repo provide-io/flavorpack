@@ -134,7 +134,9 @@ def _run_bootstrap_cache_test(helper_manager: HelperManager, verbose: bool) -> b
             temp_dir = Path(temp_dir_str)
             manifest = _prepare_bootstrap_project(temp_dir)
 
-            workenv_dir = Path.home() / ".cache" / "flavor" / "workenv" / "bootstrap-test_1.0.0"
+            import os
+            flavor_cache = os.environ.get("FLAVOR_CACHE") or str(Path.home() / ".cache" / "flavor")
+            workenv_dir = Path(flavor_cache) / "workenv" / "bootstrap-test_1.0.0"
             if workenv_dir.exists():
                 shutil.rmtree(workenv_dir, ignore_errors=True)
 
