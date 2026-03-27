@@ -171,8 +171,8 @@ def create_builder_manifest(
                 "type": "enumerate_and_execute",
                 "command": (
                     "{workenv}/python.exe -m pip install --no-deps"
-                    if windows
-                    else f"{{workenv}}/bin/uv --no-config pip install --python {python_path} --no-deps"
+                    if windows else
+                    f"{{workenv}}/bin/uv --no-config pip install --python {python_path} --no-deps"
                 ),
                 "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
             },
@@ -441,8 +441,8 @@ def create_python_builder_metadata(
                 # On Linux/macOS uv pip install works fine (shell-script entry points).
                 "command": (
                     "{workenv}/python.exe -m pip install --no-deps"
-                    if windows
-                    else f"{{workenv}}/bin/uv --no-config pip install --python {python_path} --no-deps"
+                    if windows else
+                    f"{{workenv}}/bin/uv --no-config pip install --python {python_path} --no-deps"
                 ),
                 "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
             },
