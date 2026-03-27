@@ -127,8 +127,18 @@ class PythonEnvironmentBuilder:
 
         self._log_uv_environment()
 
+        # On Windows ARM64, request the native aarch64 build explicitly — uv defaults
+        # to x86_64 because ARM64 support is labelled "not yet mature" upstream.
+        python_spec = self._resolve_uv_python_spec()
+        if python_spec != self.python_version:
+            print(
+                f"[flavor-python] Windows ARM64 detected — requesting native Python: {python_spec}",
+                flush=True,
+                file=sys.stdout,
+            )
+
         # Strategy 1: install to custom dir
-        cmd_custom = [uv_cmd, "python", "install", self.python_version, "--install-dir", uv_install_dir]
+        cmd_custom = [uv_cmd, "python", "install", python_spec, "--install-dir", uv_install_dir]
         logger.debug("💻🚀📋 Running command", command=" ".join(cmd_custom))
         result = run(cmd_custom, capture_output=True)
         print(
@@ -144,23 +154,24 @@ class PythonEnvironmentBuilder:
 
         # Strategy 2: install to uv's default managed location, then find it
         logger.debug("💻🚀📋 Strategy 2: installing to default managed location")
-        cmd_default = [uv_cmd, "python", "install", self.python_version]
-        result2 = run(cmd_default, capture_output=True)
-        print(
-            f"[flavor-python] uv python install (default) exit={result2.returncode} "
-            f"stderr={result2.stderr.strip()!r:.120}",
-            flush=True,
-            file=sys.stdout,
-        )
+        try:
+            cmd_default = [uv_cmd, "python", "install", python_spec]
+            result2 = run(cmd_default, capture_output=True, env=_windows_system_env() or None)
+            print(
+                f"[flavor-python] uv python install (default) exit={result2.returncode} "
+                f"stderr={result2.stderr.strip()!r:.120}",
+                flush=True,
+                file=sys.stdout,
+            )
 
-        find_cmd = [uv_cmd, "python", "find", self.python_version, "--python-preference", "only-managed"]
-        result3 = run(find_cmd, capture_output=True)
-        python_bin_str = result3.stdout.strip()
-        print(
-            f"[flavor-python] uv python find exit={result3.returncode} path={python_bin_str!r:.200}",
-            flush=True,
-            file=sys.stdout,
-        )
+            find_cmd = [uv_cmd, "python", "find", python_spec, "--python-preference", "only-managed"]
+            result3 = run(find_cmd, capture_output=True, env=_windows_system_env() or None)
+            python_bin_str = result3.stdout.strip()
+            print(
+                f"[flavor-python] uv python find exit={result3.returncode} path={python_bin_str!r:.200}",
+                flush=True,
+                file=sys.stdout,
+            )
 
         if result3.returncode == 0 and python_bin_str:
             python_bin = Path(python_bin_str)
