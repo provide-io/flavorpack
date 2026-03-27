@@ -53,6 +53,8 @@ dev = [
     "provide-testkit[all]; sys_platform != 'win32'",
     "provide-testkit; sys_platform == 'win32'",
     "memray>=1.0; sys_platform != 'emscripten' and sys_platform != 'win32'",
+    # protobuf is included via provide-testkit[all] on non-Windows; add explicitly for Windows
+    "protobuf>=4.0; sys_platform == 'win32'",
     "hypothesis>=6.0",
 ]
 docs = [
@@ -292,6 +294,9 @@ private_key_path = "keys/flavor-private.key"
 public_key_path = "keys/flavor-public.key"
 
 [tool.uv]
-# cryptography 46.0.4+ has no win_arm64 binary wheel; building from source
-# fails on GHA windows-11-arm runners (no OpenSSL). Pin to last known good.
-constraint-dependencies = ["cryptography<=46.0.3"]
+# cryptography: win_arm64 binary wheels first appeared in 46.0.0;
+# 46.0.4+ dropped the win_arm64 wheel again (no OpenSSL for ARM64 on GHA).
+# Pin to 46.0.x range that has win_arm64 support.
+# cffi 1.x has no win_arm64 binary wheel; cffi 2.0.0+ provides win_arm64
+# wheels for native ARM64 Python.
+constraint-dependencies = ["cryptography>=46.0.0,<=46.0.3", "cffi>=2.0.0"]
