@@ -205,7 +205,7 @@ jobs:
             runner: windows-2025
             python_platform: win_amd64
           - platform: windows_arm64
-            runner: windows-2022-arm
+            runner: windows-11-arm
             python_platform: win_arm64
     steps:
       - name: 📥 Checkout
@@ -359,7 +359,7 @@ jobs:
             python_platform: win_amd64
             continue_on_error: true
           - platform: windows_arm64
-            runner: windows-2022-arm
+            runner: windows-11-arm
             python_platform: win_arm64
 
     continue-on-error: ${{ matrix.continue_on_error == true }}
@@ -483,7 +483,7 @@ jobs:
           - platform: windows_amd64
             runner: windows-2025
           - platform: windows_arm64
-            runner: windows-2022-arm
+            runner: windows-11-arm
 
     steps:
       - name: 📥 Checkout scripts
