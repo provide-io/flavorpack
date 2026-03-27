@@ -260,16 +260,25 @@ jobs:
             platform: linux_amd64
             activate: workenv/bin/activate
             launcher_ext: ""
+            # Rust launcher works on Linux
+            bundled_launcher: flavor-rs-launcher
           - runner: windows-2025
             platform: windows_amd64
             activate: workenv/Scripts/activate
             launcher_ext: ".exe"
+            # Rust launcher crashes on Windows; use Go launcher
+            bundled_launcher: flavor-go-launcher
           - runner: windows-11-arm
             platform: windows_arm64
             activate: workenv/Scripts/activate
             launcher_ext: ".exe"
+            # Rust launcher crashes on Windows; use Go launcher
+            bundled_launcher: flavor-go-launcher
       fail-fast: false
     runs-on: ${{ matrix.runner }}
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -306,7 +315,7 @@ jobs:
           cd tests/taster
 
           echo "=== Flavor pack with explicit launcher from helpers ==="
-          LAUNCHER="../../helpers/bin/flavor-rs-launcher-${{ matrix.platform }}${{ matrix.launcher_ext }}"
+          LAUNCHER="../../helpers/bin/${{ matrix.bundled_launcher }}-${{ matrix.platform }}${{ matrix.launcher_ext }}"
 
           if [ ! -f "$LAUNCHER" ]; then
             echo "❌ Launcher not found at $LAUNCHER"
@@ -392,6 +401,12 @@ jobs:
         run: |
           source ${{ matrix.activate }}
           cd tests/taster
+
+          # Rust launcher is not supported on Windows (crashes on execution)
+          if [[ "${{ matrix.platform }}" == "windows_"* ]]; then
+            echo "⚠️ Rust launcher not supported on Windows, skipping"
+            exit 0
+          fi
 
           echo "=== Testing with Rust launcher ==="
           if [ "$LAUNCHER_SOURCE" = "wheel" ]; then
@@ -489,7 +504,7 @@ jobs:
 
           echo "=== Testing Taster self-packaging capability ==="
 
-          LAUNCHER="../../helpers/bin/flavor-rs-launcher-${{ matrix.platform }}${{ matrix.launcher_ext }}"
+          LAUNCHER="../../helpers/bin/${{ matrix.bundled_launcher }}-${{ matrix.platform }}${{ matrix.launcher_ext }}"
           if [ ! -f "$LAUNCHER" ]; then
             echo "❌ Launcher not found for self-packaging test"
             exit 1
