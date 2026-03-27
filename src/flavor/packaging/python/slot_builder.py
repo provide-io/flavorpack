@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 import sys
 import tarfile
@@ -379,24 +380,52 @@ class PythonSlotBuilder:
             req_file = Path(tmp) / "build-backends-requirements.txt"
 
             uv_exe = self.uv_manager.get_uv_executable()
-            export_cmd = [
-                uv_exe.as_posix(),
-                "export",
-                "--frozen",
-                "--only-group", "build-backends",
-                "--hashes",
-                "--output-file", req_file.as_posix(),
-            ]
-            logger.debug("Exporting build-backends from uv.lock", command=" ".join(export_cmd))
-            run(export_cmd, check=True, capture_output=True, cwd=self.manifest_dir)
+            wheel_cache_dir = os.environ.get("FLAVOR_WHEEL_CACHE")
 
-            download_cmd = _pip_base_cmd(Path(sys.executable)) + [
-                "download",
-                "--require-hashes",
-                "-r", req_file.as_posix(),
-                "-d", wheels_dir.as_posix(),
-            ]
-            logger.debug("Downloading build-backends with hash verification", command=" ".join(download_cmd))
+            if wheel_cache_dir:
+                # Offline strategy: use pre-warmed FLAVOR_WHEEL_CACHE (no network access).
+                # CI pre-warms the cache via prewarm-wheel-cache.sh using uv's Rust HTTP
+                # client; pip subprocess then copies wheels locally with --no-index.
+                export_cmd = [
+                    uv_exe.as_posix(),
+                    "export",
+                    "--frozen",
+                    "--only-group", "build-backends",
+                    "--no-hashes",
+                    "--output-file", req_file.as_posix(),
+                ]
+                logger.debug("Exporting build-backends (no-hashes, offline)", command=" ".join(export_cmd))
+                run(export_cmd, check=True, capture_output=True, cwd=self.manifest_dir)
+
+                download_cmd = _pip_base_cmd(Path(sys.executable)) + [
+                    "download",
+                    "--no-index",
+                    "--find-links", wheel_cache_dir,
+                    "-r", req_file.as_posix(),
+                    "-d", wheels_dir.as_posix(),
+                ]
+                logger.debug("Copying build-backends from FLAVOR_WHEEL_CACHE (offline)", cache=wheel_cache_dir)
+            else:
+                # Network strategy: download with hash verification from lockfile.
+                export_cmd = [
+                    uv_exe.as_posix(),
+                    "export",
+                    "--frozen",
+                    "--only-group", "build-backends",
+                    "--hashes",
+                    "--output-file", req_file.as_posix(),
+                ]
+                logger.debug("Exporting build-backends from uv.lock", command=" ".join(export_cmd))
+                run(export_cmd, check=True, capture_output=True, cwd=self.manifest_dir)
+
+                download_cmd = _pip_base_cmd(Path(sys.executable)) + [
+                    "download",
+                    "--require-hashes",
+                    "-r", req_file.as_posix(),
+                    "-d", wheels_dir.as_posix(),
+                ]
+                logger.debug("Downloading build-backends with hash verification", command=" ".join(download_cmd))
+
             run(download_cmd, check=True, capture_output=True)
 
         logger.info("Build-backend wheels bundled into slot")
