@@ -73,8 +73,24 @@ mod runtime_impl {
                 debug!("📭 No unset patterns (empty list)");
             } else {
                 debug!("📋 Unset patterns found: {:?}", unset_patterns);
+                let keys_before: std::collections::HashSet<String> =
+                    env_map.keys().cloned().collect();
                 match UnsetOperation::new(unset_patterns, &pattern_processor).execute(env_map) {
-                    Ok(_) => debug!("✅ Unset operations completed successfully"),
+                    Ok(_) => {
+                        let mut stripped: Vec<String> = keys_before
+                            .difference(&env_map.keys().cloned().collect())
+                            .cloned()
+                            .collect();
+                        if !stripped.is_empty() {
+                            stripped.sort();
+                            debug!(
+                                "🧹 Stripped {} env vars from child environment: {}",
+                                stripped.len(),
+                                stripped.join(", ")
+                            );
+                        }
+                        debug!("✅ Unset operations completed successfully");
+                    }
                     Err(e) => debug!("⚠️ Error during unset operations: {}", e),
                 }
             }

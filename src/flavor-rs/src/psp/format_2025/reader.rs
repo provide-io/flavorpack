@@ -1,7 +1,7 @@
 // helpers/flavor-rs/src/psp/format_2025/reader.rs
 // PSPF 2025 Bundle Reader - Uses backend system for flexible access
 
-use log::{debug, error, trace};
+use log::{debug, error, trace, warn};
 use std::path::Path;
 use std::time::Instant;
 
@@ -115,7 +115,7 @@ impl Reader {
 
             // Log a warning if checksum doesn't match
             if !index.verify_checksum_raw(&index_data) {
-                debug!("Warning: Index checksum mismatch (verification disabled)");
+                warn!("⚠️  Index checksum mismatch — verification is currently disabled (TODO: fix calculation)");
             }
 
             self.index = Some(index);
