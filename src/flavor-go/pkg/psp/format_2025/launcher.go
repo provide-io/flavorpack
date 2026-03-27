@@ -64,8 +64,35 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 	} else if !logging.IsJSONFormat(logLevel) {
 		logOutput = logging.NewPrefixWriter("🐹 ", launcherStderrWriter)
 	}
-	logging.Setup(logLevel, logOutput)
-	logger := logging.NewLogger(context.Background(), "flavor-go.launcher")
+
+	// Configure logger with JSON if requested
+	var output io.Writer = os.Stderr
+
+	// Support log file output
+	if logPath := os.Getenv("FLAVOR_LOG_PATH"); logPath != "" {
+		if file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644); err == nil {
+			output = file
+		}
+	}
+
+	// Add prefix to non-JSON output; enable UTF-8 console on Windows first
+	if !jsonFormat {
+		setUTF8ConsoleOutput()
+		output = logging.NewPrefixWriter("🐹 ", output)
+	}
+
+	loggerOpts := &hclog.LoggerOptions{
+		Name:       "flavor-go-launcher",
+		Level:      hclog.LevelFromString(actualLevel),
+		JSONFormat: jsonFormat,
+		Output:     output,
+		TimeFormat: "2006-01-02T15:04:05Z", // UTC ISO format without timezone
+		TimeFn: func() time.Time {
+			return time.Now().UTC() // Force UTC time
+		},
+	}
+
+	logger := hclog.New(loggerOpts)
 
 	// Only log startup messages in CLI mode
 	if isEnvTrue(EnvLauncherCLI) {
