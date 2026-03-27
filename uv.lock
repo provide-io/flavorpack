@@ -773,6 +773,7 @@ dependencies = [
     { name = "provide-foundation", extra = ["cli", "compression", "crypto", "platform", "transport"], marker = "platform_machine == 'ARM64' and sys_platform == 'win32'" },
     { name = "setuptools" },
     { name = "uv" },
+    { name = "wheel" },
 ]
 
 [package.dev-dependencies]
@@ -797,8 +798,9 @@ requires-dist = [
     { name = "pip", specifier = ">=25.2" },
     { name = "provide-foundation", extras = ["all"], marker = "platform_machine != 'ARM64' or sys_platform != 'win32'", specifier = ">=0.3.21" },
     { name = "provide-foundation", extras = ["cli", "compression", "crypto", "platform", "transport"], marker = "platform_machine == 'ARM64' and sys_platform == 'win32'", specifier = ">=0.3.21" },
-    { name = "setuptools", specifier = ">=68.0.0" },
+    { name = "setuptools", specifier = "==82.0.1" },
     { name = "uv", specifier = ">=0.9.6" },
+    { name = "wheel", specifier = "==0.46.3" },
 ]
 
 [package.metadata.requires-dev]
