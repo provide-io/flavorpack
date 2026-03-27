@@ -180,15 +180,18 @@ class UVManager(BaseToolManager):
             logger.debug(f"Found system UV: {system_uv}")
             return Path(system_uv)
 
-        # Also look next to the current Python executable.
+        # Also look next to the current Python executable and in Scripts/bin.
         # Inside a Flavor PSP workenv the workenv's Scripts/bin directory may
-        # not be in PATH, but uv is always installed as a sibling of python.exe.
+        # not be in PATH, but uv is installed as a sibling of python.exe or
+        # in the Scripts/bin subdirectory (depending on Python layout).
         python_dir = Path(sys.executable).parent
-        for name in ("uv.exe", "uv"):
-            candidate = python_dir / name
-            if candidate.exists():
-                logger.debug(f"Found UV next to Python executable: {candidate}")
-                return candidate
+        search_dirs = [python_dir, python_dir / "Scripts", python_dir / "bin"]
+        for search_dir in search_dirs:
+            for name in ("uv.exe", "uv"):
+                candidate = search_dir / name
+                if candidate.exists():
+                    logger.debug(f"Found UV next to Python executable: {candidate}")
+                    return candidate
 
         logger.debug("No system UV found")
         return None
