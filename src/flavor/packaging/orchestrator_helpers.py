@@ -62,8 +62,8 @@ def get_cli_module_for_windows(package_name: str, build_config: dict[str, Any]) 
         first_script_name = next(iter(cli_scripts.keys()))
         entry_point = cli_scripts[first_script_name]
         if ":" in entry_point:
-            return str(entry_point.split(":")[0])
-        return str(entry_point)
+            return entry_point.split(":")[0]
+        return entry_point
     return package_name
 
 
