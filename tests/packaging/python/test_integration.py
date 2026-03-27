@@ -13,6 +13,7 @@ from unittest.mock import Mock, patch
 from provide.foundation.archive import GzipCompressor, TarArchive
 import pytest
 
+import flavor.packaging.python.pypapip_manager as _pip_mod
 from flavor.packaging.python.dist_manager import PythonDistManager
 from flavor.packaging.python.pypapip_manager import PyPaPipManager
 from flavor.packaging.python.uv_manager import UVManager
@@ -192,7 +193,8 @@ version = "1.0.0"
             python_exe = Path("/usr/bin/python")
             packages = ["test-package"]
 
-            cmd = self.pypapip._get_pypapip_install_cmd(python_exe, packages)
+            with patch.object(_pip_mod.sys, "platform", "linux"):
+                cmd = self.pypapip._get_pypapip_install_cmd(python_exe, packages)
             expected = ["/usr/bin/python", "-m", "pip", "install", "test-package"]
             assert cmd == expected
 
@@ -218,7 +220,8 @@ version = "1.0.0"
             venv_python = temp_path / "venv" / "bin" / "python"
 
             # Test installation
-            self.dist_manager.install_wheels_to_environment(venv_python, wheel_files)
+            with patch.object(_pip_mod.sys, "platform", "linux"):
+                self.dist_manager.install_wheels_to_environment(venv_python, wheel_files)
 
             # Verify PyPA pip was used (not UV pip)
             mock_run.assert_called_once()
