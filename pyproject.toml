@@ -220,3 +220,8 @@ dependencies = []
 [tool.flavor.signing]
 private_key_path = "keys/flavor-private.key"
 public_key_path = "keys/flavor-public.key"
+
+[tool.uv]
+# cryptography 46.0.4+ has no win_arm64 binary wheel; building from source
+# fails on GHA windows-11-arm runners (no OpenSSL). Pin to last known good.
+constraint-dependencies = ["cryptography<=46.0.3"]
