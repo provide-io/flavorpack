@@ -160,11 +160,10 @@ func ReadPSPFFromResource(exePath string, logger hclog.Logger) ([]byte, error) {
 
 	logger.Debug("Loaded EXE as data file", "handle", handle)
 
-	// Find the PSPF resource
-	// Use MakeIntResource for string resource names
+	// Find the PSPF resource by name (string) and type (ResourceID)
 	resInfo, err := windows.FindResource(
 		handle,
-		windows.StringToUTF16Ptr(PSPF_RESOURCE_NAME),
+		PSPF_RESOURCE_NAME,
 		windows.RT_RCDATA,
 	)
 	if err != nil {
