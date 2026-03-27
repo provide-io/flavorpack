@@ -89,9 +89,8 @@ set = { "TASTER_MODE" = "test", "TASTER_VERSION" = "1.0.0", "PYTHONIOENCODING" =
 map = { "OLD_VAR" = "NEW_VAR" }
 
 [tool.uv]
-# cffi 1.x has no win_arm64 binary wheel; matches flavorpack's constraint
-# cryptography<46 has no win_arm64 binary wheel; matches flavorpack's constraint
-constraint-dependencies = ["cffi>=2.0.0", "cryptography>=46.0.0,<=46.0.3"]
+# cffi 1.17.1 has no win_arm64 binary wheel; 2.0.0 is the first with one
+constraint-dependencies = ["cffi>=2.0.0 ; sys_platform == 'win32' and platform_machine == 'ARM64'"]
 
 [dependency-groups]
 dev = [
