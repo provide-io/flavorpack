@@ -57,6 +57,10 @@ docs = [
     "provide-testkit[docs]",
     "mkdocs-mermaid2-plugin>=1.1.0",
 ]
+build-backends = [
+    "setuptools==82.0.1",
+    "wheel",
+]
 
 [project.scripts]
 flavor = "flavor.cli:main"
