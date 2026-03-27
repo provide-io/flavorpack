@@ -31,8 +31,10 @@ find . -type f | sort
 echo "=== End of file listing ==="
 
 # Find the Flavor PSP file (may be in artifacts/ subdirectory)
+# On Windows the output is flavor-*.psp (a PE binary with .psp extension);
+# also match flavor-*.exe for future builds that rename the extension.
 if [[ "$PLATFORM" == *"windows"* ]]; then
-    FLAVOR_PSP=$(find . -name "flavor-*.exe" 2>/dev/null | head -1)
+    FLAVOR_PSP=$(find . \( -name "flavor-*.exe" -o -name "flavor-*.psp" \) 2>/dev/null | head -1)
 else
     FLAVOR_PSP=$(find . -name "flavor-*.psp" 2>/dev/null | head -1)
 fi
