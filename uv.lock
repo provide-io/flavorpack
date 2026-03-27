@@ -14,7 +14,10 @@ resolution-markers = [
 ]
 
 [manifest]
-constraints = [{ name = "cryptography", specifier = "<=46.0.3" }]
+constraints = [
+    { name = "cffi", specifier = ">=2.0.0" },
+    { name = "cryptography", specifier = ">=46.0.0,<=46.0.3" },
+]
 
 [[package]]
 name = "annotated-doc"
@@ -776,6 +779,7 @@ dependencies = [
 dev = [
     { name = "hypothesis" },
     { name = "memray", marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
+    { name = "protobuf", marker = "sys_platform == 'win32'" },
     { name = "provide-testkit" },
     { name = "provide-testkit", extra = ["all"], marker = "sys_platform != 'win32'" },
 ]
@@ -797,6 +801,7 @@ requires-dist = [
 dev = [
     { name = "hypothesis", specifier = ">=6.0" },
     { name = "memray", marker = "sys_platform != 'emscripten' and sys_platform != 'win32'", specifier = ">=1.0" },
+    { name = "protobuf", marker = "sys_platform == 'win32'", specifier = ">=4.0" },
     { name = "provide-testkit", marker = "sys_platform == 'win32'" },
     { name = "provide-testkit", extras = ["all"], marker = "sys_platform != 'win32'" },
 ]
