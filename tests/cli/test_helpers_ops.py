@@ -8,9 +8,11 @@
 from __future__ import annotations
 
 from pathlib import Path
+import sys
 from unittest.mock import Mock, patch
 
 from click.testing import CliRunner
+import pytest
 
 from flavor.cli import main as cli_main
 from flavor.helpers.manager import HelperInfo
@@ -166,6 +168,7 @@ class TestHelperInfo:
         assert result.exit_code == 0
         assert "Helper 'nonexistent' not found" in result.output
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="os.access X_OK always returns True on Windows")
     @patch("flavor.helpers.manager.HelperManager")
     def test_info_helper_not_executable(self, mock_manager_class: Mock, tmp_path: Path) -> None:
         """Test info command for helper that is not executable."""

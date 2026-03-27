@@ -91,7 +91,7 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
                 skipped_count += 1
 
         if skipped_count > 0:
-            print(f"\n⚠️  Skipping {skipped_count} integration tests (launcher binaries not found)")
+            print(f"\nWARNING: Skipping {skipped_count} integration tests (launcher binaries not found)")
             print("   Run 'make build-helpers' to enable integration tests")
 
 

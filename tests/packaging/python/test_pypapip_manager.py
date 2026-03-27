@@ -291,7 +291,8 @@ class TestPyPaPipManager:
             assert "--dest" in cmd
             assert "/tmp/wheels" in cmd
             assert "-r" in cmd
-            assert str(requirements_file) in cmd
+            # Normalize path separators for cross-platform comparison
+            assert any(str(requirements_file).replace("\\", "/") == c.replace("\\", "/") for c in cmd)
 
         finally:
             requirements_file.unlink()

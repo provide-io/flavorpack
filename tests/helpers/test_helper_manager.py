@@ -54,8 +54,8 @@ class TestHelperManagerInit:
         with patch.dict("os.environ", {"XDG_CACHE_HOME": "/custom/cache"}):
             manager = HelperManager()
 
-        assert "/custom/cache" in str(manager.installed_helpers_bin)
-        assert "flavor/helpers/bin" in str(manager.installed_helpers_bin)
+        assert "/custom/cache" in manager.installed_helpers_bin.as_posix()
+        assert "flavor/helpers/bin" in manager.installed_helpers_bin.as_posix()
 
 
 @pytest.mark.unit

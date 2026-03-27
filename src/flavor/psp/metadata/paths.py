@@ -212,15 +212,17 @@ def make_relative_to_workenv(absolute_path: str, workenv_dir: str) -> str:
 
     # Check if path is under workenv
     if absolute_path.startswith(workenv_dir):
-        # Get relative path
+        # Get relative path — convert to POSIX (forward slashes) so manifest
+        # paths are platform-agnostic regardless of where the build runs.
         relpath = os.path.relpath(absolute_path, workenv_dir)
         if relpath == ".":
             return "{workenv}"
-        return f"{{workenv}}/{relpath}"
+        relpath_posix = relpath.replace(os.sep, "/")
+        return f"{{workenv}}/{relpath_posix}"
 
-    # Path is not under workenv - just return with {workenv} prefix
-    # This shouldn't normally happen but handle gracefully
-    return validate_metadata_path(absolute_path)
+    # Path is not under workenv - normalize to POSIX for metadata portability
+    posix_path = absolute_path.replace(os.sep, "/")
+    return validate_metadata_path(posix_path)
 
 
 def substitute_placeholders(path: str, workenv_path: Path) -> str:
@@ -251,7 +253,7 @@ def substitute_placeholders(path: str, workenv_path: Path) -> str:
     # Substitute placeholders
     result = path
     if "{workenv}" in result:
-        result = result.replace("{workenv}", str(workenv_path))
+        result = result.replace("{workenv}", workenv_path.as_posix())
     if "{os}" in result:
         result = result.replace("{os}", os_name)
     if "{arch}" in result:
