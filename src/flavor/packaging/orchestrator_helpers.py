@@ -123,7 +123,11 @@ def create_builder_manifest(
         "setup_commands": [
             {
                 "type": "enumerate_and_execute",
-                "command": f"{{workenv}}/bin/{uv_exe} pip install --python {python_path} --no-deps",
+                "command": (
+                    "{workenv}/python.exe -m pip install --no-deps"
+                    if windows else
+                    f"{{workenv}}/bin/uv pip install --python {python_path} --no-deps"
+                ),
                 "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
             },
             {
@@ -364,7 +368,15 @@ def create_python_builder_metadata(
         "setup_commands": [
             {
                 "type": "enumerate_and_execute",
-                "command": f"{{workenv}}/bin/uv pip install --python {python_path} --no-deps",
+                # On Windows use python -m pip: uv trampolines fail to canonicalize
+                # their own path inside the PSP workenv.  pip's distlib launchers
+                # embed the Python path at install time and don't canonicalize.
+                # On Linux/macOS uv pip install works fine (shell-script entry points).
+                "command": (
+                    "{workenv}/python.exe -m pip install --no-deps"
+                    if windows else
+                    f"{{workenv}}/bin/uv pip install --python {python_path} --no-deps"
+                ),
                 "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
             },
             {
