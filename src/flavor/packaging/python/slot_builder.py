@@ -23,6 +23,7 @@ from provide.foundation.platform import get_arch_name, get_os_name
 
 from flavor.config.defaults import DEFAULT_DIR_PERMS, DEFAULT_EXECUTABLE_PERMS
 from flavor.packaging.python.environment_builder import PythonEnvironmentBuilder
+from flavor.packaging.python.pypapip_manager import _pip_base_cmd
 from flavor.packaging.python.uv_manager import UVManager
 
 
@@ -383,14 +384,14 @@ class PythonSlotBuilder:
                 "export",
                 "--frozen",
                 "--only-group", "build-backends",
+                "--hashes",
                 "--output-file", req_file.as_posix(),
             ]
             logger.debug("Exporting build-backends from uv.lock", command=" ".join(export_cmd))
             run(export_cmd, check=True, capture_output=True, cwd=self.manifest_dir)
 
-            download_cmd = [
-                sys.executable,
-                "-m", "pip", "download",
+            download_cmd = _pip_base_cmd(Path(sys.executable)) + [
+                "download",
                 "--require-hashes",
                 "-r", req_file.as_posix(),
                 "-d", wheels_dir.as_posix(),
