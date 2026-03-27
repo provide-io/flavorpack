@@ -62,9 +62,9 @@ set = { "TASTER_MODE" = "test", "TASTER_VERSION" = "1.0.0" }
 map = { "OLD_VAR" = "NEW_VAR" }
 
 [tool.uv]
-# cffi 1.x has no win_arm64 binary wheel; cffi>=2.0.0 provides win_arm64
-# wheels and matches the constraint already in flavorpack's pyproject.toml
-constraint-dependencies = ["cffi>=2.0.0"]
+# cffi 1.x has no win_arm64 binary wheel; matches flavorpack's constraint
+# cryptography<46 has no win_arm64 binary wheel; matches flavorpack's constraint
+constraint-dependencies = ["cffi>=2.0.0", "cryptography>=46.0.0,<=46.0.3"]
 
 [dependency-groups]
 dev = [
