@@ -16,7 +16,9 @@ maintainers = [
     { name = "provide.io", email = "code@provide.io" },
 ]
 dependencies = [
-    "provide-foundation[all]",
+    # grpcio has no win_arm64 binary wheel; use reduced extras on that platform
+    "provide-foundation[all]; sys_platform != 'win32' or platform_machine != 'ARM64'",
+    "provide-foundation[cli,compression,crypto,transport,platform]; sys_platform == 'win32' and platform_machine == 'ARM64'",
 ]
 
 [project.scripts]
