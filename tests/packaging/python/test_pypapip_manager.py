@@ -56,6 +56,7 @@ class TestPyPaPipManager:
             "wheel",
             "--wheel-dir",
             "/tmp/wheels",
+            "--no-build-isolation",
             "/tmp/mypackage",
         ]
         assert cmd == expected
@@ -77,6 +78,7 @@ class TestPyPaPipManager:
             "--wheel-dir",
             "/tmp/wheels",
             "--no-deps",
+            "--no-build-isolation",
             "/tmp/mypackage",
         ]
         assert cmd == expected
