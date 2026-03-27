@@ -31,6 +31,15 @@ _PINNED_BUILD_BACKENDS: dict[str, str] = {
 }
 
 
+# Exact versions of build backends required in the workenv.
+# These must match [dependency-groups.build-backends] in pyproject.toml.
+# To update: change the version in pyproject.toml, run `uv lock`, update here.
+_PINNED_BUILD_BACKENDS: dict[str, str] = {
+    "setuptools": "82.0.1",
+    "wheel": "0.46.3",
+}
+
+
 class WheelBuilder:
     """
     Wheel builder with sophisticated dependency resolution.
@@ -88,26 +97,20 @@ class WheelBuilder:
             raise RuntimeError(f"Unable to bootstrap pip for {python_exe}: {uv_error}") from uv_error
 
     def _ensure_no_isolation_build_backend(self, python_exe: Path) -> None:
-        """Ensure setuptools and wheel are available for no-isolation builds."""
-        backend_check_cmd = [python_exe.as_posix(), "-c", "import setuptools, wheel"]
-        try:
-            logger.debug("🔍 Checking no-isolation build backend", python_exe=str(python_exe))
-            run(backend_check_cmd, check=True, capture_output=True)
-            return
-        except Exception:
-            logger.warning(
-                "⚠️ Missing setuptools/wheel for no-isolation build; installing build backend",
-                python_exe=str(python_exe),
-            )
-
-        install_cmd = self.pypapip._get_pypapip_install_cmd(python_exe, ["setuptools", "wheel"])
-        try:
-            logger.debug("🛠️ Installing no-isolation build backend", command=" ".join(install_cmd))
-            run(install_cmd, check=True, capture_output=True)
-        except Exception as backend_error:
-            raise RuntimeError(
-                f"Unable to install no-isolation build backend for {python_exe}: {backend_error}"
-            ) from backend_error
+        """Assert that pinned build backends are present. Never installs."""
+        for pkg, expected in _PINNED_BUILD_BACKENDS.items():
+            try:
+                installed = importlib_metadata.version(pkg)
+            except importlib_metadata.PackageNotFoundError:
+                raise RuntimeError(
+                    f"Build backend not found: {pkg}. Rebuild the workenv slot."
+                )
+            if installed != expected:
+                raise RuntimeError(
+                    f"Build backend mismatch: {pkg}=={installed} present, "
+                    f"expected {pkg}=={expected}. Rebuild the workenv slot."
+                )
+            logger.debug(f"✅ Build backend verified: {pkg}=={installed}")
 
     def build_wheel_from_source(
         self,
