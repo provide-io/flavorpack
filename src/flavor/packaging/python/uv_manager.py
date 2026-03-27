@@ -15,6 +15,8 @@ is critical. For complex dependency resolution, use PyPaPipManager instead.
 from __future__ import annotations
 
 import asyncio
+import os
+import sys
 from pathlib import Path
 from typing import ClassVar
 
@@ -29,6 +31,37 @@ from provide.foundation.tools.base import (
     ToolMetadata,
     ToolNotFoundError,
 )
+
+
+def _windows_system_env() -> dict[str, str]:
+    """Return Windows system env vars required for subprocess DLL loading.
+
+    provide.foundation scrubs subprocess environments to a safe allowlist, which
+    excludes SYSTEMROOT, WINDIR, etc. Without these, Windows cannot find the
+    Winsock service-provider DLLs (paths stored as %SystemRoot%\\system32\\...)
+    and any socket call — including DNS getaddrinfo — fails with errno 11001.
+
+    Pass the returned dict as ``env=`` to ``run()`` so these vars are merged
+    into the scrubbed environment as trusted caller overrides.  On non-Windows
+    platforms the dict is empty so this is a no-op.
+    """
+    if sys.platform != "win32":
+        return {}
+    _WINDOWS_VARS = (
+        "SYSTEMROOT",
+        "WINDIR",
+        "SYSTEMDRIVE",
+        "LOCALAPPDATA",
+        "APPDATA",
+        "USERPROFILE",
+        "COMPUTERNAME",
+        "PROGRAMFILES",
+        "PROGRAMFILES(X86)",
+        "COMMONPROGRAMFILES",
+        "NUMBER_OF_PROCESSORS",
+        "PROCESSOR_ARCHITECTURE",
+    )
+    return {k: v for k, v in os.environ.items() if k in _WINDOWS_VARS}
 
 
 class UVManager(BaseToolManager):
@@ -421,7 +454,7 @@ class UVManager(BaseToolManager):
             str(requirements_file),
             "--quiet",
         ]
-        result = run(cmd, check=False, capture_output=True)
+        result = run(cmd, check=False, capture_output=True, env=_windows_system_env() or None)
         if result.returncode == 0:
             logger.warning("✅ Copied wheels from FLAVOR_WHEEL_CACHE (offline)")
             return True
