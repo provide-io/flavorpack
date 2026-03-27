@@ -57,7 +57,13 @@ pass = [
     "LC_*",
     "FLAVOR_*",
     "TASTER_*",  # Allow taster-specific vars
-    "KEEP_*"     # For testing preservation
+    "KEEP_*",    # For testing preservation
+    # Windows home directory variables (needed for Path.home() on Windows)
+    "USERPROFILE",
+    "HOMEDRIVE",
+    "HOMEPATH",
+    "APPDATA",
+    "LOCALAPPDATA"
 ]
 set = { "TASTER_MODE" = "test", "TASTER_VERSION" = "1.0.0", "PYTHONIOENCODING" = "utf-8", "PYTHONUTF8" = "1" }
 # Example mapping for testing
