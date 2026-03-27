@@ -74,6 +74,8 @@ class TestWheelBuilder:
     @patch("flavor.packaging.python.wheel_builder.run")
     def test_build_wheel_with_options(self, mock_run: Mock) -> None:
         """Test wheel building with custom build options."""
+        from flavor.packaging.python.wheel_builder import _PINNED_BUILD_BACKENDS
+
         mock_result = Mock()
         mock_result.returncode = 0
         mock_result.stdout = "Built wheel: mypackage-1.0.0-py3-none-any.whl"
@@ -96,13 +98,15 @@ class TestWheelBuilder:
                 "no-build-isolation": False,
             }
 
-            self.wheel_builder.build_wheel_from_source(
-                python_exe,
-                source_path,
-                wheel_dir,
-                use_isolation=False,
-                build_options=build_options,
-            )
+            with patch("flavor.packaging.python.wheel_builder.importlib_metadata") as mock_meta:
+                mock_meta.version.side_effect = lambda pkg: _PINNED_BUILD_BACKENDS[pkg]
+                self.wheel_builder.build_wheel_from_source(
+                    python_exe,
+                    source_path,
+                    wheel_dir,
+                    use_isolation=False,
+                    build_options=build_options,
+                )
 
             # Verify command includes custom options
             args, _kwargs = mock_run.call_args_list[-1]
@@ -262,6 +266,8 @@ class TestWheelBuilder:
     @patch("flavor.packaging.python.wheel_builder.run")
     def test_build_and_resolve_project_complete(self, mock_run: Mock) -> None:
         """Test complete project building and resolution."""
+        from flavor.packaging.python.wheel_builder import _PINNED_BUILD_BACKENDS
+
         mock_result = Mock()
         mock_result.returncode = 0
         mock_result.stdout = "Built wheel: myproject-1.0.0-py3-none-any.whl"
@@ -280,9 +286,11 @@ class TestWheelBuilder:
 
             # Mock dependency resolution and wheel creation
             with (
+                patch("flavor.packaging.python.wheel_builder.importlib_metadata") as mock_meta,
                 patch.object(self.wheel_builder, "resolve_dependencies") as mock_resolve,
                 patch.object(self.wheel_builder, "download_wheels_for_resolved_deps") as mock_download,
             ):
+                mock_meta.version.side_effect = lambda pkg: _PINNED_BUILD_BACKENDS[pkg]
                 # Setup mock returns
                 locked_reqs = build_dir / "deps" / "requirements.txt"
                 locked_reqs.parent.mkdir(parents=True)
