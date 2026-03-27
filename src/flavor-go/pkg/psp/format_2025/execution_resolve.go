@@ -1,6 +1,8 @@
 package format_2025
 
 import (
+	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -68,4 +70,32 @@ func resolveExecutable(executable string, logger hclog.Logger) string {
 
 	logger.Debug("⚠️ Could not resolve executable in PATH, using as-is", "executable", executable)
 	return executable
+}
+
+// lookPathInEnv searches for a binary in the PATH extracted from the given environment
+// slice. This is used to resolve a binary name to an absolute path using a custom
+// environment (e.g., cmd.Env that includes workenv/bin) rather than the current
+// process environment that exec.LookPath uses.
+func lookPathInEnv(file string, env []string) (string, error) {
+	pathVal := ""
+	for _, e := range env {
+		if strings.HasPrefix(e, "PATH=") {
+			pathVal = strings.TrimPrefix(e, "PATH=")
+			break
+		}
+	}
+	if pathVal == "" {
+		return "", fmt.Errorf("PATH not found in environment")
+	}
+
+	for _, dir := range filepath.SplitList(pathVal) {
+		if dir == "" {
+			dir = "."
+		}
+		candidate := filepath.Join(dir, file)
+		if fi, err := os.Stat(candidate); err == nil && !fi.IsDir() {
+			return candidate, nil
+		}
+	}
+	return "", fmt.Errorf("executable %q not found in PATH", file)
 }
