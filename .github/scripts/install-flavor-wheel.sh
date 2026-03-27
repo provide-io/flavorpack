@@ -3,17 +3,17 @@ set -euo pipefail
 
 # Install Flavor from a pre-built wheel using uv tool install.
 #
-# On windows_arm64, Python runs as x64 (amd64 emulation) while the OS is native
-# ARM64. If an x64 Python is provided, it is used explicitly so that uv resolves
-# amd64 binary wheels (e.g. cryptography) rather than arm64 ones that may not
-# have pre-built wheels available.
+# On windows_arm64, the flavorpack wheel is win_arm64 (native ARM64 tool).
+# UV resolves dependencies for the native ARM64 platform; cryptography 46.0.4+
+# dropped win_arm64 binary wheels so we pin to 46.0.3 (last version with
+# win_arm64 wheel) via --with to avoid a source build that requires OpenSSL.
 #
-# Usage: install-flavor-wheel.sh <wheel-dir> [python-exe]
-#   wheel-dir   Directory containing flavorpack-*.whl
-#   python-exe  Optional: path to a specific Python interpreter for uv tool install
+# Usage: install-flavor-wheel.sh <wheel-dir> [platform]
+#   wheel-dir  Directory containing flavorpack-*.whl
+#   platform   Optional: target platform string (e.g. windows_arm64)
 
 WHEEL_DIR="${1}"
-PYTHON_EXE="${2:-}"
+PLATFORM="${2:-}"
 
 WHEEL=$(find "${WHEEL_DIR}" -name "flavorpack-*.whl" | head -1)
 
@@ -25,9 +25,11 @@ fi
 
 echo "Installing Flavor from wheel: ${WHEEL}"
 
-if [ -n "${PYTHON_EXE}" ]; then
-  echo "Using explicit Python: ${PYTHON_EXE}"
-  uv tool install "${WHEEL}" --python "${PYTHON_EXE}"
+if [[ "${PLATFORM}" == "windows_arm64" ]]; then
+  # cryptography 46.0.4+ has no win_arm64 binary wheel and cannot be built from
+  # source on GHA (no OpenSSL). Pin to 46.0.3 which ships a win_arm64 wheel.
+  echo "Platform windows_arm64: pinning cryptography==46.0.3 for binary wheel"
+  uv tool install "${WHEEL}" --with "cryptography==46.0.3"
 else
   uv tool install "${WHEEL}"
 fi
