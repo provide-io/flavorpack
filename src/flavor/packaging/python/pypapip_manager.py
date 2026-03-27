@@ -118,6 +118,11 @@ class PyPaPipManager:
         cmd = [*_pip_base_cmd(python_exe), "wheel", "--wheel-dir", wheel_dir.as_posix()]
         if no_deps:
             cmd.append("--no-deps")
+        # --no-build-isolation: the workenv already has setuptools/wheel installed.
+        # Without this, pip spawns a subprocess pip to install [build-system].requires
+        # from PyPI; that subprocess inherits a fresh truststore which crashes on
+        # Windows GHA runners with ssl.SSLError: [SSL] unknown error (_ssl.c:3108).
+        cmd.append("--no-build-isolation")
         # Note: pip wheel doesn't support --platform flag (that's for download only)
         # Wheels built locally will automatically use the current platform
         cmd.append(source.as_posix())
