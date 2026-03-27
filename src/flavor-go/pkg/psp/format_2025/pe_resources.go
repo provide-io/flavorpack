@@ -157,8 +157,14 @@ func ReadPSPFFromResource(exePath string, logger *slog.Logger) ([]byte, error) {
 	}
 	defer f.Close()
 
-	// Load only the PSPF resource type to avoid parsing all resources.
-	rs, err := winres.LoadFromEXESingleType(f, PSPF_RESOURCE_TYPE)
+	logger.Debug("Loaded EXE as data file", "handle", handle)
+
+	// Find the PSPF resource by name (string) and type (ResourceID)
+	resInfo, err := windows.FindResource(
+		handle,
+		PSPF_RESOURCE_NAME,
+		windows.RT_RCDATA,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("PSPF resource not found in PE (type=%d, name=%s): %w",
 			PSPF_RESOURCE_TYPE, PSPF_RESOURCE_NAME, err)
