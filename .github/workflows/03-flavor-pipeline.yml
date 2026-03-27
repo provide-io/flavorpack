@@ -446,15 +446,11 @@ jobs:
           echo "launcher=$LAUNCHER" >> $GITHUB_OUTPUT
           echo "wheel=$WHEEL" >> $GITHUB_OUTPUT
 
-      - name: 📦 Pre-warm UV wheel cache from lockfile
+      - name: 📦 Pre-warm wheel cache for offline PSPF build
         shell: bash
         run: |
           export PATH="$HOME/.local/bin:$PATH"
-          # Populate UV's global wheel cache with exact lockfile-pinned versions.
-          # flavor pack spawns subprocesses (pip/uv) that cannot reach PyPI on Windows
-          # runners, but this step runs in the workflow context where network works.
-          # download_wheels_offline() will then succeed without any network access.
-          uv sync --frozen --all-groups --no-build || true
+          bash .github/scripts/prewarm-wheel-cache.sh "$GITHUB_WORKSPACE/.flavor-wheel-cache"
         continue-on-error: true
 
       - name: 🔨 Build Flavor PSP using itself (with retry)
