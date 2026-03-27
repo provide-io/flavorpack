@@ -54,7 +54,7 @@ class WheelBuilder:
 
     def _ensure_pip_available(self, python_exe: Path) -> None:
         """Ensure the target Python can run PyPA pip commands."""
-        pip_version_cmd = [str(python_exe), "-m", "pip", "--version"]
+        pip_version_cmd = [python_exe.as_posix(), "-m", "pip", "--version"]
         try:
             logger.debug("🔍 Checking pip availability", python_exe=str(python_exe))
             run(pip_version_cmd, check=True, capture_output=True)
@@ -62,7 +62,7 @@ class WheelBuilder:
         except Exception:
             logger.warning("⚠️ pip not available; attempting bootstrap", python_exe=str(python_exe))
 
-        ensurepip_cmd = [str(python_exe), "-m", "ensurepip", "--default-pip"]
+        ensurepip_cmd = [python_exe.as_posix(), "-m", "ensurepip", "--default-pip"]
         try:
             logger.debug("🛠️ Bootstrapping pip with ensurepip", python_exe=str(python_exe))
             run(ensurepip_cmd, check=True, capture_output=True)
@@ -81,7 +81,7 @@ class WheelBuilder:
 
     def _ensure_no_isolation_build_backend(self, python_exe: Path) -> None:
         """Ensure setuptools and wheel are available for no-isolation builds."""
-        backend_check_cmd = [str(python_exe), "-c", "import setuptools, wheel"]
+        backend_check_cmd = [python_exe.as_posix(), "-c", "import setuptools, wheel"]
         try:
             logger.debug("🔍 Checking no-isolation build backend", python_exe=str(python_exe))
             run(backend_check_cmd, check=True, capture_output=True)

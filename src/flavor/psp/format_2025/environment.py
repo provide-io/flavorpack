@@ -23,6 +23,8 @@ from provide.foundation.platform import (
     get_platform_string,
 )
 
+from flavor.utils.log_guards import is_trace_enabled
+
 plog = get_logger()
 
 
@@ -123,7 +125,7 @@ def _unset_all_except_preserved(env_map: dict[str, str], should_preserve: Callab
     keys_to_remove = [k for k in env_map if not should_preserve(k)]
     for key in keys_to_remove:
         del env_map[key]
-        if getattr(plog, "is_trace_enabled", lambda: False)():
+        if is_trace_enabled():
             plog.trace(f"  🗑️ Unset: {key}")
 
 
@@ -132,7 +134,7 @@ def _unset_glob_pattern(env_map: dict[str, str], pattern: str, should_preserve: 
     keys_to_remove = [k for k in env_map if fnmatch.fnmatch(k, pattern) and not should_preserve(k)]
     for key in keys_to_remove:
         del env_map[key]
-        if getattr(plog, "is_trace_enabled", lambda: False)():
+        if is_trace_enabled():
             plog.trace(f"  🗑️ Unset (glob): {key}")
 
 

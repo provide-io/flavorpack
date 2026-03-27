@@ -9,9 +9,11 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import contextmanager
+import gc
 import os
 from pathlib import Path
 import random
+import sys
 import tempfile
 import time
 
@@ -25,6 +27,22 @@ from flavor.psp.format_2025.backends import (
     MMapBackend,
     create_backend,
 )
+
+
+def _safe_unlink(path: Path) -> None:
+    """Unlink a file, handling Windows file-lock issues with gc + retry."""
+    gc.collect()
+    try:
+        path.unlink(missing_ok=True)
+    except PermissionError:
+        if sys.platform == "win32":
+            gc.collect()
+            try:
+                path.unlink(missing_ok=True)
+            except PermissionError:
+                pass  # Best-effort; temp file will be cleaned on next run
+        else:
+            raise
 
 
 @contextmanager
@@ -99,7 +117,7 @@ class TestMMapPerformance:
             file_backend.close()
 
         finally:
-            path.unlink(missing_ok=True)
+            _safe_unlink(path)
 
     def test_memory_efficiency(self) -> None:
         """Test memory efficiency of mmap vs file backend."""
@@ -135,6 +153,8 @@ class TestMMapPerformance:
                 f"\n💾 MMap memory: current={current_mmap / 1024 / 1024:.2f}MB, peak={peak_mmap / 1024 / 1024:.2f}MB"
             )
 
+            # Release views before close to avoid Windows mmap file lock
+            views.clear()
             mmap_backend.close()
 
             # Test file backend memory usage
@@ -163,7 +183,7 @@ class TestMMapPerformance:
             assert peak_mmap < peak_file * 0.5, "MMap should use less than 50% of file backend memory"
 
         finally:
-            path.unlink(missing_ok=True)
+            _safe_unlink(path)
 
     def test_concurrent_access_performance(self) -> None:  # noqa: C901 - Intentional stress test
         """Test performance with concurrent access patterns."""
@@ -255,8 +275,9 @@ class TestMMapPerformance:
             print(f"  Speedup: {avg_file / avg_mmap:.2f}x")
 
         finally:
-            path.unlink(missing_ok=True)
+            _safe_unlink(path)
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="resource module not available on Windows")
     def test_page_fault_behavior(self) -> None:
         """Test page fault behavior and prefetching."""
         import resource
@@ -331,7 +352,7 @@ class TestMMapPerformance:
             backend.close()
 
         finally:
-            path.unlink(missing_ok=True)
+            _safe_unlink(path)
 
     @pytest.mark.parametrize("access_pattern", ["sequential", "random", "strided"])
     def test_access_patterns(self, access_pattern: str) -> None:
@@ -397,7 +418,7 @@ class TestMMapPerformance:
             print(f"  Speedup: {file_time / mmap_time:.2f}x")
 
         finally:
-            path.unlink(missing_ok=True)
+            _safe_unlink(path)
 
 
 # 🌶️📦🔚

@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import pytest
@@ -296,13 +297,14 @@ class TestSaveKeysToPath:
         assert (key_dir / "flavor-private.key").read_bytes() == private_key
         assert (key_dir / "flavor-public.key").read_bytes() == public_key
 
-        # Verify private key has restrictive permissions
-        import stat
+        # Verify private key has restrictive permissions (Unix only)
+        if sys.platform != "win32":
+            import stat
 
-        mode = (key_dir / "flavor-private.key").stat().st_mode
-        # Should have restrictive permissions (owner only)
-        assert mode & stat.S_IRWXG == 0  # No group permissions
-        assert mode & stat.S_IRWXO == 0  # No other permissions
+            mode = (key_dir / "flavor-private.key").stat().st_mode
+            # Should have restrictive permissions (owner only)
+            assert mode & stat.S_IRWXG == 0  # No group permissions
+            assert mode & stat.S_IRWXO == 0  # No other permissions
 
     def test_save_keys_creates_directory(self, tmp_path: Path) -> None:
         """Test that save_keys creates directory if it doesn't exist."""

@@ -9,8 +9,10 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import contextmanager
+import gc
 from pathlib import Path
 import random
+import sys
 import tempfile
 import time
 
@@ -19,6 +21,22 @@ import pytest
 from flavor.psp.format_2025.backends import (
     MMapBackend,
 )
+
+
+def _safe_unlink(path: Path) -> None:
+    """Unlink a file, handling Windows file-lock issues with gc + retry."""
+    gc.collect()
+    try:
+        path.unlink(missing_ok=True)
+    except PermissionError:
+        if sys.platform == "win32":
+            gc.collect()
+            try:
+                path.unlink(missing_ok=True)
+            except PermissionError:
+                pass
+        else:
+            raise
 
 
 @contextmanager
@@ -57,6 +75,7 @@ class TestMMapResourceManagement:
                     offset = random.randint(0, size - 100)
                     data = backend.read_at(offset, 100)
                     assert len(data) == 100
+                    del data  # Release memoryview before next read (Windows)
 
                 backend.close()
 
@@ -72,13 +91,14 @@ class TestMMapResourceManagement:
             for b in backends:
                 data = b.read_at(0, 10)
                 assert len(data) == 10
+                del data  # Release memoryview (Windows)
 
             # Clean up
             for b in backends:
                 b.close()
 
         finally:
-            path.unlink(missing_ok=True)
+            _safe_unlink(path)
 
     def test_view_cleanup_on_close(self) -> None:
         """Test that views are properly cleaned up on close."""
@@ -102,6 +122,9 @@ class TestMMapResourceManagement:
             # Views should be tracked
             assert len(backend._views) == 100
 
+            # Release test references to views before close (Windows mmap lock)
+            views.clear()
+
             # Close backend
             backend.close()
 
@@ -113,7 +136,7 @@ class TestMMapResourceManagement:
                 backend.read_at(0, 10)
 
         finally:
-            path.unlink(missing_ok=True)
+            _safe_unlink(path)
 
     def test_context_manager_cleanup(self) -> None:
         """Test cleanup via context manager."""
@@ -137,12 +160,16 @@ class TestMMapResourceManagement:
                 data = backend.read_at(0, 100)
                 assert len(data) == 100
 
+                # Release references before context exit (Windows mmap lock)
+                views.clear()
+                del data
+
             # Should be closed after context
             with pytest.raises(RuntimeError):
                 backend.read_at(0, 10)
 
         finally:
-            path.unlink(missing_ok=True)
+            _safe_unlink(path)
 
 
 # 🌶️📦🔚

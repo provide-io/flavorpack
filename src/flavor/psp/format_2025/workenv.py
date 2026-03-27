@@ -100,8 +100,8 @@ class WorkEnvManager:
             check_file = cache_validation.get("check_file", "")
             expected_content = cache_validation.get("expected_content", "")
 
-            # Substitute placeholders
-            check_file = check_file.replace("{workenv}", str(workenv_dir))
+            # Substitute placeholders (use POSIX paths; Path() handles forward slashes on Windows)
+            check_file = check_file.replace("{workenv}", workenv_dir.as_posix())
             check_file = check_file.replace("{version}", package_version)
 
             check_path = Path(check_file)
@@ -313,10 +313,11 @@ class WorkEnvManager:
         logger.debug(f"📂 Found {len(matches)} files matching {pattern} in {enum_path}")
 
         for file_path in matches:
+            # Use POSIX paths to avoid shlex.split mangling backslashes on Windows
             if "{file}" in command_template:
-                args = shlex.split(command_template.replace("{file}", str(file_path)))
+                args = shlex.split(command_template.replace("{file}", file_path.as_posix()))
             else:
-                args = [*shlex.split(command_template), str(file_path)]
+                args = [*shlex.split(command_template), file_path.as_posix()]
 
             try:
                 run(
@@ -369,9 +370,11 @@ class WorkEnvManager:
         is_win = sys.platform == "win32"
         bin_dir = "Scripts" if is_win else "bin"
         python_exe = "python.exe" if is_win else "python3"
-        python_bin = str(workenv_dir / bin_dir / python_exe)
+        python_bin = (workenv_dir / bin_dir / python_exe).as_posix()
 
-        text = text.replace("{workenv}", str(workenv_dir))
+        # Use POSIX (forward-slash) paths: shlex.split treats backslashes as
+        # escape characters, so OS-native Windows paths get silently mangled.
+        text = text.replace("{workenv}", workenv_dir.as_posix())
         text = text.replace("{package_name}", metadata["package"]["name"])
         text = text.replace("{version}", metadata["package"]["version"])
         text = text.replace("{bin}", bin_dir)
