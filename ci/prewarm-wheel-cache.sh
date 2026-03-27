@@ -132,77 +132,98 @@ PYEOF
 DOWNLOADED=$(ls "${WHEEL_CACHE_DIR}"/*.whl 2>/dev/null | wc -l || echo 0)
 echo "✅ Collected ${DOWNLOADED} wheels to ${WHEEL_CACHE_DIR}"
 
-# Download build-backends wheels (setuptools, wheel, packaging) for hermetic slot builds.
+# Build-backends wheels (setuptools, wheel, packaging) for hermetic slot builds.
 #
 # _bundle_build_backends() in slot_builder.py uses FLAVOR_WHEEL_CACHE for offline installs.
-# These packages may already be cached in the shared UV_CACHE_DIR (set by setup-uv), so the
-# main uv pip install above may NOT download them fresh into UV_PKG_CACHE (UV uses the shared
-# cache as a read-through). We fix this by using a completely isolated UV cache (BB_UV_CACHE)
-# with UV_CACHE_DIR *unset*, forcing a fresh download of all build-backends packages.
+# We cannot reliably get these from the UV archive-v0 re-zip approach (pre-installed packages
+# may not be downloaded into UV_PKG_CACHE at all). Instead:
+#   1. Install build-backends to an isolated --target dir via `uv pip install` (UV's Rust HTTP
+#      client works on all CI platforms, including Windows where pip/urllib3 cannot reach PyPI).
+#   2. Reconstruct .whl files from the installed dist-info/RECORD metadata. Each RECORD lists
+#      exactly which files belong to that package; we re-zip them into a valid wheel archive.
+#      RECORD hashes match the original wheel, so pip can verify them on install.
 BB_RAW="${WHEEL_CACHE_DIR}/build-backends-raw.txt"
 BB_REQS="${WHEEL_CACHE_DIR}/build-backends-reqs.txt"
 if uv export --frozen --only-group build-backends --no-hashes --output-file "${BB_RAW}" 2>/dev/null; then
-  grep -v '^-e \|file://' "${BB_RAW}" | grep -v '^$' > "${BB_REQS}" || true
+  # Strip editable/local lines AND comment lines to produce a clean pip-compatible requirements file
+  grep -v '^-e \|file://\|^#\|^\s*#' "${BB_RAW}" | grep -v '^$' > "${BB_REQS}" || true
   if [ -s "${BB_REQS}" ]; then
-    echo "Downloading build-backends wheels (isolated cache, no UV_CACHE_DIR fallback)..."
-    BB_UV_CACHE="${WHEEL_CACHE_DIR}/.bb-uv-cache"
     BB_INSTALL="${WHEEL_CACHE_DIR}/.bb-install"
-    mkdir -p "${BB_UV_CACHE}" "${BB_INSTALL}"
-    export BB_UV_CACHE
-    # Unset UV_CACHE_DIR in a subshell so UV cannot use the shared cache as a fallback.
-    # This forces every build-backends package to be downloaded fresh into BB_UV_CACHE,
-    # making its archive-v0 entries available for re-zipping below.
-    (unset UV_CACHE_DIR; uv pip install \
-      --cache-dir "${BB_UV_CACHE}" \
+    mkdir -p "${BB_INSTALL}"
+    export BB_INSTALL WHEEL_CACHE_DIR
+
+    echo "Installing build-backends to extract wheel files..."
+    uv pip install \
+      --cache-dir "${UV_PKG_CACHE}" \
       --target "${BB_INSTALL}" \
       -r "${BB_REQS}" \
-      --quiet)
-    # Re-zip BB_UV_CACHE archive-v0 entries into .whl files using the same mechanism as above.
+      --quiet
+
+    # Reconstruct .whl files from installed dist-info/RECORD.
+    # RECORD maps each file to its sha256 hash (correct, from the original wheel).
+    # The result is a valid, installable wheel that pip can verify.
     uv run --no-project python - <<'BBEOF'
-import os, pathlib, sys, zipfile
-cache_dir  = pathlib.Path(os.environ["BB_UV_CACHE"])
-out_dir    = pathlib.Path(os.environ["WHEEL_CACHE_DIR"])
-wheels_idx = cache_dir / "wheels-v6" / "pypi"
-if not wheels_idx.exists():
-    print(f"No build-backends wheels-v6 index at {wheels_idx}", file=sys.stderr)
-    sys.exit(0)
-created = errors = 0
-for pkg_dir in wheels_idx.iterdir():
-    if not pkg_dir.is_dir():
+import csv, io, os, pathlib, sys, zipfile
+
+install_dir = pathlib.Path(os.environ["BB_INSTALL"])
+out_dir     = pathlib.Path(os.environ["WHEEL_CACHE_DIR"])
+created = errors = skipped = 0
+
+for dist_info in sorted(install_dir.glob("*.dist-info")):
+    name_ver    = dist_info.stem            # e.g. "packaging-26.0"
+    wheel_file  = dist_info / "WHEEL"
+    record_file = dist_info / "RECORD"
+    if not wheel_file.exists() or not record_file.exists():
         continue
-    for lock_file in pkg_dir.glob("*.lock"):
-        wheel_name = lock_file.stem + ".whl"
-        out_path   = out_dir / wheel_name
+
+    # Extract the wheel tag from WHEEL metadata
+    tag = None
+    for line in wheel_file.read_text(encoding="utf-8").splitlines():
+        if line.startswith("Tag: "):
+            tag = line[5:].strip()
+            break
+    if not tag:
+        print(f"No Tag: in {wheel_file}", file=sys.stderr)
+        errors += 1
+        continue
+
+    whl_name = f"{name_ver}-{tag}.whl"
+    out_path  = out_dir / whl_name
+    if out_path.exists():
+        skipped += 1
+        continue
+
+    # Collect files listed in RECORD (CSV: relative-path, hash, size)
+    files = []
+    try:
+        text = record_file.read_text(encoding="utf-8")
+        for row in csv.reader(io.StringIO(text)):
+            if not row or not row[0]:
+                continue
+            p = install_dir / row[0]
+            if p.exists() and p.is_file():
+                files.append((p, row[0]))
+    except Exception as exc:
+        print(f"RECORD error for {name_ver}: {exc}", file=sys.stderr)
+        errors += 1
+        continue
+
+    try:
+        with zipfile.ZipFile(out_path, "w", zipfile.ZIP_DEFLATED) as zf:
+            for full_p, rel_p in files:
+                zf.write(full_p, rel_p)
+        created += 1
+        print(f"Created {whl_name} ({len(files)} files)")
+    except Exception as exc:
+        print(f"Error creating {whl_name}: {exc}", file=sys.stderr)
         if out_path.exists():
-            continue
-        pkg_norm   = pkg_dir.name.replace("-", "_")
-        pkg_prefix = pkg_norm + "-"
-        stem = lock_file.stem
-        if not stem.startswith(pkg_prefix):
-            continue
-        pointer = lock_file.parent / stem[len(pkg_prefix):]
-        if not pointer.exists():
-            continue
-        archive_key  = pointer.read_text().strip().removeprefix("archive-v0/")
-        archive_path = cache_dir / "archive-v0" / archive_key
-        if not archive_path.exists():
-            print(f"Archive missing for {wheel_name}: {archive_path}", file=sys.stderr)
-            errors += 1
-            continue
-        try:
-            with zipfile.ZipFile(out_path, "w", zipfile.ZIP_DEFLATED) as zf:
-                for f in archive_path.rglob("*"):
-                    if f.is_file():
-                        zf.write(f, f.relative_to(archive_path))
-            created += 1
-        except Exception as exc:
-            print(f"Error creating {wheel_name}: {exc}", file=sys.stderr)
-            if out_path.exists():
-                out_path.unlink()
-            errors += 1
-print(f"Created {created} build-backends wheel files ({errors} errors)")
+            out_path.unlink()
+        errors += 1
+
+print(f"Build-backends: created={created} skipped={skipped} errors={errors}")
 BBEOF
-    BB_DOWNLOADED=$(ls "${WHEEL_CACHE_DIR}"/*.whl 2>/dev/null | wc -l || echo 0)
-    echo "✅ After build-backends: ${BB_DOWNLOADED} total wheels in cache"
+
+    BB_TOTAL=$(ls "${WHEEL_CACHE_DIR}"/*.whl 2>/dev/null | wc -l || echo 0)
+    echo "✅ After build-backends: ${BB_TOTAL} total wheels in cache"
   fi
 fi
