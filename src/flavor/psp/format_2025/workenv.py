@@ -12,6 +12,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import shlex
+import sys
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -365,9 +366,17 @@ class WorkEnvManager:
         Returns:
             Text with placeholders substituted
         """
+        is_win = sys.platform == "win32"
+        bin_dir = "Scripts" if is_win else "bin"
+        python_exe = "python.exe" if is_win else "python3"
+        python_bin = str(workenv_dir / bin_dir / python_exe)
+
         text = text.replace("{workenv}", str(workenv_dir))
         text = text.replace("{package_name}", metadata["package"]["name"])
         text = text.replace("{version}", metadata["package"]["version"])
+        text = text.replace("{bin}", bin_dir)
+        text = text.replace("{python}", python_exe)
+        text = text.replace("{python_bin}", python_bin)
         return text
 
     def _normalize_slot_target(self, slot_target: str) -> str:
