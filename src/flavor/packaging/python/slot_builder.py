@@ -324,6 +324,7 @@ class PythonSlotBuilder:
                         python_exe=python_exe,
                         source_path=dep_path,
                         wheel_dir=wheels_dir,
+                        use_isolation=False,
                     )
                 else:
                     logger.warning(f"⚠️ Local dependency not found: {dep_path}")
