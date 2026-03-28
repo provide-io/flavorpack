@@ -26,11 +26,11 @@ from flavor.psp.format_2025.operations import (
 
 # 5 different operation chains to exercise various code paths
 OPERATION_CHAINS = [
-    [OP_TAR, OP_GZIP],       # tar.gz (most common)
-    [OP_TAR, OP_ZSTD],       # tar.zst
-    [OP_TAR, OP_XZ],         # tar.xz
-    [OP_TAR, OP_BZIP2],      # tar.bz2
-    [OP_GZIP],               # gzip only
+    [OP_TAR, OP_GZIP],  # tar.gz (most common)
+    [OP_TAR, OP_ZSTD],  # tar.zst
+    [OP_TAR, OP_XZ],  # tar.xz
+    [OP_TAR, OP_BZIP2],  # tar.bz2
+    [OP_GZIP],  # gzip only
 ]
 
 

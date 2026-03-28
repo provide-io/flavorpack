@@ -123,8 +123,7 @@ class TestDOSStubExpansion:
         expanded = expand_dos_stub(original)
 
         pe_offset = get_pe_header_offset(expanded)
-        assert pe_offset is not None
-        pe_sig = expanded[pe_offset : pe_offset + 4]
+        pe_sig = expanded[pe_offset : pe_offset + 4]  # ty: ignore[unsupported-operator]
         assert pe_sig == b"PE\x00\x00"
 
     def test_expand_dos_stub_updates_section_offsets(self) -> None:
