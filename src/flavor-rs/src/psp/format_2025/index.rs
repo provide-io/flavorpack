@@ -1,6 +1,8 @@
 // helpers/flavor-rs/src/psp/format_2025/index.rs
 // PSPF 2025 Index Block - Future-proof 4096-byte Header
 
+use log::{debug, trace};
+
 use super::constants::{HEADER_SIZE, PSPF_VERSION};
 use crate::exceptions::{FlavorError, Result};
 
@@ -121,7 +123,6 @@ impl Index {
         }
 
         // Parse fields manually to ensure correct byte order
-        use log::debug;
         use std::convert::TryInto;
 
         let mut index = Index::new();
@@ -146,12 +147,11 @@ impl Index {
                 .map_err(|_| FlavorError::Generic("Invalid launcher size bytes".into()))?,
         );
 
-        // Debug: Log the raw bytes we're parsing for metadata offset and size
-        debug!(
+        trace!(
             "Raw bytes at offset 24-32 (metadata_offset): {:02x?}",
             &data[24..32]
         );
-        debug!(
+        trace!(
             "Raw bytes at offset 32-40 (metadata_size): {:02x?}",
             &data[32..40]
         );
@@ -346,62 +346,44 @@ impl Index {
 
     /// Verify index checksum against raw data
     pub fn verify_checksum_raw(&self, raw_data: &[u8]) -> bool {
-        use log::debug;
-
         if raw_data.len() != HEADER_SIZE {
-            let size = raw_data.len();
-            debug!("Index size mismatch: {} != {}", size, HEADER_SIZE);
             return false;
         }
 
-        // Make a copy to zero out checksum field
         let mut data_copy = raw_data.to_vec();
-
-        // Log the checksum bytes before zeroing
-        let checksum_bytes = &raw_data[4..8];
-        debug!(
-            "Checksum bytes in index: {:02x} {:02x} {:02x} {:02x}",
-            checksum_bytes[0], checksum_bytes[1], checksum_bytes[2], checksum_bytes[3]
-        );
-
         data_copy[4..8].copy_from_slice(&[0, 0, 0, 0]);
 
-        // Log first 72 bytes of the index (core fields)
-        debug!("First 72 bytes of index (with checksum zeroed):");
-        let mut hex_line = String::new();
-        for (i, byte) in data_copy.iter().enumerate().take(72) {
-            if i % 16 == 0 {
-                if !hex_line.is_empty() {
-                    debug!("{hex_line}");
-                    hex_line.clear();
+        // Trace-level hex dump for deep debugging
+        if log::log_enabled!(log::Level::Trace) {
+            trace!(
+                "Checksum bytes in index: {:02x} {:02x} {:02x} {:02x}",
+                raw_data[4], raw_data[5], raw_data[6], raw_data[7]
+            );
+            let mut hex_line = String::new();
+            for (i, byte) in data_copy.iter().enumerate().take(72) {
+                if i % 16 == 0 {
+                    if !hex_line.is_empty() {
+                        trace!("{hex_line}");
+                        hex_line.clear();
+                    }
+                    hex_line = format!("  {:04x}: ", i);
                 }
-                hex_line = format!("  {:04x}: ", i);
+                hex_line.push_str(&format!("{byte:02x} "));
             }
-            hex_line.push_str(&format!("{byte:02x} "));
-        }
-        if !hex_line.is_empty() {
-            debug!("{hex_line}");
+            if !hex_line.is_empty() {
+                trace!("{hex_line}");
+            }
         }
 
         let calculated = adler::adler32_slice(&data_copy);
         let expected = self.index_checksum;
-        debug!(
-            "Checksum verification - Expected: {} (0x{:08x}), Calculated: {} (0x{:08x})",
-            expected, expected, calculated, calculated
+        trace!(
+            "Checksum: expected 0x{:08x}, calculated 0x{:08x}",
+            expected, calculated
         );
         calculated == expected
     }
 
-    /// Verify index checksum (deprecated - use verify_checksum_raw)
-    pub fn verify_checksum(&self) -> bool {
-        let mut bytes = self.pack();
-
-        // Zero out checksum field (bytes 4-8)
-        bytes[4..8].copy_from_slice(&[0, 0, 0, 0]);
-
-        let calculated = adler::adler32_slice(&bytes[..]);
-        calculated == self.index_checksum
-    }
 }
 
 impl Default for Index {
