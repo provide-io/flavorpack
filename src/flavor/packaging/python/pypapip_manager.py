@@ -9,7 +9,6 @@ and manylinux2014 compatibility for maximum Linux distribution coverage.
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 import sys
 

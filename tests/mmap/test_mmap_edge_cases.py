@@ -5,6 +5,7 @@
 
 """Test mmap edge cases and corner scenarios."""
 
+import contextlib
 import gc
 import hashlib
 import os
@@ -33,10 +34,8 @@ def _safe_unlink(path: Path) -> None:
             # On Windows, mmap may still hold a lock briefly after close.
             # Force a second GC pass and try again.
             gc.collect()
-            try:
+            with contextlib.suppress(PermissionError):
                 path.unlink(missing_ok=True)
-            except PermissionError:
-                pass  # Best-effort; temp file will be cleaned on next run
         else:
             raise
 
@@ -387,7 +386,7 @@ def test_parameterized_read_patterns(file_size: int, chunk_size: int, backend_ty
         path = Path(f.name)
 
     try:
-        backend = create_backend(backend_type, path)
+        backend = create_backend(backend_type, path)  # ty: ignore[invalid-argument-type]
         backend.open(path)
 
         # Sequential read test

@@ -9,10 +9,10 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-import pytest
 from click.testing import CliRunner
+import pytest
 
 from flavor.commands.workenv import workenv_group
 
@@ -100,8 +100,7 @@ class TestWorkenvInfo:
 
     def test_info_shows_cache_stats(self) -> None:
         runner = CliRunner()
-        with patch("flavor.cache.CacheManager") as MockMgr, \
-             patch("flavor.cache.get_cache_dir") as mock_dir:
+        with patch("flavor.cache.CacheManager") as MockMgr, patch("flavor.cache.get_cache_dir") as mock_dir:
             mock_dir.return_value = Path("/fake/cache")
             MockMgr.return_value.list_cached.return_value = [_make_pkg_entry()]
             MockMgr.return_value.get_cache_size.return_value = 10 * 1024 * 1024
@@ -257,16 +256,20 @@ class TestWorkenvInspect:
         index_dir = metadata_dir / "instance"
         index_dir.mkdir(parents=True)
         index_file = index_dir / "index.json"
-        index_file.write_text(json.dumps({
-            "format_version": 0x20250100,
-            "package_size": 1000,
-            "launcher_size": 500,
-            "slot_count": 3,
-            "index_checksum": "cafebabe",
-            "build_timestamp": 1700000000,
-            "capabilities": 0,
-            "requirements": 0,
-        }))
+        index_file.write_text(
+            json.dumps(
+                {
+                    "format_version": 0x20250100,
+                    "package_size": 1000,
+                    "launcher_size": 500,
+                    "slot_count": 3,
+                    "index_checksum": "cafebabe",
+                    "build_timestamp": 1700000000,
+                    "capabilities": 0,
+                    "requirements": 0,
+                }
+            )
+        )
 
         info = {
             "name": "mypkg",
