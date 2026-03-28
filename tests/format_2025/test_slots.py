@@ -132,7 +132,7 @@ class TestSlotMetadata:
 
     @pytest.mark.parametrize(
         "lifecycle",
-        ["init", "startup", "runtime", "shutdown", "cache", "temp", "lazy", "eager", "dev", "config"],
+        ["init", "startup", "runtime", "shutdown", "cache", "temporary", "lazy", "eager", "dev", "config", "platform"],
     )
     def test_valid_lifecycles(self, lifecycle: str) -> None:
         """All valid lifecycle values are accepted."""
