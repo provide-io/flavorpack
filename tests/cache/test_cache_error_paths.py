@@ -8,16 +8,14 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 import time
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
 
-def _make_modern_pkg(
-    cache_dir: Path, pkg_name: str, name: str = "pkg", version: str = "1.0"
-) -> tuple[Path, Path]:
+def _make_modern_pkg(cache_dir: Path, pkg_name: str, name: str = "pkg", version: str = "1.0") -> tuple[Path, Path]:
     """Create a well-formed cached package entry."""
     content_dir = cache_dir / pkg_name
     content_dir.mkdir(parents=True)
@@ -29,7 +27,9 @@ def _make_modern_pkg(
 
     package_dir = metadata_dir / "package"
     package_dir.mkdir(parents=True)
-    (package_dir / "psp.json").write_text(json.dumps({"package": {"name": name, "version": version}}))
+    (package_dir / "psp.json").write_text(
+        json.dumps({"package": {"name": name, "version": version}})
+    )
     return content_dir, metadata_dir
 
 
@@ -209,7 +209,7 @@ class TestInspectWorkenv:
         cache_dir.mkdir()
         manager = CacheManager(cache_dir)
 
-        _content_dir, metadata_dir = _make_modern_pkg(cache_dir, "mypkg")
+        content_dir, metadata_dir = _make_modern_pkg(cache_dir, "mypkg")
         checksum_file = metadata_dir / "instance" / "package.checksum"
         checksum_file.write_text("abc123\n")
         (metadata_dir / "instance" / "extract" / "complete").touch()
@@ -224,7 +224,7 @@ class TestInspectWorkenv:
         cache_dir.mkdir()
         manager = CacheManager(cache_dir)
 
-        _content_dir, _metadata_dir = _make_modern_pkg(cache_dir, "mypkg")
+        content_dir, metadata_dir = _make_modern_pkg(cache_dir, "mypkg")
         info = manager.inspect_workenv("mypkg")
         assert info["extraction_complete"] is True
 
@@ -235,7 +235,7 @@ class TestInspectWorkenv:
         cache_dir.mkdir()
         manager = CacheManager(cache_dir)
 
-        _content_dir, _metadata_dir = _make_modern_pkg(cache_dir, "mypkg")
+        content_dir, metadata_dir = _make_modern_pkg(cache_dir, "mypkg")
 
         with patch("flavor.cache.read_json", side_effect=OSError("can't read")):
             info = manager.inspect_workenv("mypkg")

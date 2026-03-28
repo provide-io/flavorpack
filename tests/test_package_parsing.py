@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import tempfile
+from unittest.mock import patch
 
 import pytest
 
@@ -17,7 +19,7 @@ import pytest
 class TestParseJsonManifest:
     """Test _parse_json_manifest."""
 
-    def _write_json(self, tmp_path: Path, data: dict[str, object]) -> Path:
+    def _write_json(self, tmp_path: Path, data: dict) -> Path:
         p = tmp_path / "manifest.json"
         p.write_text(json.dumps(data))
         return p
@@ -25,13 +27,10 @@ class TestParseJsonManifest:
     def test_valid_manifest(self, tmp_path: Path) -> None:
         from flavor.package import _parse_json_manifest
 
-        p = self._write_json(
-            tmp_path,
-            {
-                "package": {"name": "mypkg", "version": "1.0"},
-                "execution": {"command": "python -m mypkg"},
-            },
-        )
+        p = self._write_json(tmp_path, {
+            "package": {"name": "mypkg", "version": "1.0"},
+            "execution": {"command": "python -m mypkg"},
+        })
         result = _parse_json_manifest(p)
         assert result["project_name"] == "mypkg"
         assert result["version"] == "1.0"
@@ -41,51 +40,39 @@ class TestParseJsonManifest:
     def test_missing_name_raises(self, tmp_path: Path) -> None:
         from flavor.package import _parse_json_manifest
 
-        p = self._write_json(
-            tmp_path,
-            {
-                "package": {"version": "1.0"},
-                "execution": {"command": "run"},
-            },
-        )
+        p = self._write_json(tmp_path, {
+            "package": {"version": "1.0"},
+            "execution": {"command": "run"},
+        })
         with pytest.raises(ValueError, match="name"):
             _parse_json_manifest(p)
 
     def test_missing_version_raises(self, tmp_path: Path) -> None:
         from flavor.package import _parse_json_manifest
 
-        p = self._write_json(
-            tmp_path,
-            {
-                "package": {"name": "pkg"},
-                "execution": {"command": "run"},
-            },
-        )
+        p = self._write_json(tmp_path, {
+            "package": {"name": "pkg"},
+            "execution": {"command": "run"},
+        })
         with pytest.raises(ValueError, match="version"):
             _parse_json_manifest(p)
 
     def test_missing_command_raises(self, tmp_path: Path) -> None:
         from flavor.package import _parse_json_manifest
 
-        p = self._write_json(
-            tmp_path,
-            {
-                "package": {"name": "pkg", "version": "1.0"},
-                "execution": {},
-            },
-        )
+        p = self._write_json(tmp_path, {
+            "package": {"name": "pkg", "version": "1.0"},
+            "execution": {},
+        })
         with pytest.raises(ValueError, match="command"):
             _parse_json_manifest(p)
 
     def test_missing_execution_section_raises(self, tmp_path: Path) -> None:
         from flavor.package import _parse_json_manifest
 
-        p = self._write_json(
-            tmp_path,
-            {
-                "package": {"name": "pkg", "version": "1.0"},
-            },
-        )
+        p = self._write_json(tmp_path, {
+            "package": {"name": "pkg", "version": "1.0"},
+        })
         with pytest.raises(ValueError, match="command"):
             _parse_json_manifest(p)
 
@@ -102,9 +89,7 @@ class TestParseTomlManifest:
     def test_valid_manifest_with_version(self, tmp_path: Path) -> None:
         from flavor.package import _parse_toml_manifest
 
-        p = self._write_toml(
-            tmp_path,
-            """
+        p = self._write_toml(tmp_path, """
 [project]
 name = "mypkg"
 version = "2.0.0"
@@ -114,8 +99,7 @@ mypkg = "mypkg.__main__:main"
 
 [tool.flavor]
 entry_point = "mypkg.__main__:main"
-""",
-        )
+""")
         result = _parse_toml_manifest(p)
         assert result["project_name"] == "mypkg"
         assert result["version"] == "2.0.0"
@@ -123,26 +107,20 @@ entry_point = "mypkg.__main__:main"
     def test_missing_name_raises(self, tmp_path: Path) -> None:
         from flavor.package import _parse_toml_manifest
 
-        p = self._write_toml(
-            tmp_path,
-            """
+        p = self._write_toml(tmp_path, """
 [project]
 version = "1.0"
-""",
-        )
+""")
         with pytest.raises(ValueError, match="name"):
             _parse_toml_manifest(p)
 
     def test_no_version_not_dynamic_raises(self, tmp_path: Path) -> None:
         from flavor.package import _parse_toml_manifest
 
-        p = self._write_toml(
-            tmp_path,
-            """
+        p = self._write_toml(tmp_path, """
 [project]
 name = "mypkg"
-""",
-        )
+""")
         with pytest.raises(ValueError, match="version"):
             _parse_toml_manifest(p)
 
@@ -150,34 +128,28 @@ name = "mypkg"
         from flavor.package import _parse_toml_manifest
 
         (tmp_path / "VERSION").write_text("3.1.4")
-        p = self._write_toml(
-            tmp_path,
-            """
+        p = self._write_toml(tmp_path, """
 [project]
 name = "mypkg"
 dynamic = ["version"]
 
 [tool.flavor]
 entry_point = "mypkg:main"
-""",
-        )
+""")
         result = _parse_toml_manifest(p)
         assert result["version"] == "3.1.4"
 
     def test_dynamic_version_falls_back_to_importlib(self, tmp_path: Path) -> None:
         from flavor.package import _parse_toml_manifest
 
-        p = self._write_toml(
-            tmp_path,
-            """
+        p = self._write_toml(tmp_path, """
 [project]
 name = "flavor"
 dynamic = ["version"]
 
 [tool.flavor]
 entry_point = "flavor:main"
-""",
-        )
+""")
         # "flavor" may or may not be installed; either importlib returns something or falls back
         result = _parse_toml_manifest(p)
         assert isinstance(result["version"], str)
@@ -186,83 +158,68 @@ entry_point = "flavor:main"
     def test_dynamic_version_falls_back_to_default(self, tmp_path: Path) -> None:
         from flavor.package import _parse_toml_manifest
 
-        p = self._write_toml(
-            tmp_path,
-            """
+        p = self._write_toml(tmp_path, """
 [project]
 name = "definitely-not-installed-xyz123"
 dynamic = ["version"]
 
 [tool.flavor]
 entry_point = "xyz:main"
-""",
-        )
+""")
         result = _parse_toml_manifest(p)
         assert result["version"] == "0.0.0"
 
     def test_entry_point_from_flavor_config(self, tmp_path: Path) -> None:
         from flavor.package import _parse_toml_manifest
 
-        p = self._write_toml(
-            tmp_path,
-            """
+        p = self._write_toml(tmp_path, """
 [project]
 name = "mypkg"
 version = "1.0"
 
 [tool.flavor]
 entry_point = "mypkg.cli:main"
-""",
-        )
+""")
         result = _parse_toml_manifest(p)
         assert result["entry_point"] == "mypkg.cli:main"
 
     def test_entry_point_from_scripts(self, tmp_path: Path) -> None:
         from flavor.package import _parse_toml_manifest
 
-        p = self._write_toml(
-            tmp_path,
-            """
+        p = self._write_toml(tmp_path, """
 [project]
 name = "mypkg"
 version = "1.0"
 
 [project.scripts]
 mypkg = "mypkg.cli:main"
-""",
-        )
+""")
         result = _parse_toml_manifest(p)
         assert result["entry_point"] == "mypkg.cli:main"
 
     def test_entry_point_not_found_raises(self, tmp_path: Path) -> None:
         from flavor.package import _parse_toml_manifest
 
-        p = self._write_toml(
-            tmp_path,
-            """
+        p = self._write_toml(tmp_path, """
 [project]
 name = "mypkg"
 version = "1.0"
-""",
-        )
+""")
         with pytest.raises(ValueError, match="entry_point"):
             _parse_toml_manifest(p)
 
     def test_buildconfig_toml_is_merged(self, tmp_path: Path) -> None:
         from flavor.package import _parse_toml_manifest
 
-        (tmp_path / "buildconfig.toml").write_text("[build]\nstip = true\n")
-        p = self._write_toml(
-            tmp_path,
-            """
+        (tmp_path / "buildconfig.toml").write_text('[build]\nstip = true\n')
+        p = self._write_toml(tmp_path, """
 [project]
 name = "mypkg"
 version = "1.0"
 
 [tool.flavor]
 entry_point = "mypkg:main"
-""",
-        )
+""")
         result = _parse_toml_manifest(p)
         # buildconfig.toml was merged — stip key should be present in build_config
         assert "stip" in result["build_config"]
@@ -270,9 +227,7 @@ entry_point = "mypkg:main"
     def test_cli_scripts_extracted(self, tmp_path: Path) -> None:
         from flavor.package import _parse_toml_manifest
 
-        p = self._write_toml(
-            tmp_path,
-            """
+        p = self._write_toml(tmp_path, """
 [project]
 name = "mypkg"
 version = "1.0"
@@ -283,8 +238,7 @@ othercmd = "mypkg.other:run"
 
 [tool.flavor]
 entry_point = "mypkg:main"
-""",
-        )
+""")
         result = _parse_toml_manifest(p)
         assert result["cli_scripts"] == {"mypkg": "mypkg:main", "othercmd": "mypkg.other:run"}
 
