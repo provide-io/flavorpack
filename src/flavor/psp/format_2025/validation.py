@@ -160,7 +160,7 @@ def validate_slots(slots: list[SlotMetadata]) -> list[str]:  # noqa: C901
             "runtime",
             "shutdown",
             "cache",
-            "temp",
+            "temporary",
             "lazy",
             "eager",
             "dev",
@@ -168,7 +168,6 @@ def validate_slots(slots: list[SlotMetadata]) -> list[str]:  # noqa: C901
             "platform",
             "persistent",
             "volatile",
-            "temporary",  # New names
         ]
         if slot.lifecycle not in valid_lifecycles:
             errors.append(
