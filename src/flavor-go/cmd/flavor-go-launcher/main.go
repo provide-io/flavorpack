@@ -4,32 +4,9 @@ import (
 	"fmt"
 	"os"
 	"runtime/debug"
-	"time"
 
 	"github.com/provide-io/flavor/go/flavor/pkg/psp/format_2025"
 )
-
-const version = "0.3.21"
-
-func getBuilderTimestamp() string {
-	// Try to get vcs.time from build info
-	if info, ok := debug.ReadBuildInfo(); ok {
-		for _, setting := range info.Settings {
-			if setting.Key == "vcs.time" {
-				if t, err := time.Parse(time.RFC3339, setting.Value); err == nil {
-					return t.UTC().Format(time.RFC3339)
-				}
-			}
-		}
-	}
-	// Fallback to binary modification time
-	if exePath, err := os.Executable(); err == nil {
-		if stat, err := os.Stat(exePath); err == nil {
-			return stat.ModTime().UTC().Format(time.RFC3339)
-		}
-	}
-	return time.Now().UTC().Format(time.RFC3339)
-}
 
 func main() {
 	// Set up panic recovery to return specific exit code
