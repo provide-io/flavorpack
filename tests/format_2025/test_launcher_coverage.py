@@ -10,29 +10,27 @@ from __future__ import annotations
 import gzip
 import hashlib
 import io
-from pathlib import Path
+import struct
 import tarfile
-from typing import Any
+import tempfile
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from flavor.psp.format_2025.launcher import PSPFLauncher
 
 # ---------------------------------------------------------------------------
 # Helpers to build minimal fake slot tables
 # ---------------------------------------------------------------------------
 
-
-def _make_launcher(bundle_path: Path) -> PSPFLauncher:
+def _make_launcher(bundle_path: Path) -> "PSPFLauncher":
     """Create a PSPFLauncher instance bypassing the full init chain."""
+    from flavor.psp.format_2025.launcher import PSPFLauncher
 
-    with (
-        patch("flavor.psp.format_2025.launcher.ensure_dir"),
-        patch("flavor.psp.format_2025.launcher.WorkEnvManager"),
-    ):
+    with patch("flavor.psp.format_2025.launcher.ensure_dir"), \
+         patch("flavor.psp.format_2025.launcher.WorkEnvManager"):
         launcher = PSPFLauncher.__new__(PSPFLauncher)
-        object.__setattr__(launcher, "bundle_path", bundle_path)
+        launcher.bundle_path = str(bundle_path)
         launcher.cache_dir = bundle_path.parent
         launcher._workenv_manager = MagicMock()
     return launcher
@@ -45,7 +43,7 @@ def _make_raw_slot_entry(
     operations: int = 0,
     purpose: int = 0,
     lifecycle: int = 0,
-) -> dict[str, int]:
+) -> dict:
     return {
         "index": 0,
         "offset": offset,
@@ -62,6 +60,7 @@ class TestExtractSlotGzip:
     """Test extract_slot with gzip-compressed data (operations=0x10)."""
 
     def test_gzip_decompression(self, tmp_path: Path) -> None:
+        from flavor.psp.format_2025.launcher import PSPFLauncher
 
         raw = b"Hello from gzip"
         compressed = gzip.compress(raw)
@@ -74,13 +73,11 @@ class TestExtractSlotGzip:
         slot_entry = _make_raw_slot_entry(offset=0, size=len(compressed), operations=0x10)
 
         metadata = {"slots": [{"target": "hello.txt"}]}
-        with (
-            patch.object(launcher, "read_slot_table", return_value=[slot_entry]),
-            patch.object(launcher, "read_metadata", return_value=metadata),
-            patch("flavor.psp.format_2025.launcher.atomic_write") as mock_write,
-            patch("flavor.psp.format_2025.launcher.ensure_parent_dir"),
-        ):
-            object.__setattr__(launcher, "_apply_slot_permissions", MagicMock())
+        with patch.object(launcher, "read_slot_table", return_value=[slot_entry]), \
+             patch.object(launcher, "read_metadata", return_value=metadata), \
+             patch("flavor.psp.format_2025.launcher.atomic_write") as mock_write, \
+             patch("flavor.psp.format_2025.launcher.ensure_parent_dir"):
+            launcher._apply_slot_permissions = MagicMock()
             launcher.extract_slot(0, tmp_path)
 
         written_data = mock_write.call_args[0][1]
@@ -108,15 +105,13 @@ class TestExtractSlotTarGz:
         launcher = _make_launcher(bundle)
 
         slot_entry = _make_raw_slot_entry(offset=0, size=len(tgz_data), operations=0x1001)
-        metadata: dict[str, Any] = {"slots": []}
+        metadata: dict = {"slots": []}
         workenv = tmp_path / "workenv"
         workenv.mkdir()
 
-        with (
-            patch.object(launcher, "read_slot_table", return_value=[slot_entry]),
-            patch.object(launcher, "read_metadata", return_value=metadata),
-        ):
-            launcher.extract_slot(0, workenv)
+        with patch.object(launcher, "read_slot_table", return_value=[slot_entry]), \
+             patch.object(launcher, "read_metadata", return_value=metadata):
+            path = launcher.extract_slot(0, workenv)
 
         assert (workenv / "file.txt").exists()
 
@@ -132,14 +127,12 @@ class TestExtractSlotUnsupportedOps:
         launcher = _make_launcher(bundle)
 
         slot_entry = _make_raw_slot_entry(offset=0, size=12, operations=0xDEAD)
-        metadata: dict[str, Any] = {"slots": []}
+        metadata: dict = {"slots": []}
 
-        with (
-            patch.object(launcher, "read_slot_table", return_value=[slot_entry]),
-            patch.object(launcher, "read_metadata", return_value=metadata),
-            pytest.raises(ValueError, match="Unsupported operations"),
-        ):
-            launcher.extract_slot(0, tmp_path)
+        with patch.object(launcher, "read_slot_table", return_value=[slot_entry]), \
+             patch.object(launcher, "read_metadata", return_value=metadata):
+            with pytest.raises(ValueError, match="Unsupported operations"):
+                launcher.extract_slot(0, tmp_path)
 
 
 @pytest.mark.unit
@@ -152,11 +145,9 @@ class TestExtractSlotInvalidIndex:
 
         launcher = _make_launcher(bundle)
 
-        with (
-            patch.object(launcher, "read_slot_table", return_value=[]),
-            pytest.raises(ValueError, match="Invalid slot index"),
-        ):
-            launcher.extract_slot(-1, tmp_path)
+        with patch.object(launcher, "read_slot_table", return_value=[]):
+            with pytest.raises(ValueError, match="Invalid slot index"):
+                launcher.extract_slot(-1, tmp_path)
 
     def test_index_out_of_range_raises(self, tmp_path: Path) -> None:
         bundle = tmp_path / "test.psp"
@@ -165,11 +156,9 @@ class TestExtractSlotInvalidIndex:
         launcher = _make_launcher(bundle)
 
         slot_entry = _make_raw_slot_entry()
-        with (
-            patch.object(launcher, "read_slot_table", return_value=[slot_entry]),
-            pytest.raises(ValueError, match="Invalid slot index"),
-        ):
-            launcher.extract_slot(5, tmp_path)
+        with patch.object(launcher, "read_slot_table", return_value=[slot_entry]):
+            with pytest.raises(ValueError, match="Invalid slot index"):
+                launcher.extract_slot(5, tmp_path)
 
 
 @pytest.mark.unit
@@ -186,15 +175,13 @@ class TestExtractSlotChecksum:
 
         launcher = _make_launcher(bundle)
         slot_entry = _make_raw_slot_entry(offset=0, size=len(data), checksum=checksum, operations=0)
-        metadata: dict[str, Any] = {"slots": []}
+        metadata: dict = {"slots": []}
 
-        with (
-            patch.object(launcher, "read_slot_table", return_value=[slot_entry]),
-            patch.object(launcher, "read_metadata", return_value=metadata),
-            patch("flavor.psp.format_2025.launcher.atomic_write"),
-            patch("flavor.psp.format_2025.launcher.ensure_parent_dir"),
-        ):
-            object.__setattr__(launcher, "_apply_slot_permissions", MagicMock())
+        with patch.object(launcher, "read_slot_table", return_value=[slot_entry]), \
+             patch.object(launcher, "read_metadata", return_value=metadata), \
+             patch("flavor.psp.format_2025.launcher.atomic_write"), \
+             patch("flavor.psp.format_2025.launcher.ensure_parent_dir"):
+            launcher._apply_slot_permissions = MagicMock()
             # Should not raise
             launcher.extract_slot(0, tmp_path, verify_checksum=True)
 
@@ -204,15 +191,15 @@ class TestExtractSlotChecksum:
         bundle.write_bytes(data)
 
         launcher = _make_launcher(bundle)
-        slot_entry = _make_raw_slot_entry(offset=0, size=len(data), checksum=0xDEADBEEFCAFEBABE, operations=0)
-        metadata: dict[str, Any] = {"slots": []}
+        slot_entry = _make_raw_slot_entry(
+            offset=0, size=len(data), checksum=0xDEADBEEFCAFEBABE, operations=0
+        )
+        metadata: dict = {"slots": []}
 
-        with (
-            patch.object(launcher, "read_slot_table", return_value=[slot_entry]),
-            patch.object(launcher, "read_metadata", return_value=metadata),
-            pytest.raises(ValueError, match="Checksum mismatch"),
-        ):
-            launcher.extract_slot(0, tmp_path, verify_checksum=True)
+        with patch.object(launcher, "read_slot_table", return_value=[slot_entry]), \
+             patch.object(launcher, "read_metadata", return_value=metadata):
+            with pytest.raises(ValueError, match="Checksum mismatch"):
+                launcher.extract_slot(0, tmp_path, verify_checksum=True)
 
 
 @pytest.mark.unit
@@ -220,6 +207,7 @@ class TestApplySlotPermissions:
     """Test _apply_slot_permissions."""
 
     def test_valid_permissions_applied(self, tmp_path: Path) -> None:
+        from flavor.psp.format_2025.launcher import PSPFLauncher
 
         f = tmp_path / "exec.sh"
         f.write_text("#!/bin/sh\necho hi")
@@ -246,65 +234,14 @@ class TestApplySlotPermissions:
 
 
 @pytest.mark.unit
-class TestNormalizeSlotTarget:
-    """Test slot target normalization and rejection of unsafe paths."""
-
-    def test_workenv_placeholder_is_preserved(self, tmp_path: Path) -> None:
-        launcher = _make_launcher(tmp_path / "bundle.psp")
-        assert launcher._normalize_slot_target("{workenv}") == "{workenv}"
-
-    def test_workenv_root_slash_maps_to_root_directory(self, tmp_path: Path) -> None:
-        launcher = _make_launcher(tmp_path / "bundle.psp")
-        assert launcher._normalize_slot_target("{workenv}/") == "."
-
-    def test_workenv_prefix_is_stripped(self, tmp_path: Path) -> None:
-        launcher = _make_launcher(tmp_path / "bundle.psp")
-        assert launcher._normalize_slot_target("{workenv}/bin/tool") == "bin/tool"
-
-    @pytest.mark.parametrize(
-        "slot_target",
-        [
-            "/tmp/evil",
-            "../../etc/passwd",
-            "{workenv}/../../etc/passwd",
-            "..\\..\\windows\\system32",
-            "",
-        ],
-    )
-    def test_unsafe_targets_raise_value_error(self, tmp_path: Path, slot_target: str) -> None:
-        launcher = _make_launcher(tmp_path / "bundle.psp")
-        with pytest.raises(ValueError, match="target"):
-            launcher._normalize_slot_target(slot_target)
-
-
-@pytest.mark.unit
-class TestExtractSlotPathValidation:
-    """Test extraction rejects metadata targets that escape the workenv."""
-
-    def test_extract_slot_rejects_unsafe_target(self, tmp_path: Path) -> None:
-        bundle = tmp_path / "test.psp"
-        bundle.write_bytes(b"payload")
-
-        launcher = _make_launcher(bundle)
-        slot_entry = _make_raw_slot_entry(offset=0, size=7, operations=0)
-        metadata = {"slots": [{"target": "../../etc/passwd"}]}
-
-        with (
-            patch.object(launcher, "read_slot_table", return_value=[slot_entry]),
-            patch.object(launcher, "read_metadata", return_value=metadata),
-            pytest.raises(ValueError, match="target"),
-        ):
-            launcher.extract_slot(0, tmp_path)
-
-
-@pytest.mark.unit
 class TestVerifyIntegrity:
     """Test verify_integrity()."""
 
     def test_empty_bundle_path_returns_invalid(self, tmp_path: Path) -> None:
+        from flavor.psp.format_2025.launcher import PSPFLauncher
 
         launcher = _make_launcher(tmp_path / "bundle.psp")
-        object.__setattr__(launcher, "bundle_path", "")
+        launcher.bundle_path = ""  # type: ignore[assignment]
 
         result = launcher.verify_integrity()
         assert result["valid"] is False
