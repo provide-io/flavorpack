@@ -1,0 +1,58 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.7
+    hooks:
+      - id: ruff-format
+        name: ruff format
+      - id: ruff
+        name: ruff lint
+        args: [--fix, --exit-non-zero-on-fix]
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.1
+    hooks:
+      - id: codespell
+        additional_dependencies: ["tomli"]
+
+  - repo: local
+    hooks:
+      - id: ty
+        name: ty check
+        entry: ty check src/ tests/
+        language: system
+        pass_filenames: false
+        always_run: true
+        types: [python]
+
+      - id: mypy
+        name: mypy strict
+        entry: uv run mypy src/flavor
+        language: system
+        pass_filenames: false
+        always_run: true
+        types: [python]
+
+      - id: bandit
+        name: bandit
+        entry: bandit -r src -ll
+        language: system
+        pass_filenames: false
+        always_run: true
+        types: [python]
+
+      # --- Uncomment when tools are installed ---
+      # - id: xenon
+      #   name: xenon complexity
+      #   entry: xenon --max-absolute F --max-modules F --max-average B src/
+      #   language: system
+      #   pass_filenames: false
+      #   always_run: true
+      #   types: [python]
+
+      # - id: vulture
+      #   name: vulture dead code
+      #   entry: vulture src/ tests/ --min-confidence 80
+      #   language: system
+      #   pass_filenames: false
+      #   always_run: true
+      #   types: [python]

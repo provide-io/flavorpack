@@ -47,7 +47,7 @@ class TestProtobufFormat:
         """Test packing operations into 64-bit integers."""
         # Test TAR + GZIP
         ops1 = [operations_pb2.OP_TAR, operations_pb2.OP_GZIP]
-        packed1 = _pack_ops(ops1)
+        packed1 = _pack_ops(ops1)  # ty: ignore[invalid-argument-type]
         assert packed1 == 0x1001  # 0x01 | (0x10 << 8)
         assert _unpack_ops(packed1) == ops1
 
@@ -57,7 +57,7 @@ class TestProtobufFormat:
             operations_pb2.OP_GZIP,
             operations_pb2.OP_AES256_GCM,
         ]
-        packed2 = _pack_ops(ops2)
+        packed2 = _pack_ops(ops2)  # ty: ignore[invalid-argument-type]
         assert packed2 == 0x311001  # 0x01 | (0x10 << 8) | (0x31 << 16)
         assert _unpack_ops(packed2) == ops2
 
@@ -72,7 +72,7 @@ class TestProtobufFormat:
             operations_pb2.OP_MERGE,
             operations_pb2.OP_TERMINAL,
         ]
-        packed3 = _pack_ops(ops3)
+        packed3 = _pack_ops(ops3)  # ty: ignore[invalid-argument-type]
         unpacked3 = _unpack_ops(packed3)
         assert unpacked3[:7] == ops3[:7]  # Terminal stops unpacking
 
@@ -288,14 +288,14 @@ class TestFormatComparison:
             operations_pb2.OP_MERGE,
         ]
 
-        packed = _pack_ops(max_ops)
+        packed = _pack_ops(max_ops)  # ty: ignore[invalid-argument-type]
         assert packed != 0
         assert packed < 2**64  # Fits in 64 bits
 
         # Test with more than 8 operations (should truncate)
         too_many_ops = [*max_ops, operations_pb2.OP_DEDUPE, operations_pb2.OP_DELTA]
-        packed_truncated = _pack_ops(too_many_ops)
-        packed_max = _pack_ops(max_ops)
+        packed_truncated = _pack_ops(too_many_ops)  # ty: ignore[invalid-argument-type]
+        packed_max = _pack_ops(max_ops)  # ty: ignore[invalid-argument-type]
         assert packed_truncated == packed_max  # Same result, extra ops ignored
 
 

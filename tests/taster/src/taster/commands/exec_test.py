@@ -134,6 +134,7 @@ def _run_bootstrap_cache_test(helper_manager: HelperManager, verbose: bool) -> b
             manifest = _prepare_bootstrap_project(temp_dir)
 
             import os
+
             flavor_cache = os.environ.get("FLAVOR_CACHE") or str(Path.home() / ".cache" / "flavor")
             # Workenv name is derived from PSP filename (not package_name+version).
             # build_package_from_manifest outputs bootstrap-test.psp so the launcher

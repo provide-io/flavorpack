@@ -257,9 +257,7 @@ class PSPFIntegrityVerifier:
                     "tamper_detected": tamper_detected,
                 }
 
-                logger.debug(
-                    f"🔐 Integrity verification complete: {result} (level: {validation_level.name})"
-                )
+                logger.debug(f"🔐 Integrity verification complete: {result} (level: {validation_level.name})")
                 return result
 
         except Exception as e:

@@ -58,7 +58,8 @@ def stress_reader() -> None:
         patch(
             "flavor.psp.format_2025.writer.load_launcher_binary",
             return_value=MOCK_LAUNCHER_DATA,
-        ),tempfile.TemporaryDirectory() as tmpdir
+        ),
+        tempfile.TemporaryDirectory() as tmpdir,
     ):
         bundle_path = Path(tmpdir) / "reader_stress.pspf"
 

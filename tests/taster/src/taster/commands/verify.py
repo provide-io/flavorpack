@@ -18,9 +18,9 @@ from provide.foundation.console import pout
 
 
 @click.command("verify")
-@click.argument("package_path", required=False, type=click.Path(path_type=Path))
+@click.argument("package_path", required=False, type=click.Path(path_type=Path))  # ty: ignore[invalid-argument-type]
 @click.option("--json", "output_json", is_flag=True, help="Output results as JSON")
-@click.option("--output-file", "-o", type=click.Path(path_type=Path), help="Write output to file")
+@click.option("--output-file", "-o", type=click.Path(path_type=Path), help="Write output to file")  # ty: ignore[invalid-argument-type]
 def verify_command(
     package_path: Path | None,
     output_json: bool,
@@ -89,7 +89,7 @@ def _basic_verification(package_file: Path) -> dict[str, Any]:
         with package_file.open("rb") as handle:
             info["magic_found"] = b"PSPF2025" in handle.read(1024 * 1024)
     except Exception as exc:
-        info["read_error"] = str(exc)
+        info["read_error"] = str(exc)  # ty: ignore[invalid-assignment]
 
     return {
         "basic_info": info,
