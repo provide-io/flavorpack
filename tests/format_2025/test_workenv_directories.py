@@ -8,6 +8,7 @@
 import os
 from pathlib import Path
 import stat
+import sys
 import tempfile
 from unittest.mock import patch
 
@@ -44,6 +45,7 @@ class TestWorkenvDirectories:
             with pytest.raises(ValueError, match="must start with \\{workenv\\}"):
                 validate_workenv_paths([{"path": path}])
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="POSIX file permissions not enforced on Windows")
     def test_directory_creation_with_mode(self) -> None:
         """Test directories are created with specified mode."""
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -67,6 +69,7 @@ class TestWorkenvDirectories:
             cache_stat = (workenv / "cache").stat()
             assert stat.S_IMODE(cache_stat.st_mode) == 0o750
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="POSIX file permissions not enforced on Windows")
     def test_directory_umask_default(self) -> None:
         """Test default umask is applied when no mode specified."""
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -104,6 +107,7 @@ class TestWorkenvDirectories:
                 # Restore original umask
                 os.umask(old_umask)
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="POSIX file permissions not enforced on Windows")
     def test_directory_umask_override(self) -> None:
         """Test umask can be overridden in metadata."""
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -178,6 +182,7 @@ class TestWorkenvDirectories:
             assert (workenv / "octal2").exists()
             assert (workenv / "octal3").exists()
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="POSIX file permissions not enforced on Windows")
     def test_existing_directory_handling(self) -> None:
         """Test handling of existing directories."""
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -215,7 +220,7 @@ class TestWorkenvDirectories:
             # Should create subdir in the real directory
             assert (real_dir / "subdir").exists()
 
-    @pytest.mark.skipif(os.getuid() == 0, reason="root bypasses permission checks")
+    @pytest.mark.skipif(not hasattr(os, "getuid") or os.getuid() == 0, reason="root or Windows bypasses permission checks")
     def test_permission_error_handling(self) -> None:
         """Test handling of permission errors during directory creation."""
         with tempfile.TemporaryDirectory() as tmpdir:

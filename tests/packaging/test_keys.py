@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 from cryptography.hazmat.primitives import serialization
@@ -111,6 +112,7 @@ class TestGenerateKeyPair:
 
         assert derived_bytes == stored_bytes
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="POSIX file permissions not enforced on Windows")
     def test_generate_key_pair_file_permissions(self, tmp_path: Path) -> None:
         """Test generated keys have appropriate permissions."""
         keys_dir = tmp_path / "keys"

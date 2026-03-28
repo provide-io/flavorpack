@@ -124,11 +124,14 @@ jobs:
             --output dist/pretaster-echo.psp \
             --key-seed pretaster-test
 
-          ../../helpers/bin/flavor-rs-builder-${{ matrix.platform }}${EXT} \
-            --manifest configs/test-shell.json \
-            --launcher-bin ../../helpers/bin/flavor-go-launcher-${{ matrix.platform }}${EXT} \
-            --output dist/pretaster-shell.psp \
-            --key-seed pretaster-test
+          # Windows: Rust not supported — skip Rust builder entirely
+          if [[ "${{ matrix.platform }}" != "windows_"* ]]; then
+            ../../helpers/bin/flavor-rs-builder-${{ matrix.platform }}${EXT} \
+              --manifest configs/test-shell.json \
+              --launcher-bin ../../helpers/bin/flavor-go-launcher-${{ matrix.platform }}${EXT} \
+              --output dist/pretaster-shell.psp \
+              --key-seed pretaster-test
+          fi
 
           ls -la dist/
       
@@ -143,10 +146,6 @@ jobs:
     needs: [setup, build-pretaster, test-pretaster]
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
-    # Windows: Rust launcher not supported on Windows (AMD64 or ARM64).
-    # Cross-language combos that embed the Rust launcher cannot be executed on Windows.
-    # See tests/pretaster/KNOWN_ISSUES.md for details.
-    continue-on-error: ${{ startsWith(matrix.platform, 'windows_') }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.setup.outputs.test_matrix) }}

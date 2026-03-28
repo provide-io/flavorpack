@@ -130,21 +130,25 @@ class TestOperationChains:
             reader = PSPFReader(output)
             reader.open()
 
-            # Read index and metadata
-            reader.read_index()
-            metadata = reader.read_metadata()
+            try:
+                # Read index and metadata
+                reader.read_index()
+                metadata = reader.read_metadata()
 
-            # Check metadata exists
-            assert metadata is not None
+                # Check metadata exists
+                assert metadata is not None
 
-            # Read slot descriptors
-            reader.read_slot_descriptors()
+                # Read slot descriptors
+                reader.read_slot_descriptors()
 
-            # The slot descriptor should have operations set
-            if reader._slot_descriptors:
-                desc = reader._slot_descriptors[0]
-                # Operations are handled internally now
-                assert desc.operations == pack_operations([OP_TAR, OP_GZIP])
+                # The slot descriptor should have operations set
+                if reader._slot_descriptors:
+                    desc = reader._slot_descriptors[0]
+                    # Operations are handled internally now
+                    assert desc.operations == pack_operations([OP_TAR, OP_GZIP])
+            finally:
+                # Close reader before tempdir cleanup (Windows file locking)
+                reader.close()
 
     def test_operation_chain_validation(self) -> None:
         """Test that operation chains are valid."""

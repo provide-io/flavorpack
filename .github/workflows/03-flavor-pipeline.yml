@@ -205,7 +205,7 @@ jobs:
             runner: windows-2025
             python_platform: win_amd64
           - platform: windows_arm64
-            runner: windows-2022-arm
+            runner: windows-11-arm
             python_platform: win_arm64
     steps:
       - name: 📥 Checkout
@@ -359,7 +359,7 @@ jobs:
             python_platform: win_amd64
             continue_on_error: true
           - platform: windows_arm64
-            runner: windows-2022-arm
+            runner: windows-11-arm
             python_platform: win_arm64
 
     continue-on-error: ${{ matrix.continue_on_error == true }}
@@ -394,23 +394,8 @@ jobs:
       - name: 📦 Install Flavor from wheel
         shell: bash
         run: |
-          # Find and install the flavor wheel
-          WHEEL=$(find wheel-dist -name "flavorpack-*.whl" | head -1)
-          
-          if [ -z "$WHEEL" ]; then
-            echo "❌ Flavor wheel not found for ${{ matrix.platform }}"
-            exit 1
-          fi
-
-          echo "Installing Flavor from wheel: $WHEEL"
-          uv tool install "$WHEEL"
-          
-          # Add uv tools to PATH
           export PATH="$HOME/.local/bin:$PATH"
-          
-          # Verify flavor is installed
-          which flavor
-          flavor --version
+          bash .github/scripts/install-flavor-wheel.sh wheel-dist "${{ matrix.platform }}"
       
       - name: 🔧 Prepare Flavor build
         id: prepare
@@ -446,12 +431,23 @@ jobs:
           echo "launcher=$LAUNCHER" >> $GITHUB_OUTPUT
           echo "wheel=$WHEEL" >> $GITHUB_OUTPUT
 
-      - name: 🔨 Build Flavor PSP using itself (with retry)
-        uses: Wandalen/wretry.action@v3.5.0
-        with:
-          attempt_limit: 5
-          attempt_delay: 15000  # 15 seconds between retries
-          command: bash -c 'export PATH="$HOME/.local/bin:$PATH" && export PIP_RETRIES=10 && export PIP_TIMEOUT=120 && export PYTHONIOENCODING=utf-8 && export PYTHONUTF8=1 && export FLAVOR_LOG_LEVEL=trace && .github/scripts/build-flavor-self.sh "${{ matrix.platform }}" "${{ needs.setup.outputs.helper_version }}" "${{ steps.prepare.outputs.wheel }}" "${{ steps.prepare.outputs.launcher }}"'
+      - name: 📦 Pre-warm wheel cache for offline PSPF build
+        shell: bash
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          bash .github/scripts/prewarm-wheel-cache.sh "$GITHUB_WORKSPACE/.flavor-wheel-cache"
+        continue-on-error: true
+
+      - name: 🔨 Build Flavor PSP using itself
+        shell: bash
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          export PIP_RETRIES=10
+          export PIP_TIMEOUT=120
+          export PYTHONIOENCODING=utf-8
+          export PYTHONUTF8=1
+          export FLAVOR_LOG_LEVEL=trace
+          .github/scripts/build-flavor-self.sh "${{ matrix.platform }}" "${{ needs.setup.outputs.helper_version }}" "${{ steps.prepare.outputs.wheel }}" "${{ steps.prepare.outputs.launcher }}"
       
       - name: 📤 Upload Flavor package
         uses: actions/upload-artifact@v4
@@ -483,7 +479,7 @@ jobs:
           - platform: windows_amd64
             runner: windows-2025
           - platform: windows_arm64
-            runner: windows-2022-arm
+            runner: windows-11-arm
 
     steps:
       - name: 📥 Checkout scripts

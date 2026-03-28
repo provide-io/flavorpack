@@ -85,10 +85,21 @@ def create_builder_manifest(
     windows = is_windows()
     uv_exe = "uv.exe" if windows else "uv"
     bin_dir = "Scripts" if windows else "bin"
-    # Use the exact Python binary name that UV provides
-    python_exe = "python.exe" if windows else "python3"  # UV installs Python as python3 on all Unix platforms
-    python_path = f"{{workenv}}/{bin_dir}/{python_exe}"
+    # On Windows, cpython-build-standalone places python.exe at the root of the install
+    # dir (not inside Scripts/).  On Unix it lives in bin/.
+    python_path = "{workenv}/python.exe" if windows else "{workenv}/bin/python3"
     package_exe = get_cli_executable_name(package_name, build_config, windows)
+    # On Windows the runtime command uses python.exe -m <module> instead of the
+    # Scripts/*.exe distlib launcher.  The Rust launcher runs setup commands in
+    # the TEMP extraction directory and then moves the tree to the final workenv.
+    # pip embeds the temp python.exe path inside the distlib launcher at install
+    # time, so the launcher's embedded path is stale after the move.  Invoking
+    # python.exe directly avoids the stale-path problem entirely.
+    cli_module = package_exe[:-4] if package_exe.endswith(".exe") else package_exe
+    if windows:
+        runtime_command = f"{{workenv}}/python.exe -m {cli_module}"
+    else:
+        runtime_command = f"{{workenv}}/{bin_dir}/{package_exe}"
 
     manifest = {
         "name": package_name,
@@ -123,7 +134,11 @@ def create_builder_manifest(
         "setup_commands": [
             {
                 "type": "enumerate_and_execute",
-                "command": f"{{workenv}}/bin/{uv_exe} pip install --python {python_path} --no-deps",
+                "command": (
+                    "{workenv}/python.exe -m pip install --no-deps"
+                    if windows else
+                    f"{{workenv}}/bin/uv pip install --python {python_path} --no-deps"
+                ),
                 "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
             },
             {
@@ -132,7 +147,7 @@ def create_builder_manifest(
                 "content": "{package_name}-{version}",
             },
         ],
-        "command": f"{{workenv}}/{bin_dir}/{package_exe}",
+        "command": runtime_command,
         "slots": [
             {
                 "id": "uv",
@@ -247,7 +262,7 @@ def find_builder_executable(builder_bin: str | None) -> Path:
     if env_bin:
         path = Path(env_bin)
         if not path.exists():
-            raise BuildError(f"Builder binary not found: {path}")
+            raise BuildError(f"Builder binary not found: {path.as_posix()}")
         logger.info(f"Using builder from FLAVOR_BUILDER_BIN: {path}")
         return path
 
@@ -272,7 +287,7 @@ def find_builder_executable(builder_bin: str | None) -> Path:
                 "   • --builder-bin /path/to/builder   (command line)\n"
                 "   • FLAVOR_BUILDER_BIN=/path/to/builder (environment variable)\n"
                 "\n"
-                f"🔍 Searched locations: {manager.helpers_bin}, {manager.installed_helpers_bin}"
+                f"🔍 Searched locations: {manager.helpers_bin.as_posix()}, {manager.installed_helpers_bin.as_posix()}"
             ) from e
 
 
@@ -312,7 +327,7 @@ def find_launcher_executable(launcher_bin: str | None) -> Path:
                 "   • --launcher-bin /path/to/launcher (command line)\n"
                 "   • FLAVOR_LAUNCHER_BIN=/path/to/launcher (environment variable)\n"
                 "\n"
-                f"🔍 Searched locations: {manager.helpers_bin}, {manager.installed_helpers_bin}"
+                f"🔍 Searched locations: {manager.helpers_bin.as_posix()}, {manager.installed_helpers_bin.as_posix()}"
             ) from e
 
 
@@ -322,16 +337,27 @@ def create_python_builder_metadata(
     """Create metadata for Python builder."""
     windows = is_windows()
     bin_dir = "Scripts" if windows else "bin"
-    # Use the exact Python binary name that UV provides
-    python_exe = "python.exe" if windows else "python3"  # UV installs Python as python3 on all Unix platforms
-    python_path = f"{{workenv}}/{bin_dir}/{python_exe}"
+    # On Windows, cpython-build-standalone places python.exe at the root of the install
+    # dir (not inside Scripts/).  On Unix it lives in bin/.
+    python_path = "{workenv}/python.exe" if windows else "{workenv}/bin/python3"
     package_exe = get_cli_executable_name(package_name, build_config, windows)
+    # On Windows the runtime command uses python.exe -m <module> instead of the
+    # Scripts/*.exe distlib launcher.  The Rust launcher runs setup commands in
+    # the TEMP extraction directory and then moves the tree to the final workenv.
+    # pip embeds the temp python.exe path inside the distlib launcher at install
+    # time, so the launcher's embedded path is stale after the move.  Invoking
+    # python.exe directly avoids the stale-path problem entirely.
+    cli_module = package_exe[:-4] if package_exe.endswith(".exe") else package_exe
+    if windows:
+        runtime_command = f"{{workenv}}/python.exe -m {cli_module}"
+    else:
+        runtime_command = f"{{workenv}}/{bin_dir}/{package_exe}"
 
     metadata = {
         "package": {"name": package_name, "version": version},
         "execution": {
             "primary_slot": 0,
-            "command": f"{{workenv}}/{bin_dir}/{package_exe}",
+            "command": runtime_command,
             "env": {},
         },
         "workenv": {
@@ -364,7 +390,15 @@ def create_python_builder_metadata(
         "setup_commands": [
             {
                 "type": "enumerate_and_execute",
-                "command": f"{{workenv}}/{bin_dir}/{'uv.exe' if windows else 'uv'} pip install --python {python_path} --no-deps",
+                # On Windows use python -m pip: uv trampolines fail to canonicalize
+                # their own path inside the PSP workenv.  pip's distlib launchers
+                # embed the Python path at install time and don't canonicalize.
+                # On Linux/macOS uv pip install works fine (shell-script entry points).
+                "command": (
+                    "{workenv}/python.exe -m pip install --no-deps"
+                    if windows else
+                    f"{{workenv}}/bin/uv pip install --python {python_path} --no-deps"
+                ),
                 "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
             },
             {

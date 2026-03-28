@@ -80,7 +80,7 @@ class PackagingOrchestrator:
         logger.debug("🔍🚀📋 Detecting launcher type", path=str(launcher_path))
         try:
             result = run(
-                [str(launcher_path), "--version"],
+                [launcher_path.as_posix(), "--version"],
                 capture_output=True,
                 check=False,
                 timeout=5,
@@ -300,13 +300,13 @@ class PackagingOrchestrator:
             logger.info(f"Detected launcher type: {detected_launcher_type}")
 
             build_cmd_args = [
-                str(packager_executable),
+                packager_executable.as_posix(),
                 "--manifest",
-                str(manifest_path),
+                manifest_path.as_posix(),
                 "--output",
                 self.output_flavor_path,
                 "--launcher-bin",
-                str(launcher_executable),
+                launcher_executable.as_posix(),
             ]
 
             if self.key_seed:
@@ -354,13 +354,13 @@ class PackagingOrchestrator:
 
             # Build command
             build_cmd_args = [
-                str(packager_executable),
+                packager_executable.as_posix(),
                 "--manifest",
-                str(manifest_path),
+                manifest_path.as_posix(),
                 "--output",
                 self.output_flavor_path,
                 "--launcher-bin",
-                str(launcher_executable),
+                launcher_executable.as_posix(),
             ]
 
             if self.key_seed:

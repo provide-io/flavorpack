@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 from unittest.mock import Mock, call, patch
 
@@ -62,6 +63,7 @@ class TestSlotBuilderInit:
 class TestCopyExecutable:
     """Test _copy_executable method."""
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="Unix executable bits not supported on Windows")
     def test_copy_executable_unix(self, tmp_path: Path) -> None:
         """Test copying executable on Unix."""
         builder = PythonSlotBuilder(

@@ -15,6 +15,8 @@ is critical. For complex dependency resolution, use PyPaPipManager instead.
 from __future__ import annotations
 
 import asyncio
+import os
+import sys
 from pathlib import Path
 from typing import ClassVar
 
@@ -29,6 +31,37 @@ from provide.foundation.tools.base import (
     ToolMetadata,
     ToolNotFoundError,
 )
+
+
+def _windows_system_env() -> dict[str, str]:
+    """Return Windows system env vars required for subprocess DLL loading.
+
+    provide.foundation scrubs subprocess environments to a safe allowlist, which
+    excludes SYSTEMROOT, WINDIR, etc. Without these, Windows cannot find the
+    Winsock service-provider DLLs (paths stored as %SystemRoot%\\system32\\...)
+    and any socket call — including DNS getaddrinfo — fails with errno 11001.
+
+    Pass the returned dict as ``env=`` to ``run()`` so these vars are merged
+    into the scrubbed environment as trusted caller overrides.  On non-Windows
+    platforms the dict is empty so this is a no-op.
+    """
+    if sys.platform != "win32":
+        return {}
+    _WINDOWS_VARS = (
+        "SYSTEMROOT",
+        "WINDIR",
+        "SYSTEMDRIVE",
+        "LOCALAPPDATA",
+        "APPDATA",
+        "USERPROFILE",
+        "COMPUTERNAME",
+        "PROGRAMFILES",
+        "PROGRAMFILES(X86)",
+        "COMMONPROGRAMFILES",
+        "NUMBER_OF_PROCESSORS",
+        "PROCESSOR_ARCHITECTURE",
+    )
+    return {k: v for k, v in os.environ.items() if k in _WINDOWS_VARS}
 
 
 class UVManager(BaseToolManager):
@@ -188,7 +221,7 @@ class UVManager(BaseToolManager):
         """
         uv_exe = self.get_uv_executable()
 
-        cmd = [str(uv_exe), "venv", str(venv_path)]
+        cmd = [uv_exe.as_posix(), "venv", venv_path.as_posix()]
 
         if python_version:
             cmd.extend(["--python", python_version])
@@ -214,10 +247,10 @@ class UVManager(BaseToolManager):
         """
         uv_exe = self.get_uv_executable()
 
-        cmd = [str(uv_exe), "pip", "install", "--python", str(venv_python)]
+        cmd = [uv_exe.as_posix(), "pip", "install", "--python", venv_python.as_posix()]
 
         if requirements_file:
-            cmd.extend(["-r", str(requirements_file)])
+            cmd.extend(["-r", requirements_file.as_posix()])
 
         if packages:
             cmd.extend(packages)
@@ -241,12 +274,12 @@ class UVManager(BaseToolManager):
         uv_exe = self.get_uv_executable()
 
         cmd = [
-            str(uv_exe),
+            uv_exe.as_posix(),
             "pip",
             "compile",
-            str(input_file),
+            input_file.as_posix(),
             "--output-file",
-            str(output_file),
+            output_file.as_posix(),
         ]
 
         # Include extras in resolution to properly handle packages like provide-foundation[all]
@@ -335,7 +368,7 @@ class UVManager(BaseToolManager):
             no_dev: Whether to exclude dev dependencies (default True)
         """
         uv_exe = self.get_uv_executable()
-        cmd = [str(uv_exe), "export", "--frozen", "--no-hashes", "--output-file", str(output_file)]
+        cmd = [uv_exe.as_posix(), "export", "--frozen", "--no-hashes", "--output-file", output_file.as_posix()]
         if no_dev:
             cmd.append("--no-dev")
         # --no-hashes: hash annotations in requirements.txt cause uv pip download to
@@ -374,47 +407,68 @@ class UVManager(BaseToolManager):
 
     def download_wheels_offline(self, requirements_file: Path, dest_dir: Path) -> bool:
         """
-        Attempt to download wheels from UV's local cache without network access.
+        Attempt to download wheels from a pre-warmed local wheel cache (no network).
 
-        Uses `uv pip download --offline` which only reads from UV's wheel cache.
-        If a previous `uv tool install` or `uv sync` has run, the packages should
-        already be cached, making this a zero-network operation.
+        Checks the FLAVOR_WHEEL_CACHE environment variable for a directory containing
+        pre-downloaded .whl files (populated by the CI pre-warm step or equivalent).
+        Uses `pip download --no-index --find-links` to copy matching wheels from that
+        local directory into dest_dir without any network access.
+
+        Note: `uv pip download` does not exist as a UV subcommand. This function
+        uses standard pip with --no-index to ensure zero network activity.
 
         Args:
             requirements_file: Path to requirements.txt file
             dest_dir: Directory to download wheels to
 
         Returns:
-            True if all wheels were downloaded from cache, False otherwise
+            True if all wheels were found in local cache, False otherwise
         """
-        uv_exe = self.get_uv_executable()
+        import os
+        import sys
+
+        wheel_cache_dir = os.environ.get("FLAVOR_WHEEL_CACHE")
+        if not wheel_cache_dir:
+            logger.warning("💻 FLAVOR_WHEEL_CACHE not set, skipping offline wheel strategy")
+            return False
+
+        cache_path = Path(wheel_cache_dir)
+        whl_count = len(list(cache_path.glob("*.whl"))) if cache_path.exists() else 0
+        if not cache_path.exists() or whl_count == 0:
+            logger.warning(f"💻 FLAVOR_WHEEL_CACHE dir empty or missing: {cache_path} ({whl_count} wheels)")
+            return False
+
+        logger.warning(f"💻 Offline wheel copy from FLAVOR_WHEEL_CACHE: {cache_path} ({whl_count} wheels)")
+        python_exe = Path(sys.executable)
         cmd = [
-            str(uv_exe),
+            str(python_exe),
+            "-m",
             "pip",
             "download",
-            "--offline",
+            "--no-index",
+            "--find-links",
+            str(cache_path),
             "--dest",
             str(dest_dir),
             "-r",
             str(requirements_file),
+            "--quiet",
         ]
-        logger.debug("💻 Attempting offline wheel download from UV cache", command=" ".join(cmd))
-        result = run(cmd, check=False, capture_output=True)
+        result = run(cmd, check=False, capture_output=True, env=_windows_system_env() or None)
         if result.returncode == 0:
-            logger.info("✅ Downloaded all wheels from UV cache (offline)")
+            logger.warning("✅ Copied wheels from FLAVOR_WHEEL_CACHE (offline)")
             return True
-        if logger.is_debug_enabled():
-            logger.debug(f"Offline download failed (rc={result.returncode}): {result.stderr.strip()[:200]}")
+        logger.warning(f"FLAVOR_WHEEL_CACHE copy failed (rc={result.returncode}): {result.stderr.strip()[:400]}")
         return False
 
     def download_wheels_network(self, requirements_file: Path, dest_dir: Path) -> bool:
         """
         Download wheels via UV's HTTP client using install+cache collection.
 
-        `uv pip download` was added in uv 0.11+; older runners (0.10.x on GHA)
-        only have `uv pip install`.  Strategy: install into an isolated --target
-        dir with a private --cache-dir, then collect the .whl files that UV
-        wrote into its wheel cache during the install.
+        Note: `uv pip download` does not exist as a UV subcommand.
+        Strategy: install into an isolated --target dir with a private
+        --cache-dir, then collect the .whl files that UV wrote into its
+        wheel cache during the install.
 
         This works where pip fails because UV uses its own Rust HTTP client
         (reqwest) which succeeds on Windows GHA where Python urllib3 gets
@@ -442,15 +496,15 @@ class UVManager(BaseToolManager):
             # Install with isolated cache so we can find exactly which wheels
             # UV downloaded.  UV caches .whl files under cache/wheels/**/*.whl.
             cmd = [
-                str(uv_exe),
+                uv_exe.as_posix(),
                 "pip",
                 "install",
                 "--cache-dir",
-                str(uv_cache),
+                uv_cache.as_posix(),
                 "--target",
-                str(install_target),
+                install_target.as_posix(),
                 "-r",
-                str(requirements_file),
+                requirements_file.as_posix(),
             ]
             logger.warning(f"💻 UV pip install (network fallback): {' '.join(cmd)}")
             result = run(cmd, check=False, capture_output=True)
