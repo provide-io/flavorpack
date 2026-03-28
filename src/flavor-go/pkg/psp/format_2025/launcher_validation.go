@@ -14,6 +14,10 @@ const (
 	ExitExecutionError  = 104
 	ExitInvalidArgs     = 105
 	ExitIOError         = 106
+	ExitSignatureError  = 107
+	ExitBuildError      = 108
+	ExitConfigError     = 109
+	ExitDependencyError = 110
 )
 
 // ValidationLevel represents different levels of security validation

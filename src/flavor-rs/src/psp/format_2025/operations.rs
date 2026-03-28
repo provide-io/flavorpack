@@ -50,10 +50,11 @@ pub fn unpack_operations(packed: u64) -> Vec<u8> {
         let mask = 0xFF_u64 << shift;
         let op = ((packed & mask) >> shift) as u8;
 
-        if op != 0 {
-            trace!("🔍 Unpacked operation: index={} op={}", index, op);
-            operations.push(op);
+        if op == 0 {
+            break;
         }
+        trace!("🔍 Unpacked operation: index={} op={}", index, op);
+        operations.push(op);
     }
 
     debug!(
