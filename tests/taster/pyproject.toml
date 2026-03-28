@@ -19,6 +19,10 @@ dependencies = [
     # grpcio has no win_arm64 binary wheel; use reduced extras on that platform
     "provide-foundation[all]; sys_platform != 'win32' or platform_machine != 'ARM64'",
     "provide-foundation[cli,compression,crypto,transport,platform]; sys_platform == 'win32' and platform_machine == 'ARM64'",
+    # exec-test calls build_package_from_manifest() which requires these pinned build
+    # backends in the workenv via importlib_metadata (must match flavorpack's pins)
+    "setuptools==82.0.1",
+    "wheel==0.46.3",
 ]
 
 [project.scripts]
@@ -57,7 +61,25 @@ pass = [
     "LC_*",
     "FLAVOR_*",
     "TASTER_*",  # Allow taster-specific vars
-    "KEEP_*"     # For testing preservation
+    "KEEP_*",    # For testing preservation
+    # Windows home directory variables (needed for Path.home() on Windows)
+    "USERPROFILE",
+    "HOMEDRIVE",
+    "HOMEPATH",
+    "APPDATA",
+    "LOCALAPPDATA",
+    # Windows system variables (needed for DLL loading, subprocesses, temp files)
+    "SystemRoot",
+    "SystemDrive",
+    "WINDIR",
+    "TEMP",
+    "TMP",
+    "PATHEXT",
+    "COMSPEC",
+    "NUMBER_OF_PROCESSORS",
+    "PROCESSOR_ARCHITECTURE",
+    "PROCESSOR_ARCHITEW6432",
+    "OS"
 ]
 set = { "TASTER_MODE" = "test", "TASTER_VERSION" = "1.0.0", "PYTHONIOENCODING" = "utf-8", "PYTHONUTF8" = "1" }
 # Example mapping for testing

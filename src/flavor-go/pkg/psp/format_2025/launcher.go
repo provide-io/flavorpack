@@ -61,13 +61,10 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 		}
 	}
 
-	// Add prefix to non-JSON output (ASCII on Windows, emoji on Unix)
+	// Add prefix to non-JSON output; enable UTF-8 console on Windows first
 	if !jsonFormat {
-		prefix := "[GO] "
-		if runtime.GOOS != "windows" {
-			prefix = "🐹 "
-		}
-		output = logging.NewPrefixWriter(prefix, output)
+		setUTF8ConsoleOutput()
+		output = logging.NewPrefixWriter("🐹 ", output)
 	}
 
 	loggerOpts := &hclog.LoggerOptions{
