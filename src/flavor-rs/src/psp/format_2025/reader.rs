@@ -110,8 +110,9 @@ impl Reader {
             debug!("  slot_table_offset: 0x{:016x}", slot_offset);
             debug!("  slot_count: {}", slot_cnt);
 
-            // Verify index checksum (Adler-32 over the 8192-byte block with checksum field zeroed)
-            if !index.verify_checksum_raw(&index_data) {
+            // Verify index checksum (Adler-32 over the 8192-byte block with checksum field zeroed).
+            // Skip verification when the stored checksum is 0 (not written by older builders).
+            if index.index_checksum != 0 && !index.verify_checksum_raw(&index_data) {
                 return Err(FlavorError::Generic("Index checksum mismatch".into()));
             }
 
