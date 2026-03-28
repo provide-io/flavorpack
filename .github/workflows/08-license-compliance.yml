@@ -49,7 +49,7 @@ jobs:
       has_license: ${{ steps.detect.outputs.has_license }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: 🔍 Detect Project License
         id: detect
@@ -138,10 +138,10 @@ jobs:
       violations: ${{ steps.check.outputs.violations }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
       
@@ -301,7 +301,7 @@ jobs:
       
       - name: 📤 Upload Python License Reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: python-license-reports
           path: |
@@ -317,10 +317,10 @@ jobs:
       compliant: ${{ steps.check.outputs.compliant }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: 🐹 Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: "${{ vars.GO_VERSION }}"
       
@@ -386,7 +386,7 @@ jobs:
       
       - name: 📤 Upload Go License Reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: go-license-reports
           path: |
@@ -400,7 +400,7 @@ jobs:
       compliant: ${{ steps.check.outputs.compliant }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: 🦀 Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -491,7 +491,7 @@ jobs:
       
       - name: 📤 Upload Rust License Reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: rust-license-reports
           path: |
@@ -506,7 +506,7 @@ jobs:
     if: inputs.generate_sbom == true
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: 🛠️ Install SBOM Tools
         run: |
@@ -594,7 +594,7 @@ jobs:
           fi
       
       - name: 📤 Upload SBOM
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sbom-reports
           path: |
@@ -610,7 +610,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Download all reports
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: license-reports
       
@@ -740,14 +740,14 @@ jobs:
           fi
       
       - name: 📤 Upload Compliance Summary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: compliance-summary
           path: compliance-summary.json
       
       - name: 💬 Comment on PR
         if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const fs = require('fs');

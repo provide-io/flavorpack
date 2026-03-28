@@ -48,7 +48,7 @@ jobs:
       flavor_run_id: ${{ steps.flavor.outputs.run_id }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
       
@@ -71,7 +71,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout for scripts
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           sparse-checkout: |
             .github/scripts
@@ -95,7 +95,7 @@ jobs:
             "${{ needs.prepare.outputs.version }}"
       
       - name: 📤 Upload collected wheels
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-wheels
           path: release-wheels/*.whl
@@ -110,7 +110,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout for scripts
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           sparse-checkout: |
             .github/scripts
@@ -145,7 +145,7 @@ jobs:
             taster-psp
       
       - name: 📤 Upload collected packages
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-psp
           path: release-psp/*.psp
@@ -160,16 +160,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: 📥 Download wheels
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: release-wheels
           path: ./release
       
       - name: 📥 Download PSP packages
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: release-psp
           path: ./release
@@ -259,7 +259,7 @@ jobs:
           EOF
       
       - name: 📤 Upload release assets
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-assets
           path: release/
@@ -275,10 +275,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: 📥 Download all release artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: ./artifacts
       
@@ -360,7 +360,7 @@ jobs:
       id-token: write
     steps:
       - name: 📥 Download wheels
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: release-wheels
           path: ./dist
@@ -402,7 +402,7 @@ jobs:
       id-token: write
     steps:
       - name: 📥 Download wheels
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: release-wheels
           path: ./dist
