@@ -154,9 +154,9 @@ class WorkEnvManager:
                             safe_rmtree(slot_path)
                         else:
                             slot_path.unlink(missing_ok=True)
-                elif lifecycle == "temp":
-                    # 'temp' lifecycle: mark for cleanup after session
-                    logger.debug(f"🕐 Slot {slot_idx} marked as 'temp' - will be cleaned after session")
+                elif lifecycle == "temporary":
+                    # 'temporary' lifecycle: mark for cleanup after session
+                    logger.debug(f"🕐 Slot {slot_idx} marked as 'temporary' - will be cleaned after session")
 
     def _prepare_setup_environment(self, workenv_dir: Path, runtime_env: dict[str, Any]) -> dict[str, str]:
         """Prepare isolated environment for setup command execution.
