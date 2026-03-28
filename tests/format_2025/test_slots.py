@@ -117,7 +117,7 @@ class TestSlotMetadata:
             "size": 0,
             "checksum": "abc123",
         }
-        defaults.update(kwargs)
+        defaults.update(kwargs)  # ty: ignore[no-matching-overload]
         return SlotMetadata(**defaults)  # type: ignore[arg-type]
 
     def test_default_lifecycle_runtime(self) -> None:
@@ -132,7 +132,19 @@ class TestSlotMetadata:
 
     @pytest.mark.parametrize(
         "lifecycle",
-        ["init", "startup", "runtime", "shutdown", "cache", "temporary", "lazy", "eager", "dev", "config", "platform"],
+        [
+            "init",
+            "startup",
+            "runtime",
+            "shutdown",
+            "cache",
+            "temporary",
+            "lazy",
+            "eager",
+            "dev",
+            "config",
+            "platform",
+        ],
     )
     def test_valid_lifecycles(self, lifecycle: str) -> None:
         """All valid lifecycle values are accepted."""

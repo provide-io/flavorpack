@@ -135,6 +135,7 @@ def _run_bootstrap_cache_test(helper_manager: HelperManager, verbose: bool) -> b
             manifest = _prepare_bootstrap_project(temp_dir)
 
             import os
+
             flavor_cache = os.environ.get("FLAVOR_CACHE") or str(Path.home() / ".cache" / "flavor")
             workenv_dir = Path(flavor_cache) / "workenv" / "bootstrap-test_1.0.0"
             if workenv_dir.exists():

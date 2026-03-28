@@ -104,7 +104,7 @@ class TestValidateSlotsAdditional:
 
         slot = self._make_slot()
         object.__setattr__(slot, "source", "/no/such/path/xyz123.txt")
-        errors = validate_slots([slot])
+        errors = validate_slots([slot])  # ty: ignore[invalid-argument-type]
         assert any("source" in e.lower() or "🔍" in e for e in errors)
 
     def test_invalid_purpose_yields_error(self) -> None:
@@ -113,7 +113,7 @@ class TestValidateSlotsAdditional:
 
         slot = self._make_slot(purpose="payload")
         object.__setattr__(slot, "purpose", "bad_purpose")
-        errors = validate_slots([slot])
+        errors = validate_slots([slot])  # ty: ignore[invalid-argument-type]
         assert any("purpose" in e.lower() or "🎯" in e for e in errors)
 
     def test_invalid_lifecycle_yields_error(self) -> None:
@@ -122,7 +122,7 @@ class TestValidateSlotsAdditional:
 
         slot = self._make_slot()
         object.__setattr__(slot, "lifecycle", "bad_lifecycle")
-        errors = validate_slots([slot])
+        errors = validate_slots([slot])  # ty: ignore[invalid-argument-type]
         assert any("lifecycle" in e.lower() or "♻️" in e for e in errors)
 
     def test_empty_slot_name_yields_error(self) -> None:
@@ -131,7 +131,7 @@ class TestValidateSlotsAdditional:
 
         slot = self._make_slot(id="valid")
         object.__setattr__(slot, "id", "  ")
-        errors = validate_slots([slot])
+        errors = validate_slots([slot])  # ty: ignore[invalid-argument-type]
         assert any("empty" in e.lower() or "📝" in e for e in errors)
 
     def test_negative_size_yields_error(self) -> None:
@@ -140,7 +140,7 @@ class TestValidateSlotsAdditional:
 
         slot = self._make_slot()
         object.__setattr__(slot, "size", -1)
-        errors = validate_slots([slot])
+        errors = validate_slots([slot])  # ty: ignore[invalid-argument-type]
         assert any("size" in e.lower() or "📏" in e for e in errors)
 
     def test_non_string_operations_yields_error(self) -> None:
@@ -149,7 +149,7 @@ class TestValidateSlotsAdditional:
 
         slot = self._make_slot()
         object.__setattr__(slot, "operations", 42)
-        errors = validate_slots([slot])
+        errors = validate_slots([slot])  # ty: ignore[invalid-argument-type]
         assert any("operations" in e.lower() or "🗜️" in e for e in errors)
 
 

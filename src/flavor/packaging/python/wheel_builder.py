@@ -31,15 +31,6 @@ _PINNED_BUILD_BACKENDS: dict[str, str] = {
 }
 
 
-# Exact versions of build backends required in the workenv.
-# These must match [dependency-groups.build-backends] in pyproject.toml.
-# To update: change the version in pyproject.toml, run `uv lock`, update here.
-_PINNED_BUILD_BACKENDS: dict[str, str] = {
-    "setuptools": "82.0.1",
-    "wheel": "0.46.3",
-}
-
-
 class WheelBuilder:
     """
     Wheel builder with sophisticated dependency resolution.
@@ -101,10 +92,8 @@ class WheelBuilder:
         for pkg, expected in _PINNED_BUILD_BACKENDS.items():
             try:
                 installed = importlib_metadata.version(pkg)
-            except importlib_metadata.PackageNotFoundError:
-                raise RuntimeError(
-                    f"Build backend not found: {pkg}. Rebuild the workenv slot."
-                )
+            except importlib_metadata.PackageNotFoundError as err:
+                raise RuntimeError(f"Build backend not found: {pkg}. Rebuild the workenv slot.") from err
             if installed != expected:
                 raise RuntimeError(
                     f"Build backend mismatch: {pkg}=={installed} present, "

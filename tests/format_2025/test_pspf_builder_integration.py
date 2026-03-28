@@ -7,12 +7,10 @@
 
 from __future__ import annotations
 
-import gc
 from collections.abc import Iterator
 import contextlib
 import gc
 from pathlib import Path
-import sys
 import tempfile
 
 import pytest
@@ -36,11 +34,8 @@ def temp_dir() -> Iterator[Path]:
     yield tmpdir
     # Force GC to close any open file handles (needed on Windows)
     gc.collect()
-    try:
+    with contextlib.suppress(PermissionError, OSError):
         tmpdir_obj.cleanup()
-    except (PermissionError, OSError):
-        # Windows: file handles may still be open briefly after gc; ignore
-        pass
 
 
 @pytest.fixture
