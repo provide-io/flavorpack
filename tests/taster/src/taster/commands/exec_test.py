@@ -135,7 +135,10 @@ def _run_bootstrap_cache_test(helper_manager: HelperManager, verbose: bool) -> b
 
             import os
             flavor_cache = os.environ.get("FLAVOR_CACHE") or str(Path.home() / ".cache" / "flavor")
-            workenv_dir = Path(flavor_cache) / "workenv" / "bootstrap-test_1.0.0"
+            # Workenv name is derived from PSP filename (not package_name+version).
+            # build_package_from_manifest outputs bootstrap-test.psp so the launcher
+            # creates {FLAVOR_CACHE}/workenv/bootstrap-test/.
+            workenv_dir = Path(flavor_cache) / "workenv" / "bootstrap-test"
             if workenv_dir.exists():
                 shutil.rmtree(workenv_dir, ignore_errors=True)
 
