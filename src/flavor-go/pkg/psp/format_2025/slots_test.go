@@ -6,7 +6,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/go-hclog"
@@ -119,13 +119,13 @@ func TestPythonSlotVectors(t *testing.T) {
 	logger.Info("🐍 Loading Python slot descriptor test vectors")
 
 	// Load binary test data
-	binaryData, err := ioutil.ReadFile("testdata/descriptors.bin")
+	binaryData, err := os.ReadFile("testdata/descriptors.bin")
 	if err != nil {
 		t.Fatalf("Failed to load binary test vectors: %v", err)
 	}
 
 	// Load JSON metadata
-	jsonData, err := ioutil.ReadFile("testdata/test_vectors.json")
+	jsonData, err := os.ReadFile("testdata/test_vectors.json")
 	if err != nil {
 		t.Fatalf("Failed to load JSON test vectors: %v", err)
 	}

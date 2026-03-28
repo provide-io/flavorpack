@@ -5,7 +5,7 @@ var XORKey = []byte{3, 1, 4, 1, 5, 9, 2, 6} // First 8 digits of π
 
 // XOREncode encodes data with repeating XOR key
 func XOREncode(data []byte, key []byte) []byte {
-	if key == nil || len(key) == 0 {
+	if len(key) == 0 {
 		key = XORKey
 	}
 	result := make([]byte, len(data))
