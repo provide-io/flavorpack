@@ -4,7 +4,7 @@
 // helpers/flavor-rs/src/psp/format_2025/reader.rs
 // PSPF 2025 Bundle Reader - Uses backend system for flexible access
 
-use log::{debug, error, trace, warn};
+use log::{debug, error, trace};
 use std::path::Path;
 use std::time::Instant;
 
@@ -110,15 +110,9 @@ impl Reader {
             debug!("  slot_table_offset: 0x{:016x}", slot_offset);
             debug!("  slot_count: {}", slot_cnt);
 
-            // Skip checksum verification for now - Go launcher doesn't verify it either
-            // TODO: Fix checksum calculation to match Python builder
-            // if !index.verify_checksum_raw(&index_data) {
-            //     return Err(FlavorError::Generic("Index checksum mismatch".into()));
-            // }
-
-            // Log a warning if checksum doesn't match
+            // Verify index checksum (Adler-32 over the 8192-byte block with checksum field zeroed)
             if !index.verify_checksum_raw(&index_data) {
-                warn!("⚠️  Index checksum mismatch — verification is currently disabled (TODO: fix calculation)");
+                return Err(FlavorError::Generic("Index checksum mismatch".into()));
             }
 
             self.index = Some(index);
