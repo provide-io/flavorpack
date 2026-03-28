@@ -137,7 +137,7 @@ def create_builder_manifest(
                 "command": (
                     "{workenv}/python.exe -m pip install --no-deps"
                     if windows else
-                    f"{{workenv}}/bin/uv pip install --python {python_path} --no-deps"
+                    f"{{workenv}}/bin/uv --no-config pip install --python {python_path} --no-deps"
                 ),
                 "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
             },
@@ -397,7 +397,7 @@ def create_python_builder_metadata(
                 "command": (
                     "{workenv}/python.exe -m pip install --no-deps"
                     if windows else
-                    f"{{workenv}}/bin/uv pip install --python {python_path} --no-deps"
+                    f"{{workenv}}/bin/uv --no-config pip install --python {python_path} --no-deps"
                 ),
                 "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
             },
