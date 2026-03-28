@@ -217,11 +217,25 @@ echo ""
 
 # Run actual tests using Make targets (regardless of whether PRETASTER_PSP is provided)
 # The pretaster PSP is used for verification, but actual tests run via Make
+#
+# On Windows, test-core uses Rust (builder/launcher) which is not supported.
+# Windows runs test-combo only (combination-tests.sh filters to go:go on Windows).
+IS_WINDOWS=false
+if [[ "$PLATFORM" == *"windows"* ]]; then
+  IS_WINDOWS=true
+fi
+
 case "$TEST_SUITE" in
   all)
-    echo "🚀 Running ALL test suites via Make..."
-    echo "════════════════════════════════════════════════════════════════"
-    make test
+    if [[ "$IS_WINDOWS" == "true" ]]; then
+      echo "🚀 Running COMBO-ONLY tests on Windows (Rust not supported in core tests)..."
+      echo "════════════════════════════════════════════════════════════════"
+      make test-combo
+    else
+      echo "🚀 Running ALL test suites via Make..."
+      echo "════════════════════════════════════════════════════════════════"
+      make test
+    fi
     EXIT_CODE=$?
     ;;
   combo)
@@ -231,9 +245,15 @@ case "$TEST_SUITE" in
     EXIT_CODE=$?
     ;;
   core)
-    echo "🚀 Running CORE tests via Make..."
-    echo "════════════════════════════════════════════════════════════════"
-    make test-core
+    if [[ "$IS_WINDOWS" == "true" ]]; then
+      echo "⚠️ Skipping CORE tests on Windows (Rust not supported) — running COMBO instead..."
+      echo "════════════════════════════════════════════════════════════════"
+      make test-combo
+    else
+      echo "🚀 Running CORE tests via Make..."
+      echo "════════════════════════════════════════════════════════════════"
+      make test-core
+    fi
     EXIT_CODE=$?
     ;;
   direct)

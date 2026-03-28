@@ -54,10 +54,15 @@ class TestPretasterIntegration:
 
     @pytest.mark.integration
     @pytest.mark.cross_language
+    @pytest.mark.requires_helpers
     def test_echo_package_execution(self, pretaster_dir: Path) -> None:
         """Test that echo package can be created and executed."""
         if not pretaster_dir.exists():
             pytest.skip("Pretaster directory not found")
+
+        dist_dir = pretaster_dir.parent.parent / "dist" / "bin"
+        if not any(dist_dir.glob("flavor-*-builder-*")):
+            pytest.skip("Helpers not built - run ./build.sh first")
 
         echo_package = pretaster_dir / "dist" / "echo-test.psp"
 

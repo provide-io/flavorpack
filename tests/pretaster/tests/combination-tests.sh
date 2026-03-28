@@ -259,12 +259,19 @@ if [[ "$OS" == "windows" ]]; then
 fi
 
 # Test all combinations
-combinations=(
-    "rs:rs:$HELPERS_DIR/bin/flavor-rs-builder-$PLATFORM$EXT:$HELPERS_DIR/bin/flavor-rs-launcher-$PLATFORM$EXT:🦀🦀"
-    "rs:go:$HELPERS_DIR/bin/flavor-rs-builder-$PLATFORM$EXT:$HELPERS_DIR/bin/flavor-go-launcher-$PLATFORM$EXT:🦀🐹"
-    "go:rs:$HELPERS_DIR/bin/flavor-go-builder-$PLATFORM$EXT:$HELPERS_DIR/bin/flavor-rs-launcher-$PLATFORM$EXT:🐹🦀"
-    "go:go:$HELPERS_DIR/bin/flavor-go-builder-$PLATFORM$EXT:$HELPERS_DIR/bin/flavor-go-launcher-$PLATFORM$EXT:🐹🐹"
-)
+# On Windows, Rust is not supported — only test Go builder + Go launcher
+if [[ "$OS" == "windows" ]]; then
+    combinations=(
+        "go:go:$HELPERS_DIR/bin/flavor-go-builder-$PLATFORM$EXT:$HELPERS_DIR/bin/flavor-go-launcher-$PLATFORM$EXT:🐹🐹"
+    )
+else
+    combinations=(
+        "rs:rs:$HELPERS_DIR/bin/flavor-rs-builder-$PLATFORM$EXT:$HELPERS_DIR/bin/flavor-rs-launcher-$PLATFORM$EXT:🦀🦀"
+        "rs:go:$HELPERS_DIR/bin/flavor-rs-builder-$PLATFORM$EXT:$HELPERS_DIR/bin/flavor-go-launcher-$PLATFORM$EXT:🦀🐹"
+        "go:rs:$HELPERS_DIR/bin/flavor-go-builder-$PLATFORM$EXT:$HELPERS_DIR/bin/flavor-rs-launcher-$PLATFORM$EXT:🐹🦀"
+        "go:go:$HELPERS_DIR/bin/flavor-go-builder-$PLATFORM$EXT:$HELPERS_DIR/bin/flavor-go-launcher-$PLATFORM$EXT:🐹🐹"
+    )
+fi
 
 # Track test results
 declare -a FAILED_COMBOS

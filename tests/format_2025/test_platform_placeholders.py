@@ -22,11 +22,11 @@ class TestPlatformPlaceholders:
 
         # Basic workenv substitution
         result = substitute_placeholders("{workenv}/tmp", workenv_path)
-        assert result == "/test/workenv/tmp"
+        assert result.replace("\\", "/") == "/test/workenv/tmp"
 
         # Multiple workenv references
         result = substitute_placeholders("{workenv}/var/{workenv}/log", workenv_path)
-        assert result == "/test/workenv/var//test/workenv/log"
+        assert result.replace("\\", "/") == "/test/workenv/var//test/workenv/log"
 
     def test_substitute_os_placeholder(self) -> None:
         """Test that {os} placeholder is correctly substituted."""
@@ -74,16 +74,18 @@ class TestPlatformPlaceholders:
 
         # Complex nested path
         result = substitute_placeholders("{workenv}/{os}/{arch}/bin", workenv_path)
-        assert result.startswith("/test/workenv/")
-        assert "/bin" in result
+        result_posix = result.replace("\\", "/")
+        assert result_posix.startswith("/test/workenv/")
+        assert "/bin" in result_posix
         # Should have OS and arch in path
-        parts = result.split("/")
+        parts = result_posix.split("/")
         assert len(parts) >= 5  # /test/workenv/os/arch/bin
 
         # Platform in cache path
         result = substitute_placeholders("{workenv}/cache/{platform}", workenv_path)
-        assert result.startswith("/test/workenv/cache/")
-        assert "_" in result.split("/")[-1]  # platform should have underscore
+        result_posix = result.replace("\\", "/")
+        assert result_posix.startswith("/test/workenv/cache/")
+        assert "_" in result_posix.split("/")[-1]  # platform should have underscore
 
     def test_invalid_placeholders(self) -> None:
         """Test that invalid placeholders are left as-is."""
@@ -107,9 +109,10 @@ class TestPlatformPlaceholders:
 
         # Mix of valid and invalid
         result = substitute_placeholders("{workenv}/{unknown}/{os}", workenv_path)
+        result_posix = result.replace("\\", "/")
         # workenv and os should be substituted, unknown left as-is
-        assert result.startswith("/test/workenv/{unknown}/")
-        assert not result.endswith("{os}")
+        assert result_posix.startswith("/test/workenv/{unknown}/")
+        assert not result_posix.endswith("{os}")
 
     def test_environment_variable_placeholders(self) -> None:
         """Test placeholders in environment variable values."""

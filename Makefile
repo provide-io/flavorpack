@@ -11,15 +11,15 @@ help: ## Show this help message
 
 .PHONY: test
 test: ## Run Python tests
-	uv run pytest tests/
+	PYTHONUTF8=1 uv run pytest tests/
 
 .PHONY: test-cov
 test-cov: ## Run Python tests with coverage
-	uv run pytest --cov=flavor --cov-report=term-missing --cov-report=html tests/
+	PYTHONUTF8=1 uv run pytest --cov=flavor --cov-report=term-missing --cov-report=html tests/
 
 .PHONY: test-cov-xml
 test-cov-xml: ## Run Python tests with XML coverage for CI
-	uv run pytest --cov=flavor --cov-report=xml --cov-report=term tests/
+	PYTHONUTF8=1 uv run pytest --cov=flavor --cov-report=xml --cov-report=term tests/
 
 # Mutation Testing (using mutmut directly)
 .PHONY: mutation-run

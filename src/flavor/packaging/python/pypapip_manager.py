@@ -17,6 +17,8 @@ from provide.foundation.platform import get_arch_name, get_os_name
 from provide.foundation.process import run
 from provide.foundation.resilience.types import BackoffStrategy
 
+from flavor.packaging.python.uv_manager import _windows_system_env
+
 
 class PyPaPipManager:
     """
@@ -74,7 +76,7 @@ class PyPaPipManager:
         CRITICAL: Must use ACTUAL pip3 NOT uv pip - uv pip is incomplete/broken
         DO NOT CHANGE THIS TO uv pip - IT WILL BREAK DEPENDENCY RESOLUTION
         """
-        return [str(python_exe), "-m", "pip", "install", *packages]
+        return [python_exe.as_posix(), "-m", "pip", "install", *packages]
 
     def _get_pypapip_wheel_cmd(
         self, python_exe: Path, wheel_dir: Path, source: Path, no_deps: bool = False
@@ -85,12 +87,12 @@ class PyPaPipManager:
         CRITICAL: Must use ACTUAL pip3 NOT uv pip - uv pip is incomplete/broken
         DO NOT CHANGE THIS TO uv pip - IT WILL BREAK DEPENDENCY RESOLUTION
         """
-        cmd = [str(python_exe), "-m", "pip", "wheel", "--wheel-dir", str(wheel_dir)]
+        cmd = [python_exe.as_posix(), "-m", "pip", "wheel", "--wheel-dir", wheel_dir.as_posix()]
         if no_deps:
             cmd.append("--no-deps")
         # Note: pip wheel doesn't support --platform flag (that's for download only)
         # Wheels built locally will automatically use the current platform
-        cmd.append(str(source))
+        cmd.append(source.as_posix())
         return cmd
 
     # ⚠️ CRITICAL: This method handles manylinux platform tags - DO NOT REMOVE! ⚠️
@@ -117,7 +119,7 @@ class PyPaPipManager:
             binary_only: Whether to download only binary wheels
             platform_tag: Optional platform tag to use (e.g., "manylinux2014_x86_64")
         """
-        cmd = [str(python_exe), "-m", "pip", "download", "--dest", str(dest_dir)]
+        cmd = [python_exe.as_posix(), "-m", "pip", "download", "--dest", dest_dir.as_posix()]
         if binary_only:
             cmd.extend(["--only-binary", ":all:"])
 
@@ -154,7 +156,7 @@ class PyPaPipManager:
                 logger.warning("⚠️ grpcio on CentOS 7 ARM64 may have C++ ABI issues")
 
         if requirements_file:
-            cmd.extend(["-r", str(requirements_file)])
+            cmd.extend(["-r", requirements_file.as_posix()])
         if packages:
             cmd.extend(packages)
         return cmd
@@ -196,7 +198,7 @@ class PyPaPipManager:
         )
 
         logger.debug("💻 Downloading requirements", command=" ".join(download_cmd))
-        result = run(download_cmd, check=False, capture_output=True)
+        result = run(download_cmd, check=False, capture_output=True, env=_windows_system_env() or None)
 
         if result.returncode != 0:
             error_msg = f"Failed to download required wheels: {result.stderr}"
@@ -240,7 +242,7 @@ class PyPaPipManager:
         )
 
         logger.debug("💻 Downloading packages", command=" ".join(download_cmd))
-        result = run(download_cmd, check=False, capture_output=True)
+        result = run(download_cmd, check=False, capture_output=True, env=_windows_system_env() or None)
 
         if result.returncode != 0:
             error_msg = f"Failed to download required packages: {result.stderr}"
@@ -269,7 +271,7 @@ class PyPaPipManager:
         )
 
         logger.debug("💻 Building wheel", command=" ".join(wheel_cmd))
-        result = run(wheel_cmd, check=True, capture_output=True)
+        result = run(wheel_cmd, check=True, capture_output=True, env=_windows_system_env() or None)
 
         if result.stdout:
             # Look for the wheel filename in output
@@ -295,7 +297,7 @@ class PyPaPipManager:
         install_cmd = self._get_pypapip_install_cmd(python_exe, packages)
 
         logger.debug("💻 Installing packages", command=" ".join(install_cmd))
-        run(install_cmd, check=True, capture_output=True)
+        run(install_cmd, check=True, capture_output=True, env=_windows_system_env() or None)
 
         logger.info("✅ Successfully installed packages")
 

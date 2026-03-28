@@ -23,7 +23,7 @@ from provide.foundation.resilience.types import BackoffStrategy
 from flavor.config.defaults import DEFAULT_EXECUTABLE_PERMS
 from flavor.packaging.python.dependency_resolver import DependencyResolver
 from flavor.packaging.python.pypapip_manager import PyPaPipManager
-from flavor.packaging.python.uv_manager import UVManager
+from flavor.packaging.python.uv_manager import UVManager, _windows_system_env
 
 
 class PythonEnvironmentBuilder:
@@ -117,7 +117,7 @@ class PythonEnvironmentBuilder:
         cmd_custom = [uv_cmd, "python", "install", self.python_version, "--install-dir", uv_install_dir]
         logger.debug("💻🚀📋 Running command", command=" ".join(cmd_custom))
         try:
-            result = run(cmd_custom, capture_output=True)
+            result = run(cmd_custom, capture_output=True, env=_windows_system_env() or None)
             print(
                 f"[flavor-python] uv python install (custom-dir) exit={result.returncode} "
                 f"stderr={result.stderr.strip()!r:.120}",
@@ -139,7 +139,7 @@ class PythonEnvironmentBuilder:
         logger.debug("💻🚀📋 Strategy 2: installing to default managed location")
         try:
             cmd_default = [uv_cmd, "python", "install", self.python_version]
-            result2 = run(cmd_default, capture_output=True)
+            result2 = run(cmd_default, capture_output=True, env=_windows_system_env() or None)
             print(
                 f"[flavor-python] uv python install (default) exit={result2.returncode} "
                 f"stderr={result2.stderr.strip()!r:.120}",
@@ -148,7 +148,7 @@ class PythonEnvironmentBuilder:
             )
 
             find_cmd = [uv_cmd, "python", "find", self.python_version, "--python-preference", "only-managed"]
-            result3 = run(find_cmd, capture_output=True)
+            result3 = run(find_cmd, capture_output=True, env=_windows_system_env() or None)
             python_bin_str = result3.stdout.strip()
             print(
                 f"[flavor-python] uv python find exit={result3.returncode} path={python_bin_str!r:.200}",
@@ -237,7 +237,17 @@ class PythonEnvironmentBuilder:
     def _find_python_binary(self, python_install_dir: Path, uv_install_dir: str, uv_cmd: str) -> Path | None:
         """Find the Python binary within the installation directory."""
         if self.is_windows:
-            python_bin = python_install_dir / "Scripts" / "python.exe"
+            # cpython-build-standalone for Windows puts python.exe at the root of the
+            # install directory (not in Scripts/).  Scripts/ only contains pip and other
+            # tools.  Check the root first, fall back to Scripts/ for venv layouts.
+            candidates = [
+                python_install_dir / "python.exe",
+                python_install_dir / "Scripts" / "python.exe",
+            ]
+            python_bin = next((p for p in candidates if p.exists()), None)
+            if python_bin:
+                return python_bin
+            return self._fallback_find_python(uv_cmd, uv_install_dir)
         else:
             # Try different possible locations
             possible_bins = [
@@ -277,7 +287,9 @@ class PythonEnvironmentBuilder:
             UV_PYTHON_INSTALL_DIR=uv_install_dir,
         )
         try:
-            result = run(find_cmd, capture_output=True, env=env)
+            sys_env = _windows_system_env()
+            merged_env = {**sys_env, **env} if sys_env else env
+            result = run(find_cmd, capture_output=True, env=merged_env)
             if result.returncode == 0 and result.stdout:
                 python_path = result.stdout.strip()
                 logger.debug(f"Found Python via uv python find (restricted): {python_path}")
@@ -297,7 +309,7 @@ class PythonEnvironmentBuilder:
             command=" ".join(find_cmd),
         )
         try:
-            result = run(find_cmd, capture_output=True)
+            result = run(find_cmd, capture_output=True, env=_windows_system_env() or None)
             if result.returncode == 0 and result.stdout:
                 python_path = result.stdout.strip()
                 logger.info(
@@ -328,8 +340,15 @@ class PythonEnvironmentBuilder:
             if str(target).startswith("/usr") or str(target).startswith("/System"):
                 logger.error("🔗🚫❌ Python is a system symlink, not standalone!")
 
-        # Go up from bin/python{version} to the installation root
-        python_install_dir = python_bin.parent.parent
+        # Go up to the installation root.
+        # On Unix, python lives in bin/ so we need two levels up.
+        # On Windows standalone (cpython-build-standalone), python.exe is at the
+        # root of the install dir so only one level up is needed.
+        python_parent = python_bin.parent
+        if python_parent.name in ("bin", "Scripts"):
+            python_install_dir = python_parent.parent
+        else:
+            python_install_dir = python_parent
 
         self._log_installation_contents(python_install_dir)
         return python_install_dir

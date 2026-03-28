@@ -86,7 +86,7 @@ class TestSlotDescriptor:
 
         desc = SlotDescriptor(id=1, path=Path("/tmp/test"))
         d = desc.to_dict()
-        assert d["path"] == "/tmp/test"
+        assert d["path"].replace("\\", "/") == "/tmp/test"
 
     @pytest.mark.parametrize(
         ("purpose", "lifecycle"),

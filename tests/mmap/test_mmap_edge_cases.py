@@ -5,9 +5,11 @@
 
 """Test mmap edge cases and corner scenarios."""
 
+import gc
 import hashlib
 import os
 from pathlib import Path
+import sys
 import tempfile
 import threading
 import time
@@ -22,6 +24,24 @@ from flavor.psp.format_2025.backends import (
     MMapBackend,
     create_backend,
 )
+
+
+def _safe_unlink(path: Path) -> None:
+    """Unlink a file, handling Windows file-lock issues with gc + retry."""
+    gc.collect()  # Release any lingering memoryview references
+    try:
+        path.unlink(missing_ok=True)
+    except PermissionError:
+        if sys.platform == "win32":
+            # On Windows, mmap may still hold a lock briefly after close.
+            # Force a second GC pass and try again.
+            gc.collect()
+            try:
+                path.unlink(missing_ok=True)
+            except PermissionError:
+                pass  # Best-effort; temp file will be cleaned on next run
+        else:
+            raise
 
 
 @pytest.mark.mmap
@@ -39,7 +59,7 @@ class TestMMapEdgeCases:
             with pytest.raises(ValueError):  # Can't mmap empty file
                 backend.open(path)
         finally:
-            path.unlink(missing_ok=True)
+            _safe_unlink(path)
 
     def test_single_byte_file(self) -> None:
         """Test mmap with single byte file."""
@@ -59,9 +79,11 @@ class TestMMapEdgeCases:
             with pytest.raises(ValueError):
                 backend.read_at(0, 2)
 
+            # Release memoryview before close so Windows can release the file lock
+            del data
             backend.close()
         finally:
-            path.unlink(missing_ok=True)
+            _safe_unlink(path)
 
     def test_exact_page_boundary(self) -> None:
         """Test reads exactly on page boundaries."""
@@ -83,9 +105,10 @@ class TestMMapEdgeCases:
             with pytest.raises(ValueError):
                 backend.read_at(0, DEFAULT_PAGE_SIZE + 1)
 
+            del data
             backend.close()
         finally:
-            path.unlink(missing_ok=True)
+            _safe_unlink(path)
 
     def test_unaligned_access_patterns(self) -> None:
         """Test various unaligned access patterns."""
@@ -114,10 +137,11 @@ class TestMMapEdgeCases:
                     data = backend.read_at(offset, size)
                     expected = pattern[offset : offset + size]
                     assert bytes(data) == expected, f"Failed at offset={offset}, size={size}"
+                    del data  # Release view to avoid Windows lock issues
 
             backend.close()
         finally:
-            path.unlink(missing_ok=True)
+            _safe_unlink(path)
 
     def test_multiple_overlapping_views(self) -> None:
         """Test multiple overlapping memory views."""
@@ -150,9 +174,11 @@ class TestMMapEdgeCases:
             # So views[1][25:75] should equal views[2][0:50]
             assert bytes(views[1][25:75]) == bytes(views[2])
 
+            # Release all views before close to avoid Windows lock issues
+            views.clear()
             backend.close()
         finally:
-            path.unlink(missing_ok=True)
+            _safe_unlink(path)
 
     def test_file_growth_after_mmap(self) -> None:
         """Test behavior when file grows after mmap."""
@@ -168,6 +194,7 @@ class TestMMapEdgeCases:
             # Read initial content
             initial = backend.read_at(0, 7)
             assert bytes(initial) == b"INITIAL"
+            del initial
 
             # Append to file (this won't be visible to existing mmap)
             with path.open("ab") as f2:
@@ -184,10 +211,11 @@ class TestMMapEdgeCases:
             backend2.open(path)
             new_data = backend2.read_at(700, 8)
             assert bytes(new_data) == b"APPENDED"
+            del new_data
             backend2.close()
 
         finally:
-            path.unlink(missing_ok=True)
+            _safe_unlink(path)
 
     def test_concurrent_read_stress(self) -> None:
         """Stress test with concurrent reads from multiple threads."""
@@ -237,7 +265,7 @@ class TestMMapEdgeCases:
 
             backend.close()
         finally:
-            path.unlink(missing_ok=True)
+            _safe_unlink(path)
 
     def test_memory_pressure_handling(self) -> None:
         """Test behavior under memory pressure."""
@@ -274,12 +302,15 @@ class TestMMapEdgeCases:
                 assert len(view) == 1024
                 assert bytes(view)[0:1] == b"X"
 
+            # Release all views before closing to avoid Windows lock issues
+            views.clear()
+
             # Clean up
             for backend in backends:
                 backend.close()
 
         finally:
-            path.unlink(missing_ok=True)
+            _safe_unlink(path)
 
     def test_readonly_file_access(self) -> None:
         """Test mmap with read-only file."""
@@ -298,10 +329,11 @@ class TestMMapEdgeCases:
             data = backend.read_at(0, 8)
             assert bytes(data) == b"READONLY"
 
+            del data
             backend.close()
         finally:
             path.chmod(0o644)
-            path.unlink(missing_ok=True)
+            _safe_unlink(path)
 
     def test_backend_reuse_after_close(self) -> None:
         """Test that backend cannot be reused after close."""
@@ -317,7 +349,8 @@ class TestMMapEdgeCases:
             data = backend.read_at(0, 4)
             assert bytes(data) == b"TEST"
 
-            # Close backend
+            # Close backend — release data first to avoid Windows file lock
+            del data
             backend.close()
 
             # Should fail after close
@@ -328,10 +361,11 @@ class TestMMapEdgeCases:
             backend.open(path)
             data = backend.read_at(0, 4)
             assert bytes(data) == b"TEST"
+            del data
             backend.close()
 
         finally:
-            path.unlink(missing_ok=True)
+            _safe_unlink(path)
 
 
 @pytest.mark.parametrize(
@@ -397,7 +431,7 @@ def test_parameterized_read_patterns(file_size: int, chunk_size: int, backend_ty
         backend.close()
 
     finally:
-        path.unlink(missing_ok=True)
+        _safe_unlink(path)
 
 
 @pytest.mark.parametrize(
@@ -418,8 +452,9 @@ def test_error_handling(error_type: str) -> None:
             backend.open(Path("/nonexistent/file.dat"))
 
     elif error_type == "permission_denied":
-        if os.getuid() == 0:  # Skip if running as root
-            pytest.skip("Cannot test permission denied as root")
+        # os.getuid() is not available on Windows
+        if not hasattr(os, "getuid") or os.getuid() == 0:
+            pytest.skip("Cannot test permission denied as root or on Windows")
 
         with tempfile.NamedTemporaryFile(delete=False) as f:
             f.write(b"TEST")
@@ -433,7 +468,7 @@ def test_error_handling(error_type: str) -> None:
                 backend.open(path)
         finally:
             path.chmod(0o644)
-            path.unlink(missing_ok=True)
+            _safe_unlink(path)
 
     elif error_type == "file_corrupted":
         # This is more about handling reads from a valid mmap
@@ -449,9 +484,10 @@ def test_error_handling(error_type: str) -> None:
             data = backend.read_at(0, 50)
             assert len(data) == 50
 
+            del data
             backend.close()
         finally:
-            path.unlink(missing_ok=True)
+            _safe_unlink(path)
 
     elif error_type == "invalid_offset":
         with tempfile.NamedTemporaryFile(delete=False) as f:
@@ -472,7 +508,7 @@ def test_error_handling(error_type: str) -> None:
 
             backend.close()
         finally:
-            path.unlink(missing_ok=True)
+            _safe_unlink(path)
 
     elif error_type == "invalid_size":
         with tempfile.NamedTemporaryFile(delete=False) as f:
@@ -493,7 +529,7 @@ def test_error_handling(error_type: str) -> None:
 
             backend.close()
         finally:
-            path.unlink(missing_ok=True)
+            _safe_unlink(path)
 
 
 # 🌶️📦🔚
