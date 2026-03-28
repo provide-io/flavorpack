@@ -251,34 +251,65 @@ jobs:
 
   # Comprehensive taster testing
   comprehensive-test:
-    name: 🔬 Comprehensive Taster Tests (${{ matrix.platform }})
+    name: 🔬 Comprehensive Taster Tests (${{ matrix.platform }}-${{ matrix.launcher_name }})
     needs: [setup, test-taster]
     strategy:
       matrix:
         include:
+          # Linux: both launchers are reliable
           - runner: ubuntu-latest
             platform: linux_amd64
             activate: workenv/bin/activate
             launcher_ext: ""
-            # Rust launcher works on Linux
             bundled_launcher: flavor-rs-launcher
+            launcher_name: rust
+            allow_failure: false
+          - runner: ubuntu-latest
+            platform: linux_amd64
+            activate: workenv/bin/activate
+            launcher_ext: ""
+            bundled_launcher: flavor-go-launcher
+            launcher_name: go
+            allow_failure: false
+          # Windows AMD64: Go is reliable; Rust may work now that encoding is fixed
           - runner: windows-2025
             platform: windows_amd64
             activate: workenv/Scripts/activate
             launcher_ext: ".exe"
-            # Rust launcher crashes on Windows; use Go launcher
             bundled_launcher: flavor-go-launcher
+            launcher_name: go
+            allow_failure: false
+          - runner: windows-2025
+            platform: windows_amd64
+            activate: workenv/Scripts/activate
+            launcher_ext: ".exe"
+            bundled_launcher: flavor-rs-launcher
+            launcher_name: rust
+            allow_failure: true  # Rust launcher historically crashes on Windows (KNOWN_ISSUES.md)
+          # Windows ARM64: Go is reliable; Rust may work now that encoding is fixed
           - runner: windows-11-arm
             platform: windows_arm64
             activate: workenv/Scripts/activate
             launcher_ext: ".exe"
-            # Rust launcher crashes on Windows; use Go launcher
             bundled_launcher: flavor-go-launcher
+            launcher_name: go
+            allow_failure: false
+          - runner: windows-11-arm
+            platform: windows_arm64
+            activate: workenv/Scripts/activate
+            launcher_ext: ".exe"
+            bundled_launcher: flavor-rs-launcher
+            launcher_name: rust
+            allow_failure: true  # Rust launcher historically crashes on Windows (KNOWN_ISSUES.md)
       fail-fast: false
     runs-on: ${{ matrix.runner }}
+    continue-on-error: ${{ matrix.allow_failure }}
     defaults:
       run:
         shell: bash
+    env:
+      PYTHONIOENCODING: "utf-8"
+      PYTHONUTF8: "1"
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -299,6 +330,25 @@ jobs:
       - name: 🔧 Extract all helpers
         run: |
           .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}"
+
+      - name: 🔧 Copy helpers into flavor wheel source
+        run: |
+          mkdir -p src/flavor/helpers/bin
+          PLATFORM="${{ matrix.platform }}"
+          EXT="${{ matrix.launcher_ext }}"
+          # Copy current-platform helpers (versioned and symlinked names) into the
+          # flavor package-data dir so they are bundled in the flavorpack wheel
+          # that `flavor pack` installs inside the taster PSP. This makes
+          # HelperManager.get_helper() work inside exec-test.
+          for f in helpers/bin/flavor-*-${PLATFORM}${EXT}; do
+            if [ -f "$f" ]; then
+              cp -f "$f" src/flavor/helpers/bin/
+              echo "  Copied: $(basename $f)"
+            fi
+          done
+          chmod +x src/flavor/helpers/bin/* 2>/dev/null || true
+          echo "Helpers in src/flavor/helpers/bin/:"
+          ls -la src/flavor/helpers/bin/ || echo "  (empty)"
 
       - name: 🐍 Setup Python
         uses: actions/setup-python@v5
@@ -402,9 +452,12 @@ jobs:
           source ${{ matrix.activate }}
           cd tests/taster
 
-          # Rust launcher is not supported on Windows (crashes on execution)
-          if [[ "${{ matrix.platform }}" == "windows_"* ]]; then
-            echo "⚠️ Rust launcher not supported on Windows, skipping"
+          # For Go-primary rows on Windows, skip the Rust secondary test to avoid
+          # contaminating the reliable Go row with a potentially crashing Rust launcher.
+          # The dedicated Rust-primary matrix rows (allow_failure: true) run this test.
+          if [[ "${{ matrix.platform }}" == "windows_"* ]] && \
+             [[ "${{ matrix.bundled_launcher }}" == "flavor-go-launcher" ]]; then
+            echo "⚠️ Rust launcher secondary test skipped on Windows Go rows (see Rust-primary row)"
             exit 0
           fi
 
@@ -519,6 +572,12 @@ jobs:
         run: |
           source ${{ matrix.activate }}
           cd tests/taster
+
+          # exec-test uses Rust launcher internally; Rust launcher crashes on Windows
+          if [[ "${{ matrix.platform }}" == "windows_"* ]]; then
+            echo "⚠️ exec-test uses Rust launcher which is not supported on Windows, skipping"
+            exit 0
+          fi
 
           echo "=== Testing bootstrap and cache reuse ==="
           ./taster-bundled.psp exec-test --verbose

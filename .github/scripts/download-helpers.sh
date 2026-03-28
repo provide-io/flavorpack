@@ -6,7 +6,7 @@ set -e
 
 ARTIFACT_DIR="${1:-helpers-dist}"
 VERSION="${2:-latest}"
-PLATFORMS="${3:-linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64}"
+PLATFORMS="${3:-linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_arm64}"
 
 echo "📦 Extracting helper artifacts..."
 echo "   Artifact directory: $ARTIFACT_DIR"
