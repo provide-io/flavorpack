@@ -26,6 +26,7 @@ from flavor.psp.format_2025.constants import (
     LIFECYCLE_EAGER,
     LIFECYCLE_INIT,
     LIFECYCLE_LAZY,
+    LIFECYCLE_PLATFORM,
     LIFECYCLE_RUNTIME,
     LIFECYCLE_SHUTDOWN,
     LIFECYCLE_STARTUP,
@@ -210,13 +211,14 @@ class SlotMetadata:
                 "shutdown",
                 # Retention-based
                 "cache",
-                "temp",
+                "temporary",
                 # Access-based
                 "lazy",
                 "eager",
                 # Environment-based
                 "dev",
                 "config",
+                "platform",
             ]
         ),
     )
@@ -241,13 +243,14 @@ class SlotMetadata:
             "shutdown": LIFECYCLE_SHUTDOWN,
             # Retention-based
             "cache": LIFECYCLE_CACHE,
-            "temp": LIFECYCLE_TEMPORARY,
+            "temporary": LIFECYCLE_TEMPORARY,
             # Access-based
             "lazy": LIFECYCLE_LAZY,
             "eager": LIFECYCLE_EAGER,
             # Environment-based
             "dev": LIFECYCLE_DEV,
             "config": LIFECYCLE_CONFIG,
+            "platform": LIFECYCLE_PLATFORM,
         }
 
         # Convert hex checksum to integer
