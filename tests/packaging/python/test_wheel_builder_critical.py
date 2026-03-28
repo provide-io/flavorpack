@@ -9,6 +9,7 @@ from pathlib import Path
 import tempfile
 from unittest.mock import Mock, patch
 
+import flavor.packaging.python.pypapip_manager as _pip_mod
 from flavor.packaging.python.wheel_builder import WheelBuilder
 
 
@@ -128,7 +129,8 @@ class TestWheelBuilderCriticalFeatures:
             wheel_file.touch()
 
             python_exe = Path("/usr/bin/python3")
-            result = self.wheel_builder.build_wheel_from_source(python_exe, source_path, wheel_dir)
+            with patch.object(_pip_mod.sys, "platform", "linux"):
+                result = self.wheel_builder.build_wheel_from_source(python_exe, source_path, wheel_dir)
 
             assert result == wheel_file
             assert mock_run.call_args_list[0][0][0] == ["/usr/bin/python3", "-m", "pip", "--version"]
@@ -188,12 +190,13 @@ class TestWheelBuilderCriticalFeatures:
             wheel_file.touch()
 
             python_exe = Path("/usr/bin/python3")
-            result = self.wheel_builder.build_wheel_from_source(
-                python_exe,
-                source_path,
-                wheel_dir,
-                use_isolation=False,
-            )
+            with patch.object(_pip_mod.sys, "platform", "linux"):
+                result = self.wheel_builder.build_wheel_from_source(
+                    python_exe,
+                    source_path,
+                    wheel_dir,
+                    use_isolation=False,
+                )
 
             assert result == wheel_file
             assert mock_run.call_args_list[1][0][0] == [
