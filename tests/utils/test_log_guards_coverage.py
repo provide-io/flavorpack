@@ -107,31 +107,31 @@ class TestGlobalLoggerProxyPatch:
     """Test that GlobalLoggerProxy gets patched with is_debug_enabled / is_trace_enabled."""
 
     def test_global_logger_proxy_has_is_debug_enabled(self) -> None:
-        import flavor.utils.log_guards  # noqa: F401 — ensure module is imported
-
         from provide.foundation.logger.core import GlobalLoggerProxy
+
+        import flavor.utils.log_guards  # noqa: F401 — ensure module is imported
 
         assert hasattr(GlobalLoggerProxy, "is_debug_enabled")
 
     def test_global_logger_proxy_has_is_trace_enabled(self) -> None:
-        import flavor.utils.log_guards  # noqa: F401
-
         from provide.foundation.logger.core import GlobalLoggerProxy
+
+        import flavor.utils.log_guards  # noqa: F401
 
         assert hasattr(GlobalLoggerProxy, "is_trace_enabled")
 
     def test_proxy_is_debug_enabled_callable(self) -> None:
-        import flavor.utils.log_guards  # noqa: F401
-
         from provide.foundation.logger import logger
+
+        import flavor.utils.log_guards  # noqa: F401
 
         result = logger.is_debug_enabled()
         assert isinstance(result, bool)
 
     def test_proxy_is_trace_enabled_callable(self) -> None:
-        import flavor.utils.log_guards  # noqa: F401
-
         from provide.foundation import logger
+
+        import flavor.utils.log_guards  # noqa: F401
 
         result = logger.is_trace_enabled()
         assert isinstance(result, bool)

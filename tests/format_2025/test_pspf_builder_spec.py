@@ -80,7 +80,7 @@ class TestBuildSpec:
 
         # Should not be able to modify attributes
         with pytest.raises((AttributeError, attrs.exceptions.FrozenInstanceError)):
-            spec.metadata = {"name": "other"}  # type: ignore[misc]  # intentional: testing frozen attrs raises
+            spec.metadata = {"name": "other"}  # ty: ignore[invalid-assignment]
 
         # Should not be able to modify nested structures
         spec.metadata["name"] = "modified"  # This modifies the dict

@@ -277,8 +277,8 @@ entry_point = "flavor.cli:main"
 [tool.codespell]
 # "stip" is intentional test data (toml key), "nd" is a variable name,
 # "requestor" and "shs" are used in spec docs with specific meaning
-ignore-words-list = "stip,nd,requestor,shs,collet,ines"
-skip = "*.lock,*.min.js,.provide/*"
+ignore-words-list = "stip,nd,requestor,shs,collet"
+skip = "*.lock,*.min.js"
 
 [tool.flavor.execution.runtime.env]
 # Unset all variables except those matching pass patterns
