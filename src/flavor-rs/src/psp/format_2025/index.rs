@@ -410,4 +410,43 @@ impl Default for Index {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_pack_verify_roundtrip() {
+        // A freshly packed index must verify against its own bytes
+        let index = Index::new();
+        let packed = index.pack();
+        assert_eq!(packed.len(), HEADER_SIZE);
+
+        let unpacked = Index::unpack(&packed).expect("unpack failed");
+        assert!(
+            unpacked.verify_checksum_raw(&packed),
+            "Checksum mismatch after pack→unpack roundtrip"
+        );
+    }
+
+    #[test]
+    fn test_pack_verify_with_values() {
+        // Checksum must hold for non-default field values too
+        let mut index = Index::new();
+        index.package_size = 1_234_567;
+        index.launcher_size = 98_765;
+        index.metadata_offset = 100_000;
+        index.metadata_size = 50_000;
+        index.slot_table_offset = 150_000;
+        index.slot_count = 3;
+        index.flags = 0b11;
+
+        let packed = index.pack();
+        let unpacked = Index::unpack(&packed).expect("unpack failed");
+        assert!(
+            unpacked.verify_checksum_raw(&packed),
+            "Checksum mismatch with non-default values"
+        );
+    }
+}
+
 // 📦🔧🏗️🪄
