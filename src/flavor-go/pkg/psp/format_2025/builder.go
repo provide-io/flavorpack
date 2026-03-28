@@ -1,6 +1,7 @@
 package format_2025
 
 import (
+	"bytes"
 	"crypto/ed25519"
 	cryptorand "crypto/rand"
 	"crypto/sha256"
@@ -511,6 +512,70 @@ func shouldUseResourceEmbedding(launcherData []byte, logger hclog.Logger) bool {
 	return false
 }
 
+// adjustPSPFOffsets patches the PSPF data so that all absolute offsets are relative to the
+// start of the PSPF blob itself (byte 0), rather than the start of the original combined
+// launcher+PSPF file. This is required when the PSPF is extracted from a PE resource and
+// written to a standalone temp file: without adjustment, seeks to MetadataOffset,
+// SlotTableOffset, and slot data offsets would all land past end-of-file.
+func adjustPSPFOffsets(pspfData []byte, launcherSize int64, logger hclog.Logger) ([]byte, error) {
+	if int64(len(pspfData)) < MagicTrailerSize {
+		return nil, fmt.Errorf("PSPF data too small: %d < %d", len(pspfData), MagicTrailerSize)
+	}
+
+	data := make([]byte, len(pspfData))
+	copy(data, pspfData)
+
+	trailerStart := int64(len(data)) - MagicTrailerSize
+	trailer := data[trailerStart:]
+
+	if !bytes.Equal(trailer[:4], PackageEmojiBytes) {
+		return nil, fmt.Errorf("invalid MagicTrailer: missing 📦 at start")
+	}
+	if !bytes.Equal(trailer[MagicTrailerSize-4:], MagicWandEmojiBytes) {
+		return nil, fmt.Errorf("invalid MagicTrailer: missing 🪄 at end")
+	}
+
+	index := &PSPFIndex{}
+	if err := index.Unpack(trailer[4 : 4+IndexSize]); err != nil {
+		return nil, fmt.Errorf("failed to unpack index: %w", err)
+	}
+
+	logger.Debug("Adjusting PSPF offsets for PE resource embedding",
+		"launcher_size", launcherSize,
+		"metadata_offset_before", index.MetadataOffset,
+		"slot_table_offset_before", index.SlotTableOffset)
+
+	// Patch each slot descriptor's Offset in the slot table
+	slotTableStart := int64(index.SlotTableOffset) - launcherSize
+	for i := 0; i < int(index.SlotCount); i++ {
+		descStart := slotTableStart + int64(i)*int64(SlotDescriptorSize)
+		if descStart < 0 || descStart+int64(SlotDescriptorSize) > int64(len(data)) {
+			return nil, fmt.Errorf("slot descriptor %d out of bounds: start=%d", i, descStart)
+		}
+		desc, err := UnpackSlotDescriptor(data[descStart : descStart+int64(SlotDescriptorSize)])
+		if err != nil {
+			return nil, fmt.Errorf("failed to unpack slot descriptor %d: %w", i, err)
+		}
+		if desc.Offset > 0 {
+			desc.Offset -= uint64(launcherSize)
+		}
+		copy(data[descStart:], desc.Pack())
+	}
+
+	// Patch index offsets
+	index.MetadataOffset -= uint64(launcherSize)
+	index.SlotTableOffset -= uint64(launcherSize)
+	index.PackageSize = uint64(len(pspfData))
+	index.LauncherSize = 0
+
+	logger.Debug("Adjusted PSPF offsets",
+		"metadata_offset_after", index.MetadataOffset,
+		"slot_table_offset_after", index.SlotTableOffset)
+
+	copy(trailer[4:4+IndexSize], index.Pack())
+	return data, nil
+}
+
 // convertToResourceEmbedding converts an appended-PSPF file to resource-embedded PSPF.
 //
 // This reads the PSPF data that was appended after the launcher, removes it from the file,
@@ -535,6 +600,13 @@ func convertToResourceEmbedding(filePath string, launcherSize int64, logger hclo
 	pspfData := data[launcherSize:]
 	logger.Debug("Extracted PSPF data", "size", len(pspfData))
 
+	// Rebase all absolute offsets: they were relative to the combined launcher+PSPF file,
+	// but when extracted to a standalone temp file the file starts at byte 0.
+	adjustedPSPF, err := adjustPSPFOffsets(pspfData, launcherSize, logger)
+	if err != nil {
+		return fmt.Errorf("failed to adjust PSPF offsets: %w", err)
+	}
+
 	// Create unique temp file (NEVER modify original until success)
 	// This avoids Windows file locking issues with in-place modification
 	pid := os.Getpid()
@@ -556,8 +628,8 @@ func convertToResourceEmbedding(filePath string, launcherSize int64, logger hclo
 		}
 	}()
 
-	// Embed PSPF as resource in temp file
-	embedErr = EmbedPSPFAsResource(tempPath, pspfData, logger)
+	// Embed offset-adjusted PSPF as resource in temp file
+	embedErr = EmbedPSPFAsResource(tempPath, adjustedPSPF, logger)
 	if embedErr != nil {
 		return fmt.Errorf("failed to embed as resource: %w", embedErr)
 	}

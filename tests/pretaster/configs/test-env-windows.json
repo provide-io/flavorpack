@@ -1,0 +1,40 @@
+{
+  "name": "pretaster-env",
+  "version": "1.0.0",
+  "description": "Environment variable filtering test (Windows: uses bash instead of python3)",
+  "package": {
+    "name": "pretaster-env",
+    "version": "1.0.0",
+    "description": "Environment variable filtering test"
+  },
+  "format": "PSPF/2025",
+  "slots": [
+    {
+      "slot": 0,
+      "id": "env-test-script",
+      "source": "scripts/env_test.sh",
+      "target": "scripts/env_test.sh",
+      "purpose": "payload",
+      "lifecycle": "cached",
+      "operations": "none",
+      "permissions": "0755"
+    }
+  ],
+  "runtime": {
+    "env": {
+      "unset": ["*"],
+      "pass": ["PATH", "HOME", "USER", "LANG", "LC_*", "TERM", "FLAVOR_*"],
+      "set": {
+        "PRETASTER_MODE": "env_test"
+      }
+    }
+  },
+  "command": "/bin/bash {workenv}/scripts/env_test.sh",
+  "environment": {},
+  "execution": {
+    "command": "/bin/bash {workenv}/scripts/env_test.sh",
+    "args": [],
+    "env": {},
+    "primary_slot": 0
+  }
+}

@@ -94,6 +94,20 @@ class PythonEnvironmentBuilder:
         backoff=BackoffStrategy.EXPONENTIAL,
         jitter=True,
     )
+    def _resolve_uv_python_spec(self) -> str:
+        """Return the uv python version spec for the current platform.
+
+        On Windows ARM64, uv defaults to x86_64 Python because ARM64 support is
+        flagged as "not yet mature" in python-build-standalone. We must explicitly
+        request the aarch64 build to get a native ARM64 Python in the PSP workenv.
+        """
+        import platform
+        import sys
+
+        if sys.platform == "win32" and platform.machine() == "ARM64":
+            return f"cpython-{self.python_version}-windows-aarch64-none"
+        return self.python_version
+
     def _install_python_with_uv(self, uv_install_dir: str) -> Path | None:
         """Install Python using UV and return installation directory.
 
@@ -113,8 +127,18 @@ class PythonEnvironmentBuilder:
 
         self._log_uv_environment()
 
+        # On Windows ARM64, request the native aarch64 build explicitly — uv defaults
+        # to x86_64 because ARM64 support is labelled "not yet mature" upstream.
+        python_spec = self._resolve_uv_python_spec()
+        if python_spec != self.python_version:
+            print(
+                f"[flavor-python] Windows ARM64 detected — requesting native Python: {python_spec}",
+                flush=True,
+                file=sys.stdout,
+            )
+
         # Strategy 1: install to custom dir
-        cmd_custom = [uv_cmd, "python", "install", self.python_version, "--install-dir", uv_install_dir]
+        cmd_custom = [uv_cmd, "python", "install", python_spec, "--install-dir", uv_install_dir]
         logger.debug("💻🚀📋 Running command", command=" ".join(cmd_custom))
         try:
             result = run(cmd_custom, capture_output=True, env=_windows_system_env() or None)
@@ -138,7 +162,7 @@ class PythonEnvironmentBuilder:
         # Strategy 2: install to uv's default managed location, then find it
         logger.debug("💻🚀📋 Strategy 2: installing to default managed location")
         try:
-            cmd_default = [uv_cmd, "python", "install", self.python_version]
+            cmd_default = [uv_cmd, "python", "install", python_spec]
             result2 = run(cmd_default, capture_output=True, env=_windows_system_env() or None)
             print(
                 f"[flavor-python] uv python install (default) exit={result2.returncode} "
@@ -147,7 +171,7 @@ class PythonEnvironmentBuilder:
                 file=sys.stdout,
             )
 
-            find_cmd = [uv_cmd, "python", "find", self.python_version, "--python-preference", "only-managed"]
+            find_cmd = [uv_cmd, "python", "find", python_spec, "--python-preference", "only-managed"]
             result3 = run(find_cmd, capture_output=True, env=_windows_system_env() or None)
             python_bin_str = result3.stdout.strip()
             print(
@@ -272,7 +296,7 @@ class PythonEnvironmentBuilder:
             uv_cmd,
             "python",
             "find",
-            self.python_version,
+            self._resolve_uv_python_spec(),
             "--python-preference",
             "only-managed",
         ]
