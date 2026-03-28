@@ -57,16 +57,18 @@ class DependencyResolver:
         # 3. UV from current virtual environment
         # 4. UV via pipx
 
-        # Check if UV is in PATH
-        uv_path = shutil.which("uv")
-        if uv_path:
-            logger.debug(f"Found UV in PATH: {uv_path}")
+        # Check if UV is in PATH, or next to the current Python executable
+        # (inside a Flavor PSP workenv the workenv bin/ may not be in PATH)
+        uv_path = self.uv_manager.find_system_uv()
+        uv_path_str = str(uv_path) if uv_path else None
+        if uv_path_str:
+            logger.debug(f"Found UV: {uv_path_str}")
             try:
-                result = run([uv_path, "--version"], capture_output=True, timeout=10)
+                result = run([uv_path_str, "--version"], capture_output=True, timeout=10)
                 if result.returncode == 0:
                     if logger.is_trace_enabled():
                         logger.trace(f"UV version check successful: {result.stdout.strip()}")
-                    return uv_path
+                    return uv_path_str
                 else:
                     logger.warning(f"UV version check failed: {result.stderr}")
             except Exception as e:
