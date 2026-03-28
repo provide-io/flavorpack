@@ -11,7 +11,7 @@ __all__ = ["HelperInfo", "HelperManager"]
 
 # Try to import embedded helpers if available
 try:
-    import flavor.helpers.bin as _bin_module  # type: ignore[import-untyped]
+    import flavor.helpers.bin as _bin_module  # type: ignore[import-not-found]
 
     # Re-export available functions
     __all__.extend(

@@ -73,10 +73,8 @@ class PSPFReader:
 
     def __del__(self) -> None:
         """Ensure backend is closed when object is garbage collected (important on Windows)."""
-        try:
+        with contextlib.suppress(Exception):
             self.close()
-        except Exception:
-            pass
 
     def open(self) -> None:
         """Open the bundle with appropriate backend."""

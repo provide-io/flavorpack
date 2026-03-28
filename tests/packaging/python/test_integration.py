@@ -13,8 +13,8 @@ from unittest.mock import Mock, patch
 from provide.foundation.archive import GzipCompressor, TarArchive
 import pytest
 
-import flavor.packaging.python.pypapip_manager as _pip_mod
 from flavor.packaging.python.dist_manager import PythonDistManager
+import flavor.packaging.python.pypapip_manager as _pip_mod
 from flavor.packaging.python.pypapip_manager import PyPaPipManager
 from flavor.packaging.python.uv_manager import UVManager
 from flavor.packaging.python.wheel_builder import WheelBuilder

@@ -7,8 +7,8 @@
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
+import sys
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import dsa, ec, ed25519, rsa
@@ -96,18 +96,20 @@ class TestGenerateKeyPair:
         private_key = serialization.load_pem_private_key(private_pem, password=None)
 
         # Derive public key from private key
-        derived_public = private_key.public_key()  # type: ignore[attr-defined]
+        derived_public = private_key.public_key()
 
         # Load stored public key
         public_pem = public_path.read_bytes()
         stored_public = serialization.load_pem_public_key(public_pem)
 
         # Compare public key bytes
-        derived_bytes = derived_public.public_bytes(  # type: ignore[attr-defined]
-            encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
+        derived_bytes = derived_public.public_bytes(
+            encoding=serialization.Encoding.Raw,
+            format=serialization.PublicFormat.Raw,
         )
-        stored_bytes = stored_public.public_bytes(  # type: ignore[attr-defined]
-            encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
+        stored_bytes = stored_public.public_bytes(
+            encoding=serialization.Encoding.Raw,
+            format=serialization.PublicFormat.Raw,
         )
 
         assert derived_bytes == stored_bytes
@@ -173,8 +175,8 @@ class TestLoadPrivateKeyRaw:
         # Generate RSA key instead of Ed25519
         rsa_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
         rsa_pem = rsa_key.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.PKCS8,
+            encoding=serialization.Encoding.PEM,  # ty: ignore[invalid-argument-type]
+            format=serialization.PrivateFormat.PKCS8,  # ty: ignore[invalid-argument-type]
             encryption_algorithm=serialization.NoEncryption(),
         )
 
@@ -188,7 +190,7 @@ class TestLoadPrivateKeyRaw:
         """Test loading EC key raises helpful error."""
         # Generate EC key
         ec_key = ec.generate_private_key(ec.SECP256R1())
-        ec_pem = ec_key.private_bytes(  # type: ignore[attr-defined]
+        ec_pem = ec_key.private_bytes(  # ty: ignore[unresolved-attribute]
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.PKCS8,
             encryption_algorithm=serialization.NoEncryption(),
@@ -204,7 +206,7 @@ class TestLoadPrivateKeyRaw:
         """Test loading DSA key raises helpful error."""
         # Generate DSA key
         dsa_key = dsa.generate_private_key(key_size=2048)
-        dsa_pem = dsa_key.private_bytes(  # type: ignore[attr-defined]
+        dsa_pem = dsa_key.private_bytes(  # ty: ignore[unresolved-attribute]
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.PKCS8,
             encryption_algorithm=serialization.NoEncryption(),
@@ -220,8 +222,8 @@ class TestLoadPrivateKeyRaw:
         """Test error messages include helpful recovery instructions."""
         rsa_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
         rsa_pem = rsa_key.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.PKCS8,
+            encoding=serialization.Encoding.PEM,  # ty: ignore[invalid-argument-type]
+            format=serialization.PrivateFormat.PKCS8,  # ty: ignore[invalid-argument-type]
             encryption_algorithm=serialization.NoEncryption(),
         )
 
@@ -272,8 +274,8 @@ class TestLoadPublicKeyRaw:
         rsa_private = rsa.generate_private_key(public_exponent=65537, key_size=2048)
         rsa_public = rsa_private.public_key()
         rsa_pub_pem = rsa_public.public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+            encoding=serialization.Encoding.PEM,  # ty: ignore[invalid-argument-type]
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,  # ty: ignore[invalid-argument-type]
         )
 
         rsa_pub_path = tmp_path / "rsa_pub.key"
@@ -288,8 +290,8 @@ class TestLoadPublicKeyRaw:
         ec_private = ec.generate_private_key(ec.SECP256R1())
         ec_public = ec_private.public_key()
         ec_pub_pem = ec_public.public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+            encoding=serialization.Encoding.PEM,  # ty: ignore[invalid-argument-type]
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,  # ty: ignore[invalid-argument-type]
         )
 
         ec_pub_path = tmp_path / "ec_pub.key"
@@ -304,8 +306,8 @@ class TestLoadPublicKeyRaw:
         dsa_private = dsa.generate_private_key(key_size=2048)
         dsa_public = dsa_private.public_key()
         dsa_pub_pem = dsa_public.public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+            encoding=serialization.Encoding.PEM,  # ty: ignore[invalid-argument-type]
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,  # ty: ignore[invalid-argument-type]
         )
 
         dsa_pub_path = tmp_path / "dsa_pub.key"
@@ -319,8 +321,8 @@ class TestLoadPublicKeyRaw:
         rsa_private = rsa.generate_private_key(public_exponent=65537, key_size=2048)
         rsa_public = rsa_private.public_key()
         rsa_pub_pem = rsa_public.public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+            encoding=serialization.Encoding.PEM,  # ty: ignore[invalid-argument-type]
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,  # ty: ignore[invalid-argument-type]
         )
 
         rsa_pub_path = tmp_path / "rsa_pub.key"

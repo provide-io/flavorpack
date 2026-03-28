@@ -223,6 +223,12 @@ entry_point = "flavor.cli:main"
 [tool.flavor.execution]
 # Pass all environment variables through, especially cache-related ones
 # This ensures the packaged flavor can access the workenv cache
+[tool.codespell]
+# "stip" is intentional test data (toml key), "nd" is a variable name,
+# "requestor" and "shs" are used in spec docs with specific meaning
+ignore-words-list = "stip,nd,requestor,shs,collet"
+skip = "*.lock,*.min.js"
+
 [tool.flavor.execution.runtime.env]
 # Unset all variables except those matching pass patterns
 unset = ["*"]

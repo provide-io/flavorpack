@@ -56,11 +56,11 @@ def main() -> NoReturn:  # noqa: C901 - test script intentionally performs many 
             sys.exit(1)
 
         log_print(f"Connected. Sending secret (len: {len(secret)}).")
-        client_socket.sendall(secret.encode("utf-8"))  # Assuming secret is plain string
+        client_socket.sendall(secret.encode("utf-8"))  # ty: ignore[unresolved-attribute]  # Assuming secret is plain string
 
         log_print("Secret sent. Waiting for response from launcher...")
         # Wait for a single byte response
-        response = client_socket.recv(1)
+        response = client_socket.recv(1)  # ty: ignore[unresolved-attribute]
         log_print(f"Received response: {response!r}")
 
         if response == b"\x01":

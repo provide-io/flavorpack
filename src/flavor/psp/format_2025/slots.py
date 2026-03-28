@@ -309,7 +309,7 @@ class SlotMetadata:
             data["target"] = Path(data["target"]) if isinstance(data["target"], str) else data["target"]
 
         # Filter out any extra keys that aren't part of the class
-        valid_fields = {f.name for f in cls.__attrs_attrs__}
+        valid_fields = {f.name for f in cls.__attrs_attrs__}  # ty: ignore[unresolved-attribute]
         filtered_data = {k: v for k, v in data.items() if k in valid_fields}
 
         return cls(**filtered_data)

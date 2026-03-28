@@ -9,8 +9,8 @@ and manylinux2014 compatibility for maximum Linux distribution coverage.
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
+import sys
 
 from provide.foundation import retry
 from provide.foundation.logger import logger
@@ -19,7 +19,6 @@ from provide.foundation.process import run
 from provide.foundation.resilience.types import BackoffStrategy
 
 from flavor.packaging.python.uv_manager import _windows_system_env
-
 
 # On Windows GHA runners, pip's vendored truststore fails:
 #   truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT) → ssl.SSLError: [SSL] unknown error

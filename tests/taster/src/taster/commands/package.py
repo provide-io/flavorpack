@@ -20,7 +20,7 @@ from provide.foundation.console import perr, pout
 def _get_flavor_api() -> Any:
     """Import the Flavor API, exiting with a helpful message if unavailable."""
     try:
-        import flavor.api as flavor_api
+        import flavor.api as flavor_api  # ty: ignore[unresolved-import]
     except ImportError as exc:  # pragma: no cover - defensive check
         raise click.ClickException(
             "Flavor API not available. Install the flavor package before running packaging commands."
@@ -34,11 +34,11 @@ def package_command() -> None:
 
 
 @package_command.command("build")
-@click.argument("manifest", type=click.Path(exists=True, path_type=Path), default="pyproject.toml")
-@click.option("--output", "-o", type=click.Path(path_type=Path), help="Output path")
+@click.argument("manifest", type=click.Path(exists=True, path_type=Path), default="pyproject.toml")  # ty: ignore[invalid-argument-type]
+@click.option("--output", "-o", type=click.Path(path_type=Path), help="Output path")  # ty: ignore[invalid-argument-type]
 @click.option(
     "--launcher-bin",
-    type=click.Path(exists=True, path_type=Path),
+    type=click.Path(exists=True, path_type=Path),  # ty: ignore[invalid-argument-type]
     help="Path to launcher binary",
 )
 @click.option("--strip", is_flag=True, help="Strip binaries before packaging")
@@ -68,7 +68,7 @@ def build(
 
 
 @package_command.command("verify")
-@click.argument("package", type=click.Path(exists=True, path_type=Path))
+@click.argument("package", type=click.Path(exists=True, path_type=Path))  # ty: ignore[invalid-argument-type]
 def verify(package: Path) -> None:
     """Verify a PSPF package."""
     flavor_api = _get_flavor_api()
@@ -88,7 +88,7 @@ def verify(package: Path) -> None:
 @click.option(
     "--output",
     "-o",
-    type=click.Path(path_type=Path),
+    type=click.Path(path_type=Path),  # ty: ignore[invalid-argument-type]
     default="keys",
     help="Output directory",
 )
@@ -117,12 +117,12 @@ def clean_cache() -> None:
 @package_command.command("test-json")
 @click.option(
     "--builder-bin",
-    type=click.Path(exists=True, path_type=Path),
+    type=click.Path(exists=True, path_type=Path),  # ty: ignore[invalid-argument-type]
     help="Path to builder binary",
 )
 @click.option(
     "--launcher-bin",
-    type=click.Path(exists=True, path_type=Path),
+    type=click.Path(exists=True, path_type=Path),  # ty: ignore[invalid-argument-type]
     help="Path to launcher binary",
 )
 def test_json(builder_bin: Path | None, launcher_bin: Path | None) -> None:

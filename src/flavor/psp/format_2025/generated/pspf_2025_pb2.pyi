@@ -1,10 +1,10 @@
-from modules import operations_pb2 as _operations_pb2
-from modules import slots_pb2 as _slots_pb2
-from modules import index_pb2 as _index_pb2
-from modules import metadata_pb2 as _metadata_pb2
-from modules import crypto_pb2 as _crypto_pb2
-from modules import jit_pb2 as _jit_pb2
-from modules import spa_pb2 as _spa_pb2
+from .modules import operations_pb2 as _operations_pb2
+from .modules import slots_pb2 as _slots_pb2
+from .modules import index_pb2 as _index_pb2
+from .modules import metadata_pb2 as _metadata_pb2
+from .modules import crypto_pb2 as _crypto_pb2
+from .modules import jit_pb2 as _jit_pb2
+from .modules import spa_pb2 as _spa_pb2
 from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
