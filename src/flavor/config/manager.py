@@ -66,8 +66,14 @@ class FlavorConfigManager:
         )
 
 
-# Global configuration manager instance
-_config_manager = FlavorConfigManager()
+_config_manager: FlavorConfigManager | None = None
+
+
+def _get_manager() -> FlavorConfigManager:
+    global _config_manager
+    if _config_manager is None:
+        _config_manager = FlavorConfigManager()
+    return _config_manager
 
 
 def get_flavor_config() -> FlavorConfig:
@@ -76,7 +82,7 @@ def get_flavor_config() -> FlavorConfig:
     Returns:
         FlavorConfig: The global configuration instance
     """
-    return _config_manager.get_config()
+    return _get_manager().get_config()
 
 
 def set_flavor_config(config: FlavorConfig | None) -> None:
@@ -85,12 +91,12 @@ def set_flavor_config(config: FlavorConfig | None) -> None:
     Args:
         config: The FlavorConfig instance to use globally, or None to reset
     """
-    _config_manager.set_config(config)
+    _get_manager().set_config(config)
 
 
 def reset_flavor_config() -> None:
     """Reset the global configuration to force reload from environment."""
-    _config_manager.reset_config()
+    _get_manager().reset_config()
 
 
 # 🌶️📦🔚
