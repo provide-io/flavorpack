@@ -7,10 +7,15 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
+import sys
 import tarfile
+import tempfile
 import tomllib
 from typing import Any
+
+from provide.foundation.process import run
 
 from provide.foundation import logger
 from provide.foundation.file import ensure_dir, safe_copy
@@ -19,6 +24,7 @@ from provide.foundation.platform import get_arch_name, get_os_name
 
 from flavor.config.defaults import DEFAULT_DIR_PERMS, DEFAULT_EXECUTABLE_PERMS
 from flavor.packaging.python.environment_builder import PythonEnvironmentBuilder
+from flavor.packaging.python.pypapip_manager import _pip_base_cmd
 from flavor.packaging.python.uv_manager import UVManager
 
 
@@ -306,9 +312,11 @@ class PythonSlotBuilder:
         """Build wheels for the package and its dependencies - delegates to WheelBuilder."""
         logger.info("🎯🔨🚀 Starting wheel building process (using WheelBuilder)")
 
-        # Create a temporary Python environment for building
-        import sys
+        # Bundle pinned build-backend wheels (setuptools, wheel) when building flavorpack itself.
+        # Skips silently for user projects that lack a build-backends dependency group.
+        self._bundle_build_backends(wheels_dir)
 
+        # Create a temporary Python environment for building
         python_exe = Path(sys.executable)
 
         # Process local dependencies from [tool.flavor.build].dependencies
@@ -343,6 +351,84 @@ class PythonSlotBuilder:
             total_wheels=build_result["total_wheels"],
             project_wheel=build_result["project_wheel"].name,
         )
+
+    def _bundle_build_backends(self, wheels_dir: Path) -> None:
+        """Download pinned build-backend wheels into the slot's wheels directory.
+
+        Only runs when manifest_dir/pyproject.toml has a [dependency-groups.build-backends]
+        section and a uv.lock is present. Skips silently otherwise (e.g. user projects).
+        Uses --require-hashes to verify integrity of downloaded wheels.
+        """
+        pyproject_path = self.manifest_dir / "pyproject.toml"
+        lock_file = self.manifest_dir / "uv.lock"
+
+        if not pyproject_path.exists() or not lock_file.exists():
+            logger.debug("Skipping build-backends bundle: no pyproject.toml or uv.lock")
+            return
+
+        with pyproject_path.open("rb") as f:
+            pyproject = tomllib.load(f)
+
+        groups = pyproject.get("dependency-groups", {})
+        if "build-backends" not in groups:
+            logger.debug("Skipping build-backends bundle: no build-backends group in pyproject.toml")
+            return
+
+        logger.info("Bundling pinned build-backend wheels into slot")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            req_file = Path(tmp) / "build-backends-requirements.txt"
+
+            uv_exe = self.uv_manager.get_uv_executable()
+            wheel_cache_dir = os.environ.get("FLAVOR_WHEEL_CACHE")
+
+            if wheel_cache_dir:
+                # Offline strategy: use pre-warmed FLAVOR_WHEEL_CACHE (no network access).
+                # CI pre-warms the cache via prewarm-wheel-cache.sh using uv's Rust HTTP
+                # client; pip subprocess then copies wheels locally with --no-index.
+                export_cmd = [
+                    uv_exe.as_posix(),
+                    "export",
+                    "--frozen",
+                    "--only-group", "build-backends",
+                    "--no-hashes",
+                    "--output-file", req_file.as_posix(),
+                ]
+                logger.debug("Exporting build-backends (no-hashes, offline)", command=" ".join(export_cmd))
+                run(export_cmd, check=True, capture_output=True, cwd=self.manifest_dir)
+
+                download_cmd = _pip_base_cmd(Path(sys.executable)) + [
+                    "download",
+                    "--no-index",
+                    "--find-links", wheel_cache_dir,
+                    "-r", req_file.as_posix(),
+                    "-d", wheels_dir.as_posix(),
+                ]
+                logger.debug("Copying build-backends from FLAVOR_WHEEL_CACHE (offline)", cache=wheel_cache_dir)
+            else:
+                # Network strategy: download with hash verification from lockfile.
+                export_cmd = [
+                    uv_exe.as_posix(),
+                    "export",
+                    "--frozen",
+                    "--only-group", "build-backends",
+                    "--hashes",
+                    "--output-file", req_file.as_posix(),
+                ]
+                logger.debug("Exporting build-backends from uv.lock", command=" ".join(export_cmd))
+                run(export_cmd, check=True, capture_output=True, cwd=self.manifest_dir)
+
+                download_cmd = _pip_base_cmd(Path(sys.executable)) + [
+                    "download",
+                    "--require-hashes",
+                    "-r", req_file.as_posix(),
+                    "-d", wheels_dir.as_posix(),
+                ]
+                logger.debug("Downloading build-backends with hash verification", command=" ".join(download_cmd))
+
+            run(download_cmd, check=True, capture_output=True)
+
+        logger.info("Build-backend wheels bundled into slot")
 
     def _create_metadata(self, metadata_dir: Path) -> None:
         """Create metadata files."""

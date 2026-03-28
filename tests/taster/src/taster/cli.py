@@ -10,6 +10,19 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import sys
+import types
+
+# py-cpuinfo (used by provide.foundation.platform.cpu in older PyPI releases)
+# raises a bare Exception at module load time on some platforms, e.g., ARM64
+# Windows running x86_64 Python under emulation.  The newer local dev version
+# of provide.foundation uses lazy loading and catches ImportError; the older
+# PyPI release does not.  Pre-stub cpuinfo so the import never crashes.
+try:
+    import cpuinfo as _cpuinfo_check  # noqa: F401
+except Exception:
+    _cpuinfo_stub = types.ModuleType("cpuinfo")
+    _cpuinfo_stub.get_cpu_info = lambda: {}  # type: ignore[attr-defined]
+    sys.modules.setdefault("cpuinfo", _cpuinfo_stub)
 
 # Set up Windows Unicode support early
 if sys.platform == "win32":

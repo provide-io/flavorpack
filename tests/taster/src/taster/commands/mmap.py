@@ -11,8 +11,10 @@ import contextlib
 import mmap
 import os
 from pathlib import Path
-import resource
 import sys
+
+if sys.platform != "win32":
+    import resource  # Unix-only
 import tempfile
 import tracemalloc
 
@@ -197,6 +199,8 @@ def _memory_ratio_indicators(bundle_path: Path) -> list[str]:
 
 def _resource_usage_indicator() -> str:
     """Report page-fault counts as a lightweight signal."""
+    if sys.platform == "win32":
+        return "📊 Page faults: N/A (not available on Windows)"
     usage = resource.getrusage(resource.RUSAGE_SELF)
     return f"📊 Page faults: {usage.ru_minflt} minor, {usage.ru_majflt} major"
 
