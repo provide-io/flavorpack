@@ -273,9 +273,17 @@ def _build_package(helper_manager: HelperManager, manifest: Path, verbose: bool)
 
 def _build_env(mode: str, verbose: bool) -> dict[str, str]:
     """Create an environment dictionary for launcher execution."""
+    import os
+
     env = {"FLAVOR_EXEC_MODE": mode}
     if verbose:
         env["FLAVOR_LOG_LEVEL"] = "debug"
+    # Pass through essential vars so the inner PSP can bootstrap (locate cache
+    # dir, find uv, write temp files). Without HOME the Rust launcher uses a
+    # fallback path that differs from what Path.home() returns in the test.
+    for var in ("HOME", "PATH", "USER", "TEMP", "TMP", "TMPDIR"):
+        if val := os.environ.get(var):
+            env[var] = val
     return env
 
 
