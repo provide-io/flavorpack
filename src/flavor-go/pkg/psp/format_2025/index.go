@@ -25,7 +25,7 @@ type PSPFIndex struct {
 
 	// Security (576 bytes)
 	PublicKey          [32]byte  // Ed25519 public key for signature verification
-	MetadataChecksum   [32]byte  // Adler-32 of compressed metadata (first 4 bytes, rest zeros)
+	MetadataChecksum   [32]byte  // SHA-256 of compressed metadata (full 32 bytes)
 	IntegritySignature [512]byte // Ed25519 signature of uncompressed JSON (first 64 bytes, rest zeros)
 
 	// Performance hints (64 bytes)
@@ -60,7 +60,7 @@ type PSPFIndex struct {
 	// Future cryptography space (512 bytes)
 	FutureCrypto [512]byte // Reserved for post-quantum signatures
 
-	// Reserved for future use (6808 bytes)
+	// Reserved for future use (6816 bytes)
 	Reserved [6816]byte // Large buffer for future expansion
 }
 
@@ -105,15 +105,15 @@ func (idx *PSPFIndex) Pack() []byte {
 	copy(buf[824:832], idx.ProvenanceURI[:])
 
 	// Pack capabilities
-	binary.LittleEndian.PutUint64(buf[840:848], idx.Capabilities)
-	binary.LittleEndian.PutUint64(buf[848:856], idx.Requirements)
-	binary.LittleEndian.PutUint64(buf[856:864], idx.Extensions)
-	binary.LittleEndian.PutUint32(buf[864:868], idx.Compatibility)
-	binary.LittleEndian.PutUint32(buf[868:872], idx.ProtocolVersion)
+	binary.LittleEndian.PutUint64(buf[832:840], idx.Capabilities)
+	binary.LittleEndian.PutUint64(buf[840:848], idx.Requirements)
+	binary.LittleEndian.PutUint64(buf[848:856], idx.Extensions)
+	binary.LittleEndian.PutUint32(buf[856:860], idx.Compatibility)
+	binary.LittleEndian.PutUint32(buf[860:864], idx.ProtocolVersion)
 
 	// Pack future crypto and reserved
-	copy(buf[872:1384], idx.FutureCrypto[:])
-	copy(buf[1384:8192], idx.Reserved[:])
+	copy(buf[864:1376], idx.FutureCrypto[:])
+	copy(buf[1376:8192], idx.Reserved[:])
 
 	return buf
 }
@@ -161,15 +161,15 @@ func (idx *PSPFIndex) Unpack(data []byte) error {
 	copy(idx.ProvenanceURI[:], data[824:832])
 
 	// Unpack capabilities
-	idx.Capabilities = binary.LittleEndian.Uint64(data[840:848])
-	idx.Requirements = binary.LittleEndian.Uint64(data[848:856])
-	idx.Extensions = binary.LittleEndian.Uint64(data[856:864])
-	idx.Compatibility = binary.LittleEndian.Uint32(data[864:868])
-	idx.ProtocolVersion = binary.LittleEndian.Uint32(data[868:872])
+	idx.Capabilities = binary.LittleEndian.Uint64(data[832:840])
+	idx.Requirements = binary.LittleEndian.Uint64(data[840:848])
+	idx.Extensions = binary.LittleEndian.Uint64(data[848:856])
+	idx.Compatibility = binary.LittleEndian.Uint32(data[856:860])
+	idx.ProtocolVersion = binary.LittleEndian.Uint32(data[860:864])
 
 	// Unpack future crypto and reserved
-	copy(idx.FutureCrypto[:], data[872:1384])
-	copy(idx.Reserved[:], data[1384:8192])
+	copy(idx.FutureCrypto[:], data[864:1376])
+	copy(idx.Reserved[:], data[1376:8192])
 
 	return nil
 }

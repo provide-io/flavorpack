@@ -1,5 +1,5 @@
 // helpers/flavor-rs/src/psp/format_2025/index.rs
-// PSPF 2025 Index Block - Future-proof 4096-byte Header
+// PSPF 2025 Index Block - Future-proof 8192-byte Header
 
 use log::{debug, trace};
 
@@ -63,7 +63,7 @@ pub struct Index {
     // Future cryptography space (512 bytes)
     pub future_crypto: [u8; 512], // Reserved for post-quantum signatures
 
-    // Reserved for future use (6808 bytes)
+    // Reserved for future use (6816 bytes)
     pub reserved: [u8; 6816], // Large buffer for future expansion
 }
 

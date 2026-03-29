@@ -121,6 +121,10 @@ func processRuntimeEnv(env []string, runtimeEnv map[string]interface{}, logger h
 		logger.Debug("🔄 Processing map operations", "count", len(mapOps))
 		for from, to := range mapOps {
 			if toStr, ok := to.(string); ok {
+				if preserveVars[from] {
+					logger.Trace("🔄 Skipping map for preserved var", "from", from)
+					continue
+				}
 				if value, exists := envMap[from]; exists {
 					envMap[toStr] = value
 					if from != toStr {

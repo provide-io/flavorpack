@@ -11,8 +11,6 @@ import (
 
 const version = "0.3.21"
 
-// Phase 19 cache invalidation: Force rebuild with CGO enabled for Windows (2025-10-31)
-
 func getBuilderTimestamp() string {
 	// Try to get vcs.time from build info
 	if info, ok := debug.ReadBuildInfo(); ok {
@@ -55,4 +53,3 @@ func main() {
 	format_2025.LaunchWithLogLevel(exePath, os.Args[1:], "", "")
 }
 
-// Test 3: Trigger rebuild Mon Aug 18 15:45:13 PDT 2025
