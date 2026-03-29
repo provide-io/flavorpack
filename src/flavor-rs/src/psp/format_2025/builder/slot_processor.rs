@@ -303,7 +303,7 @@ impl SlotProcessor {
             "runtime" => 2,
             "shutdown" => 3,
             "cache" => 4,
-            "temp" => 5,
+            "temporary" => 5,
             "lazy" => 6,
             "eager" => 7,
             "dev" => 8,
