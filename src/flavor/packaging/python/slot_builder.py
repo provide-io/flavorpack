@@ -15,12 +15,11 @@ import tempfile
 import tomllib
 from typing import Any
 
-from provide.foundation.process import run
-
 from provide.foundation import logger
 from provide.foundation.file import ensure_dir, safe_copy
 from provide.foundation.file.formats import write_json
 from provide.foundation.platform import get_arch_name, get_os_name
+from provide.foundation.process import run
 
 from flavor.config.defaults import DEFAULT_DIR_PERMS, DEFAULT_EXECUTABLE_PERMS
 from flavor.packaging.python.environment_builder import PythonEnvironmentBuilder
@@ -390,19 +389,25 @@ class PythonSlotBuilder:
                     uv_exe.as_posix(),
                     "export",
                     "--frozen",
-                    "--only-group", "build-backends",
+                    "--only-group",
+                    "build-backends",
                     "--no-hashes",
-                    "--output-file", req_file.as_posix(),
+                    "--output-file",
+                    req_file.as_posix(),
                 ]
                 logger.debug("Exporting build-backends (no-hashes, offline)", command=" ".join(export_cmd))
                 run(export_cmd, check=True, capture_output=True, cwd=self.manifest_dir)
 
-                download_cmd = _pip_base_cmd(Path(sys.executable)) + [
+                download_cmd = [
+                    *_pip_base_cmd(Path(sys.executable)),
                     "download",
                     "--no-index",
-                    "--find-links", wheel_cache_dir,
-                    "-r", req_file.as_posix(),
-                    "-d", wheels_dir.as_posix(),
+                    "--find-links",
+                    wheel_cache_dir,
+                    "-r",
+                    req_file.as_posix(),
+                    "-d",
+                    wheels_dir.as_posix(),
                 ]
                 logger.debug("Copying build-backends from FLAVOR_WHEEL_CACHE (offline)", cache=wheel_cache_dir)
             else:
@@ -411,20 +416,27 @@ class PythonSlotBuilder:
                     uv_exe.as_posix(),
                     "export",
                     "--frozen",
-                    "--only-group", "build-backends",
+                    "--only-group",
+                    "build-backends",
                     "--hashes",
-                    "--output-file", req_file.as_posix(),
+                    "--output-file",
+                    req_file.as_posix(),
                 ]
                 logger.debug("Exporting build-backends from uv.lock", command=" ".join(export_cmd))
                 run(export_cmd, check=True, capture_output=True, cwd=self.manifest_dir)
 
-                download_cmd = _pip_base_cmd(Path(sys.executable)) + [
+                download_cmd = [
+                    *_pip_base_cmd(Path(sys.executable)),
                     "download",
                     "--require-hashes",
-                    "-r", req_file.as_posix(),
-                    "-d", wheels_dir.as_posix(),
+                    "-r",
+                    req_file.as_posix(),
+                    "-d",
+                    wheels_dir.as_posix(),
                 ]
-                logger.debug("Downloading build-backends with hash verification", command=" ".join(download_cmd))
+                logger.debug(
+                    "Downloading build-backends with hash verification", command=" ".join(download_cmd)
+                )
 
             run(download_cmd, check=True, capture_output=True)
 

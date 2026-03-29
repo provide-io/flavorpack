@@ -119,11 +119,11 @@ target = "config.json"
             launcher_path = helper_manager.get_helper("flavor-rs-launcher")
             build_result = build_package_from_manifest(
                 manifest_path=manifest,
-                output_dir=temp_dir,
+                output_dir=temp_dir,  # ty: ignore[unknown-argument]
                 launcher_bin=launcher_path,
                 key_seed="test123",
             )
-            if not build_result.success:
+            if not build_result.success:  # ty: ignore[unresolved-attribute]
                 status = "❌ Failed"
                 error = getattr(build_result, "error", "Unknown error")
         except Exception as exc:

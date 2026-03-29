@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+import contextlib
 from contextlib import contextmanager
 import gc
 from pathlib import Path
@@ -31,10 +32,8 @@ def _safe_unlink(path: Path) -> None:
     except PermissionError:
         if sys.platform == "win32":
             gc.collect()
-            try:
+            with contextlib.suppress(PermissionError):
                 path.unlink(missing_ok=True)
-            except PermissionError:
-                pass
         else:
             raise
 

@@ -26,7 +26,7 @@ try:
 
     HAS_PSUTIL = True
 except ImportError:  # pragma: no cover - optional dependency
-    psutil = None
+    psutil = None  # ty: ignore[invalid-assignment]
     HAS_PSUTIL = False
 
 
@@ -172,7 +172,7 @@ def _psutil_bundle_indicators(bundle_path: Path) -> list[str]:
                 indicators.append(f"📂 Bundle file is open: {handle.path}")
 
     with contextlib.suppress(psutil.Error):
-        for mmap_region in process.memory_maps():
+        for mmap_region in process.memory_maps():  # ty: ignore[unresolved-attribute]
             if bundle_path.name in mmap_region.path:
                 indicators.append(f"🗺️ Bundle is memory-mapped: {mmap_region.path}")
                 indicators.append(f"  • Size: {mmap_region.rss / 1024 / 1024:.2f} MB")

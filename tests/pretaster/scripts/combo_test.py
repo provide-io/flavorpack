@@ -85,7 +85,7 @@ def handle_command(cmd: str, *args: str) -> int:  # noqa: C901 - command dispatc
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Build the download command as PythonPackager would
-            cmd = [
+            cmd = [  # ty: ignore[invalid-assignment]
                 "pip3",
                 "download",
                 "--dest",

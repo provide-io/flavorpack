@@ -16,8 +16,8 @@ from __future__ import annotations
 
 import asyncio
 import os
-import sys
 from pathlib import Path
+import sys
 from typing import ClassVar
 
 from provide.foundation import retry
@@ -363,9 +363,7 @@ class UVManager(BaseToolManager):
         logger.debug("💻 Compiling requirements with UV", command=" ".join(compile_cmd))
         run(compile_cmd, check=True, capture_output=True)
 
-    def export_requirements(
-        self, project_dir: Path, output_file: Path, no_dev: bool = True
-    ) -> None:
+    def export_requirements(self, project_dir: Path, output_file: Path, no_dev: bool = True) -> None:
         """
         Export pinned requirements from an existing uv.lock file (no network needed).
 
@@ -472,7 +470,9 @@ class UVManager(BaseToolManager):
         if result.returncode == 0:
             logger.warning("✅ Copied wheels from FLAVOR_WHEEL_CACHE (offline)")
             return True
-        logger.warning(f"FLAVOR_WHEEL_CACHE copy failed (rc={result.returncode}): {result.stderr.strip()[:400]}")
+        logger.warning(
+            f"FLAVOR_WHEEL_CACHE copy failed (rc={result.returncode}): {result.stderr.strip()[:400]}"
+        )
         return False
 
     def download_wheels_network(self, requirements_file: Path, dest_dir: Path) -> bool:
