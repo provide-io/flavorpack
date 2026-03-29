@@ -16,7 +16,7 @@ import os
 from pathlib import Path
 import shutil  # Only kept for copytree which Foundation doesn't provide
 import sys
-from typing import Any, cast
+from typing import Any
 
 from provide.foundation.file import (
     ensure_dir,
@@ -341,9 +341,8 @@ class PythonDistManager:
             "distribution_size": self._get_directory_size(dist_site_packages),
         }
 
-        logger.info(
-            f"📊 Distribution size: {cast(int, dist_info['distribution_size']) / (1024 * 1024):.1f} MB"
-        )
+        dist_size = self._get_directory_size(dist_site_packages)
+        logger.info(f"📊 Distribution size: {dist_size / (1024 * 1024):.1f} MB")
 
         return dist_info
 

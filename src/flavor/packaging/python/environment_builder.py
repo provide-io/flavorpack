@@ -464,9 +464,7 @@ class PythonEnvironmentBuilder:
         # Calculate actual on-disk size (following symlinks/hardlinks) for diagnostic
         # Note: Path.is_file() already follows symlinks by default; no follow_symlinks kwarg
         raw_size = sum(
-            f.stat(follow_symlinks=True).st_size
-            for f in python_install_dir.rglob("*")
-            if f.is_file()
+            f.stat(follow_symlinks=True).st_size for f in python_install_dir.rglob("*") if f.is_file()
         )
         print(
             f"[flavor-python] Creating Python tarball from {python_install_dir} "

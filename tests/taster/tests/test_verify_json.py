@@ -11,7 +11,7 @@ import tempfile
 from unittest.mock import patch
 
 import click.testing
-from taster.commands.verify import verify_command
+from taster.commands.verify import verify_command  # ty: ignore[unresolved-import]
 
 
 class TestVerifyCommand:

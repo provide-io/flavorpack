@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from wrknv.memray.runner import run_memray_stress
+from wrknv.memray.runner import run_memray_stress  # ty: ignore[unresolved-import]
 
 pytestmark = [pytest.mark.memray, pytest.mark.slow]
 

@@ -13,8 +13,8 @@ import sys
 # Add generated proto modules to path
 sys.path.insert(0, str(Path(__file__).parent / "generated"))
 
-from generated import pspf_2025_pb2
-from generated.modules import (
+from generated import pspf_2025_pb2  # ty: ignore[unresolved-import]
+from generated.modules import (  # ty: ignore[unresolved-import]
     crypto_pb2,
     index_pb2,
     metadata_pb2,

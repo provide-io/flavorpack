@@ -92,7 +92,8 @@ def generate_deterministic_keys(seed: str) -> tuple[bytes, bytes]:
 
     # Get public key bytes
     public_key = key.public_key().public_bytes(
-        encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
+        encoding=serialization.Encoding.Raw,  # ty: ignore[invalid-argument-type]
+        format=serialization.PublicFormat.Raw,  # ty: ignore[invalid-argument-type]
     )
 
     logger.debug(

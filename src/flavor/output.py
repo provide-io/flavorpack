@@ -150,7 +150,7 @@ def get_output_handler(
     format_env = format_env or "FLAVOR_OUTPUT_FORMAT"
     file_env = file_env or "FLAVOR_OUTPUT_FILE"
 
-    format_str = get_str(format_env, default="text").lower()
+    format_str = (get_str(format_env, default="text") or "text").lower()
     output_format = OutputFormat.JSON if format_str == "json" else OutputFormat.TEXT
 
     output_file = get_str(file_env)
