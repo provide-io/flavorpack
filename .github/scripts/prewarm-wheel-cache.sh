@@ -131,3 +131,99 @@ PYEOF
 
 DOWNLOADED=$(ls "${WHEEL_CACHE_DIR}"/*.whl 2>/dev/null | wc -l || echo 0)
 echo "✅ Collected ${DOWNLOADED} wheels to ${WHEEL_CACHE_DIR}"
+
+# Build-backends wheels (setuptools, wheel, packaging) for hermetic slot builds.
+#
+# _bundle_build_backends() in slot_builder.py uses FLAVOR_WHEEL_CACHE for offline installs.
+# We cannot reliably get these from the UV archive-v0 re-zip approach (pre-installed packages
+# may not be downloaded into UV_PKG_CACHE at all). Instead:
+#   1. Install build-backends to an isolated --target dir via `uv pip install` (UV's Rust HTTP
+#      client works on all CI platforms, including Windows where pip/urllib3 cannot reach PyPI).
+#   2. Reconstruct .whl files from the installed dist-info/RECORD metadata. Each RECORD lists
+#      exactly which files belong to that package; we re-zip them into a valid wheel archive.
+#      RECORD hashes match the original wheel, so pip can verify them on install.
+BB_RAW="${WHEEL_CACHE_DIR}/build-backends-raw.txt"
+BB_REQS="${WHEEL_CACHE_DIR}/build-backends-reqs.txt"
+if uv export --frozen --only-group build-backends --no-hashes --output-file "${BB_RAW}" 2>/dev/null; then
+  # Strip editable/local lines AND comment lines to produce a clean pip-compatible requirements file
+  grep -v '^-e \|file://\|^#\|^\s*#' "${BB_RAW}" | grep -v '^$' > "${BB_REQS}" || true
+  if [ -s "${BB_REQS}" ]; then
+    BB_INSTALL="${WHEEL_CACHE_DIR}/.bb-install"
+    mkdir -p "${BB_INSTALL}"
+    export BB_INSTALL WHEEL_CACHE_DIR
+
+    echo "Installing build-backends to extract wheel files..."
+    uv pip install \
+      --cache-dir "${UV_PKG_CACHE}" \
+      --target "${BB_INSTALL}" \
+      -r "${BB_REQS}" \
+      --quiet
+
+    # Reconstruct .whl files from installed dist-info/RECORD.
+    # RECORD maps each file to its sha256 hash (correct, from the original wheel).
+    # The result is a valid, installable wheel that pip can verify.
+    uv run --no-project python - <<'BBEOF'
+import csv, io, os, pathlib, sys, zipfile
+
+install_dir = pathlib.Path(os.environ["BB_INSTALL"])
+out_dir     = pathlib.Path(os.environ["WHEEL_CACHE_DIR"])
+created = errors = skipped = 0
+
+for dist_info in sorted(install_dir.glob("*.dist-info")):
+    name_ver    = dist_info.stem            # e.g. "packaging-26.0"
+    wheel_file  = dist_info / "WHEEL"
+    record_file = dist_info / "RECORD"
+    if not wheel_file.exists() or not record_file.exists():
+        continue
+
+    # Extract the wheel tag from WHEEL metadata
+    tag = None
+    for line in wheel_file.read_text(encoding="utf-8").splitlines():
+        if line.startswith("Tag: "):
+            tag = line[5:].strip()
+            break
+    if not tag:
+        print(f"No Tag: in {wheel_file}", file=sys.stderr)
+        errors += 1
+        continue
+
+    whl_name = f"{name_ver}-{tag}.whl"
+    out_path  = out_dir / whl_name
+    if out_path.exists():
+        skipped += 1
+        continue
+
+    # Collect files listed in RECORD (CSV: relative-path, hash, size)
+    files = []
+    try:
+        text = record_file.read_text(encoding="utf-8")
+        for row in csv.reader(io.StringIO(text)):
+            if not row or not row[0]:
+                continue
+            p = install_dir / row[0]
+            if p.exists() and p.is_file():
+                files.append((p, row[0]))
+    except Exception as exc:
+        print(f"RECORD error for {name_ver}: {exc}", file=sys.stderr)
+        errors += 1
+        continue
+
+    try:
+        with zipfile.ZipFile(out_path, "w", zipfile.ZIP_DEFLATED) as zf:
+            for full_p, rel_p in files:
+                zf.write(full_p, rel_p)
+        created += 1
+        print(f"Created {whl_name} ({len(files)} files)")
+    except Exception as exc:
+        print(f"Error creating {whl_name}: {exc}", file=sys.stderr)
+        if out_path.exists():
+            out_path.unlink()
+        errors += 1
+
+print(f"Build-backends: created={created} skipped={skipped} errors={errors}")
+BBEOF
+
+    BB_TOTAL=$(ls "${WHEEL_CACHE_DIR}"/*.whl 2>/dev/null | wc -l || echo 0)
+    echo "✅ After build-backends: ${BB_TOTAL} total wheels in cache"
+  fi
+fi

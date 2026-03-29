@@ -106,7 +106,8 @@ class TestUVManager:
 
         assert isinstance(versions, list)
         assert len(versions) > 0
-        assert "0.1.45" in versions
+        # Versions should be reasonably recent (uv 0.1.x is EOL/removed from GitHub)
+        assert any(v >= "0.5" for v in versions)
 
         # Versions should be in descending order (newest first)
         for i in range(len(versions) - 1):
@@ -127,7 +128,9 @@ class TestUVManager:
         """Test finding system UV when it doesn't exist."""
         mock_which.return_value = None
 
-        result = self.uv_manager.find_system_uv()
+        # Also suppress the fallback that looks next to sys.executable
+        with patch("sys.executable", "/nonexistent/python.exe"):
+            result = self.uv_manager.find_system_uv()
 
         assert result is None
         mock_which.assert_called_once_with("uv")

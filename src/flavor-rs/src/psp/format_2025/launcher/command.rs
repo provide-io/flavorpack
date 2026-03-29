@@ -4,7 +4,7 @@ use super::super::execution::substitute_placeholders;
 use super::super::metadata::Metadata;
 use super::super::runtime::process_runtime_env;
 use crate::exceptions::{FlavorError, Result};
-use log::debug;
+use log::{debug, warn};
 use std::collections::HashMap;
 use std::env;
 use std::path::Path;
@@ -69,9 +69,9 @@ pub fn resolve_executable(executable: &str) -> String {
             }
         }
 
-        debug!(
-            "⚠️  Could not resolve executable '{}' in PATH, using basename: '{}'",
-            executable, exec_name
+        warn!(
+            "⚠️  Could not resolve executable '{}' in PATH — will attempt to run as-is, expect failure if not on PATH",
+            executable
         );
         exec_name.to_string()
     }

@@ -9,6 +9,7 @@ and manylinux2014 compatibility for maximum Linux distribution coverage.
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 from provide.foundation import retry
@@ -18,6 +19,33 @@ from provide.foundation.process import run
 from provide.foundation.resilience.types import BackoffStrategy
 
 from flavor.packaging.python.uv_manager import _windows_system_env
+
+
+# On Windows GHA runners, pip's vendored truststore fails:
+#   truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT) → ssl.SSLError: [SSL] unknown error
+# even for --no-deps local-source builds because pip eagerly initialises an SSL
+# session.  pip has no --no-truststore flag; the only reliable way to suppress
+# truststore is to block the import before pip loads it.  We do this via a
+# -c one-liner so no temp files are needed.
+_WIN_PIP_NOTRUST_WRAPPER = (
+    "import sys; "
+    "sys.modules.setdefault('pip._vendor.truststore', None); "
+    "from pip._internal.cli.main import main; "
+    "sys.exit(main(sys.argv[1:]))"
+)
+
+
+def _pip_base_cmd(python_exe: Path) -> list[str]:
+    """Return the base pip invocation.
+
+    On Windows, wrap pip in a -c one-liner that blocks the vendored truststore
+    module so that pip never calls truststore.SSLContext(PROTOCOL_TLS_CLIENT),
+    which crashes on Windows GHA runners with ssl.SSLError.
+    On other platforms, use the normal ``python -m pip`` invocation.
+    """
+    if sys.platform == "win32":
+        return [python_exe.as_posix(), "-c", _WIN_PIP_NOTRUST_WRAPPER]
+    return [python_exe.as_posix(), "-m", "pip"]
 
 
 class PyPaPipManager:
@@ -76,7 +104,7 @@ class PyPaPipManager:
         CRITICAL: Must use ACTUAL pip3 NOT uv pip - uv pip is incomplete/broken
         DO NOT CHANGE THIS TO uv pip - IT WILL BREAK DEPENDENCY RESOLUTION
         """
-        return [python_exe.as_posix(), "-m", "pip", "install", *packages]
+        return [*_pip_base_cmd(python_exe), "install", *packages]
 
     def _get_pypapip_wheel_cmd(
         self, python_exe: Path, wheel_dir: Path, source: Path, no_deps: bool = False
@@ -87,9 +115,14 @@ class PyPaPipManager:
         CRITICAL: Must use ACTUAL pip3 NOT uv pip - uv pip is incomplete/broken
         DO NOT CHANGE THIS TO uv pip - IT WILL BREAK DEPENDENCY RESOLUTION
         """
-        cmd = [python_exe.as_posix(), "-m", "pip", "wheel", "--wheel-dir", wheel_dir.as_posix()]
+        cmd = [*_pip_base_cmd(python_exe), "wheel", "--wheel-dir", wheel_dir.as_posix()]
         if no_deps:
             cmd.append("--no-deps")
+        # --no-build-isolation: the workenv already has setuptools/wheel installed.
+        # Without this, pip spawns a subprocess pip to install [build-system].requires
+        # from PyPI; that subprocess inherits a fresh truststore which crashes on
+        # Windows GHA runners with ssl.SSLError: [SSL] unknown error (_ssl.c:3108).
+        cmd.append("--no-build-isolation")
         # Note: pip wheel doesn't support --platform flag (that's for download only)
         # Wheels built locally will automatically use the current platform
         cmd.append(source.as_posix())
@@ -119,7 +152,7 @@ class PyPaPipManager:
             binary_only: Whether to download only binary wheels
             platform_tag: Optional platform tag to use (e.g., "manylinux2014_x86_64")
         """
-        cmd = [python_exe.as_posix(), "-m", "pip", "download", "--dest", dest_dir.as_posix()]
+        cmd = [*_pip_base_cmd(python_exe), "download", "--dest", dest_dir.as_posix()]
         if binary_only:
             cmd.extend(["--only-binary", ":all:"])
 

@@ -40,6 +40,31 @@ def get_cli_executable_name(package_name: str, build_config: dict[str, Any], win
         return f"{package_name}.exe" if windows else package_name
 
 
+def get_cli_module_for_windows(package_name: str, build_config: dict[str, Any]) -> str:
+    """Get the Python module to use for 'python -m <module>' invocation on Windows.
+
+    On Windows the runtime command is 'python.exe -m <module>' rather than running
+    a Scripts/*.exe distlib trampoline (which embeds a stale path after workenv move).
+    The module must be derived from the entry point (e.g. 'taster.cli:main' → 'taster.cli'),
+    NOT from the script name ('taster'), which would require a taster/__main__.py.
+
+    Args:
+        package_name: The package name (fallback)
+        build_config: Build configuration containing cli_scripts
+
+    Returns:
+        The Python module path suitable for 'python -m <module>'
+    """
+    cli_scripts = build_config.get("cli_scripts", {})
+    if cli_scripts:
+        first_script_name = next(iter(cli_scripts.keys()))
+        entry_point = cli_scripts[first_script_name]
+        if ":" in entry_point:
+            return entry_point.split(":")[0]
+        return entry_point
+    return package_name
+
+
 def create_slot_tarballs(temp_dir: Path, artifacts: dict[str, Path]) -> dict[str, Path]:
     """Create tarball files for each slot.
 
@@ -95,8 +120,10 @@ def create_builder_manifest(
     # pip embeds the temp python.exe path inside the distlib launcher at install
     # time, so the launcher's embedded path is stale after the move.  Invoking
     # python.exe directly avoids the stale-path problem entirely.
-    cli_module = package_exe[:-4] if package_exe.endswith(".exe") else package_exe
+    # Use the entry-point module (e.g. 'taster.cli') not the script name ('taster'),
+    # since 'python -m taster' requires taster/__main__.py which may not exist.
     if windows:
+        cli_module = get_cli_module_for_windows(package_name, build_config)
         runtime_command = f"{{workenv}}/python.exe -m {cli_module}"
     else:
         runtime_command = f"{{workenv}}/{bin_dir}/{package_exe}"
@@ -137,7 +164,7 @@ def create_builder_manifest(
                 "command": (
                     "{workenv}/python.exe -m pip install --no-deps"
                     if windows else
-                    f"{{workenv}}/bin/uv pip install --python {python_path} --no-deps"
+                    f"{{workenv}}/bin/uv --no-config pip install --python {python_path} --no-deps"
                 ),
                 "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
             },
@@ -347,8 +374,10 @@ def create_python_builder_metadata(
     # pip embeds the temp python.exe path inside the distlib launcher at install
     # time, so the launcher's embedded path is stale after the move.  Invoking
     # python.exe directly avoids the stale-path problem entirely.
-    cli_module = package_exe[:-4] if package_exe.endswith(".exe") else package_exe
+    # Use the entry-point module (e.g. 'taster.cli') not the script name ('taster'),
+    # since 'python -m taster' requires taster/__main__.py which may not exist.
     if windows:
+        cli_module = get_cli_module_for_windows(package_name, build_config)
         runtime_command = f"{{workenv}}/python.exe -m {cli_module}"
     else:
         runtime_command = f"{{workenv}}/{bin_dir}/{package_exe}"
@@ -397,7 +426,7 @@ def create_python_builder_metadata(
                 "command": (
                     "{workenv}/python.exe -m pip install --no-deps"
                     if windows else
-                    f"{{workenv}}/bin/uv pip install --python {python_path} --no-deps"
+                    f"{{workenv}}/bin/uv --no-config pip install --python {python_path} --no-deps"
                 ),
                 "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
             },

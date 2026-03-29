@@ -15,6 +15,11 @@ echo "Launcher: ${LAUNCHER}"
 echo "Platform: ${PLATFORM}"
 echo "Version: ${VERSION}"
 
+# Force UTF-8 so the bundled Python doesn't crash printing emoji on
+# Windows consoles that default to cp1252.
+export PYTHONUTF8=1
+export PYTHONIOENCODING=utf-8
+
 # Ensure Flavor PSP is executable
 chmod +x "${FLAVOR_PSP}"
 

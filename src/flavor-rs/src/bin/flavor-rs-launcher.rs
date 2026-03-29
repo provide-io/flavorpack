@@ -187,12 +187,13 @@ fn run() -> i32 {
                 eprintln!("For more details, run with FLAVOR_LOG_LEVEL=debug");
             }
 
-            match error_msg {
-                s if s.contains("PSPF") || s.contains("format") => EXIT_PSPF_ERROR,
-                s if s.contains("signature") || s.contains("checksum") => EXIT_SIGNATURE_ERROR,
-                s if s.contains("extract") => EXIT_EXTRACTION_ERROR,
-                s if s.contains("execute") || s.contains("spawn") => EXIT_EXECUTION_ERROR,
-                s if s.contains("I/O") || s.contains("file") => EXIT_IO_ERROR,
+            let lower = error_msg.to_lowercase();
+            match lower {
+                ref s if s.contains("pspf") || s.contains("format") => EXIT_PSPF_ERROR,
+                ref s if s.contains("signature") || s.contains("checksum") => EXIT_SIGNATURE_ERROR,
+                ref s if s.contains("extract") => EXIT_EXTRACTION_ERROR,
+                ref s if s.contains("execute") || s.contains("spawn") => EXIT_EXECUTION_ERROR,
+                ref s if s.contains("i/o") || s.contains("file") || s.contains("permission") => EXIT_IO_ERROR,
                 _ => EXIT_EXECUTION_ERROR,
             }
         }

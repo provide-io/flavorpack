@@ -12,6 +12,7 @@ import tempfile
 from typing import Any
 from unittest.mock import Mock, patch
 
+import flavor.packaging.python.pypapip_manager as _pip_mod
 from flavor.packaging.python.dist_manager import PythonDistManager
 
 
@@ -150,7 +151,8 @@ class TestPythonDistManager:
             for wheel in wheel_files:
                 wheel.touch()
 
-            self.dist_manager.install_wheels_to_environment(venv_python, wheel_files)
+            with patch.object(_pip_mod.sys, "platform", "linux"):
+                self.dist_manager.install_wheels_to_environment(venv_python, wheel_files)
 
             # Verify run was called
             mock_run.assert_called_once()
@@ -432,7 +434,8 @@ class TestPythonDistManagerCriticalFeatures:
             with patch("flavor.packaging.python.dist_manager.run") as mock_run:
                 mock_run.return_value = Mock(returncode=0)
 
-                self.dist_manager.install_wheels_to_environment(venv_python, wheel_files)
+                with patch.object(_pip_mod.sys, "platform", "linux"):
+                    self.dist_manager.install_wheels_to_environment(venv_python, wheel_files)
 
                 args = mock_run.call_args[0]
                 cmd = args[0]
