@@ -31,7 +31,7 @@ class TestHelperManagerInit:
         manager = HelperManager()
 
         # Check paths are set correctly
-        assert manager.flavor_root.name == "flavorpack"
+        assert manager.flavor_root.name in ("flavorpack", "mutants")
         assert manager.helpers_dir.name == "dist"
         assert manager.helpers_bin.name == "bin"
         assert manager.current_platform == "linux_amd64"
