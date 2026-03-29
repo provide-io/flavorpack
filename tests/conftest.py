@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+import contextlib
 import os
 from pathlib import Path
 import shutil
@@ -26,17 +27,13 @@ if sys.platform == "win32":
         if _real is None:
             continue
         if hasattr(_real, "reconfigure"):
-            try:
+            with contextlib.suppress(Exception):
                 _real.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[union-attr]
-            except Exception:
-                pass
         for _attr in ("wrapped", "stream"):
             _inner = getattr(_real, _attr, None)
             if _inner is not None and hasattr(_inner, "reconfigure"):
-                try:
+                with contextlib.suppress(Exception):
                     _inner.reconfigure(encoding="utf-8", errors="replace")
-                except Exception:
-                    pass
 
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from hypothesis import HealthCheck, settings
