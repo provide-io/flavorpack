@@ -37,15 +37,20 @@ BINARY_MANIFEST = """\
 name = "binary-test"
 version = "1.0.0"
 
+[project.scripts]
+binary-test = "binary_test.__main__:main"
+
 [tool.flavor]
 entry_point = "binary_test.__main__:main"
-command = "{workenv}/bin/python3.11 -m binary_test"
 """
 
 SCRIPT_MANIFEST = """\
 [project]
 name = "script-test"
 version = "1.0.0"
+
+[project.scripts]
+script-test = "script_test.__main__:main"
 
 [tool.flavor]
 entry_point = "script_test.__main__:main"
@@ -128,7 +133,12 @@ def _run_bootstrap_cache_test(helper_manager: HelperManager, verbose: bool) -> b
             temp_dir = Path(temp_dir_str)
             manifest = _prepare_bootstrap_project(temp_dir)
 
-            workenv_dir = Path.home() / ".cache" / "flavor" / "workenv" / "bootstrap-test_1.0.0"
+            import os
+            flavor_cache = os.environ.get("FLAVOR_CACHE") or str(Path.home() / ".cache" / "flavor")
+            # Workenv name is derived from PSP filename (not package_name+version).
+            # build_package_from_manifest outputs bootstrap-test.psp so the launcher
+            # creates {FLAVOR_CACHE}/workenv/bootstrap-test/.
+            workenv_dir = Path(flavor_cache) / "workenv" / "bootstrap-test"
             if workenv_dir.exists():
                 shutil.rmtree(workenv_dir, ignore_errors=True)
 
@@ -273,9 +283,17 @@ def _build_package(helper_manager: HelperManager, manifest: Path, verbose: bool)
 
 def _build_env(mode: str, verbose: bool) -> dict[str, str]:
     """Create an environment dictionary for launcher execution."""
+    import os
+
     env = {"FLAVOR_EXEC_MODE": mode}
     if verbose:
         env["FLAVOR_LOG_LEVEL"] = "debug"
+    # Pass through essential vars so the inner PSP can bootstrap (locate cache
+    # dir, find uv, write temp files). Without HOME the Rust launcher uses a
+    # fallback path that differs from what Path.home() returns in the test.
+    for var in ("HOME", "PATH", "USER", "TEMP", "TMP", "TMPDIR", "FLAVOR_CACHE"):
+        if val := os.environ.get(var):
+            env[var] = val
     return env
 
 

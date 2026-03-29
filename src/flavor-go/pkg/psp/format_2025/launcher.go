@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"syscall"
@@ -60,13 +61,10 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 		}
 	}
 
-	// Add prefix to non-JSON output (ASCII on Windows, emoji on Unix)
+	// Add prefix to non-JSON output; enable UTF-8 console on Windows first
 	if !jsonFormat {
-		prefix := "[GO] "
-		if runtime.GOOS != "windows" {
-			prefix = "🐹 "
-		}
-		output = logging.NewPrefixWriter(prefix, output)
+		setUTF8ConsoleOutput()
+		output = logging.NewPrefixWriter("🐹 ", output)
 	}
 
 	loggerOpts := &hclog.LoggerOptions{
@@ -222,6 +220,22 @@ func execBundleReplace(exePath string, args []string, userCwd string, logger hcl
 	// Convert exec.Cmd to syscall.Exec arguments
 	binary := cmd.Path
 	logger.Trace("Binary path extracted from command", "path", binary)
+
+	// exec.Command resolves PATH from the current process environment at call time,
+	// before cmd.Env is populated with workenv/bin. If the binary lives in workenv/bin
+	// (e.g. a console_script entry point like "taster"), cmd.Path will be the
+	// unresolved name. syscall.Exec needs an absolute path, so re-resolve here
+	// using the PATH from the command's own environment.
+	if !filepath.IsAbs(binary) {
+		if resolved, err := lookPathInEnv(binary, cmd.Env); err == nil {
+			logger.Debug("✅ Re-resolved binary using cmd environment PATH",
+				"input", binary, "resolved", resolved)
+			binary = resolved
+		} else {
+			logger.Warn("⚠️ Could not re-resolve binary in cmd environment PATH",
+				"binary", binary, "error", err)
+		}
+	}
 
 	argv := cmd.Args
 	if argv == nil || len(argv) == 0 {

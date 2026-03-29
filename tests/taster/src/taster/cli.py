@@ -10,6 +10,19 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import sys
+import types
+
+# py-cpuinfo (used by provide.foundation.platform.cpu in older PyPI releases)
+# raises a bare Exception at module load time on some platforms, e.g., ARM64
+# Windows running x86_64 Python under emulation.  The newer local dev version
+# of provide.foundation uses lazy loading and catches ImportError; the older
+# PyPI release does not.  Pre-stub cpuinfo so the import never crashes.
+try:
+    import cpuinfo as _cpuinfo_check  # noqa: F401
+except Exception:
+    _cpuinfo_stub = types.ModuleType("cpuinfo")
+    _cpuinfo_stub.get_cpu_info = lambda: {}  # type: ignore[attr-defined]
+    sys.modules.setdefault("cpuinfo", _cpuinfo_stub)
 
 # Set up Windows Unicode support early
 if sys.platform == "win32":
@@ -18,6 +31,15 @@ if sys.platform == "win32":
         os.environ["PYTHONIOENCODING"] = "utf-8"
     if not os.environ.get("PYTHONUTF8"):
         os.environ["PYTHONUTF8"] = "1"
+    # Reconfigure stdout/stderr to UTF-8 — PYTHONIOENCODING only takes effect
+    # at process startup; reconfigure() fixes encoding for the current process.
+    try:
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        if hasattr(sys.stderr, "reconfigure"):
+            sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass  # Ignore if reconfigure fails (e.g., non-text mode streams)
     # Try to enable ANSI escape sequences on Windows
     try:
         import ctypes

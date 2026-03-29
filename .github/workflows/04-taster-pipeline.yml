@@ -251,9 +251,65 @@ jobs:
 
   # Comprehensive taster testing
   comprehensive-test:
-    name: 🔬 Comprehensive Taster Tests
+    name: 🔬 Comprehensive Taster Tests (${{ matrix.platform }}-${{ matrix.launcher_name }})
     needs: [setup, test-taster]
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          # Linux: both launchers are reliable
+          - runner: ubuntu-latest
+            platform: linux_amd64
+            activate: workenv/bin/activate
+            launcher_ext: ""
+            bundled_launcher: flavor-rs-launcher
+            launcher_name: rust
+            allow_failure: false
+          - runner: ubuntu-latest
+            platform: linux_amd64
+            activate: workenv/bin/activate
+            launcher_ext: ""
+            bundled_launcher: flavor-go-launcher
+            launcher_name: go
+            allow_failure: false
+          # Windows AMD64: Go is reliable; Rust may work now that encoding is fixed
+          - runner: windows-2025
+            platform: windows_amd64
+            activate: workenv/Scripts/activate
+            launcher_ext: ".exe"
+            bundled_launcher: flavor-go-launcher
+            launcher_name: go
+            allow_failure: false
+          - runner: windows-2025
+            platform: windows_amd64
+            activate: workenv/Scripts/activate
+            launcher_ext: ".exe"
+            bundled_launcher: flavor-rs-launcher
+            launcher_name: rust
+            allow_failure: true  # Rust launcher historically crashes on Windows (KNOWN_ISSUES.md)
+          # Windows ARM64: Go is reliable; Rust may work now that encoding is fixed
+          - runner: windows-11-arm
+            platform: windows_arm64
+            activate: workenv/Scripts/activate
+            launcher_ext: ".exe"
+            bundled_launcher: flavor-go-launcher
+            launcher_name: go
+            allow_failure: false
+          - runner: windows-11-arm
+            platform: windows_arm64
+            activate: workenv/Scripts/activate
+            launcher_ext: ".exe"
+            bundled_launcher: flavor-rs-launcher
+            launcher_name: rust
+            allow_failure: true  # Rust launcher historically crashes on Windows (KNOWN_ISSUES.md)
+      fail-fast: false
+    runs-on: ${{ matrix.runner }}
+    continue-on-error: ${{ matrix.allow_failure }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      PYTHONIOENCODING: "utf-8"
+      PYTHONUTF8: "1"
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -275,6 +331,25 @@ jobs:
         run: |
           .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}"
 
+      - name: 🔧 Copy helpers into flavor wheel source
+        run: |
+          mkdir -p src/flavor/helpers/bin
+          PLATFORM="${{ matrix.platform }}"
+          EXT="${{ matrix.launcher_ext }}"
+          # Copy current-platform helpers (versioned and symlinked names) into the
+          # flavor package-data dir so they are bundled in the flavorpack wheel
+          # that `flavor pack` installs inside the taster PSP. This makes
+          # HelperManager.get_helper() work inside exec-test.
+          for f in helpers/bin/flavor-*-${PLATFORM}${EXT}; do
+            if [ -f "$f" ]; then
+              cp -f "$f" src/flavor/helpers/bin/
+              echo "  Copied: $(basename $f)"
+            fi
+          done
+          chmod +x src/flavor/helpers/bin/* 2>/dev/null || true
+          echo "Helpers in src/flavor/helpers/bin/:"
+          ls -la src/flavor/helpers/bin/ || echo "  (empty)"
+
       - name: 🐍 Setup Python
         uses: actions/setup-python@v5
         with:
@@ -286,25 +361,24 @@ jobs:
 
       - name: 🧪 Test 1 - Flavor pack with explicit launcher
         run: |
-          source workenv/bin/activate
+          source ${{ matrix.activate }}
           cd tests/taster
-          
+
           echo "=== Flavor pack with explicit launcher from helpers ==="
-          # Use the launcher from helpers that was downloaded
-          LAUNCHER="../../helpers/bin/flavor-rs-launcher-linux_amd64"
-          
+          LAUNCHER="../../helpers/bin/${{ matrix.bundled_launcher }}-${{ matrix.platform }}${{ matrix.launcher_ext }}"
+
           if [ ! -f "$LAUNCHER" ]; then
             echo "❌ Launcher not found at $LAUNCHER"
             ls -la ../../helpers/bin/
             exit 1
           fi
-          
+
           flavor pack \
             --manifest pyproject.toml \
             --output taster-bundled.psp \
             --launcher-bin "$LAUNCHER" \
             --key-seed test123
-          
+
           chmod +x taster-bundled.psp
           ./taster-bundled.psp --version
           ./taster-bundled.psp info
@@ -312,58 +386,58 @@ jobs:
 
       - name: 🧪 Test 2a - Taster help
         run: |
-          source workenv/bin/activate
+          source ${{ matrix.activate }}
           cd tests/taster
-          
+
           echo "=== Testing Taster help command ==="
           ./taster-bundled.psp --help
           echo "✅ Help test passed"
 
       - name: 🧪 Test 2b - Taster info
         run: |
-          source workenv/bin/activate
+          source ${{ matrix.activate }}
           cd tests/taster
-          
+
           echo "=== Testing Taster info command ==="
           ./taster-bundled.psp info
           echo "✅ Info test passed"
 
       - name: 🧪 Test 2c - Taster env
         run: |
-          source workenv/bin/activate
+          source ${{ matrix.activate }}
           cd tests/taster
-          
+
           echo "=== Testing Taster env command ==="
           ./taster-bundled.psp env
           echo "✅ Env test passed"
 
       - name: 🧪 Test 2d - Taster cache info
         run: |
-          source workenv/bin/activate
+          source ${{ matrix.activate }}
           cd tests/taster
-          
+
           echo "=== Testing Taster cache info command ==="
           ./taster-bundled.psp cache info
           echo "✅ Cache info test passed"
 
       - name: 🧪 Test 2e - Taster exit
         run: |
-          source workenv/bin/activate
+          source ${{ matrix.activate }}
           cd tests/taster
-          
+
           echo "=== Testing Taster exit command ==="
           ./taster-bundled.psp exit 0 --message "Test success"
           echo "✅ Exit test passed"
 
       - name: 🧪 Test 3a - Check launcher location
         run: |
-          source workenv/bin/activate
+          source ${{ matrix.activate }}
           cd tests/taster
-          
+
           echo "=== Checking launcher location ==="
           FLAVOR_LOCATION=$(python -c "import flavor; import os; print(os.path.dirname(flavor.__file__))")
           echo "Flavor installed at: $FLAVOR_LOCATION"
-          
+
           if [ -d "$FLAVOR_LOCATION/helpers/bin" ]; then
             echo "✅ Launchers found in wheel:"
             ls -la "$FLAVOR_LOCATION/helpers/bin/"
@@ -375,24 +449,33 @@ jobs:
 
       - name: 🧪 Test 3b - Build with Rust launcher
         run: |
-          source workenv/bin/activate
+          source ${{ matrix.activate }}
           cd tests/taster
-          
+
+          # For Go-primary rows on Windows, skip the Rust secondary test to avoid
+          # contaminating the reliable Go row with a potentially crashing Rust launcher.
+          # The dedicated Rust-primary matrix rows (allow_failure: true) run this test.
+          if [[ "${{ matrix.platform }}" == "windows_"* ]] && \
+             [[ "${{ matrix.bundled_launcher }}" == "flavor-go-launcher" ]]; then
+            echo "⚠️ Rust launcher secondary test skipped on Windows Go rows (see Rust-primary row)"
+            exit 0
+          fi
+
           echo "=== Testing with Rust launcher ==="
           if [ "$LAUNCHER_SOURCE" = "wheel" ]; then
             FLAVOR_LOCATION=$(python -c "import flavor; import os; print(os.path.dirname(flavor.__file__))")
-            RUST_LAUNCHER="$FLAVOR_LOCATION/helpers/bin/flavor-rs-launcher-linux_amd64"
+            RUST_LAUNCHER="$FLAVOR_LOCATION/helpers/bin/flavor-rs-launcher-${{ matrix.platform }}${{ matrix.launcher_ext }}"
           else
-            RUST_LAUNCHER="../../helpers/bin/flavor-rs-launcher-linux_amd64"
+            RUST_LAUNCHER="../../helpers/bin/flavor-rs-launcher-${{ matrix.platform }}${{ matrix.launcher_ext }}"
           fi
-          
+
           if [ -f "$RUST_LAUNCHER" ]; then
             flavor pack \
               --manifest pyproject.toml \
               --output taster-rust-explicit.psp \
               --launcher-bin "$RUST_LAUNCHER" \
               --key-seed test123
-            
+
             chmod +x taster-rust-explicit.psp
             ./taster-rust-explicit.psp --version
             echo "✅ Rust launcher test passed"
@@ -400,26 +483,26 @@ jobs:
             echo "⚠️ Rust launcher not found, skipping"
           fi
 
-      - name: 🧪 Test 3c - Build with Go launcher  
+      - name: 🧪 Test 3c - Build with Go launcher
         run: |
-          source workenv/bin/activate
+          source ${{ matrix.activate }}
           cd tests/taster
-          
+
           echo "=== Testing with Go launcher ==="
           if [ "$LAUNCHER_SOURCE" = "wheel" ]; then
             FLAVOR_LOCATION=$(python -c "import flavor; import os; print(os.path.dirname(flavor.__file__))")
-            GO_LAUNCHER="$FLAVOR_LOCATION/helpers/bin/flavor-go-launcher-linux_amd64"
+            GO_LAUNCHER="$FLAVOR_LOCATION/helpers/bin/flavor-go-launcher-${{ matrix.platform }}${{ matrix.launcher_ext }}"
           else
-            GO_LAUNCHER="../../helpers/bin/flavor-go-launcher-linux_amd64"
+            GO_LAUNCHER="../../helpers/bin/flavor-go-launcher-${{ matrix.platform }}${{ matrix.launcher_ext }}"
           fi
-          
+
           if [ -f "$GO_LAUNCHER" ]; then
             flavor pack \
               --manifest pyproject.toml \
               --output taster-go-explicit.psp \
               --launcher-bin "$GO_LAUNCHER" \
               --key-seed test123
-            
+
             chmod +x taster-go-explicit.psp
             ./taster-go-explicit.psp --version
             echo "✅ Go launcher test passed"
@@ -429,9 +512,9 @@ jobs:
 
       - name: 🧪 Test 4 - Pipe operations
         run: |
-          source workenv/bin/activate
+          source ${{ matrix.activate }}
           cd tests/taster
-          
+
           echo "=== Testing pipe operations ==="
           if [ -f "taster-bundled.psp" ]; then
             echo "Hello from pipe" | ./taster-bundled.psp pipe stdin
@@ -443,9 +526,9 @@ jobs:
 
       - name: 🧪 Test 5 - Signal handling
         run: |
-          source workenv/bin/activate
+          source ${{ matrix.activate }}
           cd tests/taster
-          
+
           echo "=== Testing signal handling ==="
           if command -v timeout >/dev/null 2>&1; then
             timeout 3 ./taster-bundled.psp signals --sleep 1 || true
@@ -456,9 +539,9 @@ jobs:
 
       - name: 🧪 Test 6 - Memory-mapped I/O
         run: |
-          source workenv/bin/activate
+          source ${{ matrix.activate }}
           cd tests/taster
-          
+
           echo "=== Testing memory-mapped I/O ==="
           if ./taster-bundled.psp --help | grep -q mmap; then
             ./taster-bundled.psp mmap
@@ -469,18 +552,17 @@ jobs:
 
       - name: 🧪 Test 7 - Taster self-packaging
         run: |
-          source workenv/bin/activate
+          source ${{ matrix.activate }}
           cd tests/taster
-          
+
           echo "=== Testing Taster self-packaging capability ==="
-          
-          # Find launcher
-          LAUNCHER="../../helpers/bin/flavor-rs-launcher-linux_amd64"
+
+          LAUNCHER="../../helpers/bin/${{ matrix.bundled_launcher }}-${{ matrix.platform }}${{ matrix.launcher_ext }}"
           if [ ! -f "$LAUNCHER" ]; then
             echo "❌ Launcher not found for self-packaging test"
             exit 1
           fi
-          
+
           # Use script to test self-packaging
           ../../.github/scripts/test-taster-self-package.sh \
             ./taster-bundled.psp \
@@ -488,8 +570,14 @@ jobs:
 
       - name: 🧪 Test 8 - Bootstrap and cache regression coverage
         run: |
-          source workenv/bin/activate
+          source ${{ matrix.activate }}
           cd tests/taster
+
+          # exec-test uses Rust launcher internally; Rust launcher crashes on Windows
+          if [[ "${{ matrix.platform }}" == "windows_"* ]]; then
+            echo "⚠️ exec-test uses Rust launcher which is not supported on Windows, skipping"
+            exit 0
+          fi
 
           echo "=== Testing bootstrap and cache reuse ==="
           ./taster-bundled.psp exec-test --verbose

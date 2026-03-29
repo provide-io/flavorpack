@@ -302,6 +302,10 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		if err := savePackageChecksum(paths, index.IndexChecksum, logger); err != nil {
 			logger.Warn("⚠️ Failed to save package checksum", "error", err)
 		}
+
+		// Clean up init lifecycle slots after extraction (regardless of setup commands)
+		logger.Info("🧹 Cleaning up lifecycle slots...")
+		cleanupLifecycleSlots(workenvDir, metadata, slotPaths, logger)
 	} else {
 		logger.Info("✅ Work environment is valid, skipping persistent slot extraction")
 		for i, slot := range metadata.Slots {
@@ -442,9 +446,6 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 			}
 		}
 
-		// Clean up lifecycle-based slots after setup
-		logger.Info("🧹 Cleaning up lifecycle slots...")
-		cleanupLifecycleSlots(workenvDir, metadata, slotPaths, logger)
 	}
 
 	if metadata.Execution == nil {

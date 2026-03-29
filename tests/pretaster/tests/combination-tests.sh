@@ -66,7 +66,11 @@ test_combination() {
     
     # Build the package
     # Use test-combination.json for CI compatibility (test-taster-lite requires taster.psp which isn't available in CI)
+    # On Windows, use a bash-based variant since /usr/bin/python3 is not available
     local config="configs/test-combination.json"
+    if [[ "$OS" == "windows" ]]; then
+        config="configs/test-combination-windows.json"
+    fi
     if build_package "$builder_bin" "$launcher_bin" "$config" "$output" >> "$log_file" 2>&1; then
         echo "$emoji   ✅ Build successful: $output" | tee -a "$log_file"
     else
