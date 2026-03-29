@@ -112,7 +112,7 @@ jobs:
           python-version: '3.11'
 
       - name: 📦 Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
 
@@ -368,7 +368,7 @@ jobs:
         uses: actions/checkout@v6
       
       - name: 🐍 Setup uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
       
@@ -508,6 +508,7 @@ jobs:
         with:
           name: flavor-psp-test-${{ matrix.platform }}-${{ github.run_id }}
           path: test-result.txt
+          if-no-files-found: ignore
 
   # Summary and validation
   validate:
@@ -529,8 +530,9 @@ jobs:
         if: needs.build-wheels.result == 'success'
         uses: actions/download-artifact@v8
         with:
-          name: flavor-wheels-${{ needs.setup.outputs.helper_version }}
+          pattern: flavor-wheel-${{ needs.setup.outputs.helper_version }}-*
           path: wheel-artifacts
+          merge-multiple: true
         continue-on-error: true
       
       - name: 📥 Download Flavor packages

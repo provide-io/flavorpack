@@ -349,7 +349,7 @@ def test_slots(temp_dir: Path, test_builder: PSPFBuilder) -> list[SlotMetadata]:
             checksum=hashlib.sha256(temp_data).hexdigest(),
             operations="none",
             purpose="payload",
-            lifecycle="temp",
+            lifecycle="temporary",
         )
     )
 

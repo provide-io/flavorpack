@@ -81,7 +81,7 @@ class TestPSPFSlots:
                 checksum=hashlib.sha256(temp_data).hexdigest(),
                 operations="none",
                 purpose="payload",
-                lifecycle="temp",
+                lifecycle="temporary",
             )
         )
 
@@ -138,14 +138,14 @@ class TestPSPFSlots:
             checksum="abc123",
             operations="gzip",
             purpose="payload",
-            lifecycle="temp",
+            lifecycle="temporary",
         )
 
         # Test metadata serialization
         slot_dict = slot.to_dict()
-        assert slot_dict["lifecycle"] == "temp"
+        assert slot_dict["lifecycle"] == "temporary"
         assert slot_dict["id"] == "test-temp"
-        # Temp slots removed after current session
+        # Temporary slots removed after current session
 
     def test_slot_lifecycle_cache(self, temp_dir: Path, test_builder: PSPFBuilder) -> None:
         """Test cache slot lifecycle metadata."""

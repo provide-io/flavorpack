@@ -256,7 +256,7 @@ class TestCleanupLifecycleSlots:
         assert not slot_file.exists()
 
     def test_cleanup_temp_lifecycle(self, tmp_path: Path) -> None:
-        """Test handling of 'temp' lifecycle slot (not removed immediately)."""
+        """Test handling of 'temporary' lifecycle slot (not removed immediately)."""
         mock_reader = Mock()
         manager = WorkEnvManager(mock_reader)
 
@@ -264,12 +264,12 @@ class TestCleanupLifecycleSlots:
         slot_dir = tmp_path / "temp_slot"
         slot_dir.mkdir(parents=True)
 
-        metadata = {"slots": [{"id": "temp", "lifecycle": "temp"}]}
+        metadata = {"slots": [{"id": "temp", "lifecycle": "temporary"}]}
         extracted_slots = {0: slot_dir}
 
         manager._cleanup_lifecycle_slots(workenv_dir, metadata, extracted_slots)
 
-        # Should NOT remove temp slot immediately
+        # Should NOT remove temporary slot immediately
         assert slot_dir.exists()
 
     def test_cleanup_runtime_lifecycle(self, tmp_path: Path) -> None:
