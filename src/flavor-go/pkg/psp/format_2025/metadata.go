@@ -30,7 +30,7 @@ type CacheValidationInfo struct {
 type ExecutionInfo struct {
 	PrimarySlot int               `json:"primary_slot"`
 	Command     string            `json:"command"`
-	Environment map[string]string `json:"environment"`
+	Environment map[string]string `json:"env,omitempty"`
 }
 
 type RuntimeInfo struct {

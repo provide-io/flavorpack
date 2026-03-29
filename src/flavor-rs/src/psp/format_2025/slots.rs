@@ -1,7 +1,7 @@
 // helpers/flavor-rs/src/psp/format_2025/slots.rs
 // PSPF 2025 Slot Management - Enhanced 64-byte descriptors
 
-use super::constants::{LifecycleCache, PurposeData, SLOT_DESCRIPTOR_SIZE};
+use super::constants::{LifecycleRuntime, PurposeData, SLOT_DESCRIPTOR_SIZE};
 use super::defaults::{CACHE_NORMAL, DEFAULT_FILE_PERMS, DEFAULT_PAGE_SIZE};
 use log::trace;
 use std::path::PathBuf;
@@ -12,7 +12,7 @@ use std::path::PathBuf;
 pub struct SlotDescriptor {
     // Core fields (56 bytes total - 7x uint64)
     pub id: u64,            // Unique slot ID
-    pub name_hash: u64,     // xxHash64 of slot name
+    pub name_hash: u64,     // SHA-256 of slot name (first 8 bytes, little-endian u64)
     pub offset: u64,        // Byte offset in file
     pub size: u64,          // Size as stored (compressed)
     pub original_size: u64, // Uncompressed size
@@ -42,7 +42,7 @@ impl SlotDescriptor {
             operations: 0, // No operations (raw data)
             checksum: 0,
             purpose: PurposeData,
-            lifecycle: LifecycleCache,
+            lifecycle: LifecycleRuntime,
             priority: CACHE_NORMAL,
             platform: 0,
             reserved1: 0,
@@ -166,10 +166,17 @@ pub enum Purpose {
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Lifecycle {
-    Permanent = 0,
-    Cached = 1,
-    Temporary = 2,
-    Stream = 3,
+    Init = 0,
+    Startup = 1,
+    Runtime = 2,
+    Shutdown = 3,
+    Cache = 4,
+    Temporary = 5,
+    Lazy = 6,
+    Eager = 7,
+    Dev = 8,
+    Config = 9,
+    Platform = 10,
 }
 
 /// Slot metadata for runtime use
