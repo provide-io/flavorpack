@@ -11,18 +11,35 @@ use super::paths::WorkenvPaths;
 /// Global flag for lock acquisition status
 static LOCK_ACQUIRED: AtomicBool = AtomicBool::new(false);
 
-/// Check if a process with given PID is still running
+/// Check if a process with given PID is still running.
+/// Uses `kill -0` on Unix (works on both Linux and macOS, unlike /proc)
+/// and `tasklist` on Windows.
 #[cfg(unix)]
 pub fn is_process_running(pid: u32) -> bool {
-    // Use safe process checking by reading /proc filesystem
-    let proc_path = format!("/proc/{}", pid);
-    std::path::Path::new(&proc_path).exists()
+    std::process::Command::new("kill")
+        .args(["-0", &pid.to_string()])
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .status()
+        .map(|status| status.success())
+        .unwrap_or(false)
 }
 
-#[cfg(not(unix))]
+#[cfg(windows)]
+pub fn is_process_running(pid: u32) -> bool {
+    std::process::Command::new("tasklist")
+        .args(["/FI", &format!("PID eq {}", pid), "/NH"])
+        .output()
+        .map(|output| {
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            stdout.contains(&pid.to_string())
+        })
+        .unwrap_or(false)
+}
+
+#[cfg(not(any(unix, windows)))]
 pub fn is_process_running(_pid: u32) -> bool {
-    // On non-Unix systems, assume process is not running
-    // This is conservative but safe
+    // On other platforms, conservatively assume process is not running
     false
 }
 

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""File-based locking for concurrent Flavor operations."""
 
 from collections.abc import Generator
 from contextlib import contextmanager
