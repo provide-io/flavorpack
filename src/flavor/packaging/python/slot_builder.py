@@ -171,7 +171,8 @@ class PythonSlotBuilder:
         artifacts["payload_tgz"] = payload_tgz
 
         # Log the compressed size
-        payload_tgz.stat().st_size / (1024 * 1024)
+        payload_size_mb = payload_tgz.stat().st_size / (1024 * 1024)
+        logger.info(f"Payload archive size: {payload_size_mb:.1f} MB")
 
         # Create metadata archive (separate for selective extraction)
         metadata_content = work_dir / "metadata_content"
@@ -206,8 +207,6 @@ class PythonSlotBuilder:
         if seen is None:
             seen = set()
             logger.info("🔍🔄🚀 Starting transitive dependency resolution")
-
-        "  " * depth
 
         # Normalize the path to avoid duplicates
         dep_path = dep_path.resolve()

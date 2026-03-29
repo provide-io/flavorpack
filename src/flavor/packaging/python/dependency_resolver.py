@@ -89,15 +89,20 @@ class DependencyResolver:
 
     def _find_uv_via_pipx(self) -> str | None:
         """Check if UV is available via pipx."""
-        pipx_uv = shutil.which("pipx")
-        if not pipx_uv:
+        pipx_path = shutil.which("pipx")
+        if not pipx_path:
             return None
         try:
             logger.trace("Checking if UV is available via pipx")
             result = run(["pipx", "run", "uv", "--version"], capture_output=True, timeout=15)
             if result.returncode == 0:
                 logger.debug("UV found via pipx")
-                return "pipx run uv"
+                # Try to find the actual uv binary path rather than returning
+                # a multi-word string that cannot be used as a single argv element.
+                uv_path = shutil.which("uv")
+                if uv_path:
+                    return uv_path
+                return None
         except Exception as e:
             if logger.is_trace_enabled():
                 logger.trace(f"pipx uv check failed: {e}")

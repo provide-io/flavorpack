@@ -214,7 +214,9 @@ class WheelBuilder:
         logger.info("🔍📝 Resolving dependencies")
 
         if output_dir is None:
-            output_dir = Path(tempfile.mkdtemp())
+            # Use a temporary directory that will persist for the caller.
+            # The caller is responsible for cleanup via the returned path.
+            output_dir = Path(tempfile.mkdtemp(prefix="flavor-resolve-"))
 
         # Create input requirements file if packages provided
         if packages and not requirements_file:
