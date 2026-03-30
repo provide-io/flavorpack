@@ -333,7 +333,10 @@ impl Reader {
                 );
                 descriptors.push(descriptor);
             } else {
-                debug!("⚠️ Warning: Could not parse descriptor #{}", i);
+                return Err(FlavorError::Generic(format!(
+                    "Failed to parse slot descriptor #{} at offset {:#x}",
+                    i, offset
+                )));
             }
         }
 
