@@ -433,7 +433,7 @@ Windows ARM64 is now fully integrated into the CI/CD pipeline:
 
 - **Helper Build**: `01-helper-prep.yml` - builds on `windows-2022-arm` runner
 - **Wheel Build**: `03-flavor-pipeline.yml` - builds on `windows-2022-arm` runner
-- **Release**: `release-pipeline.yml` - includes `win_arm64.whl` in releases
+- **Release**: `release.yml` - includes `win_arm64.whl` in releases
 
 To trigger a build:
 ```bash
