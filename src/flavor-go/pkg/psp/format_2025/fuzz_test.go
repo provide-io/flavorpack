@@ -1,6 +1,9 @@
 package format_2025
 
-import "testing"
+import (
+	"bytes"
+	"testing"
+)
 
 // FuzzOperationsRoundTrip verifies pack→unpack is a perfect round-trip
 // for any sequence of up to 8 non-zero operation bytes.
@@ -38,6 +41,32 @@ func FuzzOperationsRoundTrip(f *testing.F) {
 				t.Fatalf("element %d: want %d got %d (ops=%v packed=%d unpacked=%v)",
 					i, ops[i], unpacked[i], ops, packed, unpacked)
 			}
+		}
+	})
+}
+
+// FuzzUnpackSlotDescriptor verifies UnpackSlotDescriptor never panics on
+// arbitrary 64-byte inputs and that pack/unpack round-trips perfectly.
+func FuzzUnpackSlotDescriptor(f *testing.F) {
+	// Seed with known valid vectors
+	for _, v := range regressionVectors {
+		f.Add(v.Binary)
+	}
+	// Add edge cases
+	f.Add(make([]byte, SlotDescriptorSize))
+	f.Add(bytes.Repeat([]byte{0xFF}, SlotDescriptorSize))
+
+	f.Fuzz(func(t *testing.T, data []byte) {
+		if len(data) != SlotDescriptorSize {
+			return
+		}
+		desc, err := UnpackSlotDescriptor(data)
+		if err != nil {
+			return // Parse errors are acceptable
+		}
+		repacked := desc.Pack()
+		if !bytes.Equal(data, repacked) {
+			t.Errorf("round-trip mismatch:\n  input:    %x\n  repacked: %x", data, repacked)
 		}
 	})
 }
