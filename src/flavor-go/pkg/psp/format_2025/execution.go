@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -185,9 +186,9 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 
 	// Create WorkenvPaths structure
 	var paths *WorkenvPaths
-	if customWorkenv := os.Getenv("FLAVOR_WORKDIR"); customWorkenv != "" {
+	if customWorkenv := os.Getenv("FLAVOR_WORKENV"); customWorkenv != "" {
 		// Use custom workenv path from environment variable
-		logger.Info("📁 Using custom work environment from FLAVOR_WORKDIR", "path", customWorkenv)
+		logger.Info("📁 Using custom work environment from FLAVOR_WORKENV", "path", customWorkenv)
 		// Extract cache dir from custom workenv (go up two levels)
 		cacheDir := filepath.Dir(filepath.Dir(customWorkenv))
 		paths = NewWorkenvPaths(cacheDir, exePath)
@@ -218,6 +219,12 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		for _, dirSpec := range metadata.Workenv.Directories {
 			// Substitute {workenv} placeholder in the path
 			dirPath := strings.ReplaceAll(dirSpec.Path, "{workenv}", workenvDir)
+			// Path traversal protection: ensure dirPath stays within workenvDir
+			cleanDir := filepath.Clean(dirPath)
+			cleanBase := filepath.Clean(workenvDir)
+			if !strings.HasPrefix(cleanDir, cleanBase+string(os.PathSeparator)) && cleanDir != cleanBase {
+				return nil, fmt.Errorf("directory path %q escapes work environment directory", dirSpec.Path)
+			}
 			logger.Debug("📁 Creating directory", "path", dirPath)
 			if err := os.MkdirAll(dirPath, os.FileMode(DirPerms)); err != nil {
 				logger.Error("❌ Failed to create directory", "path", dirPath, "error", err)
@@ -433,7 +440,11 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 
 				for i, env := range setupExec.Env {
 					if strings.HasPrefix(env, "PATH=") {
-						setupExec.Env[i] = fmt.Sprintf("PATH=%s/bin:%s", workenvDir, strings.TrimPrefix(env, "PATH="))
+						binDir := "bin"
+				if runtime.GOOS == "windows" {
+					binDir = "Scripts"
+				}
+				setupExec.Env[i] = fmt.Sprintf("PATH=%s%s%s", filepath.Join(workenvDir, binDir), string(os.PathListSeparator), strings.TrimPrefix(env, "PATH="))
 						break
 					}
 				}
@@ -522,13 +533,21 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 	pathFound := false
 	for i, env := range cmd.Env {
 		if strings.HasPrefix(env, "PATH=") {
-			cmd.Env[i] = fmt.Sprintf("PATH=%s/bin:%s", workenvDir, strings.TrimPrefix(env, "PATH="))
+			binDir := "bin"
+			if runtime.GOOS == "windows" {
+				binDir = "Scripts"
+			}
+			cmd.Env[i] = fmt.Sprintf("PATH=%s%s%s", filepath.Join(workenvDir, binDir), string(os.PathListSeparator), strings.TrimPrefix(env, "PATH="))
 			pathFound = true
 			break
 		}
 	}
 	if !pathFound {
-		cmd.Env = append(cmd.Env, fmt.Sprintf("PATH=%s/bin", workenvDir))
+		binDir := "bin"
+		if runtime.GOOS == "windows" {
+			binDir = "Scripts"
+		}
+		cmd.Env = append(cmd.Env, fmt.Sprintf("PATH=%s", filepath.Join(workenvDir, binDir)))
 	}
 
 	// Process runtime.env configuration

@@ -147,5 +147,5 @@ const (
 // Validation defaults
 // =================================
 const (
-	DefaultValidationLevel = "standard" // Default validation level
+	DefaultValidationLevel = "strict" // Default validation level
 )

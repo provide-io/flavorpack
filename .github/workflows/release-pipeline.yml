@@ -78,7 +78,7 @@ jobs:
           sparse-checkout-cone-mode: false
       
       - name: 📥 Download wheel artifacts from Flavor Pipeline
-        uses: dawidd6/action-download-artifact@v6
+        uses: dawidd6/action-download-artifact@v19
         with:
           workflow: 03-flavor-pipeline.yml
           run_id: ${{ needs.prepare.outputs.flavor_run_id }}
@@ -117,7 +117,7 @@ jobs:
           sparse-checkout-cone-mode: false
       
       - name: 📥 Download Flavor PSP artifacts
-        uses: dawidd6/action-download-artifact@v6
+        uses: dawidd6/action-download-artifact@v19
         with:
           workflow: 03-flavor-pipeline.yml
           run_id: ${{ needs.prepare.outputs.flavor_run_id }}
@@ -128,7 +128,7 @@ jobs:
         continue-on-error: true
       
       - name: 📥 Download Taster artifacts
-        uses: dawidd6/action-download-artifact@v6
+        uses: dawidd6/action-download-artifact@v19
         with:
           workflow: 04-taster-pipeline.yml
           name_is_regexp: true
