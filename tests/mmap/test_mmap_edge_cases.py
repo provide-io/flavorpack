@@ -386,7 +386,7 @@ def test_parameterized_read_patterns(file_size: int, chunk_size: int, backend_ty
         path = Path(f.name)
 
     try:
-        backend = create_backend(backend_type, path)  # ty: ignore[invalid-argument-type]
+        backend = create_backend(backend_type, path)
         backend.open(path)
 
         # Sequential read test

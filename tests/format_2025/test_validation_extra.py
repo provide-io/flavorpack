@@ -5,7 +5,11 @@
 
 """Additional validation coverage tests for uncovered branches in validation.py."""
 
+from pathlib import Path
+
 import pytest
+
+from flavor.psp.format_2025.slots import SlotMetadata
 
 
 @pytest.mark.unit
@@ -48,7 +52,7 @@ class TestBuildSpecValidationExtra:
         errors = validate_spec(spec)
         assert any("format" in e.lower() or "📐" in e for e in errors)
 
-    def test_validate_key_config_nonexistent_key_path(self, tmp_path: object) -> None:
+    def test_validate_key_config_nonexistent_key_path(self, tmp_path: Path) -> None:
         """Key path that does not exist yields error."""
         from pathlib import Path
 
@@ -61,7 +65,7 @@ class TestBuildSpecValidationExtra:
         errors = validate_key_config(spec)
         assert any("key" in e.lower() or "🔑" in e for e in errors)
 
-    def test_validate_key_config_file_path_not_dir(self, tmp_path: object) -> None:
+    def test_validate_key_config_file_path_not_dir(self, tmp_path: Path) -> None:
         """Key path that is a file (not directory) yields error."""
         from pathlib import Path
 
@@ -80,10 +84,8 @@ class TestBuildSpecValidationExtra:
 class TestValidateSlotsAdditional:
     """Additional validate_slots coverage for uncovered error branches."""
 
-    def _make_slot(self, **kwargs: object) -> object:
+    def _make_slot(self, **kwargs: object) -> SlotMetadata:
         import tempfile
-
-        from flavor.psp.format_2025.slots import SlotMetadata
 
         with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as tf:
             tf.write(b"x")
@@ -169,7 +171,7 @@ class TestValidateMetadataExtra:
         errors = validate_spec(spec)
         assert any("version" in e.lower() or "🏷️" in e for e in errors)
 
-    def test_validate_key_config_valid_dir_no_error(self, tmp_path: object) -> None:
+    def test_validate_key_config_valid_dir_no_error(self, tmp_path: Path) -> None:
         """Key path that is a valid directory produces no error (covers branch 210->213)."""
         from pathlib import Path
 

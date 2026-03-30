@@ -324,8 +324,13 @@ pub fn run_command(
     }
 
     // Prepend workenv bin directory to PATH (platform-aware)
-    let path = build_workenv_path(workenv_dir, env::var("PATH").ok().as_deref());
-    command.env("PATH", path);
+    if let Ok(path) = env::var("PATH") {
+        let bin_dir = if cfg!(windows) { "Scripts" } else { "bin" };
+        let sep = if cfg!(windows) { ";" } else { ":" };
+        let bin_path = workenv_dir.join(bin_dir);
+        let new_path = format!("{}{sep}{path}", bin_path.display());
+        command.env("PATH", new_path);
+    }
 
     let output = command.output()?;
 

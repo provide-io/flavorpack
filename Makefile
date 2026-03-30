@@ -9,6 +9,22 @@ help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "%-20s %s\n", $$1, $$2}'
 
+.PHONY: check
+check: ## Run all quality gates (Python, Go, Rust)
+	@echo "=== Python: ruff ==="
+	ruff check src/ tests/
+	@echo "=== Python: mypy ==="
+	uv run mypy src/flavor
+	uv run mypy tests/ --exclude 'tests/(taster|pretaster|assets)/'
+	@echo "=== Go: fmt + vet + build + test ==="
+	@cd src/flavor-go && gofmt -l . | grep . && exit 1 || true
+	cd src/flavor-go && go vet ./... && go build ./... && go test ./...
+	@echo "=== Rust: fmt + clippy + test ==="
+	cd src/flavor-rs && cargo fmt --check && cargo clippy -- -D warnings && cargo test
+	@echo "=== Version sync ==="
+	python scripts/check_version_sync.py
+	@echo "=== ALL GATES PASSED ==="
+
 .PHONY: test
 test: ## Run Python tests
 	PYTHONUTF8=1 uv run pytest tests/

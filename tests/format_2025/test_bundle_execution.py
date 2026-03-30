@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from pathlib import Path
 import tempfile
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -38,7 +39,7 @@ class TestPSPFExecution:
             try:
                 Path(path).chmod(stat.S_IWRITE)
                 if callable(func):
-                    func(path)  # type: ignore[operator]
+                    func(path)
             except Exception:
                 pass
 
@@ -180,11 +181,11 @@ class TestBundleExecutorUnit:
     def _make_executor(
         self,
         command: str = "/usr/bin/python3",
-        slots: list | None = None,
-        execution_env: dict | None = None,
+        slots: list[dict[str, Any]] | None = None,
+        execution_env: dict[str, str] | None = None,
         primary_slot: int = 0,
     ) -> BundleExecutor:
-        metadata: dict = {
+        metadata: dict[str, Any] = {
             "package": {"name": "test-pkg", "version": "1.2.3"},
             "execution": {
                 "primary_slot": primary_slot,

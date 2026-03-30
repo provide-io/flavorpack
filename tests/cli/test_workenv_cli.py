@@ -23,7 +23,7 @@ def _make_pkg_entry(
     version: str = "1.0",
     size: int = 1024 * 1024 * 5,  # 5 MB
     modified: float = 1_700_000_000.0,
-) -> dict:
+) -> dict[str, object]:
     return {
         "id": pkg_id,
         "path": f"/cache/{pkg_id}",

@@ -200,7 +200,7 @@ class TestMMapPerformance:
 
             def worker(backend_type: int, worker_id: int, iterations: int = 100) -> None:
                 """Worker thread for concurrent access."""
-                backend = create_backend(backend_type, path)  # ty: ignore[invalid-argument-type]
+                backend = create_backend(backend_type, path)
                 backend.open(path)
 
                 start = time.perf_counter()

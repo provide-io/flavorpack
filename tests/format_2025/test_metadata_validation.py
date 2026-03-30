@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from flavor.psp.format_2025.slots import SlotMetadata
 from flavor.psp.format_2025.validation import extract_package_metadata
 from flavor.psp.metadata.validators import validate_metadata
 
@@ -256,12 +257,12 @@ class TestMetadataValidation:
 class TestBuildSpecValidation:
     """Tests for validate_spec, validate_slots, validate_key_config, validate_build_options."""
 
-    def _make_slot(self, tmp_path: object = None, **kwargs: object) -> object:
+    def _make_slot(self, tmp_path: Path | None = None, **kwargs: object) -> SlotMetadata:
         from flavor.psp.format_2025.slots import SlotMetadata
 
         # Create a real temp file for source path (validator checks existence)
         if tmp_path is not None:
-            src = tmp_path / "slot_src.txt"  # ty: ignore[unsupported-operator]
+            src = tmp_path / "slot_src.txt"
             src.write_text("x")
             source = str(src)
         else:
@@ -282,7 +283,7 @@ class TestBuildSpecValidation:
         defaults.update(kwargs)
         return SlotMetadata(**defaults)  # type: ignore[arg-type]
 
-    def test_valid_spec_no_errors(self, tmp_path: object) -> None:
+    def test_valid_spec_no_errors(self, tmp_path: Path) -> None:
         """A valid spec with metadata and slot returns no errors."""
         from flavor.psp.format_2025.spec import BuildSpec
         from flavor.psp.format_2025.validation import validate_spec

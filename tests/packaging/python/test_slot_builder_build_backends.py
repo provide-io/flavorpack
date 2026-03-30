@@ -108,7 +108,7 @@ class TestBundleBuildBackends:
             builder = self._make_builder(manifest_dir)
             mock_uv_exe = Path("/usr/bin/uv")
 
-            def fail_on_download(cmd: list, **kwargs: object) -> Mock:
+            def fail_on_download(cmd: list[str], **kwargs: object) -> Mock:
                 if "download" in cmd:
                     raise subprocess.CalledProcessError(1, cmd)
                 return Mock(returncode=0, stdout="")
