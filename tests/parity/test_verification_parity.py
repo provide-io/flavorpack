@@ -1,6 +1,3 @@
-# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
 """Cross-language parity tests for PSPF verification contracts.
 
 Tests the Python implementation of verification behaviours that must be
@@ -10,7 +7,6 @@ consistent across Python, Go and Rust launchers/readers.
 from __future__ import annotations
 
 import hashlib
-from pathlib import Path
 import struct
 import zlib
 
@@ -23,13 +19,6 @@ from flavor.psp.format_2025.constants import (
     TRAILER_START_MAGIC,
 )
 from flavor.psp.format_2025.index import PSPFIndex
-
-pytestmark = [
-    pytest.mark.cross_language,
-    pytest.mark.ci,
-    pytest.mark.security,
-    pytest.mark.adversarial,
-]
 
 
 # ---------------------------------------------------------------------------
@@ -164,14 +153,15 @@ def test_package_size_validation() -> None:
 @pytest.mark.parity_rust("PASS")
 def test_fail_closed_on_error() -> None:
     """verify_integrity returns valid=False (fail-closed) on any exception."""
-    from unittest.mock import Mock
+    from unittest.mock import MagicMock
 
     from flavor.psp.format_2025.reader import PSPFReader
 
-    reader = PSPFReader(Path("/nonexistent.psp"))
+    reader = MagicMock(spec=PSPFReader)
     # Make verify_magic_trailer raise so verify_integrity hits the except path
-    reader.verify_magic_trailer = Mock(side_effect=RuntimeError("forced error"))  # type: ignore[method-assign]
-    result = reader.verify_integrity()
+    reader.verify_magic_trailer.side_effect = RuntimeError("forced error")
+    # Call the *real* verify_integrity with the broken mock as self
+    result = PSPFReader.verify_integrity(reader)
 
     assert result["valid"] is False
     assert result["tamper_detected"] is True
