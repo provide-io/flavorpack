@@ -386,8 +386,8 @@ class TestVerifyIntegrityFailureBranches:
         assert result["valid"] is False
         assert result["tamper_detected"] is True
 
-    def test_outer_exception_standard_returns_valid(self, mock_test_package: Path) -> None:
-        """Outer exception on STANDARD → warns, returns valid=True, tamper=False."""
+    def test_outer_exception_standard_returns_invalid(self, mock_test_package: Path) -> None:
+        """Outer exception on STANDARD → warns, returns valid=False, tamper=True (fail-closed)."""
         verifier = self._verifier()
 
         with (
@@ -401,8 +401,8 @@ class TestVerifyIntegrityFailureBranches:
 
             result = verifier.verify_integrity(mock_test_package)
 
-        assert result["valid"] is True
-        assert result["tamper_detected"] is False
+        assert result["valid"] is False
+        assert result["tamper_detected"] is True
 
 
 # 🌶️📦🔚
