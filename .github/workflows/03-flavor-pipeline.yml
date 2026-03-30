@@ -288,11 +288,14 @@ jobs:
       - name: 📦 Install build tools
         shell: bash
         run: |
-          uv pip install --system build wheel setuptools
-      
+          uv venv .venv
+          uv pip install build wheel setuptools
+
       - name: 🎡 Build platform wheel
         shell: bash
-        run: .github/scripts/build-platform-wheel.sh "${{ matrix.python_platform }}"
+        run: |
+          source .venv/bin/activate 2>/dev/null || source .venv/Scripts/activate 2>/dev/null
+          .github/scripts/build-platform-wheel.sh "${{ matrix.python_platform }}"
       
       - name: 🔍 Validate wheel structure
         shell: bash
