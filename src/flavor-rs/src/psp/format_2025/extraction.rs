@@ -3,7 +3,7 @@
 //! This module handles the extraction of slots from PSPF packages,
 //! including single files, tarballs, and permission management.
 
-#![allow(warnings)]
+#![deny(warnings)]
 #![deny(clippy::all)]
 #![deny(clippy::pedantic)]
 #![allow(clippy::module_name_repetitions)]
@@ -333,8 +333,7 @@ pub fn extract_tarball(data: &[u8], dest_dir: &Path) -> Result<()> {
         // PathBuf::starts_with already handles ".." components in the joined path.
         if !dest_path.starts_with(dest_dir) {
             return Err(FlavorError::Generic(format!(
-                "tar entry {:?} escapes extraction directory",
-                path
+                "tar entry {path:?} escapes extraction directory"
             )));
         }
 

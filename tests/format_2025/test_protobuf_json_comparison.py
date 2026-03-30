@@ -7,7 +7,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 import json
+from typing import Any
 
 from google.protobuf import json_format
 
@@ -21,7 +23,7 @@ from flavor.psp.format_2025.generated.modules import (
 )
 
 
-def _pack_ops(ops: list[int]) -> int:
+def _pack_ops(ops: Sequence[int]) -> int:
     """Pack up to eight operations into a 64-bit int."""
     packed = 0
     for i, op in enumerate(ops[:8]):
@@ -226,7 +228,7 @@ class TestFormatComparison:
     def test_old_format_structure(self) -> None:
         """Verify old format structure"""
 
-        old_format = {
+        old_format: dict[str, Any] = {
             "format_version": "2024.1",
             "package": {"name": "test", "version": "1.0.0"},
             "slots": [

@@ -24,7 +24,7 @@ FlavorPack's native launchers and builders require Go and Rust toolchains:
 
 **Rust Requirements:**
 
-FlavorPack requires Rust 1.85+ (edition 2024):
+FlavorPack requires Rust 1.86+ (edition 2024):
 
 ```bash
 # Install Rust via rustup
@@ -50,8 +50,8 @@ See [Rust's official installation guide](https://www.rust-lang.org/tools/install
 |-----------|---------|--------------|
 | Python | 3.11+ | Running FlavorPack |
 | UV | 0.8.13+ | Package management |
-| Go | 1.23+ | Building Go helpers |
-| Rust | 1.85+ | Building Rust helpers (edition 2024) |
+| Go | 1.26+ | Building Go helpers |
+| Rust | 1.86+ | Building Rust helpers (edition 2024) |
 | Git | 2.25+ | Cloning repository |
 | Make | 3.81+ | Build automation |
 
@@ -141,8 +141,8 @@ For VS Code users with the Remote-Containers extension.
 
 The devcontainer includes:
 - Python 3.11+
-- Go 1.23+
-- Rust 1.85+
+- Go 1.26+
+- Rust 1.86+
 - All required build tools
 - Pre-configured environment
 
@@ -192,7 +192,7 @@ The system automatically selects appropriate builder/launcher combinations based
 === "Rust Components"
 
     ```bash
-    cd src/flavor-rust
+    cd src/flavor-rs
 
     # Build launcher
     cargo build --release --bin flavor-rs-launcher
@@ -306,7 +306,7 @@ uv run pytest -m security
 
 ```bash
 # Rust code must compile with strict mode
-cd src/flavor-rust
+cd src/flavor-rs
 cargo build --release
 
 # Type checking with mypy
@@ -417,7 +417,7 @@ The project has a polyglot architecture with three main layers:
 ### 2. Native Helpers
 
 - `src/flavor-go/` - Go builder and launcher implementations
-- `src/flavor-rust/` - Rust builder and launcher implementations
+- `src/flavor-rs/` - Rust builder and launcher implementations
 - Built binaries placed in `dist/bin/` and embedded during packaging
 
 ### 3. PSPF Package Structure

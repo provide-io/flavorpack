@@ -415,8 +415,8 @@ class TestPSPFCore:
         index = reader.read_index()
         assert index.slot_count == 0
 
-        metadata = reader.read_metadata()
-        assert metadata["package"]["name"] == "empty"
+        read_meta = reader.read_metadata()
+        assert read_meta["package"]["name"] == "empty"
 
 
 # 🌶️📦🔚

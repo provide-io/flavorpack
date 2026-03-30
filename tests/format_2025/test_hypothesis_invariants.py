@@ -166,12 +166,12 @@ class TestValidateMetadataHypothesis:
         name=st.text(
             min_size=1,
             max_size=50,
-            alphabet=st.characters(whitelist_categories=("Ll", "Lu", "Nd"), whitelist_characters="-_"),
+            alphabet=st.characters(whitelist_categories=["Ll", "Lu", "Nd"], whitelist_characters="-_"),
         ),
         version=st.text(
             min_size=1,
             max_size=20,
-            alphabet=st.characters(whitelist_categories=("Nd",), whitelist_characters="."),
+            alphabet=st.characters(whitelist_categories=["Nd"], whitelist_characters="."),
         ),
     )
     def test_valid_metadata_always_passes(self, name: str, version: str) -> None:
@@ -188,7 +188,7 @@ class TestValidateMetadataHypothesis:
         path=st.text(
             min_size=1,
             max_size=50,
-            alphabet=st.characters(whitelist_categories=("Ll",), whitelist_characters="/"),
+            alphabet=st.characters(whitelist_categories=["Ll"], whitelist_characters="/"),
         )
     )
     def test_workenv_dir_path_always_valid_with_prefix(self, path: str) -> None:

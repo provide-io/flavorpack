@@ -13,8 +13,8 @@ import tempfile
 
 import pytest
 
+from flavor.config.defaults import ACCESS_AUTO
 from flavor.psp.format_2025.backends import (
-    ACCESS_AUTO,
     FileBackend,
     HybridBackend,
     MMapBackend,
@@ -97,8 +97,8 @@ class TestTasterMMapBackends:
         start = time.perf_counter()
         # Same random access pattern
         for offset in [0, 1024 * 1024, 5 * 1024 * 1024, 9 * 1024 * 1024]:
-            data = file_backend.read_at(offset, 4096)
-            assert len(data) == 4096
+            file_data = file_backend.read_at(offset, 4096)
+            assert len(file_data) == 4096
         file_time = time.perf_counter() - start
 
         file_backend.close()

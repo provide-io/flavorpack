@@ -186,7 +186,8 @@ class PackagingOrchestrator:
             launcher_type = self._detect_launcher_type(launcher_path)
             logger.info(f"Detected launcher type: {launcher_type}")
 
-            is_windows()
+            windows = is_windows()
+            uv_target = "Scripts/uv.exe" if windows else "bin/uv"
             metadata = create_python_builder_metadata(self.package_name, self.version, self.build_config)
             metadata = validate_metadata_dict(metadata)
 
@@ -200,7 +201,7 @@ class PackagingOrchestrator:
                     operations="gzip",
                     purpose="tool",
                     lifecycle="runtime",
-                    target="bin/uv",
+                    target=uv_target,
                     permissions="0700",
                 )
                 .add_slot(

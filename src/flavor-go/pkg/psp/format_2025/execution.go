@@ -441,10 +441,10 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 				for i, env := range setupExec.Env {
 					if strings.HasPrefix(env, "PATH=") {
 						binDir := "bin"
-				if runtime.GOOS == "windows" {
-					binDir = "Scripts"
-				}
-				setupExec.Env[i] = fmt.Sprintf("PATH=%s%s%s", filepath.Join(workenvDir, binDir), string(os.PathListSeparator), strings.TrimPrefix(env, "PATH="))
+						if runtime.GOOS == "windows" {
+							binDir = "Scripts"
+						}
+						setupExec.Env[i] = fmt.Sprintf("PATH=%s%s%s", filepath.Join(workenvDir, binDir), string(os.PathListSeparator), strings.TrimPrefix(env, "PATH="))
 						break
 					}
 				}

@@ -5,6 +5,7 @@
 
 """Test platform detection utilities."""
 
+from collections.abc import Callable
 import platform
 from unittest.mock import MagicMock, patch
 
@@ -239,10 +240,16 @@ class TestPlatformDetection:
         """Test CPU type detection with known values."""
         from provide.foundation.platform.detection import get_cpu_type as foundation_get_cpu_type
 
-        test_cases = [
-            ("Apple M1 Pro", lambda cpu: "Apple" in cpu and "M1" in cpu),
-            ("Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz", lambda cpu: "Intel" in cpu and "Core" in cpu),
-            ("AMD Ryzen 9 5900X 12-Core Processor", lambda cpu: "AMD" in cpu and "Ryzen" in cpu),
+        test_cases: list[tuple[str, Callable[[str | None], bool]]] = [
+            ("Apple M1 Pro", lambda cpu: cpu is not None and "Apple" in cpu and "M1" in cpu),
+            (
+                "Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz",
+                lambda cpu: cpu is not None and "Intel" in cpu and "Core" in cpu,
+            ),
+            (
+                "AMD Ryzen 9 5900X 12-Core Processor",
+                lambda cpu: cpu is not None and "AMD" in cpu and "Ryzen" in cpu,
+            ),
             ("arm", lambda cpu: cpu == "arm"),  # Generic ARM
             ("", lambda cpu: cpu is None or cpu == ""),  # Empty processor info
         ]

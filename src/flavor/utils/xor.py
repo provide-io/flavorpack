@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""XOR encoding/decoding for lightweight data obfuscation."""
 
 from __future__ import annotations
 

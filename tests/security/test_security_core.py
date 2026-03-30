@@ -30,11 +30,11 @@ class TestValidationLevel:
 
     def test_validation_levels_exist(self) -> None:
         """Test all validation levels are defined."""
-        assert ValidationLevel.STRICT == 0
-        assert ValidationLevel.STANDARD == 1
-        assert ValidationLevel.RELAXED == 2
-        assert ValidationLevel.MINIMAL == 3
-        assert ValidationLevel.NONE == 4
+        assert ValidationLevel.STRICT.value == 0
+        assert ValidationLevel.STANDARD.value == 1
+        assert ValidationLevel.RELAXED.value == 2
+        assert ValidationLevel.MINIMAL.value == 3
+        assert ValidationLevel.NONE.value == 4
 
 
 class TestGetValidationLevel:

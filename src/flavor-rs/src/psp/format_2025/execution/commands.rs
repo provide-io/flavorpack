@@ -5,7 +5,7 @@ use super::super::metadata::PackageInfo;
 use super::placeholders::substitute_placeholders;
 use crate::exceptions::{FlavorError, Result};
 use glob::glob;
-use log::{debug, info, warn};
+use log::{debug, info};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::env;
@@ -282,7 +282,13 @@ pub fn execute_command(
     }
 
     let part_refs: Vec<&str> = parts.iter().map(|s| s.as_str()).collect();
-    run_command(part_refs[0], &part_refs[1..], workenv_dir, user_cwd, exec_env)
+    run_command(
+        part_refs[0],
+        &part_refs[1..],
+        workenv_dir,
+        user_cwd,
+        exec_env,
+    )
 }
 
 /// Run a command with arguments
@@ -314,17 +320,12 @@ pub fn run_command(
         command.env(key, value);
     }
 
-    // Prepend workenv/bin to PATH
+    // Prepend workenv bin directory to PATH (platform-aware)
     if let Ok(path) = env::var("PATH") {
-        let workenv_string;
-        let workenv_str = if let Some(s) = workenv_dir.to_str() {
-            s
-        } else {
-            warn!("Work environment path contains non-UTF8 characters, using lossy conversion");
-            workenv_string = workenv_dir.to_string_lossy().into_owned();
-            &workenv_string
-        };
-        let new_path = format!("{workenv_str}/bin:{path}");
+        let bin_dir = if cfg!(windows) { "Scripts" } else { "bin" };
+        let sep = if cfg!(windows) { ";" } else { ":" };
+        let bin_path = workenv_dir.join(bin_dir);
+        let new_path = format!("{}{sep}{path}", bin_path.display());
         command.env("PATH", new_path);
     }
 
