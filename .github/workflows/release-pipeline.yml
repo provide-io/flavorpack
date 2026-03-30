@@ -321,11 +321,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Update VERSION file
+          # Update VERSION file if changed
           echo "${{ needs.prepare.outputs.version }}" > VERSION
           git add VERSION
-          git commit -m "🚀 Release v${{ needs.prepare.outputs.version }}"
-          
+          git diff --cached --quiet || git commit -m "🚀 Release v${{ needs.prepare.outputs.version }}"
+
           # Create and push tag
           git tag -a "${{ needs.prepare.outputs.version_tag }}" \
             -m "Release ${{ needs.prepare.outputs.version }}"
