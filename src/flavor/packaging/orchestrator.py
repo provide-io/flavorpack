@@ -361,8 +361,15 @@ class PackagingOrchestrator:
                 launcher_executable.as_posix(),
             ]
 
-        logger.info("Building package...")
-        run(build_cmd_args, check=True, capture_output=True, cwd=self.manifest_dir)
+            if self.key_seed:
+                build_cmd_args.extend(["--key-seed", self.key_seed])
+            elif self.package_integrity_key_path:
+                build_cmd_args.extend(["--private-key", self.package_integrity_key_path])
+                if self.public_key_path:
+                    build_cmd_args.extend(["--public-key", self.public_key_path])
+
+            logger.info("Building package...")
+            run(build_cmd_args, check=True, capture_output=True)
 
 
 # 🌶️📦🔚
