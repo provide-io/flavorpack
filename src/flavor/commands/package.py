@@ -197,7 +197,7 @@ def _verify_artifact(artifact: Path, quiet: bool) -> None:
         if result.get("valid", False):
             log.info("Package verified successfully", artifact=str(artifact))
             if not quiet:
-                pout("  ✅ Package signature verified")
+                pout("  ✅ Package integrity verified")
         else:
             log.error(
                 "Package verification failed",
