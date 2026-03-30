@@ -53,8 +53,8 @@ jobs:
         with:
           persist-credentials: false
       
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v6
+      - name: 📦 Setup uv + Python
+        uses: astral-sh/setup-uv@v8
         with:
           python-version: '3.11'
 
