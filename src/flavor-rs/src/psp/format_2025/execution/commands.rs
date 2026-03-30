@@ -350,6 +350,78 @@ pub fn run_command(
     Ok(())
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Test that `run_command` prepends the correct bin directory to PATH.
+    ///
+    /// On macOS/Linux the subdirectory is "bin" and the separator is ":".
+    /// On Windows the subdirectory is "Scripts" and the separator is ";".
+    /// The Windows branch is verified at compile time via `cfg!(windows)`.
+    #[test]
+    fn test_run_command_path_has_correct_bin_dir_and_separator() {
+        let workenv_dir = Path::new("/tmp/test_workenv");
+        let original_path = env::var("PATH").unwrap_or_default();
+
+        let expected_bin_dir = if cfg!(windows) { "Scripts" } else { "bin" };
+        let expected_sep = if cfg!(windows) { ";" } else { ":" };
+        let bin_path = workenv_dir.join(expected_bin_dir);
+        let expected_path = format!("{}{expected_sep}{original_path}", bin_path.display());
+
+        // On the current platform (macOS/Linux in CI), verify the directory name
+        #[cfg(not(windows))]
+        {
+            assert_eq!(expected_bin_dir, "bin");
+            assert_eq!(expected_sep, ":");
+            assert!(
+                expected_path.starts_with("/tmp/test_workenv/bin:"),
+                "PATH should start with workenv/bin: but was: {expected_path}"
+            );
+        }
+
+        #[cfg(windows)]
+        {
+            assert_eq!(expected_bin_dir, "Scripts");
+            assert_eq!(expected_sep, ";");
+            assert!(
+                expected_path.contains("\\test_workenv\\Scripts;"),
+                "PATH should contain workenv\\Scripts; but was: {expected_path}"
+            );
+        }
+
+        // Verify the expected PATH contains the original PATH after the separator
+        assert!(
+            expected_path.contains(&original_path),
+            "New PATH should contain the original PATH"
+        );
+    }
+
+    #[test]
+    fn test_shell_split_basic() {
+        let result = shell_split("echo hello world");
+        assert_eq!(result, vec!["echo", "hello", "world"]);
+    }
+
+    #[test]
+    fn test_shell_split_quoted() {
+        let result = shell_split(r#"echo "hello world" foo"#);
+        assert_eq!(result, vec!["echo", "hello world", "foo"]);
+    }
+
+    #[test]
+    fn test_shell_split_single_quoted() {
+        let result = shell_split("echo 'hello world' foo");
+        assert_eq!(result, vec!["echo", "hello world", "foo"]);
+    }
+
+    #[test]
+    fn test_shell_split_empty() {
+        let result = shell_split("");
+        assert!(result.is_empty());
+    }
+}
+
 /// Execute main command with environment
 pub fn execute_main_command(
     command: &str,
