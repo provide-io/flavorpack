@@ -1,6 +1,3 @@
-# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
 """Parity test framework -- generates cross-language behavior reports."""
 
 from __future__ import annotations
@@ -10,6 +7,15 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+
+
+def pytest_addoption(parser: Any) -> None:
+    parser.addoption(
+        "--parity-report",
+        action="store_true",
+        default=False,
+        help="Generate cross-language parity Markdown report",
+    )
 
 
 def pytest_configure(config: Any) -> None:
