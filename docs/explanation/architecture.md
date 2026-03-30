@@ -359,14 +359,14 @@ Every implementation — Python, Go, and Rust — must perform the same sequence
 
 ### Verification Matrix
 
-| Check                               | Python | Go  | Rust |
-| ----------------------------------- | ------ | --- | ---- |
-| Magic trailer present and valid     | ✅     | ✅  | ✅   |
-| Index checksum (SHA-256)            | ✅     | ✅  | ✅   |
-| Metadata checksum (SHA-256)         | ✅     | ✅  | ✅   |
-| Per-slot checksums (SHA-256)        | ✅     | ✅  | ✅   |
-| Ed25519 signature over index        | ✅     | ✅  | ✅   |
-| Package size matches declared value | ✅     | ✅  | ✅   |
+| Check | Python | Go | Rust |
+|---|---|---|---|
+| Magic trailer present and valid | ✅ | ✅ | ✅ |
+| Index checksum (SHA-256) | ✅ | ✅ | ✅ |
+| Metadata checksum (SHA-256) | ✅ | ✅ | ✅ |
+| Per-slot checksums (SHA-256) | ✅ | ✅ | ✅ |
+| Ed25519 signature over index | ✅ | ✅ | ✅ |
+| Package size matches declared value | ✅ | ✅ | ✅ |
 
 ### Fail-Closed Requirement
 
@@ -376,10 +376,10 @@ All three implementations must be fail-closed: if an exception or unexpected err
 
 Launchers extract package contents into a per-platform cache directory:
 
-| Platform      | Default path            | Override variable                      |
-| ------------- | ----------------------- | -------------------------------------- |
-| Linux / macOS | `~/.cache/flavor`       | `XDG_CACHE_HOME` or `FLAVOR_CACHE_DIR` |
-| Windows       | `%LOCALAPPDATA%\flavor` | `FLAVOR_CACHE_DIR`                     |
+| Platform | Default path | Override variable |
+|---|---|---|
+| Linux / macOS | `~/.cache/flavor` | `XDG_CACHE_HOME` or `FLAVOR_CACHE_DIR` |
+| Windows | `%LOCALAPPDATA%\flavor` | `FLAVOR_CACHE_DIR` |
 
 Both override variables take precedence over the platform default when set.
 
