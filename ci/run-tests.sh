@@ -52,6 +52,11 @@ if [ -n "$EXTRA_ARGS" ]; then
     TEST_CMD+=("${extra_args_array[@]}")
 fi
 
+# Add extra args (e.g. --parity-report)
+if [ -n "$EXTRA_ARGS" ]; then
+    TEST_CMD="$TEST_CMD $EXTRA_ARGS"
+fi
+
 if [ "$MARKER" = "integration" ] || [ "$MARKER" = "security" ] || [ "$MARKER" = "cross_language" ] || [[ "$PATH_FILTER" == "tests/format_2025" ]]; then
     export FLAVOR_REQUIRE_HELPERS=1
 fi
