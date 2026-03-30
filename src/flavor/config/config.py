@@ -149,7 +149,7 @@ class MetadataConfig(RuntimeConfig):
 
 
 @define(frozen=True, kw_only=True)
-class FlavorConfig(BaseConfig):
+class FlavorConfig(BaseConfig):  # ty: ignore[invalid-frozen-dataclass-subclass]
     """Top-level structured configuration for the `[tool.flavor]` section."""
 
     name: str = config_field(description="Package name", env_var="FLAVOR_PACKAGE_NAME")

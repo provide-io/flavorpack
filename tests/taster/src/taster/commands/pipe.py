@@ -28,7 +28,7 @@ def pipe_command() -> None:
 @pipe_command.command("stdin")
 @click.option("--format", "input_format", type=click.Choice(["raw", "json", "base64", "hex"]), default="raw")
 @click.option("--output", "destination", type=click.Choice(["stdout", "stderr", "file"]), default="stdout")
-@click.option("--file", "file_path", type=click.Path(path_type=Path), help="Output file path")
+@click.option("--file", "file_path", type=click.Path(path_type=Path), help="Output file path")  # ty: ignore[invalid-argument-type]
 @click.option(
     "--transform",
     type=click.Choice(["upper", "lower", "reverse", "hash", "none"]),

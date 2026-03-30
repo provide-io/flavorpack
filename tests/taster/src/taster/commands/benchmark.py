@@ -55,11 +55,11 @@ def _make_worker(
                 test_bundle = tmpdir / "test.psp"
                 builder.build(
                     output_path=test_bundle,
-                    metadata={
+                    metadata={  # ty: ignore[unknown-argument]
                         "format": "PSPF/2025",
                         "package": {"name": "test", "version": "1.0"},
                     },
-                    slots=[],
+                    slots=[],  # ty: ignore[unknown-argument]
                 )
 
             while not stop_event.is_set():
@@ -69,14 +69,14 @@ def _make_worker(
                         bundle_path = tmpdir / f"worker_{worker_id}_{ops_count}.psp"
                         builder.build(
                             output_path=bundle_path,
-                            metadata={
+                            metadata={  # ty: ignore[unknown-argument]
                                 "format": "PSPF/2025",
                                 "package": {
                                     "name": f"test_{worker_id}",
                                     "version": "1.0",
                                 },
                             },
-                            slots=[],
+                            slots=[],  # ty: ignore[unknown-argument]
                         )
                         bundle_path.unlink()
                     else:
@@ -257,11 +257,11 @@ def speed_test(iterations: int, warmup: int) -> None:
             bundle_path = tmpdir / "warmup.psp"
             builder.build(
                 output_path=bundle_path,
-                metadata={
+                metadata={  # ty: ignore[unknown-argument]
                     "format": "PSPF/2025",
                     "package": {"name": "test", "version": "1.0"},
                 },
-                slots=[],
+                slots=[],  # ty: ignore[unknown-argument]
             )
             bundle_path.unlink()
 
@@ -275,11 +275,11 @@ def speed_test(iterations: int, warmup: int) -> None:
             bundle_path = tmpdir / f"bench_{i}.psp"
             builder.build(
                 output_path=bundle_path,
-                metadata={
+                metadata={  # ty: ignore[unknown-argument]
                     "format": "PSPF/2025",
                     "package": {"name": "test", "version": "1.0"},
                 },
-                slots=[],
+                slots=[],  # ty: ignore[unknown-argument]
             )
 
             build_time = time.perf_counter() - start

@@ -1,7 +1,5 @@
 package format_2025
 
-// Cache invalidation: Force rebuild to include Windows spawn mode fix (2025-10-31)
-
 import (
 	"errors"
 	"fmt"
@@ -238,7 +236,7 @@ func execBundleReplace(exePath string, args []string, userCwd string, logger hcl
 	}
 
 	argv := cmd.Args
-	if argv == nil || len(argv) == 0 {
+	if len(argv) == 0 {
 		logger.Debug("Command args are nil/empty, using binary as sole argument")
 		argv = []string{binary}
 	}

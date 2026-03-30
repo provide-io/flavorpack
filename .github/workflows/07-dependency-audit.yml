@@ -46,10 +46,10 @@ jobs:
       update_count: ${{ steps.check.outputs.update_count }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
       
@@ -223,7 +223,7 @@ jobs:
       
       - name: 📤 Upload Python Reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: python-dependency-reports
           path: |
@@ -240,10 +240,10 @@ jobs:
       has_updates: ${{ steps.check.outputs.has_updates }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: 🐹 Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: "${{ vars.GO_VERSION }}"
       
@@ -376,7 +376,7 @@ jobs:
       
       - name: 📤 Upload Go Reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: go-dependency-reports
           path: |
@@ -392,7 +392,7 @@ jobs:
       has_updates: ${{ steps.check.outputs.has_updates }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: 🦀 Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -535,7 +535,7 @@ jobs:
       
       - name: 📤 Upload Rust Reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: rust-dependency-reports
           path: |
@@ -551,10 +551,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: 📥 Download all reports
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: dependency-reports
       
@@ -725,7 +725,7 @@ jobs:
       
       - name: 🔄 Create Update PR
         if: inputs.auto_pr == true && (needs.python-deps.outputs.has_updates == 'true' || needs.go-deps.outputs.has_updates == 'true' || needs.rust-deps.outputs.has_updates == 'true')
-        uses: peter-evans/create-pull-request@v5
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "chore: Update dependencies"
@@ -752,7 +752,7 @@ jobs:
           delete-branch: true
       
       - name: 📤 Upload Summary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dependency-summary
           path: dependency-summary.json

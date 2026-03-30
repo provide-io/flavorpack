@@ -7,8 +7,8 @@
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
+import sys
 from unittest.mock import Mock, call, patch
 
 import pytest

@@ -32,7 +32,7 @@ def shell_command() -> None:
     try:
         import flavor
 
-        namespace["flavor"] = flavor
+        namespace["flavor"] = flavor  # ty: ignore[invalid-assignment]
     except ImportError:
         pout("⚠️ Flavor module not available")
 

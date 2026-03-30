@@ -76,7 +76,7 @@ def collect_test_metadata(output_dir: Path) -> None:
     # Test summary from pytest report
     test_report = Path("test-report.json")
     if test_report.exists():
-        with open(test_report) as f:
+        with test_report.open() as f:
             data = json.load(f)
 
         summary = {
@@ -102,7 +102,7 @@ def collect_test_metadata(output_dir: Path) -> None:
     # Coverage summary
     coverage_report = Path("coverage.json")
     if coverage_report.exists():
-        with open(coverage_report) as f:
+        with coverage_report.open() as f:
             data = json.load(f)
 
         totals = data.get("totals", {})
@@ -131,11 +131,35 @@ def collect_test_metadata(output_dir: Path) -> None:
     (output_dir / "environment.json").write_text(json.dumps(env_vars, indent=2))
 
 
+def _merge_platform_test_files(test_files: list[Path]) -> dict[str, Any]:
+    """Merge results from all test files for a single platform."""
+    platform_data: dict[str, Any] = {}
+    for test_file in test_files:
+        try:
+            with test_file.open() as f:
+                data = json.load(f)
+                # Merge data
+                if not platform_data:
+                    platform_data = data
+                else:
+                    # Merge test counts
+                    if "summary" in data:
+                        if "summary" not in platform_data:
+                            platform_data["summary"] = {}
+                        for key in ["total", "passed", "failed", "skipped"]:
+                            platform_data["summary"][key] = platform_data["summary"].get(key, 0) + data[
+                                "summary"
+                            ].get(key, 0)
+        except Exception as e:
+            print(f"    ⚠️ Error reading {test_file}: {e}")
+    return platform_data
+
+
 def combine_test_results(input_dir: Path, output_file: Path) -> None:
     """Combine test results from multiple platforms."""
     print(f"📋 Combining test results from {input_dir}")
 
-    combined = {
+    combined: dict[str, Any] = {
         "timestamp": datetime.now(UTC).isoformat(),
         "platforms": {},
         "summary": {
@@ -162,26 +186,7 @@ def combine_test_results(input_dir: Path, output_file: Path) -> None:
         test_files = list(input_dir.glob(f"**/{pattern}"))
 
         if test_files:
-            # Merge results from all test files for this platform
-            platform_data = {}
-            for test_file in test_files:
-                try:
-                    with open(test_file) as f:
-                        data = json.load(f)
-                        # Merge data
-                        if not platform_data:
-                            platform_data = data
-                        else:
-                            # Merge test counts
-                            if "summary" in data:
-                                if "summary" not in platform_data:
-                                    platform_data["summary"] = {}
-                                for key in ["total", "passed", "failed", "skipped"]:
-                                    platform_data["summary"][key] = platform_data["summary"].get(
-                                        key, 0
-                                    ) + data["summary"].get(key, 0)
-                except Exception as e:
-                    print(f"    ⚠️ Error reading {test_file}: {e}")
+            platform_data = _merge_platform_test_files(test_files)
 
             if platform_data:
                 combined["platforms"][platform_name] = platform_data

@@ -30,7 +30,7 @@ jobs:
       flavor_run_id: ${{ steps.flavor.outputs.run_id }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 🔧 Ensure gh CLI available
         run: type gh >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq gh)
@@ -55,7 +55,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
       - name: 📥 Download Flavor PSP artifacts
-        uses: dawidd6/action-download-artifact@v6
+        uses: dawidd6/action-download-artifact@v19
         with:
           workflow: 03-flavor-pipeline.yml
           run_id: ${{ steps.flavor.outputs.run_id }}
@@ -71,14 +71,14 @@ jobs:
           ls -la flavor-psp/
       
       - name: 📥 Download helper artifacts
-        uses: dawidd6/action-download-artifact@v6
+        uses: dawidd6/action-download-artifact@v19
         with:
           workflow: 01-helper-prep.yml
           name: flavor-helpers-${{ steps.version.outputs.version }}-all
           path: ./helpers-dist
 
       - name: 📤 Upload Flavor PSP for test jobs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: flavor-psp-${{ github.run_id }}
           path: |
@@ -117,16 +117,16 @@ jobs:
       matrix: ${{ fromJson(needs.setup.outputs.test_matrix) }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 📥 Download Flavor PSP
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: flavor-psp-${{ github.run_id }}
           path: ./flavor-psp
       
       - name: 📥 Download helpers
-        uses: dawidd6/action-download-artifact@v6
+        uses: dawidd6/action-download-artifact@v19
         with:
           workflow: 01-helper-prep.yml
           name: flavor-helpers-${{ needs.setup.outputs.version }}-all
@@ -235,7 +235,7 @@ jobs:
           EOF
 
       - name: 📤 Upload taster package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: taster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: |
@@ -244,7 +244,7 @@ jobs:
 
       - name: 📤 Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: taster-results-${{ matrix.platform }}-${{ github.run_id }}
           path: test-results/
@@ -312,16 +312,16 @@ jobs:
       PYTHONUTF8: "1"
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 📥 Download all test results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: taster-results-*
           path: all-results
 
       - name: 📥 Download helpers
-        uses: dawidd6/action-download-artifact@v6
+        uses: dawidd6/action-download-artifact@v19
         with:
           workflow: 01-helper-prep.yml
           name: flavor-helpers-${{ needs.setup.outputs.version }}-all
@@ -351,7 +351,7 @@ jobs:
           ls -la src/flavor/helpers/bin/ || echo "  (empty)"
 
       - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
           cache: 'pip'
@@ -590,10 +590,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 📥 Download all test results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: taster-results-*
           path: test-results

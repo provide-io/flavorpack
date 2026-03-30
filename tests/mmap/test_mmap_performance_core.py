@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+import contextlib
 from contextlib import contextmanager
 import gc
 import os
@@ -37,10 +38,8 @@ def _safe_unlink(path: Path) -> None:
     except PermissionError:
         if sys.platform == "win32":
             gc.collect()
-            try:
+            with contextlib.suppress(PermissionError):
                 path.unlink(missing_ok=True)
-            except PermissionError:
-                pass  # Best-effort; temp file will be cleaned on next run
         else:
             raise
 
@@ -203,7 +202,7 @@ class TestMMapPerformance:
 
             def worker(backend_type: str, worker_id: int, iterations: int = 100) -> None:
                 """Worker thread for concurrent access."""
-                backend = create_backend(backend_type, path)
+                backend = create_backend(backend_type, path)  # ty: ignore[invalid-argument-type]
                 backend.open(path)
 
                 start = time.perf_counter()

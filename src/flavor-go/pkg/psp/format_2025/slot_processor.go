@@ -123,7 +123,7 @@ func mapLifecycleToUint8(lifecycle string) uint8 {
 	// Retention-based
 	case "cache":
 		return 4
-	case "temp":
+	case "temporary":
 		return 5
 	// Access-based
 	case "lazy":

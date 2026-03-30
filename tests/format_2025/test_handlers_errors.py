@@ -129,7 +129,7 @@ class TestErrorPaths:
         # Patch to simulate the warning path
         with patch("flavor.psp.format_2025.handlers.logger") as mock_logger:
             # Call with a mock ArchiveOperation that will fall through
-            result = _apply_single_operation(data, Mock(spec=ArchiveOperation), compression_level=6)
+            result = _apply_single_operation(data, Mock(spec=ArchiveOperation), compression_level=6)  # ty: ignore[invalid-argument-type]
 
             # Should return data unchanged and log warning
             assert result == data

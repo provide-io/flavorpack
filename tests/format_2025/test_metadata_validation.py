@@ -259,7 +259,7 @@ class TestBuildSpecValidation:
 
         # Create a real temp file for source path (validator checks existence)
         if tmp_path is not None:
-            src = tmp_path / "slot_src.txt"
+            src = tmp_path / "slot_src.txt"  # ty: ignore[unsupported-operator]
             src.write_text("x")
             source = str(src)
         else:
@@ -288,7 +288,7 @@ class TestBuildSpecValidation:
         slot = self._make_slot(tmp_path=tmp_path)
         spec = BuildSpec(
             metadata={"package": {"name": "mypkg"}},
-            slots=[slot],
+            slots=[slot],  # ty: ignore[invalid-argument-type]
         )
         errors = validate_spec(spec)
         assert errors == []
@@ -334,7 +334,7 @@ class TestBuildSpecValidation:
 
         slot0a = self._make_slot(index=0, id="a")
         slot0b = self._make_slot(index=0, id="b")
-        errors = validate_slots([slot0a, slot0b])
+        errors = validate_slots([slot0a, slot0b])  # ty: ignore[invalid-argument-type]
         assert any("duplicate" in e.lower() or "🔢" in e for e in errors)
 
     def test_validate_slots_duplicate_name(self) -> None:
@@ -343,7 +343,7 @@ class TestBuildSpecValidation:
 
         slot0 = self._make_slot(index=0, id="same")
         slot1 = self._make_slot(index=1, id="same")
-        errors = validate_slots([slot0, slot1])
+        errors = validate_slots([slot0, slot1])  # ty: ignore[invalid-argument-type]
         assert any("duplicate" in e.lower() or "📝" in e for e in errors)
 
     def test_validate_key_config_both_keys_required(self) -> None:

@@ -15,11 +15,17 @@ import tempfile
 from typing import TYPE_CHECKING
 
 from cryptography.hazmat.primitives.asymmetric import ed25519
+from hypothesis import HealthCheck, settings
 import provide.testkit  # noqa: F401 - Installs setproctitle blocker early
 from provide.testkit.logger import reset_foundation_setup_for_testing
 import pytest
 
 from flavor.psp.format_2025.pspf_builder import PSPFBuilder
+
+# Suppress differing_executors health check globally — mutmut runs hypothesis
+# tests from multiple worker processes which triggers this false positive.
+settings.register_profile("mutmut-safe", suppress_health_check=[HealthCheck.differing_executors])
+settings.load_profile("mutmut-safe")
 
 if TYPE_CHECKING:
     from flavor.psp.format_2025 import SlotMetadata
@@ -349,7 +355,7 @@ def test_slots(temp_dir: Path, test_builder: PSPFBuilder) -> list[SlotMetadata]:
             checksum=hashlib.sha256(temp_data).hexdigest(),
             operations="none",
             purpose="payload",
-            lifecycle="temp",
+            lifecycle="temporary",
         )
     )
 
