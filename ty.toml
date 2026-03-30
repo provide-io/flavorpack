@@ -1,5 +1,0 @@
-# ty type checker configuration
-# Disable warnings about mypy's `# type: ignore` comments — mypy and ty
-# coexist in pre-commit and each has its own suppression syntax.
-[rules]
-unused-type-ignore-comment = "ignore"
