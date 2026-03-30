@@ -48,18 +48,15 @@ jobs:
         with:
           fetch-depth: 0  # Full history for better analysis
       
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v6
+      - name: 📦 Setup uv + Python
+        uses: astral-sh/setup-uv@v8
         with:
           python-version: '3.11'
-          cache: 'pip'
-      
+
       - name: 📦 Install Quality Tools
         run: |
-          python -m venv quality-env
-          source quality-env/bin/activate
-          pip install --upgrade pip
-          pip install \
+          uv sync
+          uv pip install \
             ruff \
             mypy \
             bandit[toml] \
@@ -79,15 +76,12 @@ jobs:
             vulture \
             safety \
             pip-audit
-          
-          # Install project dependencies for better type checking
-          pip install -e ".[dev,test]"
       
       - name: 🎨 Code Formatting Check
         id: formatting
         continue-on-error: true
         run: |
-          source quality-env/bin/activate
+          source .venv/bin/activate
           echo "## 🎨 Code Formatting" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
@@ -117,7 +111,7 @@ jobs:
         id: linting
         continue-on-error: true
         run: |
-          source quality-env/bin/activate
+          source .venv/bin/activate
           echo "## 🔍 Linting Analysis" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
@@ -167,7 +161,7 @@ jobs:
         id: type-checking
         continue-on-error: true
         run: |
-          source quality-env/bin/activate
+          source .venv/bin/activate
           echo "## 🔒 Type Checking" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
@@ -205,7 +199,7 @@ jobs:
         id: complexity
         continue-on-error: true
         run: |
-          source quality-env/bin/activate
+          source .venv/bin/activate
           echo "## 📊 Code Complexity" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
@@ -251,7 +245,7 @@ jobs:
         id: documentation
         continue-on-error: true
         run: |
-          source quality-env/bin/activate
+          source .venv/bin/activate
           echo "## 📝 Documentation Quality" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
@@ -302,7 +296,7 @@ jobs:
         id: dead-code
         continue-on-error: true
         run: |
-          source quality-env/bin/activate
+          source .venv/bin/activate
           echo "## 🧹 Dead Code Detection" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
@@ -323,7 +317,7 @@ jobs:
       - name: 📈 Generate Quality Metrics
         if: always()
         run: |
-          source quality-env/bin/activate
+          source .venv/bin/activate
           echo "## 📈 Quality Metrics Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           

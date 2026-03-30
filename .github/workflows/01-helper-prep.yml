@@ -93,8 +93,8 @@ jobs:
           key: ${{ needs.setup.outputs.cache_key_base }}-${{ matrix.platform }}-${{ needs.setup.outputs.version }}
           # No restore-keys - only use exact version match to prevent old binary accumulation
 
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v6
+      - name: 📦 Setup uv + Python
+        uses: astral-sh/setup-uv@v8
         with:
           python-version: '3.11'
 
