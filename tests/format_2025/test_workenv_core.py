@@ -368,6 +368,119 @@ class TestRunEnumerateExecuteCommand:
             manager._run_enumerate_execute_command(cmd, tmp_path, metadata, {})
 
 
+@pytest.mark.unit
+class TestPrepareSetupEnvironmentPathHandling:
+    """Regression tests for cross-platform PATH handling in _prepare_setup_environment.
+
+    The fix uses sys.platform to choose 'Scripts' vs 'bin' and os.pathsep
+    instead of a hardcoded '/bin:' prefix.
+    """
+
+    @patch("flavor.psp.format_2025.workenv.apply_environment_layers")
+    def test_native_path_uses_platform_bin_and_sep(self, mock_apply: Mock, tmp_path: Path) -> None:
+        """PATH should be prepended with the platform-appropriate bin dir and separator."""
+        mock_apply.side_effect = lambda **kwargs: {
+            **kwargs.get("base_env", {}),
+            **kwargs.get("workenv_env", {}),
+        }
+        mock_reader = Mock()
+        manager = WorkEnvManager(mock_reader)
+
+        workenv_dir = tmp_path / "workenv"
+        workenv_dir.mkdir()
+
+        env = manager._prepare_setup_environment(workenv_dir, runtime_env={})
+
+        import sys
+        bin_dir = "Scripts" if sys.platform == "win32" else "bin"
+        expected_bin = str(workenv_dir / bin_dir)
+        assert env["PATH"].startswith(expected_bin)
+        # The separator after the bin dir should be the native os.pathsep
+        rest = env["PATH"][len(expected_bin):]
+        assert rest.startswith(os.pathsep)
+
+    @patch("flavor.psp.format_2025.workenv.apply_environment_layers")
+    @patch("flavor.psp.format_2025.workenv.sys")
+    @patch("flavor.psp.format_2025.workenv.os")
+    def test_win32_path_uses_scripts_and_semicolon(
+        self, mock_os: Mock, mock_sys: Mock, mock_apply: Mock, tmp_path: Path
+    ) -> None:
+        """When sys.platform == 'win32', PATH should use Scripts and semicolon."""
+        mock_sys.platform = "win32"
+        # Provide os.pathsep and os.environ for the win32 mock
+        mock_os.pathsep = ";"
+        mock_os.environ = {"PATH": "/usr/bin"}
+
+        mock_apply.side_effect = lambda **kwargs: {
+            **kwargs.get("base_env", {}),
+            **kwargs.get("workenv_env", {}),
+        }
+
+        mock_reader = Mock()
+        manager = WorkEnvManager(mock_reader)
+
+        workenv_dir = tmp_path / "workenv"
+        workenv_dir.mkdir()
+
+        env = manager._prepare_setup_environment(workenv_dir, runtime_env={})
+
+        expected_scripts = str(workenv_dir / "Scripts")
+        assert expected_scripts in env["PATH"], f"Expected '{expected_scripts}' in PATH, got: {env['PATH']}"
+        # Must use semicolon as separator (Windows pathsep)
+        assert ";" in env["PATH"]
+
+    @pytest.mark.parametrize(
+        ("plat", "sep", "bin_dir"),
+        [
+            ("linux", ":", "bin"),
+            ("darwin", ":", "bin"),
+            ("win32", ";", "Scripts"),
+        ],
+    )
+    @patch("flavor.psp.format_2025.workenv.apply_environment_layers")
+    @patch("flavor.psp.format_2025.workenv.sys")
+    @patch("flavor.psp.format_2025.workenv.os")
+    def test_path_separator_matches_os_pathsep(
+        self,
+        mock_os: Mock,
+        mock_sys: Mock,
+        mock_apply: Mock,
+        tmp_path: Path,
+        plat: str,
+        sep: str,
+        bin_dir: str,
+    ) -> None:
+        """The PATH separator must always match os.pathsep for the platform."""
+        mock_sys.platform = plat
+        mock_os.pathsep = sep
+        mock_os.environ = {"PATH": "/original"}
+
+        captured: dict[str, dict[str, str]] = {}
+
+        def capture_layers(**kwargs: Any) -> dict[str, str]:
+            captured["workenv_env"] = kwargs.get("workenv_env", {})
+            return {**kwargs.get("base_env", {}), **kwargs.get("workenv_env", {})}
+
+        mock_apply.side_effect = capture_layers
+
+        mock_reader = Mock()
+        manager = WorkEnvManager(mock_reader)
+
+        workenv_dir = tmp_path / "workenv"
+        workenv_dir.mkdir(exist_ok=True)
+
+        manager._prepare_setup_environment(workenv_dir, runtime_env={})
+
+        path_val = captured["workenv_env"]["PATH"]
+        expected_prefix = str(workenv_dir / bin_dir)
+        assert path_val.startswith(expected_prefix), (
+            f"[{plat}] PATH should start with '{expected_prefix}', got: {path_val}"
+        )
+        # Character right after the bin/Scripts dir must be the pathsep
+        after_prefix = path_val[len(expected_prefix)]
+        assert after_prefix == sep, f"[{plat}] Expected separator '{sep}' after bin dir, got '{after_prefix}'"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
 
