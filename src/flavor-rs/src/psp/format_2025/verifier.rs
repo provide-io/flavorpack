@@ -246,6 +246,7 @@ fn verify_slot_checksum(
 mod tests {
     use super::*;
     use crate::psp::format_2025::slots::SlotDescriptor;
+    use proptest::prelude::*;
 
     #[test]
     fn test_verify_slot_checksum_detects_tampering() {
@@ -256,5 +257,45 @@ mod tests {
 
         assert!(verify_slot_checksum(&descriptor, payload));
         assert!(!verify_slot_checksum(&descriptor, b"tampered payload"));
+    }
+
+    proptest! {
+        /// Checksum of data always matches descriptor built from that data.
+        #[test]
+        fn prop_checksum_consistent(data in proptest::collection::vec(any::<u8>(), 0..1024)) {
+            let checksum = Sha256::digest(&data);
+            let mut checksum_bytes = [0u8; 8];
+            checksum_bytes.copy_from_slice(&checksum[..8]);
+            let expected = u64::from_le_bytes(checksum_bytes);
+
+            let mut descriptor = SlotDescriptor::new(1);
+            descriptor.checksum = expected;
+            descriptor.size = data.len() as u64;
+            descriptor.original_size = data.len() as u64;
+
+            prop_assert!(verify_slot_checksum(&descriptor, &data));
+        }
+
+        /// Changing any byte in data must cause checksum mismatch.
+        #[test]
+        fn prop_tamper_always_detected(
+            data in proptest::collection::vec(any::<u8>(), 1..256),
+            flip_idx in any::<proptest::sample::Index>()
+        ) {
+            let checksum = Sha256::digest(&data);
+            let mut checksum_bytes = [0u8; 8];
+            checksum_bytes.copy_from_slice(&checksum[..8]);
+            let expected = u64::from_le_bytes(checksum_bytes);
+
+            let mut descriptor = SlotDescriptor::new(1);
+            descriptor.checksum = expected;
+            descriptor.size = data.len() as u64;
+            descriptor.original_size = data.len() as u64;
+
+            let mut tampered = data.clone();
+            let idx = flip_idx.index(tampered.len());
+            tampered[idx] ^= 0xFF;
+            prop_assert!(!verify_slot_checksum(&descriptor, &tampered));
+        }
     }
 }
