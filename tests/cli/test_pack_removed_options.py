@@ -70,7 +70,7 @@ class TestPackCommandBasicInvocation:
             patch("flavor.commands.package.verify_package") as mock_verify,
         ):
             mock_build.return_value = [fake_artifact]
-            mock_verify.return_value = {"signature_valid": True}
+            mock_verify.return_value = {"valid": True, "signature_valid": True}
 
             result = runner.invoke(
                 cli_main,
@@ -102,7 +102,7 @@ class TestPackValidOptionsAccepted:
             patch("flavor.commands.package.verify_package") as mock_verify,
         ):
             mock_build.return_value = [fake_artifact]
-            mock_verify.return_value = {"signature_valid": True}
+            mock_verify.return_value = {"valid": True, "signature_valid": True}
 
             result = runner.invoke(
                 cli_main,

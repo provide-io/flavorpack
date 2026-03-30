@@ -5,7 +5,7 @@ use super::super::metadata::{Metadata, WorkenvInfo};
 use super::super::paths::WorkenvPaths;
 use crate::exceptions::Result;
 use crate::utils::get_cache_dir;
-use log::{debug, warn};
+use log::debug;
 use std::fs;
 use std::path::Path;
 
@@ -17,52 +17,15 @@ pub(super) fn get_workenv_paths(package_path: &Path) -> WorkenvPaths {
 
 /// Check if there's enough disk space for extraction
 pub(super) fn check_disk_space(_paths: &WorkenvPaths, metadata: &Metadata) -> Result<()> {
-    // Calculate total size needed (compressed size * DISK_SPACE_MULTIPLIER for safety)
-    let _total_size_needed: u64 = metadata
-        .slots
-        .iter()
-        .map(|slot| slot.size as u64 * DEFAULT_DISK_SPACE_MULTIPLIER)
-        .sum();
-
-    // Get available disk space
-    #[cfg(unix)]
-    {
-        use crate::exceptions::FlavorError;
-
-        // Safe disk space check using fs2 crate alternative or simplified check
-        let workenv_path = _paths.workenv();
-
-        // Try to create a small test file to check if we can write
-        // This is a simpler but less precise check than statvfs
-        let test_file = workenv_path.join(".space_test");
-        match std::fs::create_dir_all(&workenv_path) {
-            Ok(_) => {
-                match std::fs::write(&test_file, b"test") {
-                    Ok(_) => {
-                        let _ = std::fs::remove_file(&test_file);
-                        debug!("✅ Disk space check passed (write test successful)");
-                    }
-                    Err(e) => {
-                        warn!("⚠️ Disk write test failed: {}", e);
-                        // Don't fail the process, just warn
-                    }
-                }
-            }
-            Err(e) => {
-                warn!("⚠️ Could not create workenv directory: {}", e);
-                return Err(FlavorError::Generic(format!(
-                    "Cannot create workenv directory: {}",
-                    e
-                )));
-            }
-        }
-    }
-
-    #[cfg(not(unix))]
-    {
-        warn!("⚠️ Disk space check not implemented for this platform");
-    }
-
+    let total_size_needed = calculate_total_size_needed(metadata);
+    let workenv_path = _paths.workenv();
+    std::fs::create_dir_all(&workenv_path)?;
+    let available_space = get_available_disk_space(&workenv_path)?;
+    ensure_sufficient_disk_space(total_size_needed, available_space)?;
+    debug!(
+        "✅ Disk space check passed: required={} available={}",
+        total_size_needed, available_space
+    );
     Ok(())
 }
 
@@ -117,4 +80,114 @@ pub(super) fn setup_workenv_directories(
         }
     }
     Ok(())
+}
+
+fn calculate_total_size_needed(metadata: &Metadata) -> u64 {
+    metadata
+        .slots
+        .iter()
+        .map(|slot| u64::try_from(slot.size.max(0)).unwrap_or(0))
+        .map(|size| size.saturating_mul(DEFAULT_DISK_SPACE_MULTIPLIER))
+        .sum()
+}
+
+fn ensure_sufficient_disk_space(required_bytes: u64, available_bytes: u64) -> Result<()> {
+    use crate::exceptions::FlavorError;
+
+    if available_bytes < required_bytes {
+        return Err(FlavorError::Generic(format!(
+            "Insufficient disk space: required {} bytes, available {} bytes",
+            required_bytes, available_bytes
+        )));
+    }
+
+    Ok(())
+}
+
+fn get_available_disk_space(path: &Path) -> Result<u64> {
+    use crate::exceptions::FlavorError;
+    fs2::available_space(path).map_err(|e| {
+        FlavorError::Generic(format!("Failed to query disk space for {:?}: {}", path, e))
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::psp::format_2025::metadata::{
+        ExecutionInfo, Metadata, PackageInfo, PlatformInfo, SlotMetadata,
+    };
+
+    fn sample_metadata(slot_sizes: &[i64]) -> Metadata {
+        Metadata {
+            format: "PSPF/2025".to_string(),
+            format_version: None,
+            package: PackageInfo {
+                name: "pkg".to_string(),
+                version: "1.0.0".to_string(),
+            },
+            slots: slot_sizes
+                .iter()
+                .enumerate()
+                .map(|(index, size)| SlotMetadata {
+                    index,
+                    id: format!("slot-{index}"),
+                    source: "src".to_string(),
+                    target: format!("bin/{index}"),
+                    size: *size,
+                    checksum: "sum".to_string(),
+                    operations: "raw".to_string(),
+                    purpose: "code".to_string(),
+                    lifecycle: "runtime".to_string(),
+                    permissions: None,
+                    resolution: None,
+                    self_ref: None,
+                })
+                .collect(),
+            execution: ExecutionInfo {
+                primary_slot: 0,
+                command: "echo hi".to_string(),
+                env: std::collections::HashMap::new(),
+            },
+            verification: None,
+            build: Some(crate::psp::format_2025::metadata::BuildInfo {
+                tool: "builder".to_string(),
+                tool_version: "1.0.0".to_string(),
+                timestamp: "2026-01-01T00:00:00Z".to_string(),
+                deterministic: true,
+                platform: PlatformInfo {
+                    os: "linux".to_string(),
+                    arch: "amd64".to_string(),
+                    host: "host".to_string(),
+                },
+            }),
+            launcher: None,
+            compatibility: None,
+            cache_validation: None,
+            runtime: None,
+            workenv: None,
+            setup_commands: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn test_calculate_total_size_needed_uses_multiplier() {
+        let metadata = sample_metadata(&[10, 20]);
+        assert_eq!(
+            calculate_total_size_needed(&metadata),
+            30 * DEFAULT_DISK_SPACE_MULTIPLIER
+        );
+    }
+
+    #[test]
+    fn test_ensure_sufficient_disk_space_rejects_insufficient_capacity() {
+        let result = ensure_sufficient_disk_space(4096, 1024);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_ensure_sufficient_disk_space_accepts_available_capacity() {
+        let result = ensure_sufficient_disk_space(1024, 4096);
+        assert!(result.is_ok());
+    }
 }

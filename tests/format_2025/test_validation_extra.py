@@ -154,6 +154,25 @@ class TestValidateSlotsAdditional:
         errors = validate_slots([slot])  # ty: ignore[invalid-argument-type]
         assert any("operations" in e.lower() or "🗜️" in e for e in errors)
 
+    @pytest.mark.parametrize(
+        "target",
+        [
+            "/tmp/evil",
+            "../../etc/passwd",
+            "{workenv}/../../etc/passwd",
+            "..\\..\\windows\\system32",
+            "",
+        ],
+    )
+    def test_unsafe_target_yields_error(self, target: str) -> None:
+        """validate_slots rejects targets that would escape the workenv."""
+        from flavor.psp.format_2025.validation import validate_slots
+
+        slot = self._make_slot(target="bin/tool")
+        object.__setattr__(slot, "target", target)
+        errors = validate_slots([slot])  # ty: ignore[invalid-argument-type]
+        assert any("target" in e.lower() or "path" in e.lower() for e in errors)
+
 
 @pytest.mark.unit
 class TestValidateMetadataExtra:

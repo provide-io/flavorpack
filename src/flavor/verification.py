@@ -38,6 +38,8 @@ class FlavorVerifier:
 
         # Verify integrity using reader's method
         integrity_result = reader.verify_integrity()
+        valid = integrity_result.get("valid", False)
+        checksums_valid = integrity_result.get("checksums_valid", False)
         signature_valid = integrity_result.get("signature_valid", False)
 
         # Extract comprehensive slot information from metadata
@@ -66,6 +68,8 @@ class FlavorVerifier:
             "format": "PSPF/2025",
             "version": f"0x{index.format_version:08x}",
             "launcher_size": index.launcher_size,
+            "valid": valid,
+            "checksums_valid": checksums_valid,
             "signature_valid": signature_valid,
             "slot_count": index.slot_count,
             "package": metadata.get("package", {}),
