@@ -7,10 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"log/slog"
-
+	"github.com/hashicorp/go-hclog"
 	"github.com/provide-io/flavor/go/flavor/internal/workenv"
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // setFlavorCacheBeforeWorkenv sets FLAVOR_CACHE to the HOST's cache directory.
@@ -25,7 +23,7 @@ func setFlavorCacheBeforeWorkenv(env []string, logger *slog.Logger) []string {
 
 	// Use workenv.GetCacheRoot() for cross-platform cache directory consistency
 	flavorCache := filepath.Join(workenv.GetCacheRoot(), "workenv")
-	env = append(env, fmt.Sprintf("%s=%s", EnvCache, flavorCache))
+	env = append(env, fmt.Sprintf("FLAVOR_CACHE=%s", flavorCache))
 	logger.Debug("🗂️ Setting FLAVOR_CACHE to HOST cache", "path", flavorCache)
 	return env
 }
