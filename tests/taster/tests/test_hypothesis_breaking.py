@@ -222,8 +222,8 @@ class PSPFStateMachine(RuleBasedStateMachine):
     def __init__(self) -> None:
         super().__init__()
         self.tmpdir = tempfile.mkdtemp()
-        self.bundles = []
-        self.slots = []
+        self.bundles: list[Path] = []
+        self.slots: list[SlotMetadata] = []
 
     @initialize()
     def setup(self) -> None:
@@ -257,7 +257,7 @@ class PSPFStateMachine(RuleBasedStateMachine):
             return
 
         builder = PSPFBuilder()
-        bundle_path = self.tmpdir / f"bundle_{len(self.bundles)}.psp"
+        bundle_path = self.tmpdir / f"bundle_{len(self.bundles)}.psp"  # ty: ignore[unsupported-operator]
 
         try:
             builder = builder.metadata(format="PSPF/2025", package={"name": "test", "version": "1.0"})

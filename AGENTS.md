@@ -160,7 +160,7 @@ uv run pytest -m security
 - nope. you will *NEVER* hardcode permissions directly into code.
 - flavorpack is the name of the package. `flavor` is the actual tool/API.
 - use constants for the default permissions, then the metadata must be able to override it. you will not directly embed default permissions into the code. anything default must be a constant.
-- no lauchers will ever intercept command line arguments unless the flavor cli option is enabled.
+- no launchers will ever intercept command line arguments unless the flavor cli option is enabled.
 
 ## CRITICAL REQUIREMENTS - NEVER FORGET
 

@@ -28,7 +28,7 @@ jobs:
       test_matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 🔧 Ensure gh CLI available
         run: type gh >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq gh)
@@ -68,10 +68,10 @@ jobs:
       matrix: ${{ fromJson(needs.setup.outputs.test_matrix) }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 📥 Download helpers for platform
-        uses: dawidd6/action-download-artifact@v6
+        uses: dawidd6/action-download-artifact@v19
         with:
           workflow: 01-helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
@@ -136,7 +136,7 @@ jobs:
           ls -la dist/
       
       - name: 📤 Upload Pretaster packages
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pretaster-packages-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: tests/pretaster/dist/
@@ -151,16 +151,16 @@ jobs:
       matrix: ${{ fromJson(needs.setup.outputs.test_matrix) }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: 📥 Download pretaster packages
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: pretaster-psp-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./build
       
       - name: 📥 Download helpers for platform
-        uses: dawidd6/action-download-artifact@v6
+        uses: dawidd6/action-download-artifact@v19
         with:
           workflow: 01-helper-prep.yml
           name: flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
@@ -223,21 +223,21 @@ jobs:
       
       - name: 📤 Upload test logs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: crosslang-logs-${{ matrix.platform }}-${{ github.run_id }}
           path: tests/pretaster/logs/
 
       - name: 📤 Upload crosslang PSP files
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: crosslang-psp-${{ matrix.platform }}-${{ github.run_id }}
           path: tests/pretaster/dist/*.psp
 
       - name: 📤 Upload failure diagnostics
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: crosslang-diagnostics-${{ matrix.platform }}-${{ github.run_id }}
           path: tests/pretaster/failure-diagnostics/
@@ -252,10 +252,10 @@ jobs:
       matrix: ${{ fromJson(needs.setup.outputs.test_matrix) }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 📥 Download helpers for platform
-        uses: dawidd6/action-download-artifact@v6
+        uses: dawidd6/action-download-artifact@v19
         with:
           workflow: 01-helper-prep.yml
           name: flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
@@ -282,21 +282,21 @@ jobs:
             "build"
       
       - name: 📤 Upload pretaster PSP
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pretaster-psp-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: build/pretaster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.*
       
       - name: 📤 Upload test logs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pretaster-logs-${{ matrix.platform }}-${{ github.run_id }}
           path: tests/pretaster/logs/
 
       - name: 📤 Upload failure diagnostics
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: failure-diagnostics-${{ matrix.platform }}-${{ github.run_id }}
           path: tests/pretaster/failure-diagnostics/
@@ -308,10 +308,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: 📥 Download all logs
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: '*-logs-*'
           path: all-logs

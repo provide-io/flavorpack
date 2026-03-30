@@ -23,7 +23,6 @@ from provide.foundation.process import run
 from flavor.packaging.python.pypapip_manager import PyPaPipManager
 from flavor.packaging.python.uv_manager import UVManager
 
-
 # Exact versions of build backends required in the workenv.
 # These must match [dependency-groups.build-backends] in pyproject.toml.
 # To update: change the version in pyproject.toml, run `uv lock`, update here.
@@ -94,10 +93,8 @@ class WheelBuilder:
         for pkg, expected in _PINNED_BUILD_BACKENDS.items():
             try:
                 installed = importlib_metadata.version(pkg)
-            except importlib_metadata.PackageNotFoundError:
-                raise RuntimeError(
-                    f"Build backend not found: {pkg}. Rebuild the workenv slot."
-                )
+            except importlib_metadata.PackageNotFoundError as err:
+                raise RuntimeError(f"Build backend not found: {pkg}. Rebuild the workenv slot.") from err
             if installed != expected:
                 raise RuntimeError(
                     f"Build backend mismatch: {pkg}=={installed} present, "

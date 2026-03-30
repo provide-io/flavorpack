@@ -50,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0  # Full history for better secret detection
       
@@ -110,7 +110,7 @@ jobs:
       
       - name: 📤 Upload Secret Scan Results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: secret-scan-results
           path: |
@@ -125,10 +125,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
       
@@ -284,7 +284,7 @@ jobs:
       
       - name: 📤 Upload Python Security Reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: python-security-results
           path: |
@@ -298,10 +298,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: 🐹 Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: "${{ vars.GO_VERSION }}"
       
@@ -389,7 +389,7 @@ jobs:
       
       - name: 📤 Upload Go Security Reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: go-security-results
           path: |
@@ -402,7 +402,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: 🦀 Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -497,7 +497,7 @@ jobs:
       
       - name: 📤 Upload Rust Security Reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: rust-security-results
           path: |
@@ -511,7 +511,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: 🔍 Dockerfile Security Scan
         continue-on-error: true
@@ -557,7 +557,7 @@ jobs:
       
       - name: 📤 Upload Container Security Results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: container-security-results
           path: |
@@ -571,7 +571,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: 🔍 Checkov IaC Scan
         id: checkov
@@ -636,7 +636,7 @@ jobs:
       
       - name: 📤 Upload IaC Security Results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: iac-security-results
           path: |
@@ -651,7 +651,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Download all security reports
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: security-reports
       
@@ -793,7 +793,7 @@ jobs:
           EOF
       
       - name: 📤 Upload Consolidated Report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: security-summary
           path: security-summary.json

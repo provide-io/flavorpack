@@ -184,15 +184,14 @@ class TestWheelBuilderCriticalFeatures:
         python_exe = Path("/usr/bin/python3")
 
         with patch("flavor.packaging.python.wheel_builder.importlib_metadata") as mock_meta:
-            mock_meta.version.side_effect = lambda pkg: (
-                "99.0.0" if pkg == "setuptools" else "99.0.0"
-            )
+            mock_meta.version.side_effect = lambda pkg: "99.0.0"
             with pytest.raises(RuntimeError, match="Build backend mismatch"):
                 self.wheel_builder._ensure_no_isolation_build_backend(python_exe)
 
     def test_ensure_backend_passes_on_correct_versions(self) -> None:
         """CRITICAL: correct versions must pass silently with no subprocess calls."""
         from flavor.packaging.python.wheel_builder import _PINNED_BUILD_BACKENDS
+
         python_exe = Path("/usr/bin/python3")
 
         with patch("flavor.packaging.python.wheel_builder.importlib_metadata") as mock_meta:

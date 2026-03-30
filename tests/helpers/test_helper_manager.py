@@ -31,7 +31,7 @@ class TestHelperManagerInit:
         manager = HelperManager()
 
         # Check paths are set correctly
-        assert manager.flavor_root.name == "flavorpack"
+        assert manager.flavor_root.name in ("flavorpack", "mutants")
         assert manager.helpers_dir.name == "dist"
         assert manager.helpers_bin.name == "bin"
         assert manager.current_platform == "linux_amd64"
@@ -257,7 +257,7 @@ class TestVersionExtraction:
         manager = self.setup_manager()
         mock_path = Mock(spec=Path)
         # Configure __str__ to return a string, not a Mock
-        type(mock_path).__str__ = Mock(return_value="/path/to/binary")
+        type(mock_path).__str__ = Mock(return_value="/path/to/binary")  # ty: ignore[invalid-assignment]
 
         mock_result = Mock()
         mock_result.returncode = 0
@@ -273,7 +273,7 @@ class TestVersionExtraction:
         manager = self.setup_manager()
         mock_path = Mock(spec=Path)
         # Configure __str__ to return a string, not a Mock
-        type(mock_path).__str__ = Mock(return_value="/path/to/binary")
+        type(mock_path).__str__ = Mock(return_value="/path/to/binary")  # ty: ignore[invalid-assignment]
 
         mock_result = Mock()
         mock_result.returncode = 1

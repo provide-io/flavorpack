@@ -397,13 +397,22 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	// Store signature in index (first 64 bytes of 512-byte field)
 	copy(index.IntegritySignature[:64], signature)
 
-	// Calculate metadata checksum (Adler-32 of compressed data)
+	// Calculate metadata checksum (SHA-256 of compressed data)
 	// Need to seek back and read the compressed data
 	savedPos, _ := out.Seek(0, 1)
-	out.Seek(int64(metadataPos), 0)
+	if _, err := out.Seek(int64(metadataPos), 0); err != nil {
+		logger.Error("❌ Failed to seek to metadata position", "error", err)
+		os.Exit(1)
+	}
 	compressedData := make([]byte, metadataSize)
-	out.Read(compressedData)
-	out.Seek(savedPos, 0)
+	if _, err := out.Read(compressedData); err != nil {
+		logger.Error("❌ Failed to read compressed metadata", "error", err)
+		os.Exit(1)
+	}
+	if _, err := out.Seek(savedPos, 0); err != nil {
+		logger.Error("❌ Failed to restore seek position", "error", err)
+		os.Exit(1)
+	}
 
 	// Compute full SHA-256 checksum (32 bytes)
 	metadataHash := sha256.Sum256(compressedData)

@@ -19,7 +19,7 @@ def _get_flavor_api() -> Any | None:
     """Get the Flavor API."""
     try:
         sys.path.insert(0, str(Path(__file__).parents[4] / "src"))
-        import flavor.api as flavor_api
+        import flavor.api as flavor_api  # ty: ignore[unresolved-import]
 
         return flavor_api
     except ImportError:

@@ -28,7 +28,7 @@ jobs:
       test_matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 🔧 Ensure gh CLI available
         run: type gh >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq gh)
@@ -45,7 +45,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
       
       - name: 📥 Download helper artifacts
-        uses: dawidd6/action-download-artifact@v6
+        uses: dawidd6/action-download-artifact@v19
         with:
           workflow: 01-helper-prep.yml
           run_id: ${{ steps.helpers.outputs.run_id }}
@@ -53,7 +53,7 @@ jobs:
           path: ./helpers-dist
       
       - name: 📤 Upload helpers for test jobs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-helpers-${{ github.run_id }}
           path: |
@@ -91,10 +91,10 @@ jobs:
       matrix: ${{ fromJson(needs.setup.outputs.test_matrix) }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: 📥 Download helpers
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: test-helpers-${{ github.run_id }}
           path: ./helpers-dist
@@ -107,12 +107,12 @@ jobs:
           ls -la helpers/bin/
       
       - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
       - name: 📦 Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
 
@@ -146,7 +146,7 @@ jobs:
       
       - name: 📊 Test Summary
         if: always()
-        uses: test-summary/action@v2
+        uses: test-summary/action@v2.4
         with:
           paths: |
             pytest-results.xml
@@ -154,7 +154,7 @@ jobs:
       
       - name: 📊 Upload coverage
         if: always()
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v6
         with:
           files: ./coverage.xml
           flags: ${{ matrix.name }}
@@ -163,7 +163,7 @@ jobs:
       
       - name: 📤 Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-results-${{ matrix.name }}-${{ github.run_id }}
           path: |
@@ -209,15 +209,15 @@ jobs:
             python_platform: win_arm64
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
       
       - name: 📥 Download platform-specific helpers
-        uses: dawidd6/action-download-artifact@v6
+        uses: dawidd6/action-download-artifact@v19
         with:
           workflow: 01-helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
@@ -325,7 +325,7 @@ jobs:
           python -m zipfile -l dist/*.whl | grep -q "\.dist-info/METADATA" && echo "✅ Metadata found in wheel" || echo "❌ Metadata not found"
       
       - name: 📤 Upload platform wheel
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: flavor-wheel-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
           path: dist/*.whl
@@ -365,21 +365,21 @@ jobs:
     continue-on-error: ${{ matrix.continue_on_error == true }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: 🐍 Setup uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
       
       - name: 📥 Download platform wheel
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: flavor-wheel-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
           path: ./wheel-dist
       
       - name: 📥 Download helper artifacts
-        uses: dawidd6/action-download-artifact@v6
+        uses: dawidd6/action-download-artifact@v19
         with:
           workflow: 01-helper-prep.yml
           name: flavor-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
@@ -450,7 +450,7 @@ jobs:
           .github/scripts/build-flavor-self.sh "${{ matrix.platform }}" "${{ needs.setup.outputs.helper_version }}" "${{ steps.prepare.outputs.wheel }}" "${{ steps.prepare.outputs.launcher }}"
       
       - name: 📤 Upload Flavor package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: flavor-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
           path: |
@@ -483,14 +483,14 @@ jobs:
 
     steps:
       - name: 📥 Checkout scripts
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           sparse-checkout: |
             .github/scripts
           sparse-checkout-cone-mode: false
       
       - name: 📥 Download Flavor package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: flavor-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
           path: ./
@@ -504,10 +504,11 @@ jobs:
       
       - name: 📤 Upload results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: flavor-psp-test-${{ matrix.platform }}-${{ github.run_id }}
           path: test-result.txt
+          if-no-files-found: ignore
 
   # Summary and validation
   validate:
@@ -517,25 +518,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       
       - name: 📥 Download test results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: test-results-*
           path: test-results
       
       - name: 📥 Download wheels
         if: needs.build-wheels.result == 'success'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
-          name: flavor-wheels-${{ needs.setup.outputs.helper_version }}
+          pattern: flavor-wheel-${{ needs.setup.outputs.helper_version }}-*
           path: wheel-artifacts
+          merge-multiple: true
         continue-on-error: true
       
       - name: 📥 Download Flavor packages
         if: needs.build-flavor.result == 'success'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: flavor-${{ needs.setup.outputs.helper_version }}-*
           path: flavor-artifacts

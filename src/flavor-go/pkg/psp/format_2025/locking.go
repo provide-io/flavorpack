@@ -157,7 +157,9 @@ func IsExtractionComplete(paths *WorkenvPaths) bool {
 // MarkExtractionIncomplete marks cache as incomplete (used during signal handling)
 func MarkExtractionIncomplete(paths *WorkenvPaths, logger hclog.Logger) {
 	extractDir := paths.Extract()
-	os.MkdirAll(extractDir, os.FileMode(DirPerms))
+	if err := os.MkdirAll(extractDir, os.FileMode(DirPerms)); err != nil {
+		logger.Warn("⚠️ Failed to create extract dir", "error", err)
+	}
 	// Remove the complete marker if it exists
 	os.Remove(paths.CompleteFile())
 	logger.Debug("⚠️ Marked extraction as incomplete")

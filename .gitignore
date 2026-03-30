@@ -66,6 +66,7 @@ docs/.shared-theme/
 # MkDocs generated site
 site/
 bf-*.txt
+*-bf.txt
 
 # Local act secrets (never commit)
 .act.secrets

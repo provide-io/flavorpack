@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-import os
 from pathlib import Path
 import tempfile
 from unittest.mock import MagicMock, patch
@@ -37,7 +36,7 @@ class TestPSPFExecution:
         def _on_rmtree_error(func: object, path: str, exc_info: object) -> None:
             """Make read-only files writable before retrying delete (Windows)."""
             try:
-                os.chmod(path, stat.S_IWRITE)
+                Path(path).chmod(stat.S_IWRITE)
                 if callable(func):
                     func(path)  # type: ignore[operator]
             except Exception:
@@ -195,7 +194,7 @@ class TestBundleExecutorUnit:
         if slots is not None:
             metadata["slots"] = slots
         if execution_env is not None:
-            metadata["execution"]["env"] = execution_env
+            metadata["execution"]["env"] = execution_env  # ty: ignore[invalid-assignment]
         return BundleExecutor(metadata, Path("/workenv"))
 
     def test_prepare_command_no_args(self) -> None:

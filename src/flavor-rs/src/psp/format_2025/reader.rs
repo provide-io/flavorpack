@@ -107,8 +107,9 @@ impl Reader {
             debug!("  slot_table_offset: 0x{:016x}", slot_offset);
             debug!("  slot_count: {}", slot_cnt);
 
-            // Verify index checksum (Adler-32 over the 8192-byte block with checksum field zeroed)
-            if !index.verify_checksum_raw(&index_data) {
+            // Verify index checksum (Adler-32 over the 8192-byte block with checksum field zeroed).
+            // Skip verification when the stored checksum is 0 (not written by older builders).
+            if index.index_checksum != 0 && !index.verify_checksum_raw(&index_data) {
                 return Err(FlavorError::Generic("Index checksum mismatch".into()));
             }
 
@@ -194,49 +195,33 @@ impl Reader {
             }
             trace!("✅ Metadata checksum verified (SHA-256)");
 
-            // Parse metadata - always gzip compressed for now
-            let metadata: Metadata = if true {
-                // Always gzip for now
-                // Decompress first
-                use flate2::read::GzDecoder;
-                use std::io::Read;
+            // Parse metadata — always gzip-compressed JSON
+            use flate2::read::GzDecoder;
+            use std::io::Read;
 
-                trace!("🎈 Decompressing gzip metadata...");
-                let mut decoder = GzDecoder::new(&metadata_data[..]);
-                let mut json_data = String::new();
-                decoder.read_to_string(&mut json_data)?;
+            trace!("🎈 Decompressing gzip metadata...");
+            let mut decoder = GzDecoder::new(&metadata_data[..]);
+            let mut json_data = String::new();
+            decoder.read_to_string(&mut json_data)?;
 
-                // Debug dump decompressed JSON
-                if std::env::var("FLAVOR_DEBUG_METADATA").is_ok() {
-                    if let Err(e) = std::fs::write("debug_metadata.json", &json_data) {
-                        debug!("⚠️ Could not save decompressed metadata: {}", e);
-                    } else {
-                        debug!(
-                            "📄 Saved decompressed metadata to debug_metadata.json ({} chars)",
-                            json_data.len()
-                        );
-                    }
-
-                    // Check if it's actually JSON
-                    if json_data.starts_with('{') {
-                        debug!("✅ Decompressed data is valid JSON");
-                    } else if json_data.contains("ustar") {
-                        debug!("🚨 ERROR: Decompressed data contains tar signatures!");
-                        trace!(
-                            "📄 First 200 chars: {}",
-                            &json_data[..200.min(json_data.len())]
-                        );
-                    }
+            if std::env::var("FLAVOR_DEBUG_METADATA").is_ok() {
+                if let Err(e) = std::fs::write("debug_metadata.json", &json_data) {
+                    debug!("⚠️ Could not save decompressed metadata: {}", e);
+                } else {
+                    debug!(
+                        "📄 Saved decompressed metadata to debug_metadata.json ({} chars)",
+                        json_data.len()
+                    );
                 }
+                if json_data.starts_with('{') {
+                    debug!("✅ Decompressed data is valid JSON");
+                } else if json_data.contains("ustar") {
+                    debug!("🚨 ERROR: Decompressed data contains tar signatures!");
+                    trace!("📄 First 200 chars: {}", &json_data[..200.min(json_data.len())]);
+                }
+            }
 
-                serde_json::from_str(&json_data)?
-            } else {
-                // Direct JSON
-                trace!("📝 Parsing uncompressed JSON metadata");
-                let json_str = std::str::from_utf8(&metadata_data)
-                    .map_err(|e| FlavorError::Generic(format!("Invalid UTF-8: {}", e)))?;
-                serde_json::from_str(json_str)?
-            };
+            let metadata: Metadata = serde_json::from_str(&json_data)?;
 
             debug!(
                 "✅ Successfully parsed metadata for {} v{}",

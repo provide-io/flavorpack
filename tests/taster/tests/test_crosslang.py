@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import click.testing
 import pytest
-from taster.commands.crosslang import CrossLangTester, crosslang_command
+from taster.commands.crosslang import CrossLangTester, crosslang_command  # ty: ignore[unresolved-import]
 
 
 class TestCrossLangTester:

@@ -5,8 +5,8 @@
 
 """Tests for PythonSlotBuilder._bundle_build_backends."""
 
-import subprocess
 from pathlib import Path
+import subprocess
 import tempfile
 from unittest.mock import Mock, patch
 
@@ -31,9 +31,7 @@ class TestBundleBuildBackends:
         """If pyproject.toml has no build-backends group, skip silently."""
         with tempfile.TemporaryDirectory() as tmp:
             manifest_dir = Path(tmp)
-            (manifest_dir / "pyproject.toml").write_text(
-                "[project]\nname = 'foo'\n"
-            )
+            (manifest_dir / "pyproject.toml").write_text("[project]\nname = 'foo'\n")
             wheels_dir = manifest_dir / "wheels"
             wheels_dir.mkdir()
             builder = self._make_builder(manifest_dir)
@@ -47,7 +45,7 @@ class TestBundleBuildBackends:
             manifest_dir = Path(tmp)
             (manifest_dir / "pyproject.toml").write_text(
                 '[project]\nname = "foo"\n'
-                '[dependency-groups]\n'
+                "[dependency-groups]\n"
                 'build-backends = ["setuptools==82.0.1", "wheel==0.46.3"]\n'
             )
             (manifest_dir / "uv.lock").write_text("# mock lock file\n")
@@ -84,9 +82,7 @@ class TestBundleBuildBackends:
         with tempfile.TemporaryDirectory() as tmp:
             manifest_dir = Path(tmp)
             (manifest_dir / "pyproject.toml").write_text(
-                '[project]\nname = "foo"\n'
-                '[dependency-groups]\n'
-                'build-backends = ["setuptools==82.0.1"]\n'
+                '[project]\nname = "foo"\n[dependency-groups]\nbuild-backends = ["setuptools==82.0.1"]\n'
             )
             # No uv.lock created
             wheels_dir = manifest_dir / "wheels"
@@ -102,7 +98,7 @@ class TestBundleBuildBackends:
             manifest_dir = Path(tmp)
             (manifest_dir / "pyproject.toml").write_text(
                 '[project]\nname = "foo"\n'
-                '[dependency-groups]\n'
+                "[dependency-groups]\n"
                 'build-backends = ["setuptools==82.0.1", "wheel==0.46.3"]\n'
             )
             (manifest_dir / "uv.lock").write_text("# mock lock file\n")
