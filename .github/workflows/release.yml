@@ -33,6 +33,7 @@ permissions:
   packages: write
   id-token: write
   actions: read
+  workflows: write
 
 jobs:
   # ==================================================================================
