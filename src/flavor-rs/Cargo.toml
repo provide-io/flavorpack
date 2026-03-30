@@ -48,6 +48,10 @@ hex = "0.4"
 which = "6.0"
 fs2 = "0.4"
 
+[target.'cfg(unix)'.dependencies]
+signal-hook = "0.3"
+libc = "0.2"
+
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.58", features = [
     "Win32_Foundation",
