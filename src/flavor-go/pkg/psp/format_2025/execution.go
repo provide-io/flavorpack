@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/internal/workenv"
 	"github.com/provide-io/flavor/go/flavor/pkg/utils/shellparse"
 )
 
@@ -193,13 +194,8 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		cacheDir := filepath.Dir(filepath.Dir(customWorkenv))
 		paths = NewWorkenvPaths(cacheDir, exePath)
 	} else {
-		// Get cache directory (XDG_CACHE_HOME or fallback)
-		cacheDir := os.Getenv("XDG_CACHE_HOME")
-		if cacheDir == "" {
-			homeDir, _ := os.UserHomeDir()
-			cacheDir = filepath.Join(homeDir, ".cache")
-		}
-		cacheDir = filepath.Join(cacheDir, "flavor")
+		// Get cache directory using workenv.GetCacheRoot() for cross-platform consistency
+		cacheDir := workenv.GetCacheRoot()
 		paths = NewWorkenvPaths(cacheDir, exePath)
 	}
 
