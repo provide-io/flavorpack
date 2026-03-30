@@ -33,6 +33,18 @@ class PSPFBuilder:
     def __init__(self, spec: BuildSpec | None = None) -> None:
         """Initialize with optional starting specification."""
         self._spec = spec or BuildSpec()
+        self._temp_files: list[Path] = []
+
+    def __del__(self) -> None:
+        """Clean up any temporary files created during slot addition."""
+        self.cleanup()
+
+    def cleanup(self) -> None:
+        """Remove temporary files created by add_slot()."""
+        for temp_path in self._temp_files:
+            with __import__("contextlib").suppress(OSError):
+                temp_path.unlink(missing_ok=True)
+        self._temp_files.clear()
 
     @classmethod
     def create(cls) -> PSPFBuilder:
@@ -71,6 +83,7 @@ class PSPFBuilder:
             permissions: Unix permissions as octal string (e.g., "0755")
         """
         # Determine path and size
+        temp_path: Path | None = None
         if isinstance(data, bytes):
             # Write to temp file securely
             with tempfile.NamedTemporaryFile(delete=False) as temp_file:
@@ -106,7 +119,12 @@ class PSPFBuilder:
         )
 
         new_spec = self._spec.with_slot(slot)
-        return PSPFBuilder(new_spec)
+        new_builder = PSPFBuilder(new_spec)
+        # Transfer ownership of all temp files to the new builder
+        new_builder._temp_files = self._temp_files.copy()
+        if temp_path is not None:
+            new_builder._temp_files.append(temp_path)
+        return new_builder
 
     def with_keys(
         self,
