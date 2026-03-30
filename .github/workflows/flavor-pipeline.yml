@@ -123,8 +123,8 @@ jobs:
           # List available helpers
           ls -la helpers/bin/
       
-      - name: 📦 Setup uv + Python
-        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
