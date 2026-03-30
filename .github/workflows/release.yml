@@ -33,7 +33,6 @@ permissions:
   packages: write
   id-token: write
   actions: read
-  workflows: write
 
 jobs:
   # ==================================================================================
@@ -327,10 +326,18 @@ jobs:
           git add VERSION
           git diff --cached --quiet || git commit -m "🚀 Release v${{ needs.prepare.outputs.version }}"
 
-          # Create and push tag
-          git tag -a "${{ needs.prepare.outputs.version_tag }}" \
-            -m "Release ${{ needs.prepare.outputs.version }}"
-          git push origin "${{ needs.prepare.outputs.version_tag }}"
+          # Create tag via GitHub API (avoids GITHUB_TOKEN workflow-file restriction)
+          COMMIT_SHA=$(git rev-parse HEAD)
+          gh api repos/${{ github.repository }}/git/tags \
+            -f tag="${{ needs.prepare.outputs.version_tag }}" \
+            -f message="Release ${{ needs.prepare.outputs.version }}" \
+            -f object="$COMMIT_SHA" \
+            -f type="commit" > /dev/null
+          gh api repos/${{ github.repository }}/git/refs \
+            -f ref="refs/tags/${{ needs.prepare.outputs.version_tag }}" \
+            -f sha="$COMMIT_SHA" > /dev/null
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
       - name: 🚀 Create GitHub Release
         uses: softprops/action-gh-release@v2
