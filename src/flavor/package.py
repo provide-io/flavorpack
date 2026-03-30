@@ -162,7 +162,9 @@ def clean_cache() -> None:
         print("Cache cleared successfully")
         ```
     """
-    cache_dir = Path.home() / ".cache" / "flavor"
+    from flavor.cache import get_cache_dir
+
+    cache_dir = get_cache_dir().parent
     if cache_dir.exists():
         safe_rmtree(cache_dir)
 

@@ -35,7 +35,9 @@ class PSPFLauncher(PSPFReader):
         else:
             bundle_path_arg = bundle_path
         super().__init__(bundle_path_arg)
-        self.cache_dir = Path.home() / ".cache" / "flavor"
+        from flavor.cache import get_cache_dir
+
+        self.cache_dir = get_cache_dir().parent
         ensure_dir(self.cache_dir)
         self._workenv_manager = WorkEnvManager(self)
 
