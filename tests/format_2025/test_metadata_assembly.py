@@ -43,7 +43,7 @@ class TestBuildMetadata:
         assert "platform" in metadata
         assert metadata["platform"]["os"] in ["darwin", "linux", "windows", "macos"]
         assert metadata["platform"]["arch"] in ["arm64", "amd64", "x86_64"]
-        assert "host" in metadata["platform"]
+        # "host" is only included when FLAVOR_INCLUDE_BUILD_HOST=1
 
     def test_build_metadata_deterministic_flag(self) -> None:
         """Test deterministic build flag."""
