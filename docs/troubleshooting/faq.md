@@ -63,7 +63,6 @@ See the [Installation Guide](../getting-started/installation/) for complete inst
 ### Do I need to install anything else?
 
 Yes, during alpha you need to build the launcher binaries locally. This requires:
-
 - Go 1.26+
 - Rust 1.86+
 - Make

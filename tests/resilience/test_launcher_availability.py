@@ -67,7 +67,7 @@ def orchestrator_factory(tmp_path: Path) -> Callable[..., PackagingOrchestrator]
             "show_progress": False,
         }
         defaults.update(kwargs)
-        return PackagingOrchestrator(**defaults)  # ty: ignore[invalid-argument-type]
+        return PackagingOrchestrator(**defaults)
 
     return _factory
 
