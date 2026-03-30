@@ -84,7 +84,7 @@ class TestGetHelperInfo:
             language="go",
             size=1024,
         )
-        manager._get_helper_info = Mock(return_value=expected_info)  # ty: ignore[invalid-assignment]
+        object.__setattr__(manager, "_get_helper_info", Mock(return_value=expected_info))
 
         info = manager.get_helper_info("flavor-go-launcher")
         assert info is not None
@@ -108,11 +108,15 @@ class TestGetHelperInfo:
             language="go",
             size=1024,
         )
-        manager.list_helpers = Mock(  # ty: ignore[invalid-assignment]
-            return_value={
-                "launchers": [mock_helper],
-                "builders": [],
-            }
+        object.__setattr__(
+            manager,
+            "list_helpers",
+            Mock(
+                return_value={
+                    "launchers": [mock_helper],
+                    "builders": [],
+                }
+            ),
         )
 
         info = manager.get_helper_info("launcher")
@@ -128,11 +132,15 @@ class TestGetHelperInfo:
         manager.helpers_bin = Mock(spec=Path)
         manager.helpers_bin.__truediv__ = Mock(return_value=mock_path)
 
-        manager.list_helpers = Mock(  # ty: ignore[invalid-assignment]
-            return_value={
-                "launchers": [],
-                "builders": [],
-            }
+        object.__setattr__(
+            manager,
+            "list_helpers",
+            Mock(
+                return_value={
+                    "launchers": [],
+                    "builders": [],
+                }
+            ),
         )
 
         info = manager.get_helper_info("nonexistent")
@@ -221,11 +229,11 @@ class TestGetHelperInfoHelper:
         mock_path.name = "flavor-go-launcher-linux_amd64"
 
         # Mock all helper methods
-        manager._parse_helper_identity = Mock(return_value=("launcher", "go"))  # ty: ignore[invalid-assignment]
-        manager._get_file_size = Mock(return_value=12345)  # ty: ignore[invalid-assignment]
-        manager._calculate_checksum = Mock(return_value="abcd1234")  # ty: ignore[invalid-assignment]
-        manager._extract_version = Mock(return_value="1.2.3")  # ty: ignore[invalid-assignment]
-        manager._determine_build_source = Mock(return_value=Path("/src/go"))  # ty: ignore[invalid-assignment]
+        object.__setattr__(manager, "_parse_helper_identity", Mock(return_value=("launcher", "go")))
+        object.__setattr__(manager, "_get_file_size", Mock(return_value=12345))
+        object.__setattr__(manager, "_calculate_checksum", Mock(return_value="abcd1234"))
+        object.__setattr__(manager, "_extract_version", Mock(return_value="1.2.3"))
+        object.__setattr__(manager, "_determine_build_source", Mock(return_value=Path("/src/go")))
 
         info = manager._get_helper_info(mock_path)
 
@@ -245,7 +253,7 @@ class TestGetHelperInfoHelper:
         mock_path = Mock(spec=Path)
         mock_path.name = "random-file.txt"
 
-        manager._parse_helper_identity = Mock(return_value=(None, None))  # ty: ignore[invalid-assignment]
+        object.__setattr__(manager, "_parse_helper_identity", Mock(return_value=(None, None)))
 
         info = manager._get_helper_info(mock_path)
         assert info is None
@@ -257,8 +265,8 @@ class TestGetHelperInfoHelper:
         mock_path = Mock(spec=Path)
         mock_path.name = "flavor-go-launcher"
 
-        manager._parse_helper_identity = Mock(return_value=("launcher", "go"))  # ty: ignore[invalid-assignment]
-        manager._get_file_size = Mock(return_value=None)  # ty: ignore[invalid-assignment]
+        object.__setattr__(manager, "_parse_helper_identity", Mock(return_value=("launcher", "go")))
+        object.__setattr__(manager, "_get_file_size", Mock(return_value=None))
 
         info = manager._get_helper_info(mock_path)
         assert info is None

@@ -15,25 +15,10 @@ Usage:
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from pathlib import Path
 import re
 
-
-def _find_repo_root(start: Path) -> Path:
-    """Find the repository root by walking upward to the nearest VERSION file."""
-    current = start.resolve()
-    if current.is_file():
-        current = current.parent
-
-    for candidate in (current, *current.parents):
-        if (candidate / "VERSION").is_file() and (candidate / "scripts" / "check_version_sync.py").is_file():
-            return candidate
-
-    raise FileNotFoundError(f"Could not locate repository root from {start}")
-
-
-_REPO_ROOT = _find_repo_root(Path(__file__))
+_REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
 def _read_version_file() -> str:
@@ -84,7 +69,7 @@ def _rust_version_rs() -> str | None:
     return match.group(1) if match else None
 
 
-_LANG_READERS: dict[str, Callable[[], str | None]] = {
+_LANG_READERS: dict[str, callable] = {
     "python (pyproject.toml)": _python_version,
     "go (builder main.go)": _go_builder_version,
     "rust (Cargo.toml)": _rust_cargo_version,

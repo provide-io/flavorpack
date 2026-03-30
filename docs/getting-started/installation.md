@@ -22,7 +22,7 @@ Flavorpack's native launchers and builders require Go and Rust toolchains:
 
 **Rust Requirements:**
 
-Flavorpack requires Rust 1.86+ (edition 2024):
+FlavorPack requires Rust 1.86+ (edition 2024):
 
 ```bash
 # Install Rust via rustup
@@ -44,14 +44,14 @@ See [Rust's official installation guide](https://www.rust-lang.org/tools/install
 
 ### System Requirements Summary
 
-| Component | Version | Required For                         |
-| --------- | ------- | ------------------------------------ |
-| Python    | 3.11+   | Running Flavorpack                   |
-| UV        | 0.8.13+ | Package management                   |
-| Go        | 1.26+   | Building Go helpers                  |
-| Rust      | 1.86+   | Building Rust helpers (edition 2024) |
-| Git       | 2.25+   | Cloning repository                   |
-| Make      | 3.81+   | Build automation                     |
+| Component | Version | Required For |
+|-----------|---------|--------------|
+| Python | 3.11+ | Running FlavorPack |
+| UV | 0.8.13+ | Package management |
+| Go | 1.26+ | Building Go helpers |
+| Rust | 1.86+ | Building Rust helpers (edition 2024) |
+| Git | 2.25+ | Cloning repository |
+| Make | 3.81+ | Build automation |
 
 ### Supported Platforms
 
@@ -191,9 +191,8 @@ go build -o ../../dist/bin/flavor-go-builder-$(uname -s | tr '[:upper:]' '[:lowe
 
 === "Rust Components"
 
-````
-```bash
-cd src/flavor-rs
+    ```bash
+    cd src/flavor-rs
 
 # Build launcher
 cargo build --release --bin flavor-rs-launcher

@@ -67,10 +67,10 @@ git --version
 
 Only required if you're building or modifying Go/Rust helper binaries:
 
-| Tool     | Version | Source File                | Verification      |
-| -------- | ------- | -------------------------- | ----------------- |
-| **Go**   | 1.26.0+ | `src/flavor-go/go.mod`     | `go version`      |
-| **Rust** | 1.86+   | `src/flavor-rs/Cargo.toml` | `rustc --version` |
+| Tool | Version | Source File | Verification |
+|------|---------|-------------|--------------|
+| **Go** | 1.26.0+ | `src/flavor-go/go.mod` | `go version` |
+| **Rust** | 1.86+ | `src/flavor-rs/Cargo.toml` | `rustc --version` |
 
 **Installation**:
 

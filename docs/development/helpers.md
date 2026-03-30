@@ -80,12 +80,10 @@ Makefile                   # Build automation
 ### Prerequisites
 
 #### For Go Helpers
-
 - Go 1.26 or higher
 - Make (optional)
 
 #### For Rust Helpers
-
 - Rust 1.86 or higher (edition 2024)
 - Cargo
 - Make (optional)
