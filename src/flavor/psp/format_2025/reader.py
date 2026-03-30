@@ -184,18 +184,9 @@ class PSPFReader:
             actual_checksum = zlib.adler32(data_for_check) & 0xFFFFFFFF
 
             if expected_checksum != actual_checksum:
-                # In test environments, launcher binaries may differ between platforms
-                # Log warning instead of failing if we detect a test environment
-                import os
-
-                if os.environ.get("PYTEST_CURRENT_TEST") or os.environ.get("CI"):
-                    logger.warning(
-                        f"Index checksum mismatch (test environment): expected {expected_checksum}, got {actual_checksum}"
-                    )
-                else:
-                    raise ValueError(
-                        f"Index checksum mismatch: expected {expected_checksum}, got {actual_checksum}"
-                    )
+                raise ValueError(
+                    f"Index checksum mismatch: expected {expected_checksum}, got {actual_checksum}"
+                )
 
         return self._index
 
@@ -482,10 +473,11 @@ def verify_bundle(bundle_path: Path) -> bool:
 
         # Check signature if present
         try:
-            if reader.verify_signature():
-                pass
-        except Exception:
-            pass  # Signature optional
+            if not reader.verify_signature():
+                logger.error("❌ Signature verification failed")
+                return False
+        except Exception as e:
+            logger.warning(f"⚠️ Signature verification skipped: {e}")
 
         return True
 
