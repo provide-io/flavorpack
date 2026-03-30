@@ -238,9 +238,7 @@ class TestWorkenvDirectories:
             with pytest.raises(PermissionError):
                 create_workenv_directories(directories, workenv)
 
-    @pytest.mark.skipif(
-        sys.platform == "win32", reason="Mode validation only applies on Unix; Windows skips chmod"
-    )
+    @pytest.mark.skipif(sys.platform == "win32", reason="Mode validation only applies on Unix; Windows skips chmod")
     def test_invalid_mode_handling(self) -> None:
         """Test handling of invalid mode values (Unix only)."""
         with tempfile.TemporaryDirectory() as tmpdir:
