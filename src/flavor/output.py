@@ -45,7 +45,7 @@ class OutputHandler:
     def __enter__(self) -> OutputHandler:
         """Context manager entry."""
         if self._output_file and self._output_file not in ("STDOUT", "STDERR"):
-            self._file_handle = Path(self._output_file).open("w")
+            self._file_handle = Path(self._output_file).open("w", encoding="utf-8")
         return self
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:

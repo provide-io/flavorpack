@@ -1,6 +1,6 @@
 //! Command preparation and environment setup
 
-use super::super::execution::substitute_placeholders;
+use super::super::execution::{shell_split, substitute_placeholders};
 use super::super::metadata::Metadata;
 use super::super::runtime::process_runtime_env;
 use crate::exceptions::{FlavorError, Result};
@@ -90,8 +90,8 @@ pub(super) fn prepare_command(
 
     debug!("🎯 Final command: {command}");
 
-    // Split command into parts
-    let mut command_parts: Vec<String> = command.split_whitespace().map(String::from).collect();
+    // Split command into parts (shell-aware: handles quoted arguments)
+    let mut command_parts: Vec<String> = shell_split(&command);
     if command_parts.is_empty() {
         return Err(FlavorError::Generic("No command specified".to_string()));
     }

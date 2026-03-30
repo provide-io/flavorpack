@@ -220,8 +220,10 @@ class PSPFReader:
 
         # Parse metadata (always gzipped JSON in current implementation)
         # Decompress first
-        with contextlib.suppress(gzip.BadGzipFile):
+        try:
             metadata_data = gzip.decompress(metadata_data)
+        except gzip.BadGzipFile as exc:
+            raise ValueError("Metadata section is not valid gzip data; bundle may be corrupt") from exc
 
         # Parse JSON
         self._metadata = json_loads(metadata_data.decode("utf-8"))

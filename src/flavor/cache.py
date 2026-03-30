@@ -193,7 +193,7 @@ class CacheManager:
         checksum_file = instance_metadata_dir / "instance" / "package.checksum"
         if checksum_file.exists():
             with contextlib.suppress(IOError):
-                info["checksum"] = checksum_file.read_text().strip()
+                info["checksum"] = checksum_file.read_text(encoding="utf-8").strip()
 
         # Check for the modern completion marker
         completion_marker = instance_metadata_dir / "instance" / "extract" / "complete"

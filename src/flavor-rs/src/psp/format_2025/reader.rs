@@ -173,7 +173,8 @@ impl Reader {
                     );
                 }
 
-                // Save raw data
+                // Save raw data (only in debug builds)
+                #[cfg(debug_assertions)]
                 if let Err(e) = std::fs::write("debug_metadata_raw.bin", &metadata_data) {
                     debug!("⚠️ Could not save raw metadata: {}", e);
                 } else {
@@ -207,6 +208,7 @@ impl Reader {
                 .map_err(|e| FlavorError::Generic(format!("Metadata is not valid UTF-8: {}", e)))?;
 
             if std::env::var("FLAVOR_DEBUG_METADATA").is_ok() {
+                #[cfg(debug_assertions)]
                 if let Err(e) = std::fs::write("debug_metadata.json", &json_data) {
                     debug!("⚠️ Could not save decompressed metadata: {}", e);
                 } else {

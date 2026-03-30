@@ -111,7 +111,7 @@ class WorkEnvManager:
             logger.debug(f"🔍 Checking cache validity: {check_path}")
 
             if check_path.exists():
-                actual_content = check_path.read_text().strip()
+                actual_content = check_path.read_text(encoding="utf-8").strip()
                 if actual_content == expected_content.replace("{version}", package_version):
                     cache_valid = True
                 else:

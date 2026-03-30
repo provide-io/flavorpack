@@ -275,7 +275,7 @@ def _get_version_from_toml(project_config: dict[str, Any], manifest_path: Path, 
     # Try to get version from VERSION file
     version_file = manifest_path.parent / "VERSION"
     if version_file.exists():
-        return version_file.read_text().strip()
+        return version_file.read_text(encoding="utf-8").strip()
 
     # Try to get from package metadata if installed
     try:
