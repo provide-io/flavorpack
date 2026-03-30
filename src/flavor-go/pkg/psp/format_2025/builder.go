@@ -344,7 +344,7 @@ func doBuild(logger *slog.Logger, manifestPath, outputPath, launcherBin, private
 	metadataPos, err := out.Seek(0, io.SeekCurrent)
 	if err != nil {
 		logger.Error("❌ Failed to get file position", "error", err)
-		buildExitFn(1)
+		os.Exit(1)
 	}
 	logger.Debug("📜 Writing metadata (gzipped JSON)", "position", metadataPos)
 	metadataSize, signature, err := writeMetadataFn(out, metadata, privateKey, publicKey)
@@ -369,7 +369,7 @@ func doBuild(logger *slog.Logger, manifestPath, outputPath, launcherBin, private
 	currentPos, err := out.Seek(0, io.SeekCurrent)
 	if err != nil {
 		logger.Error("❌ Failed to get file position", "error", err)
-		buildExitFn(1)
+		os.Exit(1)
 	}
 	slotTableOffset := AlignOffset(currentPos, SlotAlignment)
 	if _, err := out.Seek(slotTableOffset, 0); err != nil {
@@ -422,7 +422,7 @@ func doBuild(logger *slog.Logger, manifestPath, outputPath, launcherBin, private
 		currentPos, err := out.Seek(0, io.SeekCurrent)
 		if err != nil {
 			logger.Error("❌ Failed to get file position", "error", err)
-			buildExitFn(1)
+			os.Exit(1)
 		}
 		alignedPos := AlignOffset(currentPos, SlotAlignment)
 		if alignedPos > currentPos {
@@ -452,7 +452,7 @@ func doBuild(logger *slog.Logger, manifestPath, outputPath, launcherBin, private
 	endOfSlots, err := out.Seek(0, io.SeekCurrent)
 	if err != nil {
 		logger.Error("❌ Failed to get file position", "error", err)
-		buildExitFn(1)
+		os.Exit(1)
 	}
 	if _, err := out.Seek(slotTableOffset, 0); err != nil {
 		logger.Error("Failed to seek to slot table for writing", "error", err)
@@ -481,7 +481,7 @@ func doBuild(logger *slog.Logger, manifestPath, outputPath, launcherBin, private
 	savedPos, err := out.Seek(0, io.SeekCurrent)
 	if err != nil {
 		logger.Error("❌ Failed to get file position", "error", err)
-		buildExitFn(1)
+		os.Exit(1)
 	}
 	if _, err := out.Seek(int64(metadataPos), 0); err != nil {
 		logger.Error("❌ Failed to seek to metadata position", "error", err)
@@ -506,18 +506,9 @@ func doBuild(logger *slog.Logger, manifestPath, outputPath, launcherBin, private
 	currentPos, err = out.Seek(0, io.SeekCurrent)
 	if err != nil {
 		logger.Error("❌ Failed to get file position", "error", err)
-		buildExitFn(1)
+		os.Exit(1)
 	}
-	currentPosUint64, err := int64ToUint64Checked(currentPos, "package size")
-	if err != nil {
-		logger.Error("❌ Failed to convert package size", "error", err)
-		buildExitFn(1)
-	}
-	index.PackageSize, err = addUint64Checked(currentPosUint64, MagicTrailerSize, "package size")
-	if err != nil {
-		logger.Error("❌ Failed to calculate package size", "error", err)
-		buildExitFn(1)
-	}
+	index.PackageSize = uint64(currentPos) + MagicTrailerSize
 
 	// 🔐 Calculate index checksum (with checksum field as 0)
 	indexData := index.Pack()

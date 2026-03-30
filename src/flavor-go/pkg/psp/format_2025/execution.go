@@ -13,10 +13,8 @@ import (
 	"strconv"
 	"strings"
 
-	"log/slog"
-
+	"github.com/hashicorp/go-hclog"
 	"github.com/provide-io/flavor/go/flavor/internal/workenv"
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 	"github.com/provide-io/flavor/go/flavor/pkg/utils/shellparse"
 )
 
