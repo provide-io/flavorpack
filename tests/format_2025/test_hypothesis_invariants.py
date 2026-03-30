@@ -110,6 +110,14 @@ class TestXorHypothesis:
         # but encoding should be deterministic
         assert xor_encode(data) == encoded
 
+    @given(
+        data=st.binary(min_size=0, max_size=1024),
+        key=st.binary(min_size=1, max_size=32),
+    )
+    def test_custom_key_roundtrip(self, data: bytes, key: bytes) -> None:
+        """Encode/decode with arbitrary key is lossless."""
+        assert xor_decode(xor_encode(data, key), key) == data
+
 
 @pytest.mark.unit
 class TestSlotDescriptorHypothesis:
@@ -201,6 +209,20 @@ class TestValidateMetadataHypothesis:
             "workenv": {"directories": [{"path": full_path}]},
         }
         assert validate_metadata(metadata) is True
+
+
+@pytest.mark.unit
+class TestSlotDescriptorEdgeCases:
+    """Edge-case property tests for SlotDescriptor boundaries."""
+
+    @given(data=st.binary(min_size=64, max_size=64))
+    @settings(max_examples=200)
+    def test_any_64_bytes_unpacks_without_crash(self, data: bytes) -> None:
+        """Any 64-byte input must unpack without crashing."""
+        from flavor.psp.format_2025.slots import SlotDescriptor
+
+        desc = SlotDescriptor.unpack(data)
+        assert desc.pack() == data  # Round-trip must be exact
 
 
 # 🌶️📦🔚
