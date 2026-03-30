@@ -321,13 +321,8 @@ pub fn run_command(
     }
 
     // Prepend workenv bin directory to PATH (platform-aware)
-    if let Ok(path) = env::var("PATH") {
-        let bin_dir = if cfg!(windows) { "Scripts" } else { "bin" };
-        let sep = if cfg!(windows) { ";" } else { ":" };
-        let bin_path = workenv_dir.join(bin_dir);
-        let new_path = format!("{}{sep}{path}", bin_path.display());
-        command.env("PATH", new_path);
-    }
+    let path = build_workenv_path(workenv_dir, env::var("PATH").ok().as_deref());
+    command.env("PATH", path);
 
     let output = command.output()?;
 
@@ -350,9 +345,32 @@ pub fn run_command(
     Ok(())
 }
 
+fn build_workenv_path(workenv_dir: &Path, existing_path: Option<&str>) -> String {
+    let bin_dir = if cfg!(windows) { "Scripts" } else { "bin" };
+    let sep = if cfg!(windows) { ";" } else { ":" };
+    let bin_path = workenv_dir.join(bin_dir);
+
+    match existing_path {
+        Some(path) if !path.is_empty() => format!("{}{sep}{path}", bin_path.display()),
+        _ => format!("{}", bin_path.display()),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_build_workenv_path_without_existing_path_uses_only_bin_dir() {
+        let workenv_dir = Path::new("/tmp/test_workenv");
+        let path = build_workenv_path(workenv_dir, None);
+
+        #[cfg(not(windows))]
+        assert_eq!(path, "/tmp/test_workenv/bin");
+
+        #[cfg(windows)]
+        assert!(path.contains("test_workenv\\Scripts"));
+    }
 
     /// Test that `run_command` prepends the correct bin directory to PATH.
     ///
@@ -363,17 +381,11 @@ mod tests {
     fn test_run_command_path_has_correct_bin_dir_and_separator() {
         let workenv_dir = Path::new("/tmp/test_workenv");
         let original_path = env::var("PATH").unwrap_or_default();
-
-        let expected_bin_dir = if cfg!(windows) { "Scripts" } else { "bin" };
-        let expected_sep = if cfg!(windows) { ";" } else { ":" };
-        let bin_path = workenv_dir.join(expected_bin_dir);
-        let expected_path = format!("{}{expected_sep}{original_path}", bin_path.display());
+        let expected_path = build_workenv_path(workenv_dir, Some(&original_path));
 
         // On the current platform (macOS/Linux in CI), verify the directory name
         #[cfg(not(windows))]
         {
-            assert_eq!(expected_bin_dir, "bin");
-            assert_eq!(expected_sep, ":");
             assert!(
                 expected_path.starts_with("/tmp/test_workenv/bin:"),
                 "PATH should start with workenv/bin: but was: {expected_path}"
@@ -382,8 +394,6 @@ mod tests {
 
         #[cfg(windows)]
         {
-            assert_eq!(expected_bin_dir, "Scripts");
-            assert_eq!(expected_sep, ";");
             assert!(
                 expected_path.contains("\\test_workenv\\Scripts;"),
                 "PATH should contain workenv\\Scripts; but was: {expected_path}"

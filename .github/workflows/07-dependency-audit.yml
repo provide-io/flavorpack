@@ -48,17 +48,15 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v6
       
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v6
+      - name: 📦 Setup uv + Python
+        uses: astral-sh/setup-uv@v8
         with:
           python-version: '3.11'
-      
+
       - name: 📦 Install Audit Tools
         run: |
-          python -m venv audit-env
-          source audit-env/bin/activate
-          pip install --upgrade pip
-          pip install \
+          uv sync
+          uv pip install \
             pip-audit \
             safety \
             pip-licenses \
@@ -68,13 +66,10 @@ jobs:
             pipgrip \
             johnnydep \
             pip-autoremove
-          
-          # Install project dependencies
-          pip install -e ".[dev,test]"
       
       - name: 🔍 Dependency Tree Analysis
         run: |
-          source audit-env/bin/activate
+          source .venv/bin/activate
           echo "## 🐍 Python Dependency Analysis" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
@@ -99,7 +94,7 @@ jobs:
         id: vuln-scan
         continue-on-error: true
         run: |
-          source audit-env/bin/activate
+          source .venv/bin/activate
           echo "### Vulnerability Scan" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
@@ -136,7 +131,7 @@ jobs:
       - name: 📋 License Analysis
         continue-on-error: true
         run: |
-          source audit-env/bin/activate
+          source .venv/bin/activate
           echo "### License Analysis" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
@@ -165,7 +160,7 @@ jobs:
         if: inputs.check_updates == true
         continue-on-error: true
         run: |
-          source audit-env/bin/activate
+          source .venv/bin/activate
           echo "### Dependency Updates" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
@@ -190,7 +185,7 @@ jobs:
       - name: 🧹 Identify Unused Dependencies
         continue-on-error: true
         run: |
-          source audit-env/bin/activate
+          source .venv/bin/activate
           echo "### Unused Dependencies Analysis" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
@@ -201,7 +196,7 @@ jobs:
       - name: 📊 Generate Dependency Report
         if: always()
         run: |
-          source audit-env/bin/activate
+          source .venv/bin/activate
           
           # Create comprehensive report
           cat > python-deps-report.json << EOF
