@@ -170,16 +170,10 @@ fn verify_integrity_seal(file: &mut File, index: &super::index::Index) -> Result
     let mut metadata_bytes = vec![0u8; index.metadata_size as usize];
     file.read_exact(&mut metadata_bytes)?;
 
-    // Decompress metadata if needed
-    let json_bytes = if true {
-        // Always gzip for now
-        let gz = GzDecoder::new(&metadata_bytes[..]);
-        let mut json_data = Vec::new();
-        gz.take(1024 * 1024).read_to_end(&mut json_data)?;
-        json_data
-    } else {
-        metadata_bytes.clone()
-    };
+    // Decompress gzip metadata
+    let gz = GzDecoder::new(&metadata_bytes[..]);
+    let mut json_bytes = Vec::new();
+    gz.take(1024 * 1024).read_to_end(&mut json_bytes)?;
 
     // Get signature from index
     let sig_bytes = &index.integrity_signature;
