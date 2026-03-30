@@ -324,7 +324,10 @@ def apply_umask(umask_value: int) -> None:
     Args:
         umask_value: Umask value to apply
     """
-    os.umask(umask_value)
+    import sys
+
+    if sys.platform != "win32":
+        os.umask(umask_value)
 
 
 def create_workenv_directories(
@@ -338,9 +341,13 @@ def create_workenv_directories(
         workenv: Path to workenv root
         umask: Optional umask to apply
     """
-    # Apply umask if specified
+    import sys
+
+    is_unix = sys.platform != "win32"
+
+    # Apply umask if specified (Unix only)
     old_umask = None
-    if umask:
+    if umask and is_unix:
         old_umask = os.umask(parse_mode(umask))
 
     try:
@@ -355,17 +362,18 @@ def create_workenv_directories(
             # Create directory
             ensure_dir(dir_path)
 
-            # Set permissions if specified
-            if mode_str:
-                mode = parse_mode(mode_str)
-                dir_path.chmod(mode)
-            else:
-                # Apply default permissions for new directories
-                # Default is 0777 & ~umask
-                default_mode = 0o777 & ~parse_mode(umask) if umask else 0o700  # Default to owner-only
-                dir_path.chmod(default_mode)
+            # Set permissions if specified (Unix only)
+            if is_unix:
+                if mode_str:
+                    mode = parse_mode(mode_str)
+                    dir_path.chmod(mode)
+                else:
+                    # Apply default permissions for new directories
+                    # Default is 0777 & ~umask
+                    default_mode = 0o777 & ~parse_mode(umask) if umask else 0o700  # Default to owner-only
+                    dir_path.chmod(default_mode)
     finally:
-        # Restore original umask
+        # Restore original umask (Unix only)
         if old_umask is not None:
             os.umask(old_umask)
 

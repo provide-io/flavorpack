@@ -225,6 +225,47 @@ pub fn execute_setup_commands(
     Ok(())
 }
 
+/// Split a command string into parts, respecting single and double quotes.
+/// Handles simple quoting (no escape sequences within quotes).
+fn shell_split(input: &str) -> Vec<String> {
+    let mut parts = Vec::new();
+    let mut current = String::new();
+    let mut chars = input.chars().peekable();
+    let mut in_single_quote = false;
+    let mut in_double_quote = false;
+
+    while let Some(c) = chars.next() {
+        match c {
+            '\'' if !in_double_quote => {
+                in_single_quote = !in_single_quote;
+            }
+            '"' if !in_single_quote => {
+                in_double_quote = !in_double_quote;
+            }
+            '\\' if in_double_quote => {
+                // Inside double quotes, backslash escapes the next character
+                if let Some(next) = chars.next() {
+                    current.push(next);
+                }
+            }
+            c if c.is_whitespace() && !in_single_quote && !in_double_quote => {
+                if !current.is_empty() {
+                    parts.push(std::mem::take(&mut current));
+                }
+            }
+            _ => {
+                current.push(c);
+            }
+        }
+    }
+
+    if !current.is_empty() {
+        parts.push(current);
+    }
+
+    parts
+}
+
 /// Execute a command
 pub fn execute_command(
     command: &str,
@@ -234,13 +275,14 @@ pub fn execute_command(
     exec_env: &HashMap<String, String>,
 ) -> Result<()> {
     let command = substitute_placeholders(command, workenv_dir, package);
-    let parts: Vec<_> = command.split_whitespace().collect();
+    let parts = shell_split(&command);
 
     if parts.is_empty() {
         return Ok(());
     }
 
-    run_command(parts[0], &parts[1..], workenv_dir, user_cwd, exec_env)
+    let part_refs: Vec<&str> = parts.iter().map(|s| s.as_str()).collect();
+    run_command(part_refs[0], &part_refs[1..], workenv_dir, user_cwd, exec_env)
 }
 
 /// Run a command with arguments

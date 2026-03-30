@@ -54,7 +54,9 @@ class WorkEnvManager:
         package_version = metadata["package"]["version"]
 
         # Create work environment directory
-        workenv_base = Path.home() / ".cache" / "flavor" / "workenv"
+        from flavor.cache import get_cache_dir
+
+        workenv_base = get_cache_dir()
         workenv_dir = workenv_base / f"{package_name}_{package_version}"
         ensure_dir(workenv_dir)
 

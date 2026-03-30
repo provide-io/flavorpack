@@ -11,7 +11,7 @@ echo "helper_run_id=$HELPER_RUN" >> $GITHUB_OUTPUT
 echo "📦 Using Helper Pipeline run: $HELPER_RUN"
 
 # Get flavor run (allow partial success with wheels)
-FLAVOR_RUN=$(gh run list --workflow=03-flavor-pipeline.yml --limit=1 --json databaseId -q '.[0].databaseId')
+FLAVOR_RUN=$(gh run list --workflow=03-flavor-pipeline.yml --status=success --limit=1 --json databaseId -q '.[0].databaseId')
 if [ -z "$FLAVOR_RUN" ]; then
     echo "::error::No Flavor Pipeline runs found"
     exit 1
