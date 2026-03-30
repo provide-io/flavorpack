@@ -9,15 +9,6 @@ from typing import Any
 import pytest
 
 
-def pytest_addoption(parser: Any) -> None:
-    parser.addoption(
-        "--parity-report",
-        action="store_true",
-        default=False,
-        help="Generate cross-language parity Markdown report",
-    )
-
-
 def pytest_configure(config: Any) -> None:
     config.addinivalue_line("markers", "parity: cross-language parity test")
     config.addinivalue_line("markers", "parity_category(name): parity test category")
