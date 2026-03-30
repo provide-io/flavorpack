@@ -324,13 +324,8 @@ pub fn run_command(
     }
 
     // Prepend workenv bin directory to PATH (platform-aware)
-    if let Ok(path) = env::var("PATH") {
-        let bin_dir = if cfg!(windows) { "Scripts" } else { "bin" };
-        let sep = if cfg!(windows) { ";" } else { ":" };
-        let bin_path = workenv_dir.join(bin_dir);
-        let new_path = format!("{}{sep}{path}", bin_path.display());
-        command.env("PATH", new_path);
-    }
+    let path = build_workenv_path(workenv_dir, env::var("PATH").ok().as_deref());
+    command.env("PATH", path);
 
     let output = command.output()?;
 
@@ -384,6 +379,18 @@ mod tests {
         assert!(path.contains("test_workenv\\Scripts"));
     }
 
+    #[test]
+    fn test_build_workenv_path_without_existing_path_uses_only_bin_dir() {
+        let workenv_dir = Path::new("/tmp/test_workenv");
+        let path = build_workenv_path(workenv_dir, None);
+
+        #[cfg(not(windows))]
+        assert_eq!(path, "/tmp/test_workenv/bin");
+
+        #[cfg(windows)]
+        assert!(path.contains("test_workenv\\Scripts"));
+    }
+
     /// Test that `run_command` prepends the correct bin directory to PATH.
     ///
     /// On macOS/Linux the subdirectory is "bin" and the separator is ":".
@@ -409,9 +416,6 @@ mod tests {
 
         #[cfg(windows)]
         {
-            // Use platform-joined path for correct separator assertion.
-            let sep = std::path::MAIN_SEPARATOR;
-            let expected_scripts = format!("{sep}test_workenv{sep}Scripts;");
             assert!(
                 expected_path.contains(&expected_scripts),
                 "PATH should contain workenv\\Scripts; but was: {expected_path}"
