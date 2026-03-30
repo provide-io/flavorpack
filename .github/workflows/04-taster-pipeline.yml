@@ -23,6 +23,13 @@ jobs:
   setup:
     name: 🔧 Setup & Get Flavor PSP
     runs-on: ubuntu-latest
+    # Only run taster when the triggering Flavor pipeline succeeded.
+    # workflow_run fires on all conclusions (success, failure, cancelled);
+    # this if-guard skips everything when Flavor failed or was cancelled.
+    # workflow_dispatch bypasses this (github.event_name != 'workflow_run').
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
     outputs:
       version: ${{ steps.version.outputs.version }}
       helper_version: ${{ steps.version.outputs.version }}
