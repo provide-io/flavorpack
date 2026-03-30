@@ -16,17 +16,10 @@ repos:
 
   - repo: local
     hooks:
-      - id: ty
-        name: ty check
-        entry: ty check src/ tests/
-        language: system
-        pass_filenames: false
-        always_run: true
-        types: [python]
-
+      # ── Python ─────────────────────────────────────────────────────────
       - id: mypy
         name: mypy strict
-        entry: uv run mypy src/flavor
+        entry: bash -c 'uv run mypy src/flavor && uv run mypy tests/ --exclude "tests/(taster|pretaster|assets)/"'
         language: system
         pass_filenames: false
         always_run: true
@@ -40,19 +33,69 @@ repos:
         always_run: true
         types: [python]
 
-      # --- Uncomment when tools are installed ---
-      # - id: xenon
-      #   name: xenon complexity
-      #   entry: xenon --max-absolute F --max-modules F --max-average B src/
-      #   language: system
-      #   pass_filenames: false
-      #   always_run: true
-      #   types: [python]
+      # ── Go ─────────────────────────────────────────────────────────────
+      - id: go-fmt
+        name: go fmt
+        entry: bash -c 'cd src/flavor-go && gofmt -l . | grep . && exit 1 || exit 0'
+        language: system
+        pass_filenames: false
+        always_run: true
+        files: ^src/flavor-go/
 
-      # - id: vulture
-      #   name: vulture dead code
-      #   entry: vulture src/ tests/ --min-confidence 80
-      #   language: system
-      #   pass_filenames: false
-      #   always_run: true
-      #   types: [python]
+      - id: go-vet
+        name: go vet
+        entry: bash -c 'cd src/flavor-go && go vet ./...'
+        language: system
+        pass_filenames: false
+        always_run: true
+        files: ^src/flavor-go/
+
+      - id: go-build
+        name: go build
+        entry: bash -c 'cd src/flavor-go && go build ./...'
+        language: system
+        pass_filenames: false
+        always_run: true
+        files: ^src/flavor-go/
+
+      - id: go-test
+        name: go test
+        entry: bash -c 'cd src/flavor-go && go test ./...'
+        language: system
+        pass_filenames: false
+        always_run: true
+        files: ^src/flavor-go/
+
+      # ── Rust ───────────────────────────────────────────────────────────
+      - id: rust-fmt
+        name: cargo fmt
+        entry: bash -c 'cd src/flavor-rs && cargo fmt --check'
+        language: system
+        pass_filenames: false
+        always_run: true
+        files: ^src/flavor-rs/
+
+      - id: rust-clippy
+        name: cargo clippy
+        entry: bash -c 'cd src/flavor-rs && cargo clippy -- -D warnings'
+        language: system
+        pass_filenames: false
+        always_run: true
+        files: ^src/flavor-rs/
+
+      - id: rust-test
+        name: cargo test
+        entry: bash -c 'cd src/flavor-rs && cargo test'
+        language: system
+        pass_filenames: false
+        always_run: true
+        files: ^src/flavor-rs/
+
+      # ── Cross-language ─────────────────────────────────────────────────
+      - id: version-sync
+        name: version sync check
+        entry: python scripts/check_version_sync.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        files: (VERSION|Cargo\.toml|main\.go|version\.rs|pyproject\.toml)$

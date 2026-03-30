@@ -21,7 +21,7 @@ You must have the following installed on your Windows 11 ARM64 machine:
    ```
    If not installed: [Download from python.org](https://www.python.org/downloads/) - ensure you download the **ARM64** version
 
-2. **Go Compiler 1.23+**
+2. **Go Compiler 1.26+**
    ```cmd
    go version
    ```
@@ -88,8 +88,8 @@ rustc --print sysroot | grep aarch64 && echo "✅ Rust ARM64 target available" |
 
 2. **Clone and navigate to flavorpack**
    ```bash
-   git clone https://github.com/provide-io/flavor.git
-   cd flavor
+   git clone https://github.com/provide-io/flavorpack.git
+   cd flavorpack
    ```
 
 3. **Build helper binaries**
@@ -151,8 +151,8 @@ rustc --print sysroot | grep aarch64 && echo "✅ Rust ARM64 target available" |
    sudo apt install golang-go rust git python3 python3-pip
 
    # Clone and build
-   git clone https://github.com/provide-io/flavor.git
-   cd flavor
+   git clone https://github.com/provide-io/flavorpack.git
+   cd flavorpack
    ./build.sh
    python3 tools/build_wheel.py --platform windows_arm64
    ```
@@ -205,12 +205,12 @@ python tools/build_wheel.py --platform windows_arm64
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/provide-io/flavor.git
-cd flavor
+git clone https://github.com/provide-io/flavorpack.git
+cd flavorpack
 
 # 2. Verify prerequisites
 python --version      # Should be 3.11+
-go version            # Should be 1.23+
+go version            # Should be 1.26+
 rustc --version       # Should be 1.86+
 
 # 3. Build helper binaries
@@ -477,7 +477,7 @@ After building:
 
 1. **Test with real applications**: Package an app and test the PSP
 2. **Submit to PyPI**: `pip install flavorpack==0.3.21` should work
-3. **File issues**: Report any ARM64-specific problems to [GitHub Issues](https://github.com/provide-io/flavor/issues)
+3. **File issues**: Report any ARM64-specific problems to [GitHub Issues](https://github.com/provide-io/flavorpack/issues)
 4. **Contribute**: Help improve ARM64 support!
 
 ## References

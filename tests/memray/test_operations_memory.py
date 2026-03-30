@@ -5,14 +5,15 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from wrknv.memray.runner import run_memray_stress  # ty: ignore[unresolved-import]
+
+from tests.memray.conftest import run_memray_stress
 
 pytestmark = [pytest.mark.memray, pytest.mark.slow]
 
 
 def test_operations_allocations(
     memray_output_dir: Path,
-    memray_baseline: dict,
+    memray_baseline: dict[str, int],
     memray_baselines_path: Path,
 ) -> None:
     """Profile memory allocations in operations hot path."""

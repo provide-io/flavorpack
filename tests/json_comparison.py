@@ -8,17 +8,6 @@ Shows the evolution from text-based operation chains to packed integers"""
 
 import json
 
-# Add generated proto modules to path
-sys.path.insert(0, str(Path(__file__).parent / "generated"))
-
-from generated import pspf_2025_pb2  # ty: ignore[unresolved-import]
-from generated.modules import (  # ty: ignore[unresolved-import]
-    crypto_pb2,
-    index_pb2,
-    metadata_pb2,
-    operations_pb2,
-    slots_pb2,
-)
 from google.protobuf import json_format
 
 # Import v0 constants for operation packing
