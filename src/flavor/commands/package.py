@@ -84,16 +84,6 @@ log = get_command_logger("pack")
     type=click.Path(exists=True, file_okay=False, resolve_path=True),
     help="Base directory for {workenv} resolution (defaults to CWD).",
 )
-@click.option(
-    "--output-format",
-    type=click.Choice(["text", "json"], case_sensitive=False),
-    help="Output format (or set FLAVOR_OUTPUT_FORMAT env var).",
-)
-@click.option(
-    "--output-file",
-    type=str,
-    help="Output file path, STDOUT, or STDERR (or set FLAVOR_OUTPUT_FILE env var).",
-)
 def pack_command(
     pyproject_toml_path: str,
     output_path: str | None,
@@ -107,8 +97,6 @@ def pack_command(
     public_key: str | None,
     key_seed: str | None,
     workenv_base: str | None,
-    output_format: str | None,
-    output_file: str | None,
 ) -> None:
     """Pack the application for one or more target platforms."""
     log.debug(
@@ -124,9 +112,6 @@ def pack_command(
     _setup_workenv_base(workenv_base)
 
     try:
-        if not quiet:
-            pass
-
         built_artifacts = _build_package_artifacts(
             pyproject_toml_path,
             output_path,
@@ -192,8 +177,6 @@ def _process_built_artifacts(built_artifacts: list[Path], verify: bool, strip: b
     """Process each built artifact with verification and optimization reporting."""
     for artifact in built_artifacts:
         log.debug("Processing artifact", artifact=str(artifact), verify=verify, strip=strip)
-        if not quiet:
-            pass
 
         if strip and not quiet:
             pout("  📉 Binary optimized (debug symbols stripped)")
@@ -213,7 +196,7 @@ def _verify_artifact(artifact: Path, quiet: bool) -> None:
         if result["signature_valid"]:
             log.info("Package verified successfully", artifact=str(artifact))
             if not quiet:
-                pass
+                pout("  ✅ Package signature verified")
         else:
             log.error("Package verification failed", artifact=str(artifact))
             perr("  ❌ Package verification failed")
@@ -229,7 +212,7 @@ def _show_final_results(built_artifacts: list[Path], quiet: bool) -> None:
     if built_artifacts:
         log.info("All targets built successfully", artifact_count=len(built_artifacts))
         if not quiet:
-            pass
+            pout(f"✅ Successfully built {len(built_artifacts)} package(s)")
     else:
         log.warning("No targets were specified or built")
         pout("⚠️ No targets were specified or built.")

@@ -182,7 +182,7 @@ class TestMetadataAssembly:
         self, basic_spec: BuildSpec, mock_launcher_info: dict[str, Any]
     ) -> None:
         """Test complete metadata assembly."""
-        slots = []  # Empty slots for now
+        slots: list[Any] = []  # Empty slots for now
 
         metadata = assemble_metadata(basic_spec, slots, mock_launcher_info)
 

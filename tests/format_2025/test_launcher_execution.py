@@ -32,8 +32,8 @@ class TestSlotTableReading:
     @pytest.fixture
     def test_bundle_with_slots(self) -> Iterator[Path]:
         """Create a test bundle with multiple slots."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            tmpdir = Path(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir_str:
+            tmpdir = Path(tmpdir_str)
 
             # Create test files for slots
             slot1_path = tmpdir / "slot1.txt"
@@ -158,8 +158,8 @@ class TestWorkEnvironment:
     @pytest.fixture
     def bundle_with_setup_commands(self) -> Iterator[Path]:
         """Create a bundle with setup commands."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            tmpdir = Path(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir_str:
+            tmpdir = Path(tmpdir_str)
             package_version = tmpdir.name
 
             # Create a Python runtime tarball
@@ -281,8 +281,8 @@ class TestProcessExecution:
     @pytest.fixture
     def executable_bundle(self) -> Iterator[Path]:
         """Create a bundle that can be executed."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            tmpdir = Path(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir_str:
+            tmpdir = Path(tmpdir_str)
 
             # Create a simple Python script
             script_path = tmpdir / "main.py"

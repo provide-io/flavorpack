@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""Shared utilities: platform detection, XOR encoding, and re-exports."""
 
 from __future__ import annotations
 

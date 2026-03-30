@@ -14,7 +14,6 @@ from provide.foundation.archive import GzipCompressor, TarArchive
 import pytest
 
 from flavor.packaging.python.dist_manager import PythonDistManager
-import flavor.packaging.python.pypapip_manager as _pip_mod
 from flavor.packaging.python.pypapip_manager import PyPaPipManager
 from flavor.packaging.python.uv_manager import UVManager
 from flavor.packaging.python.wheel_builder import WheelBuilder
@@ -38,9 +37,9 @@ class TestPythonPackagingIntegration:
     def test_managers_initialization_compatible(self) -> None:
         """Test that all managers initialize without conflicts."""
         # All managers should be independent instances
-        assert self.pypapip is not self.uv_manager
-        assert self.pypapip is not self.wheel_builder
-        assert self.pypapip is not self.dist_manager
+        assert id(self.pypapip) != id(self.uv_manager)
+        assert id(self.pypapip) != id(self.wheel_builder)
+        assert id(self.pypapip) != id(self.dist_manager)
 
         # All managers should have their expected capabilities
         assert hasattr(self.pypapip, "_get_pypapip_install_cmd")
@@ -194,7 +193,7 @@ version = "1.0.0"
             python_exe = Path("/usr/bin/python")
             packages = ["test-package"]
 
-            with patch.object(_pip_mod.sys, "platform", "linux"):
+            with patch.object(sys, "platform", "linux"):
                 cmd = self.pypapip._get_pypapip_install_cmd(python_exe, packages)
             expected = ["/usr/bin/python", "-m", "pip", "install", "test-package"]
             assert cmd == expected
@@ -221,7 +220,7 @@ version = "1.0.0"
             venv_python = temp_path / "venv" / "bin" / "python"
 
             # Test installation
-            with patch.object(_pip_mod.sys, "platform", "linux"):
+            with patch.object(sys, "platform", "linux"):
                 self.dist_manager.install_wheels_to_environment(venv_python, wheel_files)
 
             # Verify PyPA pip was used (not UV pip)

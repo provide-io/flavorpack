@@ -165,15 +165,15 @@ pub(super) fn prepare_command(
         package_path.to_string_lossy().to_string(),
     );
 
-    // Prepend workenv/bin to PATH
+    // Prepend workenv bin directory to PATH (platform-aware)
+    let bin_dir = if cfg!(windows) { "Scripts" } else { "bin" };
+    let sep = if cfg!(windows) { ";" } else { ":" };
+    let bin_path = workenv_path.join(bin_dir);
     if let Some(path) = env_map.get("PATH") {
-        let new_path = format!("{}/bin:{}", workenv_path.display(), path);
+        let new_path = format!("{}{sep}{path}", bin_path.display());
         env_map.insert("PATH".to_string(), new_path);
     } else {
-        env_map.insert(
-            "PATH".to_string(),
-            format!("{}/bin", workenv_path.display()),
-        );
+        env_map.insert("PATH".to_string(), format!("{}", bin_path.display()));
     }
 
     Ok((executable, all_args, env_map))

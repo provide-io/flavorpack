@@ -176,8 +176,9 @@ class WorkEnvManager:
         base_env = dict(os.environ)
 
         # Prepare workenv-specific environment variables
+        bin_dir = "Scripts" if sys.platform == "win32" else "bin"
         workenv_env = {
-            "PATH": f"{workenv_dir}/bin:{base_env.get('PATH', '')}",
+            "PATH": f"{workenv_dir / bin_dir}{os.pathsep}{base_env.get('PATH', '')}",
         }
 
         # Apply environment layers with isolation

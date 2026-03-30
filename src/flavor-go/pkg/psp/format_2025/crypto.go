@@ -100,4 +100,3 @@ func loadKeysFromFiles(privateKeyPath, publicKeyPath string) (ed25519.PrivateKey
 
 	return privateKey, publicKey, nil
 }
-
