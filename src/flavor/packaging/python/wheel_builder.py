@@ -221,7 +221,7 @@ class WheelBuilder:
         # Create input requirements file if packages provided
         if packages and not requirements_file:
             requirements_file = output_dir / "requirements.in"
-            with requirements_file.open("w") as f:
+            with requirements_file.open("w", encoding="utf-8") as f:
                 for package in packages:
                     f.write(f"{package}\n")
 

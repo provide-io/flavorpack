@@ -30,11 +30,8 @@ class PSPFLauncher(PSPFReader):
 
     def __init__(self, bundle_path: Path | None = None) -> None:
         if bundle_path is None:
-            # Allow None for testing purposes, parent class will handle it
-            bundle_path_arg: Path | str = ""
-        else:
-            bundle_path_arg = bundle_path
-        super().__init__(bundle_path_arg)
+            raise ValueError("bundle_path is required")
+        super().__init__(bundle_path)
         from flavor.cache import get_cache_dir
 
         self.cache_dir = get_cache_dir().parent
