@@ -288,7 +288,7 @@ jobs:
       - name: 📦 Install build tools
         shell: bash
         run: |
-          uv pip install build wheel setuptools
+          uv pip install --system build wheel setuptools
       
       - name: 🎡 Build platform wheel
         shell: bash
