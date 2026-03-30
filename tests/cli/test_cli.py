@@ -32,7 +32,7 @@ def test_cli_pack_and_verify(tmp_path: Path) -> None:
 
         # Also mock verify to avoid real verification
         with patch("flavor.commands.package.verify_package") as mock_verify:
-            mock_verify.return_value = {"signature_valid": True}
+            mock_verify.return_value = {"valid": True, "signature_valid": True}
 
             pack_result = runner.invoke(
                 cli_main,
@@ -56,11 +56,39 @@ def test_cli_pack_and_verify(tmp_path: Path) -> None:
             "slot_count": 1,
             "package": {"name": "test-package", "version": "1.0.0"},
             "slots": [{"index": 0, "id": "main", "size": 512 * 1024, "codec": "raw"}],
+            "valid": True,
             "signature_valid": True,
         }
         verify_result = runner.invoke(cli_main, ["verify", str(fake_package_file)])
         assert verify_result.exit_code == 0, f"Verify command failed: {verify_result.output}"
         mock_verify.assert_called_once_with(fake_package_file)
+
+
+def test_cli_pack_fails_when_overall_verification_fails(tmp_path: Path) -> None:
+    """Pack must reject artifacts that fail overall integrity even if signatures still validate."""
+    runner = CliRunner()
+    pyproject_path = tmp_path / "pyproject.toml"
+    pyproject_path.touch()
+    fake_artifact = tmp_path / "fake_artifact.psp"
+    fake_artifact.touch()
+
+    with patch("flavor.commands.package.build_package_from_manifest") as mock_build:
+        mock_build.return_value = [fake_artifact]
+
+        with patch("flavor.commands.package.verify_package") as mock_verify:
+            mock_verify.return_value = {
+                "valid": False,
+                "checksums_valid": False,
+                "signature_valid": True,
+            }
+
+            pack_result = runner.invoke(
+                cli_main,
+                ["pack", "--manifest", str(pyproject_path)],
+            )
+
+    assert pack_result.exit_code != 0
+    assert "Verification failed" in pack_result.output
 
 
 def test_cli_keygen(tmp_path: Path) -> None:

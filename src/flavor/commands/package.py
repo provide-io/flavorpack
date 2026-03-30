@@ -193,13 +193,24 @@ def _verify_artifact(artifact: Path, quiet: bool) -> None:
 
     try:
         result = verify_package(artifact)
-        if result["signature_valid"]:
+        if result.get("valid", False):
             log.info("Package verified successfully", artifact=str(artifact))
             if not quiet:
-                pout("  ✅ Package signature verified")
+                pout("  ✅ Package integrity verified")
         else:
-            log.error("Package verification failed", artifact=str(artifact))
-            perr("  ❌ Package verification failed")
+            log.error(
+                "Package verification failed",
+                artifact=str(artifact),
+                checksums_valid=result.get("checksums_valid"),
+                signature_valid=result.get("signature_valid"),
+            )
+            failure_reasons: list[str] = []
+            if result.get("checksums_valid") is False:
+                failure_reasons.append("checksums invalid")
+            if result.get("signature_valid") is False:
+                failure_reasons.append("signature invalid")
+            detail = f" ({', '.join(failure_reasons)})" if failure_reasons else ""
+            perr(f"  ❌ Package verification failed{detail}")
             raise BuildError(f"Verification failed for {artifact}")
     except Exception as e:
         log.error("Verification error", artifact=str(artifact), error=str(e))

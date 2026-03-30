@@ -33,6 +33,8 @@ pub struct LaunchOptions {
 pub struct VerifyResult {
     pub format: String,
     pub version: String,
+    pub valid: bool,
+    pub checksums_valid: bool,
     pub signature_valid: bool,
     pub slot_count: usize,
     pub package_name: String,

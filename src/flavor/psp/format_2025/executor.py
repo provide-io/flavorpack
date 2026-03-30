@@ -20,6 +20,7 @@ from provide.foundation import logger
 from provide.foundation.process import run
 
 from flavor.psp.format_2025.environment import apply_environment_layers
+from flavor.psp.format_2025.targets import normalize_workenv_target
 
 
 class BundleExecutor:
@@ -162,11 +163,7 @@ class BundleExecutor:
 
     def _normalize_slot_target(self, slot_target: str) -> str:
         """Normalize slot target metadata to a path relative to the workenv."""
-        if slot_target == "{workenv}":
-            return "{workenv}"
-        if slot_target.startswith("{workenv}/"):
-            return slot_target.removeprefix("{workenv}/")
-        return slot_target
+        return normalize_workenv_target(slot_target)
 
     def prepare_environment(self) -> dict[str, str]:
         """Prepare environment variables for execution.
