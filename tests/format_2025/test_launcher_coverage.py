@@ -246,6 +246,54 @@ class TestApplySlotPermissions:
 
 
 @pytest.mark.unit
+class TestNormalizeSlotTarget:
+    """Test slot target normalization and rejection of unsafe paths."""
+
+    def test_workenv_placeholder_is_preserved(self, tmp_path: Path) -> None:
+        launcher = _make_launcher(tmp_path / "bundle.psp")
+        assert launcher._normalize_slot_target("{workenv}") == "{workenv}"
+
+    def test_workenv_prefix_is_stripped(self, tmp_path: Path) -> None:
+        launcher = _make_launcher(tmp_path / "bundle.psp")
+        assert launcher._normalize_slot_target("{workenv}/bin/tool") == "bin/tool"
+
+    @pytest.mark.parametrize(
+        "slot_target",
+        [
+            "/tmp/evil",
+            "../../etc/passwd",
+            "{workenv}/../../etc/passwd",
+            "..\\..\\windows\\system32",
+            "",
+        ],
+    )
+    def test_unsafe_targets_raise_value_error(self, tmp_path: Path, slot_target: str) -> None:
+        launcher = _make_launcher(tmp_path / "bundle.psp")
+        with pytest.raises(ValueError, match="target"):
+            launcher._normalize_slot_target(slot_target)
+
+
+@pytest.mark.unit
+class TestExtractSlotPathValidation:
+    """Test extraction rejects metadata targets that escape the workenv."""
+
+    def test_extract_slot_rejects_unsafe_target(self, tmp_path: Path) -> None:
+        bundle = tmp_path / "test.psp"
+        bundle.write_bytes(b"payload")
+
+        launcher = _make_launcher(bundle)
+        slot_entry = _make_raw_slot_entry(offset=0, size=7, operations=0)
+        metadata = {"slots": [{"target": "../../etc/passwd"}]}
+
+        with (
+            patch.object(launcher, "read_slot_table", return_value=[slot_entry]),
+            patch.object(launcher, "read_metadata", return_value=metadata),
+            pytest.raises(ValueError, match="target"),
+        ):
+            launcher.extract_slot(0, tmp_path)
+
+
+@pytest.mark.unit
 class TestVerifyIntegrity:
     """Test verify_integrity()."""
 
