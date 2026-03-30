@@ -123,7 +123,7 @@ class PSPFBuilder:
         new_spec = self._spec.with_slot(slot)
         new_builder = PSPFBuilder(new_spec)
         # Transfer ownership of all temp files to the new builder
-        new_builder._temp_files, self._temp_files = self._temp_files, []
+        new_builder._temp_files = self._temp_files.copy()
         if temp_path is not None:
             new_builder._temp_files.append(temp_path)
         return new_builder
