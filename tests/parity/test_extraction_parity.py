@@ -1,6 +1,3 @@
-# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
 """Cross-language parity tests for PSPF extraction safety.
 
 Tests the Python implementation of extraction-safety behaviours that must
@@ -16,13 +13,6 @@ import tarfile
 import pytest
 
 from flavor.psp.format_2025.targets import normalize_workenv_target
-
-pytestmark = [
-    pytest.mark.cross_language,
-    pytest.mark.ci,
-    pytest.mark.security,
-    pytest.mark.adversarial,
-]
 
 
 # ---------------------------------------------------------------------------
@@ -111,10 +101,6 @@ def test_rejects_symlinks_in_tar(tmp_path: Path) -> None:
 @pytest.mark.parity_category("Extraction Safety")
 @pytest.mark.parity_go("PASS")
 @pytest.mark.parity_rust("PASS")
-@pytest.mark.skipif(
-    not hasattr(__import__("os"), "statvfs"),
-    reason="os.statvfs not available on Windows; disk space check silently skips",
-)
 def test_validates_disk_space_before_extraction(tmp_path: Path) -> None:
     """Python checks available disk space before attempting extraction."""
     from provide.foundation.file import check_disk_space
