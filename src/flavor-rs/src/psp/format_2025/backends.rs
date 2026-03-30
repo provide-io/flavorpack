@@ -440,12 +440,12 @@ pub fn create_backend(mode: u8, path: Option<&Path>) -> Box<dyn Backend> {
             if let Ok(metadata) = std::fs::metadata(p) {
                 let file_size = metadata.len();
 
-                // Use mmap for files over 1MB
-                if file_size > 1024 * 1024 {
-                    mode = ACCESS_MMAP;
-                // Use streaming for very large files
-                } else if file_size > 100 * 1024 * 1024 {
+                // Use streaming for very large files (>100MB)
+                if file_size > 100 * 1024 * 1024 {
                     mode = ACCESS_STREAM;
+                // Use mmap for files over 1MB
+                } else if file_size > 1024 * 1024 {
+                    mode = ACCESS_MMAP;
                 } else {
                     mode = ACCESS_FILE;
                 }
