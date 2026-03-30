@@ -13,7 +13,7 @@
 
 use std::fs;
 use std::io::Read;
-use std::path::Path;
+use std::path::{Component, Path, PathBuf};
 
 use flate2::read::GzDecoder;
 use log::{debug, error, trace};
@@ -164,7 +164,8 @@ pub fn extract_slot(reader: &mut Reader, slot_index: usize, dest_dir: &Path) -> 
         extract_tarball(&decompressed_data, dest_dir)?;
     } else {
         // No TAR operation - treat as single file
-        let target_path = dest_dir.join(&slot_target);
+        let normalized_target = slot_target.replace('\\', "/");
+        let target_path = resolve_in_workenv(dest_dir, Path::new(&normalized_target))?;
         extract_single_file(&decompressed_data, &target_path, &descriptors, slot_index)?;
     }
 
@@ -317,7 +318,7 @@ pub fn extract_tarball(data: &[u8], dest_dir: &Path) -> Result<()> {
     for entry_result in tar.entries()? {
         let mut entry = entry_result?;
         let path = entry.path()?;
-        let dest_path = dest_dir.join(&path);
+        let entry_type = entry.header().entry_type();
 
         trace!("📄 Extracting: {path:?}");
 
@@ -328,14 +329,13 @@ pub fn extract_tarball(data: &[u8], dest_dir: &Path) -> Result<()> {
             continue;
         }
 
-        // Path traversal protection: ensure the destination stays within dest_dir.
-        // We cannot use canonicalize() because the file may not exist yet, but
-        // PathBuf::starts_with already handles ".." components in the joined path.
-        if !dest_path.starts_with(dest_dir) {
+        if entry_type.is_symlink() || entry_type.is_hard_link() {
             return Err(FlavorError::Generic(format!(
-                "tar entry {path:?} escapes extraction directory"
+                "tar entry {path:?} uses unsupported link type"
             )));
         }
+
+        let dest_path = resolve_in_workenv(dest_dir, &path)?;
 
         // Create parent directories if needed
         if let Some(parent) = dest_path.parent() {
@@ -373,4 +373,67 @@ pub fn is_gzipped_tarball(data: &[u8]) -> Result<bool> {
     let mut decompressed = Vec::new();
     decoder.read_to_end(&mut decompressed)?;
     Ok(is_tarball(&decompressed))
+}
+
+fn resolve_in_workenv(dest_dir: &Path, target: &Path) -> Result<PathBuf> {
+    let mut resolved = dest_dir.to_path_buf();
+
+    for component in target.components() {
+        match component {
+            Component::CurDir => {}
+            Component::Normal(part) => resolved.push(part),
+            Component::ParentDir => {
+                return Err(FlavorError::Generic(format!(
+                    "path {target:?} escapes extraction directory"
+                )));
+            }
+            Component::RootDir | Component::Prefix(_) => {
+                return Err(FlavorError::Generic(format!(
+                    "absolute path {target:?} is not allowed during extraction"
+                )));
+            }
+        }
+    }
+
+    Ok(resolved)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tar::{Builder, EntryType, Header};
+    use tempfile::tempdir;
+
+    #[test]
+    fn test_resolve_in_workenv_rejects_parent_traversal() {
+        let dest_dir = Path::new("/tmp/workenv");
+        assert!(resolve_in_workenv(dest_dir, Path::new("../../etc/passwd")).is_err());
+    }
+
+    #[test]
+    fn test_resolve_in_workenv_rejects_absolute_paths() {
+        let dest_dir = Path::new("/tmp/workenv");
+        assert!(resolve_in_workenv(dest_dir, Path::new("/etc/passwd")).is_err());
+    }
+
+    #[test]
+    fn test_extract_tarball_rejects_symlink_entries() {
+        let mut archive_bytes = Vec::new();
+        {
+            let mut builder = Builder::new(&mut archive_bytes);
+            let mut header = Header::new_gnu();
+            header.set_entry_type(EntryType::Symlink);
+            header.set_size(0);
+            header.set_mode(0o777);
+            header.set_cksum();
+            builder
+                .append_link(&mut header, "bad-link", "../../etc/passwd")
+                .expect("append symlink");
+            builder.finish().expect("finish archive");
+        }
+
+        let temp_dir = tempdir().expect("tempdir");
+        let result = extract_tarball(&archive_bytes, temp_dir.path());
+        assert!(result.is_err());
+    }
 }
