@@ -117,8 +117,8 @@ def verify_package(package_path: Path) -> dict[str, Any]:
     Returns:
         Dictionary containing verification results with keys:
             - 'valid' (bool): Overall verification status
+            - 'checksums_valid' (bool): Slot checksum verification result
             - 'signature_valid' (bool): Signature verification result
-            - 'checksums_valid' (bool): Checksum verification result
             - 'format_valid' (bool): Format validation result
             - 'errors' (list): List of any errors encountered
 

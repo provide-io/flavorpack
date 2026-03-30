@@ -45,6 +45,7 @@ gethostname = "0.5"
 memmap2 = "0.9"
 hex = "0.4"
 which = "6.0"
+fs2 = "0.4"
 
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.58", features = [
