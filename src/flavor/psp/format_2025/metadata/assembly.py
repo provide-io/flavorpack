@@ -223,12 +223,12 @@ def create_build_metadata(deterministic: bool = False) -> dict[str, Any]:
     # Only add non-deterministic fields if not in deterministic mode
     if not deterministic:
         build_meta["timestamp"] = datetime.datetime.now(datetime.UTC).isoformat()
-        if os.environ.get(ENV_INCLUDE_BUILD_HOST) == "1":
+        if os.environ.get("FLAVOR_INCLUDE_BUILD_HOST") == "1":
             platform_info["host"] = socket.gethostname()
     else:
         # Use fixed timestamp for deterministic builds
         build_meta["timestamp"] = "2025-01-01T00:00:00+00:00"
-        if os.environ.get(ENV_INCLUDE_BUILD_HOST) == "1":
+        if os.environ.get("FLAVOR_INCLUDE_BUILD_HOST") == "1":
             platform_info["host"] = "deterministic-build"
 
     return build_meta
