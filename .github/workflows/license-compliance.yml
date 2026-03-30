@@ -147,8 +147,8 @@ jobs:
         with:
           persist-credentials: false
       
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v6
+      - name: 📦 Setup uv + Python
+        uses: astral-sh/setup-uv@v8
         with:
           python-version: '3.11'
 
@@ -548,14 +548,10 @@ jobs:
         run: |
           # Install syft for SBOM generation
           curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
-
-          # Install cyclonedx-bom (Python-based, reliable)
-          uv tool install cyclonedx-bom || pip install cyclonedx-bom || true
-
-          # @cyclonedx/cli is optional — skip if npm unavailable
-          if command -v npm &>/dev/null; then
-            npm install -g @cyclonedx/cli || true
-          fi
+          
+          # Install cyclonedx tools
+          uv tool install cyclonedx-bom
+          npm install -g @cyclonedx/cli
       
       - name: 📋 Generate SBOM
         run: |
