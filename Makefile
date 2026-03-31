@@ -37,11 +37,15 @@ test-cov: ## Run Python tests with coverage
 test-cov-xml: ## Run Python tests with XML coverage for CI
 	PYTHONUTF8=1 uv run pytest --cov=flavor --cov-report=xml --cov-report=term tests/
 
+.PHONY: test-property-python
+test-property-python: ## Run Python property and hypothesis tests
+	PYTHONUTF8=1 uv run pytest -m stress tests/
+
 # Mutation Testing (using mutmut directly)
 .PHONY: mutation-run
 mutation-run: ## Run mutation testing with mutmut
 	@echo "🧬 Running mutation testing..."
-	@mutmut run
+	@mutmut run $(QUALITY_PY_MUTATION_ARGS)
 
 .PHONY: mutation-results
 mutation-results: ## Show mutation testing results
@@ -55,6 +59,57 @@ mutation-browse: ## Open interactive mutation browser
 mutation-clean: ## Clean mutation testing artifacts
 	@rm -rf .mutmut-cache html/
 	@echo "🧹 Mutation testing artifacts cleaned"
+
+# ==================== Unified Quality ====================
+
+QUALITY_PY_COV_MIN ?= 85
+QUALITY_GO_COV_MIN ?= 80
+QUALITY_RUST_COV_MIN ?= 80
+QUALITY_GO_FUZZTIME ?= 30s
+QUALITY_RUST_FUZZ_SECONDS ?= 30
+QUALITY_PY_MUTATION_ARGS ?=
+QUALITY_GO_MUTATION_ARGS ?=
+QUALITY_RUST_MUTATION_ARGS ?=
+
+.PHONY: quality-python-fast
+quality-python-fast: ## Run strict Python coverage and property workflows
+	PYTHONUTF8=1 uv run pytest --cov=flavor --cov-report=term-missing --cov-report=xml --cov-report=json tests/
+	$(MAKE) test-property-python
+
+.PHONY: quality-python-deep
+quality-python-deep: ## Run strict Python mutation workflows
+	$(MAKE) mutation-run QUALITY_PY_MUTATION_ARGS="$(QUALITY_PY_MUTATION_ARGS)"
+
+.PHONY: quality-python
+quality-python: quality-python-fast quality-python-deep ## Run all strict Python quality workflows
+
+.PHONY: quality-go-fast
+quality-go-fast: ## Run strict Go coverage workflows
+	@$(MAKE) -C src/flavor-go coverage QUALITY_GO_COV_MIN=$(QUALITY_GO_COV_MIN)
+
+.PHONY: quality-go-deep
+quality-go-deep: ## Run strict Go fuzzing and mutation workflows
+	@$(MAKE) -C src/flavor-go fuzz FUZZTIME=$(QUALITY_GO_FUZZTIME)
+	@$(MAKE) -C src/flavor-go mutation QUALITY_GO_MUTATION_ARGS="$(QUALITY_GO_MUTATION_ARGS)"
+
+.PHONY: quality-go
+quality-go: quality-go-fast quality-go-deep ## Run all strict Go quality workflows
+
+.PHONY: quality-rust-fast
+quality-rust-fast: ## Run strict Rust coverage and property workflows
+	@$(MAKE) -C src/flavor-rs coverage QUALITY_RUST_COV_MIN=$(QUALITY_RUST_COV_MIN)
+	@$(MAKE) -C src/flavor-rs proptest
+
+.PHONY: quality-rust-deep
+quality-rust-deep: ## Run strict Rust fuzzing and mutation workflows
+	@$(MAKE) -C src/flavor-rs fuzz QUALITY_RUST_FUZZ_SECONDS=$(QUALITY_RUST_FUZZ_SECONDS)
+	@$(MAKE) -C src/flavor-rs mutation QUALITY_RUST_MUTATION_ARGS="$(QUALITY_RUST_MUTATION_ARGS)"
+
+.PHONY: quality-rust
+quality-rust: quality-rust-fast quality-rust-deep ## Run all strict Rust quality workflows
+
+.PHONY: quality-ci
+quality-ci: quality-python quality-go quality-rust ## Run all cross-language quality workflows
 
 # ==================== Go Testing ====================
 
