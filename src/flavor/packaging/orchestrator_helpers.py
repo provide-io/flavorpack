@@ -5,6 +5,7 @@
 
 """Helper functions for the packaging orchestrator build pipeline."""
 
+import gzip
 import os
 from pathlib import Path
 import tarfile
@@ -80,21 +81,27 @@ def create_slot_tarballs(temp_dir: Path, artifacts: dict[str, Path]) -> dict[str
 
     slots = {}
 
-    # UV is a single binary (builder will compress it)
-    uv_path = artifacts["payload_dir"] / "bin" / uv_exe
-    slots["uv"] = uv_path
+    # UV binary: pre-compress with gzip so external builders (Go/Rust) store
+    # data that matches operations="gzip" — both builders stream source bytes
+    # directly without applying compression themselves.
+    uv_raw = artifacts["payload_dir"] / "bin" / uv_exe
+    uv_gz = temp_dir / f"{uv_exe}.gz"
+    with uv_raw.open("rb") as src, gzip.open(uv_gz, "wb") as dst:
+        dst.write(src.read())
+    slots["uv"] = uv_gz
 
     python_tarball = artifacts.get("python_tgz")
     if not python_tarball:
         raise BuildError("Python runtime tarball not found")
-    slots["python"] = python_tarball
+    slots["python"] = python_tarball  # already .tar.gz, matches operations="tgz"
 
-    wheels_tarball = temp_dir / "wheels.tar"
-    with tarfile.open(wheels_tarball, "w") as tar:
+    # Wheels: build a .tar.gz so stored bytes match operations="tgz"
+    wheels_tgz = temp_dir / "wheels.tar.gz"
+    with tarfile.open(wheels_tgz, "w:gz") as tar:
         wheels_dir = artifacts["payload_dir"] / "wheels"
         for wheel in wheels_dir.glob("*.whl"):
             tar.add(wheel, arcname=f"wheels/{wheel.name}")
-    slots["wheels"] = wheels_tarball
+    slots["wheels"] = wheels_tgz
 
     return slots
 
@@ -129,8 +136,8 @@ def create_builder_manifest(
         runtime_command = f"{{workenv}}/{bin_dir}/{package_exe}"
 
     manifest = {
-        "name": package_name,
-        "version": version,
+        "package": {"name": package_name, "version": version},
+        "execution": {"command": runtime_command},
         "cache_validation": {
             "check_file": "{workenv}/metadata/installed",
             "expected_content": f"{package_name}-{version}",
@@ -174,7 +181,6 @@ def create_builder_manifest(
                 "content": "{package_name}-{version}",
             },
         ],
-        "command": runtime_command,
         "slots": [
             {
                 "id": "uv",
