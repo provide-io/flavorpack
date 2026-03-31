@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -21,7 +18,7 @@ func buildPolicyHashBundle(t *testing.T, policy *PackagePolicy, hashHex string) 
 	if err != nil {
 		t.Fatalf("create temp file: %v", err)
 	}
-	defer func() { _ = f.Close() }()
+	defer f.Close()
 
 	// Build metadata JSON with optional policy field.
 	type minimalMeta struct {
@@ -97,7 +94,7 @@ func TestVerifyAttestationPolicyHash_ZeroField_Skip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader: %v", err)
 	}
-	defer func() { _ = reader.Close() }()
+	defer reader.Close()
 
 	if err := reader.VerifyAttestationPolicyHash(); err != nil {
 		t.Errorf("expected nil for zero policy hash, got: %v", err)
@@ -112,19 +109,10 @@ func TestVerifyAttestationPolicyHash_Match(t *testing.T) {
 		RefuseRoot: true,
 	}
 
-	// Compute canonical JSON the same way the method does:
-	// marshal to JSON, unmarshal to map, re-marshal (sorts keys alphabetically).
-	rawPolicy, err := json.Marshal(policy)
+	// Compute canonical JSON the same way the method does.
+	canonical, err := json.Marshal(policy)
 	if err != nil {
 		t.Fatalf("marshal policy: %v", err)
-	}
-	var policyMap map[string]interface{}
-	if err := json.Unmarshal(rawPolicy, &policyMap); err != nil {
-		t.Fatalf("unmarshal policy to map: %v", err)
-	}
-	canonical, err := json.Marshal(policyMap)
-	if err != nil {
-		t.Fatalf("re-marshal policy map: %v", err)
 	}
 	h := sha256.Sum256(canonical)
 	correctHex := hex.EncodeToString(h[:])
@@ -134,7 +122,7 @@ func TestVerifyAttestationPolicyHash_Match(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader: %v", err)
 	}
-	defer func() { _ = reader.Close() }()
+	defer reader.Close()
 
 	if err := reader.VerifyAttestationPolicyHash(); err != nil {
 		t.Errorf("expected no error for matching policy hash, got: %v", err)
@@ -154,7 +142,7 @@ func TestVerifyAttestationPolicyHash_Mismatch(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader: %v", err)
 	}
-	defer func() { _ = reader.Close() }()
+	defer reader.Close()
 
 	if err := reader.VerifyAttestationPolicyHash(); err == nil {
 		t.Error("expected error for mismatched policy hash, got nil")
@@ -172,7 +160,7 @@ func TestVerifyAttestationPolicyHash_HashPresentNoPolicyFails(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader: %v", err)
 	}
-	defer func() { _ = reader.Close() }()
+	defer reader.Close()
 
 	if err := reader.VerifyAttestationPolicyHash(); err == nil {
 		t.Error("expected error when hash is set but metadata has no policy, got nil")
