@@ -214,6 +214,34 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 	logger.Debug("🎯 Primary slot", "slot", metadata.Execution.PrimarySlot)
 	logger.Debug("🔧 Command", "command", metadata.Execution.Command)
 
+	// Policy enforcement
+	opPolicy, policyErr := LoadOperatorPolicy()
+	if policyErr != nil {
+		fmt.Fprintf(os.Stderr, "WARN: failed to load operator policy: %v\n", policyErr)
+		opPolicy = OperatorPolicy{}
+	}
+
+	var pkgPolicy PackagePolicy
+	if metadata.Policy != nil {
+		pkgPolicy = *metadata.Policy
+	}
+
+	effective := MergePolicy(pkgPolicy, opPolicy)
+
+	hasSBOM := false
+	for _, slot := range metadata.Slots {
+		if slot.Lifecycle == "attestation" {
+			hasSBOM = true
+			break
+		}
+	}
+
+	if enforceErr := EnforcePolicy(effective, int64(index.BuildTimestamp), hasSBOM); enforceErr != nil {
+		logger.Error("❌ Policy violation", "error", enforceErr)
+		return nil, fmt.Errorf("policy violation: %w", enforceErr)
+	}
+	logger.Debug("✅ Policy enforcement passed")
+
 	// Create WorkenvPaths structure
 	var paths *WorkenvPaths
 	if customWorkenv := os.Getenv("FLAVOR_WORKENV"); customWorkenv != "" {
