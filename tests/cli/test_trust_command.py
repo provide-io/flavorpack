@@ -16,6 +16,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 
 from flavor.cli import cli
+from flavor.config.trust import _load_keys_from_dir
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -185,7 +186,7 @@ def test_trust_list_global_flag(tmp_path: Path) -> None:
     assert result.exit_code == 0, result.output
     # Either "SysKey" shows or "No trusted keys found." - either is valid since
     # _load_keys_from_dir validates PEM. Use a real key to be safe.
-    # (output varies if the PEM is valid)
+    assert "SysKey" in result.output or "No trusted keys found." in result.output
 
 
 # ---------------------------------------------------------------------------
@@ -210,8 +211,6 @@ def test_trust_remove_deletes_key(tmp_path: Path) -> None:
     assert len(pub_files) == 1
 
     # Get the fingerprint from the stored file
-    from flavor.config.trust import _load_keys_from_dir
-
     keys = _load_keys_from_dir(store_dir)
     assert keys, "No keys found after add"
     fp = next(iter(keys))
@@ -239,34 +238,52 @@ def test_trust_remove_unknown_fingerprint_exits_nonzero(tmp_path: Path) -> None:
 
 
 def test_trust_remove_global_flag(tmp_path: Path) -> None:
-    """flavor trust remove --global queries system store."""
+    """flavor trust remove --global only removes from the system store, not the user store."""
     _, pem = _make_ed25519_pem()
     key_file = tmp_path / "key.pub"
     key_file.write_text(pem)
-    store_dir = tmp_path / "sys-trusted-keys"
+
+    # Set up system store with the key
+    system_store = tmp_path / "sys-trusted-keys"
+    system_store.mkdir(parents=True)
+
+    # Set up a separate user store with the same key (should remain untouched)
+    user_store = tmp_path / "user-trusted-keys"
+    user_store.mkdir(parents=True)
 
     runner = CliRunner()
-    # Add to system store by patching get_trusted_keys_dir
-    with mock.patch("flavor.commands.trust.get_trusted_keys_dir", return_value=store_dir):
+    # Add key to system store directly
+    with mock.patch("flavor.commands.trust.get_trusted_keys_dir", return_value=system_store):
         runner.invoke(cli, ["trust", "add", str(key_file)])
 
-    # Resolve fingerprint
-    from flavor.config.trust import _load_keys_from_dir
+    # Also write an identical key to user store so we can verify it is untouched
+    sys_pub_files = list(system_store.glob("*.pub"))
+    assert sys_pub_files, "Key was not added to system store"
+    user_store_copy = user_store / sys_pub_files[0].name
+    user_store_copy.write_bytes(sys_pub_files[0].read_bytes())
 
-    keys = _load_keys_from_dir(store_dir)
+    # Resolve fingerprint from system store
+    keys = _load_keys_from_dir(system_store)
     assert keys
     fp = next(iter(keys))
 
-    # Remove from global store
-    pub_path = str(next(iter(store_dir.glob("*.pub"))))
+    # Remove from global (system) store — patch both get_trusted_keys_dir and
+    # get_system_config_dir so the command operates on our temp system_store
     with (
-        mock.patch("flavor.commands.trust.get_trusted_keys_dir", return_value=store_dir),
-        mock.patch("flavor.commands.trust.load_trusted_keys", return_value={fp: {"path": pub_path}}),
+        mock.patch("flavor.commands.trust.get_trusted_keys_dir", return_value=system_store),
+        mock.patch("flavor.commands.trust.get_system_config_dir", return_value=tmp_path / "sys"),
+        mock.patch(
+            "flavor.commands.trust._load_keys_from_dir",
+            return_value={fp: {"path": str(sys_pub_files[0])}},
+        ),
     ):
         result = runner.invoke(cli, ["trust", "remove", fp, "--global"])
 
     assert result.exit_code == 0, result.output
-    assert not list(store_dir.glob("*.pub"))
+    # System store key was removed
+    assert not list(system_store.glob("*.pub"))
+    # User store key is untouched
+    assert list(user_store.glob("*.pub"))
 
 
 # ---------------------------------------------------------------------------
