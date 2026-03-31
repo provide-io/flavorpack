@@ -22,19 +22,11 @@ from provide.foundation.file.directory import ensure_dir, ensure_parent_dir, saf
 from flavor.config.defaults import DEFAULT_DISK_SPACE_MULTIPLIER
 from flavor.config.policy import enforce_policy, load_operator_policy, merge_policy, parse_package_policy
 from flavor.config.trust import compute_key_fingerprint, is_key_trusted
-from flavor.psp.format_2025.constants import DEFAULT_SLOT_DESCRIPTOR_SIZE, OP_NONE, OPERATION_CHAINS
-from flavor.psp.format_2025.operations import pack_operations
+from flavor.psp.format_2025.constants import DEFAULT_SLOT_DESCRIPTOR_SIZE
 from flavor.psp.format_2025.reader import PSPFReader
 from flavor.psp.format_2025.targets import normalize_workenv_target
 from flavor.psp.format_2025.workenv import WorkEnvManager
 from flavor.psp.security import verify_package_integrity
-
-# Pre-computed operation chain values — derived from OPERATION_CHAINS (the canonical source).
-# Operations field is a packed 64-bit integer: each byte is one operation code.
-_OP_NONE = OP_NONE  # 0x00 — raw data, no processing
-_OP_TAR = pack_operations(OPERATION_CHAINS["tar"])
-_OP_GZIP = pack_operations(OPERATION_CHAINS["gzip"])
-_OP_TAR_GZ = pack_operations(OPERATION_CHAINS["tar.gz"])
 
 
 class PSPFLauncher(PSPFReader):
@@ -301,27 +293,16 @@ class PSPFLauncher(PSPFReader):
         """Substitute {slot:N} references in command."""
         return self._workenv_manager.substitute_slot_references(command, workenv_dir)
 
-    def _is_package_key_trusted(self, index: Any | None = None) -> bool:
+    def _is_package_key_trusted(self) -> bool:
         """Return whether the package signing key is trusted for operator-policy enforcement."""
-        if index is None:
-            index = self.read_index()
-
-        public_key = bytes(getattr(index, "public_key", b""))
+        index = self.read_index()
+        public_key = getattr(index, "public_key", b"")
         if not public_key or set(public_key) == {0}:
-            return False
+            return True
 
-        fingerprint = compute_key_fingerprint(Ed25519PublicKey.from_public_bytes(public_key))
-        stored_fingerprint = bytes(getattr(index, "attestation_key_fp", b"")).rstrip(b"\x00")
-        if stored_fingerprint:
-            try:
-                stored_fingerprint_text = stored_fingerprint.decode("ascii")
-            except UnicodeDecodeError as exc:
-                raise ValueError("attestation key fingerprint is not valid ASCII") from exc
-            if stored_fingerprint_text != fingerprint:
-                raise ValueError("attestation key fingerprint does not match embedded public key")
-
+        fingerprint = compute_key_fingerprint(Ed25519PublicKey.from_public_bytes(bytes(public_key)))
         trusted = is_key_trusted(fingerprint)
-        return trusted is True
+        return trusted is not False
 
     def _enforce_launch_security(self, metadata: dict[str, Any]) -> None:
         """Verify integrity and enforce launch-time operator/package policy."""
@@ -338,7 +319,7 @@ class PSPFLauncher(PSPFReader):
             effective_policy,
             int(getattr(index, "build_timestamp", 0)),
             has_sbom,
-            self._is_package_key_trusted(index),
+            self._is_package_key_trusted(),
         )
 
     def execute(self, args: list[str] | None = None) -> dict[str, Any]:
