@@ -13,6 +13,9 @@ use super::defaults::{ACCESS_AUTO, ACCESS_FILE, ACCESS_MMAP, ACCESS_STREAM, DEFA
 use super::slots::SlotDescriptor;
 use crate::exceptions::{FlavorError, Result};
 
+/// Maximum allocation size for a single read (4 GB)
+const MAX_SLOT_SIZE: u64 = 4 * 1024 * 1024 * 1024;
+
 /// Trait for PSPF bundle access backends
 pub trait Backend: Send + Sync {
     /// Open the bundle file
@@ -26,7 +29,15 @@ pub trait Backend: Send + Sync {
 
     /// Read slot data based on descriptor
     fn read_slot(&mut self, descriptor: &SlotDescriptor) -> Result<Vec<u8>> {
-        self.read_at(descriptor.offset, descriptor.size as usize)
+        let slot_size = descriptor.size;
+        if slot_size > MAX_SLOT_SIZE {
+            return Err(FlavorError::Generic(format!(
+                "Slot size {} exceeds maximum allowed size ({} bytes)",
+                slot_size, MAX_SLOT_SIZE
+            )));
+        }
+        let slot_offset = descriptor.offset;
+        self.read_at(slot_offset, slot_size as usize)
     }
 
     /// Get a view of data without copying (if supported)
@@ -123,6 +134,12 @@ impl Backend for MMapBackend {
 
     fn read_at(&mut self, offset: u64, size: usize) -> Result<Vec<u8>> {
         trace!("🔍 Safe file read_at: offset={}, size={}", offset, size);
+        if size as u64 > MAX_SLOT_SIZE {
+            return Err(FlavorError::Generic(format!(
+                "Read size {} exceeds maximum allowed ({} bytes)",
+                size, MAX_SLOT_SIZE
+            )));
+        }
         if let Some(file) = &mut self.file {
             let timer = Instant::now();
             file.seek(SeekFrom::Start(offset))
@@ -207,6 +224,12 @@ impl Backend for FileBackend {
 
     fn read_at(&mut self, offset: u64, size: usize) -> Result<Vec<u8>> {
         trace!("🗓️ File read_at: offset={}, size={}", offset, size);
+        if size as u64 > MAX_SLOT_SIZE {
+            return Err(FlavorError::Generic(format!(
+                "Read size {} exceeds maximum allowed ({} bytes)",
+                size, MAX_SLOT_SIZE
+            )));
+        }
 
         // Check cache first
         let cache_key = (offset, size);
@@ -408,6 +431,12 @@ impl Backend for HybridBackend {
     }
 
     fn read_at(&mut self, offset: u64, size: usize) -> Result<Vec<u8>> {
+        if size as u64 > MAX_SLOT_SIZE {
+            return Err(FlavorError::Generic(format!(
+                "Read size {} exceeds maximum allowed ({} bytes)",
+                size, MAX_SLOT_SIZE
+            )));
+        }
         // Use safe file I/O for all operations
         if let Some(file) = &mut self.file {
             file.seek(SeekFrom::Start(offset))
@@ -440,12 +469,12 @@ pub fn create_backend(mode: u8, path: Option<&Path>) -> Box<dyn Backend> {
             if let Ok(metadata) = std::fs::metadata(p) {
                 let file_size = metadata.len();
 
-                // Use mmap for files over 1MB
-                if file_size > 1024 * 1024 {
-                    mode = ACCESS_MMAP;
-                // Use streaming for very large files
-                } else if file_size > 100 * 1024 * 1024 {
+                // Use streaming for very large files (>100MB)
+                if file_size > 100 * 1024 * 1024 {
                     mode = ACCESS_STREAM;
+                // Use mmap for files over 1MB
+                } else if file_size > 1024 * 1024 {
+                    mode = ACCESS_MMAP;
                 } else {
                     mode = ACCESS_FILE;
                 }

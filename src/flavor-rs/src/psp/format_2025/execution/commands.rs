@@ -227,7 +227,7 @@ pub fn execute_setup_commands(
 
 /// Split a command string into parts, respecting single and double quotes.
 /// Handles simple quoting (no escape sequences within quotes).
-fn shell_split(input: &str) -> Vec<String> {
+pub fn shell_split(input: &str) -> Vec<String> {
     let mut parts = Vec::new();
     let mut current = String::new();
     let mut chars = input.chars().peekable();
@@ -439,12 +439,12 @@ pub fn execute_main_command(
     env: HashMap<String, String>,
     workdir: &Path,
 ) -> Result<i32> {
-    let parts: Vec<_> = command.split_whitespace().collect();
+    let parts = shell_split(command);
     if parts.is_empty() {
         return Ok(0);
     }
 
-    let resolved_cmd = resolve_executable(parts[0]);
+    let resolved_cmd = resolve_executable(&parts[0]);
     let mut cmd = Command::new(&resolved_cmd);
 
     // Add command arguments

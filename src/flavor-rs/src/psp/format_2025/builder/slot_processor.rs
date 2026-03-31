@@ -8,7 +8,7 @@ use super::super::metadata::SlotMetadata;
 use super::super::operations::pack_operations;
 use super::super::slots::SlotDescriptor;
 use crate::exceptions::{FlavorError, Result};
-use log::{debug, error, info, trace};
+use log::{debug, info, trace};
 use std::fs::File;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
@@ -58,11 +58,10 @@ impl SlotProcessor {
             // Validate slot number if provided
             if let Some(declared_slot) = slot.slot {
                 if declared_slot as usize != i {
-                    error!(
-                        "❌ Critical: Slot number mismatch - expected {}, declared {} for slot '{}'",
+                    return Err(FlavorError::Generic(format!(
+                        "Slot number mismatch - expected {}, declared {} for slot '{}'",
                         i, declared_slot, slot.id
-                    );
-                    std::process::exit(1);
+                    )));
                 }
             }
 

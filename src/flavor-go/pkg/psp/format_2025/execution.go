@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/internal/workenv"
 	"github.com/provide-io/flavor/go/flavor/pkg/utils/shellparse"
 )
 
@@ -193,13 +194,8 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		cacheDir := filepath.Dir(filepath.Dir(customWorkenv))
 		paths = NewWorkenvPaths(cacheDir, exePath)
 	} else {
-		// Get cache directory (XDG_CACHE_HOME or fallback)
-		cacheDir := os.Getenv("XDG_CACHE_HOME")
-		if cacheDir == "" {
-			homeDir, _ := os.UserHomeDir()
-			cacheDir = filepath.Join(homeDir, ".cache")
-		}
-		cacheDir = filepath.Join(cacheDir, "flavor")
+		// Get cache directory using workenv.GetCacheRoot() for cross-platform consistency
+		cacheDir := workenv.GetCacheRoot()
 		paths = NewWorkenvPaths(cacheDir, exePath)
 	}
 
@@ -315,18 +311,8 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		cleanupLifecycleSlots(workenvDir, metadata, slotPaths, logger)
 	} else {
 		logger.Info("✅ Work environment is valid, skipping persistent slot extraction")
-		for i, slot := range metadata.Slots {
-			if slot.Lifecycle == "volatile" {
-				logger.Debug("📦 Extracting volatile slot", "index", i, "id", slot.ID)
-				slotPath, err := reader.ExtractSlot(i, paths.Workenv())
-				if err != nil {
-					logger.Error("❌ Failed to extract slot", "error", fmt.Errorf("%w: %v", ErrSlotExtractionFailed, err))
-					return nil, fmt.Errorf("%w: %v", ErrSlotExtractionFailed, err)
-				}
-				slotPaths[slot.Slot] = slotPath
-			} else {
-				slotPaths[slot.Slot] = paths.Workenv()
-			}
+		for _, slot := range metadata.Slots {
+			slotPaths[slot.Slot] = paths.Workenv()
 		}
 	}
 
