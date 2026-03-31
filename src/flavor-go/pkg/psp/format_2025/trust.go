@@ -27,7 +27,7 @@ type TrustedKey struct {
 //
 //	→ XDG_CONFIG_HOME/flavor/trusted-keys → ~/.config/flavor/trusted-keys
 func GetTrustedKeysDir() string {
-	if dir := os.Getenv("FLAVOR_TRUSTED_KEYS_DIR"); dir != "" {
+	if dir := os.Getenv(EnvTrustedKeysDir); dir != "" {
 		return dir
 	}
 	return filepath.Join(workenv.GetConfigRoot(), "trusted-keys")
