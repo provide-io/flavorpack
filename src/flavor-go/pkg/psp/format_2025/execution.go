@@ -134,6 +134,19 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		return nil, fmt.Errorf("failed to read index: %w", err)
 	}
 
+	// Warn if signing key is not in the trusted store (backwards-compatible — no error if store missing)
+	if fp := strings.TrimRight(string(index.AttestationKeyFp[:]), "\x00"); fp != "" {
+		trusted, err := IsKeyTrusted(fp, true)
+		if err != nil {
+			logger.Warn("⚠️ Failed to check trusted key store", "error", err)
+		} else if trusted != nil && !*trusted {
+			fmt.Fprintf(os.Stderr, "⚠️ SECURITY WARNING: Package signing key is not in the trusted store\n")
+			fmt.Fprintf(os.Stderr, "⚠️ Key fingerprint: %s\n", fp)
+			fmt.Fprintf(os.Stderr, "⚠️ Use 'flavor trust add <key-file>' to trust this key\n")
+			logger.Warn("⚠️ Package signing key not in trusted store", "fingerprint", fp)
+		}
+	}
+
 	validationLevel := getValidationLevel()
 
 	switch validationLevel {
