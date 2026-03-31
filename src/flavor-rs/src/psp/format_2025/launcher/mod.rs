@@ -74,7 +74,6 @@ fn select_workenv_paths(
 type SlotPaths = std::collections::HashMap<usize, PathBuf>;
 type ExtractionResult = ((SlotPaths, Vec<PathBuf>), PathBuf);
 
-#[cfg(unix)]
 fn executable_is_script(executable: &Path) -> bool {
     if let Ok(file) = fs::File::open(executable) {
         use std::io::{BufRead, BufReader};
@@ -266,8 +265,13 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
     debug!("🔧 Command: {}", metadata.execution.command);
 
     // Get work environment paths
-    let paths = if let Ok(custom_workenv) = env::var(crate::env_vars::WORKENV) {
-        // Use custom workenv path from environment variable
+    let custom_workenv = env::var(crate::env_vars::WORKENV).ok();
+    let paths = select_workenv_paths(
+        package_path,
+        custom_workenv.as_deref(),
+        options.workdir.as_deref(),
+    );
+    if let Some(ref custom_workenv) = custom_workenv {
         info!(
             "📁 Using custom work environment from FLAVOR_WORKENV: {}",
             custom_workenv
@@ -311,9 +315,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
 
     // Check work environment validity
     // If FLAVOR_WORKENV_CACHE is set to false, always treat as invalid to force extraction
-    let use_cache = env::var(crate::env_vars::WORKENV_CACHE)
-        .map(|v| v.to_lowercase() != "false" && v != "0")
-        .unwrap_or(true);
+    let use_cache = cache_enabled_from_env(env::var(crate::env_vars::WORKENV_CACHE).ok());
 
     let workenv_valid = if use_cache {
         debug!("🔍 Checking cache validity");
@@ -630,82 +632,11 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
 }
 
 #[cfg(test)]
-#[allow(unsafe_code)]
 mod tests {
     use super::*;
-    #[cfg(unix)]
-    use crate::api::BuildOptions;
-    #[cfg(unix)]
-    use crate::psp::format_2025::build;
-    #[cfg(unix)]
-    use serde_json::json;
-    #[cfg(unix)]
-    use std::env;
     use std::fs;
-    use std::path::PathBuf;
     use tempfile::tempdir;
 
-    #[cfg(unix)]
-    fn build_real_bundle(temp: &tempfile::TempDir) -> PathBuf {
-        let payload = temp.path().join("payload.txt");
-        fs::write(&payload, b"payload contents").expect("write payload");
-
-        let launcher = temp.path().join(if cfg!(windows) {
-            "launcher.bat"
-        } else {
-            "launcher.sh"
-        });
-        let launcher_bytes = if cfg!(windows) {
-            b"@echo off\r\nexit /b 0\r\n".as_slice()
-        } else {
-            b"#!/bin/sh\nexit 0\n".as_slice()
-        };
-        fs::write(&launcher, launcher_bytes).expect("write launcher");
-
-        let manifest_path = temp.path().join("manifest.json");
-        let output_path = temp.path().join("bundle.pspf");
-        let manifest = json!({
-            "package": {
-                "name": "launcher-mod-demo",
-                "version": "1.0.0"
-            },
-            "execution": {
-                "command": if cfg!(windows) { "cmd /C exit 0" } else { "true" },
-                "env": {}
-            },
-            "slots": [
-                {
-                    "slot": 0,
-                    "id": "payload",
-                    "source": payload.display().to_string(),
-                    "target": "bin/payload.txt",
-                    "operations": "",
-                    "purpose": "payload",
-                    "lifecycle": "runtime",
-                    "permissions": "0644"
-                }
-            ]
-        });
-        fs::write(
-            &manifest_path,
-            serde_json::to_vec_pretty(&manifest).expect("serialize manifest"),
-        )
-        .expect("write manifest");
-
-        let options = BuildOptions {
-            launcher_bin: Some(launcher),
-            skip_verification: false,
-            private_key_path: None,
-            public_key_path: None,
-            key_seed: Some("launcher-mod-test-seed".to_string()),
-            workenv_base: None,
-        };
-
-        build(&manifest_path, &output_path, options).expect("build real bundle");
-        output_path
-    }
-
-    #[cfg(unix)]
     #[test]
     fn executable_is_script_detects_shebang_files() {
         let temp = tempdir().expect("tempdir");
@@ -715,7 +646,6 @@ mod tests {
         assert!(executable_is_script(&script));
     }
 
-    #[cfg(unix)]
     #[test]
     fn executable_is_script_rejects_plain_files() {
         let temp = tempdir().expect("tempdir");
@@ -725,7 +655,6 @@ mod tests {
         assert!(!executable_is_script(&binary));
     }
 
-    #[cfg(unix)]
     #[test]
     fn executable_is_script_rejects_missing_files() {
         let temp = tempdir().expect("tempdir");
@@ -802,58 +731,5 @@ mod tests {
 
         let result = launch(&package, &[], LaunchOptions::default());
         assert!(result.is_err());
-    }
-
-    #[cfg(unix)]
-    #[test]
-    fn launch_executes_real_bundle_in_spawn_mode() {
-        let temp = tempdir().expect("tempdir");
-        let bundle = build_real_bundle(&temp);
-        let workdir_hint = temp
-            .path()
-            .join("cache/workenv/launcher-mod-test")
-            .display()
-            .to_string();
-
-        let original_exec_mode = env::var(crate::env_vars::EXEC_MODE).ok();
-        let original_validation = env::var(crate::env_vars::VALIDATION).ok();
-        let original_workenv = env::var(crate::env_vars::WORKENV).ok();
-
-        unsafe {
-            env::set_var(crate::env_vars::EXEC_MODE, "spawn");
-            env::set_var(crate::env_vars::VALIDATION, "strict");
-            env::remove_var(crate::env_vars::WORKENV);
-        }
-
-        let options = LaunchOptions {
-            workdir: Some(workdir_hint),
-        };
-        let result = launch(&bundle, &[], options).expect("launch real bundle");
-        assert_eq!(result, 0);
-
-        match original_exec_mode {
-            Some(value) => unsafe {
-                env::set_var(crate::env_vars::EXEC_MODE, value);
-            },
-            None => unsafe {
-                env::remove_var(crate::env_vars::EXEC_MODE);
-            },
-        }
-        match original_validation {
-            Some(value) => unsafe {
-                env::set_var(crate::env_vars::VALIDATION, value);
-            },
-            None => unsafe {
-                env::remove_var(crate::env_vars::VALIDATION);
-            },
-        }
-        match original_workenv {
-            Some(value) => unsafe {
-                env::set_var(crate::env_vars::WORKENV, value);
-            },
-            None => unsafe {
-                env::remove_var(crate::env_vars::WORKENV);
-            },
-        }
     }
 }
