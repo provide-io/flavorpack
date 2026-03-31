@@ -76,9 +76,9 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 FEP-0001 §5 defines the lifecycle value table for slots. This extension adds one new value:
 
-| Value | Name | Description |
-|---|---|---|
-| 11 | `attestation` | Security attestation slot containing SBOM and build provenance |
+| Value | Constant | Name | Description |
+|---|---|---|---|
+| 11 | `LIFECYCLE_ATTESTATION` | `attestation` | Security attestation slot containing SBOM and build provenance |
 
 A launcher that does not recognise lifecycle value 11 MUST treat the slot as `init` (extracted on first run, removed after execution) per FEP-0001 §6.1. This ensures old launchers handle attestation slots gracefully without error.
 
@@ -90,9 +90,9 @@ The FEP-0001 index block contains a 6816-byte reserved region (see FEP-0001 §4.
 
 | Offset within reserved | Size | Field | Description |
 |---|---|---|---|
-| 0 | 64 bytes | `key_fingerprint` | SHA-256 of the Ed25519 public key (raw 32 bytes), hex-encoded ASCII |
-| 64 | 64 bytes | `sbom_digest` | SHA-256 of the attestation slot content (canonical JSON), hex-encoded ASCII |
-| 128 | 64 bytes | `policy_hash` | SHA-256 of the package-declared policy JSON (canonical form), hex-encoded ASCII |
+| 0 | 64 bytes | `attestation_key_fp` | SHA-256 of the Ed25519 public key (raw 32 bytes), hex-encoded ASCII |
+| 64 | 64 bytes | `attestation_sbom_digest` | SHA-256 of the attestation slot content (canonical JSON), hex-encoded ASCII |
+| 128 | 64 bytes | `attestation_policy_hash` | SHA-256 of the package-declared policy JSON (canonical form), hex-encoded ASCII |
 
 All three fields are optional. A zero-filled field (all 64 bytes are `0x00`) indicates that the field is absent. A launcher implementing this extension MUST skip the associated check for any absent field.
 
@@ -105,9 +105,9 @@ All three digest fields are encoded as lowercase hexadecimal ASCII. Builders MUS
 ### 4.2 Builder Requirements
 
 A builder implementing this extension MUST:
-1. Compute `key_fingerprint` as `SHA-256(raw_ed25519_public_key_bytes)`, hex-encoded.
-2. Compute `sbom_digest` as `SHA-256(attestation_slot_content_bytes)` after serialising the attestation slot content to canonical JSON (RFC 8785 or equivalent: sorted keys, no insignificant whitespace).
-3. Compute `policy_hash` as `SHA-256(canonical_policy_json_bytes)` where the policy JSON is derived from the `[tool.flavor.policy]` section of `pyproject.toml`, serialised to canonical JSON.
+1. Compute `attestation_key_fp` as `SHA-256(raw_ed25519_public_key_bytes)`, hex-encoded.
+2. Compute `attestation_sbom_digest` as `SHA-256(attestation_slot_content_bytes)` after serialising the attestation slot content to canonical JSON (RFC 8785 or equivalent: sorted keys, no insignificant whitespace).
+3. Compute `attestation_policy_hash` as `SHA-256(canonical_policy_json_bytes)` where the policy JSON is derived from the `[tool.flavor.policy]` section of `pyproject.toml`, serialised to canonical JSON.
 4. Write all three fields into the attestation section before computing the Ed25519 signature, so the signature covers the attestation fields.
 
 ## 5. Attestation Slot Contents
@@ -121,7 +121,7 @@ The attestation slot contains a single JSON file. The top-level object has two k
 }
 ```
 
-Either key MAY be absent (but not both — an empty attestation slot SHOULD NOT be created). If `sbom` is absent, the `sbom_digest` index field MUST be zero-filled.
+Either key MAY be absent (but not both — an empty attestation slot SHOULD NOT be created). If `sbom` is absent, the `attestation_sbom_digest` index field MUST be zero-filled.
 
 ### 5.1 SBOM Format
 
@@ -133,7 +133,7 @@ The `sbom` value MUST be a valid CycloneDX 1.6 JSON object. The `components` arr
 
 Builders MAY include additional components. Consumers MUST NOT reject attestation slots that contain components beyond this list.
 
-If `[tool.flavor] sbom = false` is set in `pyproject.toml`, the builder MUST omit the `sbom` key and MUST zero-fill `sbom_digest` in the index.
+If `[tool.flavor] sbom = false` is set in `pyproject.toml`, the builder MUST omit the `sbom` key and MUST zero-fill `attestation_sbom_digest` in the index.
 
 ### 5.2 Provenance Record
 
@@ -158,7 +158,7 @@ The `provenance` value MUST be a JSON object conforming to the following schema:
     "version": "1.24.1",
     "hash": "sha256:..."
   },
-  "signing_key_fingerprint": "sha256:...",
+  "signing_attestation_key_fp": "sha256:...",
   "reproducible": true
 }
 ```
@@ -174,10 +174,10 @@ Field semantics:
 | `platform` | object | REQUIRED | `os` and `arch` of the build host |
 | `python` | object | REQUIRED | `version` (string) and `implementation` (string) of the embedded Python |
 | `launcher` | object | REQUIRED | `language`, `version`, and `hash` (prefixed with `sha256:`) of the embedded launcher |
-| `signing_key_fingerprint` | string | REQUIRED | `sha256:` prefixed hex fingerprint of the Ed25519 signing key |
+| `signing_attestation_key_fp` | string | REQUIRED | `sha256:` prefixed hex fingerprint of the Ed25519 signing key |
 | `reproducible` | boolean | RECOMMENDED | `true` if the build used `SOURCE_DATE_EPOCH` and deterministic settings |
 
-The `signing_key_fingerprint` in the provenance record MUST match the `key_fingerprint` field in the index attestation section (§4), without the `sha256:` prefix. A launcher MUST verify this consistency and MUST reject a package where they differ.
+The `signing_attestation_key_fp` in the provenance record MUST match the `attestation_key_fp` field in the index attestation section (§4), without the `sha256:` prefix. A launcher MUST verify this consistency and MUST reject a package where they differ.
 
 ## 6. Trusted Key Store
 
@@ -286,11 +286,11 @@ A launcher MUST enforce package-declared policy before applying operator policy.
 A launcher implementing this extension MUST enforce the following steps in order. The first failure MUST cause the launcher to exit with a non-zero status and a human-readable diagnostic message. The launcher MUST NOT proceed to a subsequent step if an earlier step fails.
 
 1. **Signature verification** (FEP-0001 §7): Verify the Ed25519 signature over the entire package content. Reject if invalid.
-2. **Attestation consistency** (§5.2): If `key_fingerprint` in the index is non-zero and an attestation slot is present, verify that `provenance.signing_key_fingerprint` (stripped of `sha256:` prefix) matches the index field. Reject if they differ.
+2. **Attestation consistency** (§5.2): If `attestation_key_fp` in the index is non-zero and an attestation slot is present, verify that `provenance.signing_attestation_key_fp` (stripped of `sha256:` prefix) matches the index field. Reject if they differ.
 3. **Key store check** (§6.3): If a trusted-keys directory exists or `require_trusted_key = true` (from either policy source), check the package's signing key fingerprint against the store. Apply enforcement per §6.3.
 4. **Package-declared policy** (§8): Evaluate all constraints declared in the package metadata.
 5. **Operator policy overlay** (§7): Evaluate operator policy fields, applying the stricter value for any field also declared by the package.
-6. **SBOM digest verification** (§4): If `sbom_digest` in the index is non-zero, re-serialise the attestation slot content to canonical JSON, compute `SHA-256`, and compare to `sbom_digest`. Reject if they differ.
+6. **SBOM digest verification** (§4): If `attestation_sbom_digest` in the index is non-zero, re-serialise the attestation slot content to canonical JSON, compute `SHA-256`, and compare to `attestation_sbom_digest`. Reject if they differ.
 7. **Execute**: Proceed with normal FEP-0001 extraction and execution.
 
 ## 10. `flavor init` Command
@@ -318,7 +318,7 @@ Packages built with FEP-0003 support set the three attestation index fields with
 ### 11.2 New launchers reading old packages
 
 Packages built without FEP-0003 support have zero-filled attestation index fields and no attestation slot. A launcher implementing this extension MUST handle this gracefully:
-- Zero-filled `key_fingerprint`, `sbom_digest`, and `policy_hash` fields MUST be treated as absent; no associated checks are performed.
+- Zero-filled `attestation_key_fp`, `attestation_sbom_digest`, and `attestation_policy_hash` fields MUST be treated as absent; no associated checks are performed.
 - Absence of an attestation slot is not an error unless `require_sbom = true` in operator policy (§7.2), in which case the launcher MUST block with a descriptive message.
 
 ## 12. Non-Goals
@@ -341,17 +341,17 @@ The `FLAVOR_TRUSTED_KEYS_DIR` environment variable allows a user-level override 
 
 ### 13.2 Policy Downgrade Attacks
 
-The package-declared policy is embedded in the signed FEP-0002 metadata; tampering with it invalidates the Ed25519 signature (step 1 of the launch sequence, §9). The `policy_hash` index field provides an additional integrity check over the policy JSON. Launchers MUST verify the signature before evaluating policy fields, and MUST verify `policy_hash` consistency if it is non-zero.
+The package-declared policy is embedded in the signed FEP-0002 metadata; tampering with it invalidates the Ed25519 signature (step 1 of the launch sequence, §9). The `attestation_policy_hash` index field provides an additional integrity check over the policy JSON. Launchers MUST verify the signature before evaluating policy fields, and MUST verify `attestation_policy_hash` consistency if it is non-zero.
 
 Operator policy cannot be protected by the package signature since it is host-controlled. An attacker with write access to `/etc/flavor/policy.toml` can loosen operator constraints. This is intentional — operators are trusted by definition — but access to system policy files MUST be restricted to privileged accounts.
 
 ### 13.3 SBOM Tampering
 
-The `sbom_digest` index field binds the attestation slot content to the signed index block. An attacker who modifies the attestation slot content without updating the signature will cause the Ed25519 check (step 1, §9) to fail. An attacker who replaces the entire attestation slot and re-signs with a different key will be caught by the key store check (step 3) if the new key is not trusted.
+The `attestation_sbom_digest` index field binds the attestation slot content to the signed index block. An attacker who modifies the attestation slot content without updating the signature will cause the Ed25519 check (step 1, §9) to fail. An attacker who replaces the entire attestation slot and re-signs with a different key will be caught by the key store check (step 3) if the new key is not trusted.
 
-The `sbom_digest` check (step 6 of §9) provides defence-in-depth: even if the index block is somehow forged, the SBOM content is independently verified against the digest committed in the index.
+The `attestation_sbom_digest` check (step 6 of §9) provides defence-in-depth: even if the index block is somehow forged, the SBOM content is independently verified against the digest committed in the index.
 
-Consumers relying on SBOM data for compliance purposes SHOULD verify the full Ed25519 signature independently before processing the SBOM, and SHOULD record the `signing_key_fingerprint` alongside any compliance artefacts.
+Consumers relying on SBOM data for compliance purposes SHOULD verify the full Ed25519 signature independently before processing the SBOM, and SHOULD record the `signing_attestation_key_fp` alongside any compliance artefacts.
 
 ## 14. References
 
