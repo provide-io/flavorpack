@@ -230,7 +230,7 @@ entry_point = "crosslang_test:main"
             # First try the verifier
             try:
                 verify_result = FlavorVerifier.verify_package(package_path)
-                success = verify_result.get("signature_valid", False)
+                success = verify_result.get("valid", verify_result.get("signature_valid", False))
 
                 self.results["verify_tests"].append(
                     {

@@ -25,6 +25,7 @@ from provide.foundation.process import run
 
 from flavor.config.defaults import DEFAULT_EXECUTABLE_PERMS
 from flavor.psp.format_2025.environment import apply_environment_layers
+from flavor.psp.format_2025.targets import normalize_workenv_target
 
 
 class WorkEnvManager:
@@ -387,11 +388,7 @@ class WorkEnvManager:
 
     def _normalize_slot_target(self, slot_target: str) -> str:
         """Normalize slot target metadata to a path relative to the workenv."""
-        if slot_target == "{workenv}":
-            return "{workenv}"
-        if slot_target.startswith("{workenv}/"):
-            return slot_target.removeprefix("{workenv}/")
-        return slot_target
+        return normalize_workenv_target(slot_target)
 
     def substitute_slot_references(self, command: str, workenv_dir: Path) -> str:
         """Substitute {slot:N} references in command.

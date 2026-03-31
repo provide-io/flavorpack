@@ -128,72 +128,27 @@ pub fn show_metadata(exe_path: &Path) -> i32 {
 /// Verify bundle integrity
 pub fn verify_bundle(exe_path: &Path) -> i32 {
     println!("🔍 Verifying PSPF package: {:?}", exe_path);
+    match crate::psp::format_2025::verifier::verify(exe_path) {
+        Ok(result) => {
+            println!("  Format: {}", result.format);
+            println!("  Version: {}", result.version);
+            println!("  Slots: {}", result.slot_count);
+            println!("  Signature valid: {}", result.signature_valid);
+            println!("  Checksums valid: {}", result.checksums_valid);
+            println!("  Overall valid: {}", result.valid);
 
-    let mut reader = match Reader::new(exe_path) {
-        Ok(r) => r,
-        Err(e) => {
-            eprintln!("Error: Failed to create reader: {}", e);
-            return 1;
-        }
-    };
-
-    let mut errors = Vec::new();
-
-    // Reading index and metadata performs the necessary checksum checks.
-    let _index = match reader.read_index() {
-        Ok(idx) => {
-            let format_version = idx.format_version; // Copy to avoid unaligned access
-            println!("  ✓ Valid PSPF magic");
-            println!("  ✓ Format version: {:04x}", format_version);
-            println!("  ✓ Index checksum valid");
-            idx.clone()
-        }
-        Err(e) => {
-            println!("  ✗ Index verification failed");
-            errors.push(format!("Index error: {}", e));
-            return 1;
-        }
-    };
-
-    let metadata = match reader.read_metadata() {
-        Ok(m) => {
-            println!("  ✓ Metadata checksum valid");
-            m.clone()
-        }
-        Err(e) => {
-            println!("  ✗ Metadata verification failed");
-            errors.push(format!("Metadata error: {}", e));
-            return 1;
-        }
-    };
-
-    // Check slots
-    match reader.read_slot_descriptors() {
-        Ok(descriptors) => {
-            if descriptors.len() == metadata.slots.len() {
-                println!("  ✓ All {} slot descriptors valid", metadata.slots.len());
+            if result.valid {
+                println!("\n✓ Bundle verification passed");
+                0
             } else {
-                errors.push(format!(
-                    "Slot descriptor count mismatch: expected {}, got {}",
-                    metadata.slots.len(),
-                    descriptors.len()
-                ));
+                println!("\n✗ Bundle verification failed");
+                1
             }
         }
         Err(e) => {
-            errors.push(format!("Failed to read slot descriptors: {}", e));
+            eprintln!("Error: Verification failed: {}", e);
+            1
         }
-    }
-
-    if errors.is_empty() {
-        println!("\n✓ Bundle verification passed");
-        0
-    } else {
-        println!("\n✗ Bundle verification failed:");
-        for err in &errors {
-            println!("  - {}", err);
-        }
-        1
     }
 }
 

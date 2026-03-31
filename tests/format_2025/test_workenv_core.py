@@ -379,11 +379,12 @@ class TestPrepareSetupEnvironmentPathHandling:
         env = manager._prepare_setup_environment(workenv_dir, runtime_env={})
 
         import sys
+
         bin_dir = "Scripts" if sys.platform == "win32" else "bin"
         expected_bin = str(workenv_dir / bin_dir)
         assert env["PATH"].startswith(expected_bin)
         # The separator after the bin dir should be the native os.pathsep
-        rest = env["PATH"][len(expected_bin):]
+        rest = env["PATH"][len(expected_bin) :]
         assert rest.startswith(os.pathsep)
 
     @patch("flavor.psp.format_2025.workenv.apply_environment_layers")
