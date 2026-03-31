@@ -32,6 +32,8 @@ from provide.foundation.tools.base import (
     ToolNotFoundError,
 )
 
+from flavor.env_vars import WHEEL_CACHE
+
 
 def _windows_system_env() -> dict[str, str]:
     """Return Windows system env vars required for subprocess DLL loading.
@@ -439,7 +441,7 @@ class UVManager(BaseToolManager):
         import os
         import sys
 
-        wheel_cache_dir = os.environ.get("FLAVOR_WHEEL_CACHE")
+        wheel_cache_dir = os.environ.get(WHEEL_CACHE)
         if not wheel_cache_dir:
             logger.warning("💻 FLAVOR_WHEEL_CACHE not set, skipping offline wheel strategy")
             return False
