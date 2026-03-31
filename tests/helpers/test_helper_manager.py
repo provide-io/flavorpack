@@ -31,7 +31,8 @@ class TestHelperManagerInit:
         manager = HelperManager()
 
         # Check paths are set correctly
-        assert manager.flavor_root.name in ("flavorpack", "mutants")
+        assert (manager.flavor_root / "pyproject.toml").exists()
+        assert (manager.flavor_root / "src" / "flavor").exists()
         assert manager.helpers_dir.name == "dist"
         assert manager.helpers_bin.name == "bin"
         assert manager.current_platform == "linux_amd64"

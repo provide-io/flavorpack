@@ -68,6 +68,16 @@ pub fn verify(package_path: &Path) -> Result<VerifyResult> {
         }
     );
 
+    let slot_checksums_valid = verify_slot_checksums(&mut reader)?;
+    debug!(
+        "Slot checksums: {}",
+        if slot_checksums_valid {
+            "✅ VALID"
+        } else {
+            "❌ INVALID"
+        }
+    );
+
     // Verify trailing magic (8 bytes: 📦🪄)
     let trailing_magic_valid = verify_trailing_magic(&mut file)?;
     debug!(
@@ -81,23 +91,27 @@ pub fn verify(package_path: &Path) -> Result<VerifyResult> {
 
     // Overall signature validity
     debug!(
-        "🔍 Verification results: index_checksum={}, metadata_checksum={}, size={}, integrity_seal={}, trailing_magic={}",
+        "🔍 Verification results: index_checksum={}, metadata_checksum={}, size={}, integrity_seal={}, slot_checksums={}, trailing_magic={}",
         index_checksum_valid,
         metadata_checksum_valid,
         size_valid,
         integrity_seal_valid,
+        slot_checksums_valid,
         trailing_magic_valid
     );
-    let signature_valid = index_checksum_valid
+    let valid = index_checksum_valid
         && metadata_checksum_valid
         && size_valid
         && integrity_seal_valid
+        && slot_checksums_valid
         && trailing_magic_valid;
 
     Ok(VerifyResult {
         format: "PSPF/2025".to_string(),
         version: format!("0x{:08x}", super::constants::FORMAT_VERSION),
-        signature_valid,
+        valid,
+        checksums_valid: slot_checksums_valid,
+        signature_valid: integrity_seal_valid,
         slot_count: metadata.slots.len(),
         package_name: metadata.package.name.clone(),
         package_version: metadata.package.version.clone(),
@@ -208,4 +222,45 @@ fn verify_integrity_seal(file: &mut File, index: &super::index::Index) -> Result
     }
 
     Ok(valid)
+}
+
+fn verify_slot_checksums(reader: &mut super::reader::Reader) -> Result<bool> {
+    let descriptors = reader.read_slot_descriptors()?;
+
+    for descriptor in &descriptors {
+        let slot_data = reader.read_slot(descriptor)?;
+        if !verify_slot_checksum(descriptor, &slot_data) {
+            return Ok(false);
+        }
+    }
+
+    Ok(true)
+}
+
+fn verify_slot_checksum(
+    descriptor: &crate::psp::format_2025::slots::SlotDescriptor,
+    slot_data: &[u8],
+) -> bool {
+    let checksum = Sha256::digest(slot_data);
+    let mut checksum_bytes = [0u8; 8];
+    checksum_bytes.copy_from_slice(&checksum[..8]);
+    let actual = u64::from_le_bytes(checksum_bytes);
+    actual == descriptor.checksum
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::psp::format_2025::slots::SlotDescriptor;
+
+    #[test]
+    fn test_verify_slot_checksum_detects_tampering() {
+        let payload = b"expected payload";
+        let mut descriptor = SlotDescriptor::new(1);
+        let checksum = Sha256::digest(payload);
+        descriptor.checksum = u64::from_le_bytes(checksum[..8].try_into().expect("checksum slice"));
+
+        assert!(verify_slot_checksum(&descriptor, payload));
+        assert!(!verify_slot_checksum(&descriptor, b"tampered payload"));
+    }
 }

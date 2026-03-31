@@ -21,6 +21,7 @@ from provide.foundation.file.directory import ensure_dir, ensure_parent_dir, saf
 from flavor.config.defaults import DEFAULT_DISK_SPACE_MULTIPLIER
 from flavor.psp.format_2025.constants import DEFAULT_SLOT_DESCRIPTOR_SIZE
 from flavor.psp.format_2025.reader import PSPFReader
+from flavor.psp.format_2025.targets import normalize_workenv_target
 from flavor.psp.format_2025.workenv import WorkEnvManager
 
 
@@ -270,11 +271,7 @@ class PSPFLauncher(PSPFReader):
 
     def _normalize_slot_target(self, slot_target: str) -> str:
         """Normalize slot target metadata to a path relative to the workenv."""
-        if slot_target == "{workenv}":
-            return "{workenv}"
-        if slot_target.startswith("{workenv}/"):
-            return slot_target.removeprefix("{workenv}/")
-        return slot_target
+        return normalize_workenv_target(slot_target)
 
     def setup_workenv(self) -> Path:
         """Setup work environment for bundle execution."""
