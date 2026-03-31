@@ -70,7 +70,7 @@ def test_sbom_package_has_purl_and_hash() -> None:
     pkg_component = next(c for c in sbom["components"] if c["name"] == "requests")
     assert pkg_component["purl"] == "pkg:pypi/requests@2.31.0"
     assert len(pkg_component["hashes"]) == 1
-    assert pkg_component["hashes"][0]["alg"] == "SHA256"
+    assert pkg_component["hashes"][0]["alg"] == "SHA-256"
 
 
 def test_sbom_package_has_license() -> None:
@@ -98,7 +98,7 @@ def test_sbom_python_runtime_has_hash() -> None:
     assert sbom is not None
     python_component = next(c for c in sbom["components"] if c["name"] == "python")
     assert "hashes" in python_component
-    assert python_component["hashes"][0]["alg"] == "SHA256"
+    assert python_component["hashes"][0]["alg"] == "SHA-256"
 
 
 def test_sbom_includes_launcher() -> None:
@@ -124,7 +124,7 @@ def test_sbom_launcher_has_hash() -> None:
     assert sbom is not None
     launcher = next(c for c in sbom["components"] if "launcher" in c["name"])
     assert "hashes" in launcher
-    assert launcher["hashes"][0]["alg"] == "SHA256"
+    assert launcher["hashes"][0]["alg"] == "SHA-256"
 
 
 def test_sbom_includes_builder() -> None:

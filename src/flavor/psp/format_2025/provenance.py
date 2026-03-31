@@ -23,7 +23,7 @@ def build_provenance(
     launcher_language: str,
     launcher_version: str,
     launcher_hash: str,
-    signing_key_fingerprint: str,
+    signing_key_fingerprint: str | None = None,
 ) -> dict[str, Any]:
     """Assemble a provenance record.
 
@@ -40,7 +40,7 @@ def build_provenance(
         launcher_version: Version of the launcher binary.
         launcher_hash: Hash of the launcher binary (e.g. "sha256:<hex>").
         signing_key_fingerprint: Hex fingerprint of the signing key, or
-            empty string if the package is unsigned.
+            None if the package is unsigned.
 
     Returns:
         Provenance record dict, JSON-serialisable.
@@ -49,7 +49,7 @@ def build_provenance(
     source_date_epoch_str = os.environ.get("SOURCE_DATE_EPOCH", "")
     reproducible = bool(source_date_epoch_str.strip())
 
-    return {
+    record: dict[str, Any] = {
         "builder": builder_name,
         "builder_version": builder_version,
         "build_timestamp": ts,
@@ -67,9 +67,15 @@ def build_provenance(
             "version": launcher_version,
             "hash": launcher_hash,
         },
-        "signing_key_fingerprint": signing_key_fingerprint,
         "reproducible": reproducible,
     }
+
+    if signing_key_fingerprint is not None:
+        record["signing_attestation_key_fp"] = f"sha256:{signing_key_fingerprint}"
+    else:
+        record["signing_attestation_key_fp"] = None
+
+    return record
 
 
 # 🌶️📦🔚
