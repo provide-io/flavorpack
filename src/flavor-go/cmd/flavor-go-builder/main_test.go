@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package main
 
 import (
@@ -66,11 +63,4 @@ func TestBuilderBundleHelperProcess(t *testing.T) {
 	versionFlag = true
 	buildBundle(rootCmd, nil)
 	os.Exit(0)
-}
-
-func TestGetBuilderTimestampReturnsSomething(t *testing.T) {
-	ts := getBuilderTimestamp()
-	if ts == "" {
-		t.Fatal("expected non-empty build timestamp")
-	}
 }

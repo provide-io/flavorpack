@@ -1,0 +1,26 @@
+--- src/psp/format_2025/backends.rs
++++ replace <impl Backend for StreamBackend>::open -> Result<()> with Ok(())
+@@ -322,22 +322,17 @@
+ 
+             Some(result)
+         })
+     }
+ }
+ 
+ impl Backend for StreamBackend {
+     fn open(&mut self, path: &Path) -> Result<()> {
+-        let file = File::open(path).map_err(FlavorError::IoError)?;
+-
+-        self.file = Some(file);
+-        self.path = Some(path.to_path_buf());
+-
+-        Ok(())
++        Ok(()) /* ~ changed by cargo-mutants ~ */
+     }
+ 
+     fn close(&mut self) -> Result<()> {
+         self.file = None;
+         self.path = None;
+         Ok(())
+     }
+ 

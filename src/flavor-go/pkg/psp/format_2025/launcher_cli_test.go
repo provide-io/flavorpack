@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -11,12 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
-
-type launcherExitCode struct {
-	code int
-}
 
 func TestDetectLauncherType(t *testing.T) {
 	t.Parallel()
@@ -122,7 +115,7 @@ func captureStdout(t *testing.T, fn func()) string {
 }
 
 func TestCLIMetadataAndVerificationPaths(t *testing.T) {
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	bundle := buildSingleSlotBundleForTests(t, []byte("cli file content"), []byte("cli file content"), nil, SlotMetadata{
 		ID:     "cli-slot",
 		Target: "{workenv}/bin/app.txt",
@@ -154,30 +147,10 @@ func TestCLIMetadataAndVerificationPaths(t *testing.T) {
 	}
 }
 
-func TestShowBundleInfoReportsCodecInfo(t *testing.T) {
-	logger := logging.NewNullLogger()
-	bundle := buildSingleSlotBundleForTests(t, []byte("cli file content"), []byte("cli file content"), []uint8{OP_GZIP}, SlotMetadata{
-		ID:         "cli-slot",
-		Target:     "{workenv}/bin/app.txt",
-		Operations: "gzip",
-	}, 0, false)
-
-	output := captureStdout(t, func() {
-		showBundleInfo(bundle, logger)
-	})
-
-	if !strings.Contains(output, "demo v1.0.0") {
-		t.Fatalf("showBundleInfo() output = %q", output)
-	}
-	if !strings.Contains(output, "Slots: 1 (gzip) | Verified: ✓") {
-		t.Fatalf("showBundleInfo() output = %q", output)
-	}
-}
-
 func TestVerifyBundleDirectSuccess(t *testing.T) {
 	t.Parallel()
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	bundle := buildSingleSlotBundleForTests(t, []byte("verify file content"), []byte("verify file content"), nil, SlotMetadata{
 		ID:     "verify-slot",
 		Target: "{workenv}/bin/app.txt",
@@ -187,123 +160,6 @@ func TestVerifyBundleDirectSuccess(t *testing.T) {
 		verifyBundle(bundle, logger)
 	})
 	if !strings.Contains(output, "✓ Magic sequence valid") || !strings.Contains(output, "✓ Bundle verification passed") {
-		t.Fatalf("verifyBundle() output = %q", output)
-	}
-}
-
-func TestCLIHelpersExitOnInvalidInputs(t *testing.T) {
-	logger := logging.NewNullLogger()
-
-	bundle := buildSingleSlotBundleForTests(t, []byte("cli file content"), []byte("cli file content"), nil, SlotMetadata{
-		ID:     "cli-slot",
-		Target: "{workenv}/bin/app.txt",
-	}, 0, false)
-
-	cases := []struct {
-		name     string
-		fn       func()
-		wantCode int
-	}{
-		{
-			name: "show info invalid bundle",
-			fn: func() {
-				showBundleInfo(filepath.Join(t.TempDir(), "missing.psp"), logger)
-			},
-			wantCode: 1,
-		},
-		{
-			name: "show metadata invalid bundle",
-			fn: func() {
-				showMetadata(filepath.Join(t.TempDir(), "missing.psp"), logger)
-			},
-			wantCode: 1,
-		},
-		{
-			name: "verify invalid bundle",
-			fn: func() {
-				verifyBundle(filepath.Join(t.TempDir(), "missing.psp"), logger)
-			},
-			wantCode: 1,
-		},
-		{
-			name: "extract invalid index",
-			fn: func() {
-				extractSlot(bundle, "nope", t.TempDir(), logger)
-			},
-			wantCode: 1,
-		},
-		{
-			name: "extract out of range",
-			fn: func() {
-				extractSlot(bundle, "9", t.TempDir(), logger)
-			},
-			wantCode: 1,
-		},
-	}
-
-	for _, tc := range cases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			oldExitFn := osExitFn
-			osExitFn = func(code int) {
-				panic(launcherExitCode{code: code})
-			}
-			t.Cleanup(func() {
-				osExitFn = oldExitFn
-			})
-
-			defer func() {
-				r := recover()
-				if r == nil {
-					t.Fatal("expected helper to terminate via osExitFn")
-				}
-				got, ok := r.(launcherExitCode)
-				if !ok {
-					t.Fatalf("unexpected panic value: %#v", r)
-				}
-				if got.code != tc.wantCode {
-					t.Fatalf("exit code = %d, want %d", got.code, tc.wantCode)
-				}
-			}()
-
-			tc.fn()
-		})
-	}
-}
-
-func TestVerifyBundleDirectFailure(t *testing.T) {
-	logger := logging.NewNullLogger()
-	bundle := filepath.Join(t.TempDir(), "invalid.psp")
-	if err := os.WriteFile(bundle, bytes.Repeat([]byte{0}, MagicTrailerSize), 0o600); err != nil {
-		t.Fatalf("WriteFile() error = %v", err)
-	}
-
-	oldExitFn := osExitFn
-	osExitFn = func(code int) {
-		panic(launcherExitCode{code: code})
-	}
-	t.Cleanup(func() {
-		osExitFn = oldExitFn
-	})
-
-	output := captureStdout(t, func() {
-		defer func() {
-			r := recover()
-			if r == nil {
-				t.Fatal("expected verifyBundle to terminate via osExitFn")
-			}
-			got, ok := r.(launcherExitCode)
-			if !ok {
-				t.Fatalf("unexpected panic value: %#v", r)
-			}
-			if got.code != 1 {
-				t.Fatalf("exit code = %d, want 1", got.code)
-			}
-		}()
-		verifyBundle(bundle, logger)
-	})
-
-	if !strings.Contains(output, "Bundle verification failed") {
 		t.Fatalf("verifyBundle() output = %q", output)
 	}
 }

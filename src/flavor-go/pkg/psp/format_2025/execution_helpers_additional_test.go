@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -49,7 +46,7 @@ func TestExecutionHelperConversions(t *testing.T) {
 			})
 		}
 
-		for _, tc := range []float64{math.NaN(), math.Inf(1), -1, 12.5, 4294967296.0} {
+		for _, tc := range []float64{math.NaN(), math.Inf(1), -1, 12.5} {
 			if _, err := modeFromJSONNumber(tc); err == nil {
 				t.Fatalf("expected error from modeFromJSONNumber(%v)", tc)
 			}
@@ -70,15 +67,6 @@ func TestExecutionHelperConversions(t *testing.T) {
 
 		if _, err := safeJoinWithinBase(base, "..", "escape"); err == nil {
 			t.Fatal("expected escape detection from safeJoinWithinBase")
-		}
-
-		// No parts: joined == base, rel == ".", covers the dot-return branch.
-		got, err = safeJoinWithinBase(base)
-		if err != nil {
-			t.Fatalf("safeJoinWithinBase() with no parts error = %v", err)
-		}
-		if got != filepath.Clean(base) {
-			t.Fatalf("safeJoinWithinBase() with no parts = %q, want %q", got, filepath.Clean(base))
 		}
 	})
 

@@ -1,0 +1,47 @@
+--- src/psp/format_2025/backends.rs
++++ replace create_backend -> Box<dyn Backend> with Box::new(Default::default())
+@@ -456,43 +456,12 @@
+         Err(FlavorError::Generic(
+             "View not available in safe file backend".into(),
+         ))
+     }
+ }
+ 
+ /// Factory function to create the appropriate backend
+ pub fn create_backend(mode: u8, path: Option<&Path>) -> Box<dyn Backend> {
+-    let mut mode = mode;
+-
+-    if mode == ACCESS_AUTO {
+-        // Auto-select based on file size and platform
+-        if let Some(p) = path {
+-            if let Ok(metadata) = std::fs::metadata(p) {
+-                let file_size = metadata.len();
+-
+-                // Use streaming for very large files (>100MB)
+-                if file_size > 100 * 1024 * 1024 {
+-                    mode = ACCESS_STREAM;
+-                // Use mmap for files over 1MB
+-                } else if file_size > 1024 * 1024 {
+-                    mode = ACCESS_MMAP;
+-                } else {
+-                    mode = ACCESS_FILE;
+-                }
+-            } else {
+-                mode = ACCESS_FILE;
+-            }
+-        } else {
+-            mode = ACCESS_FILE;
+-        }
+-    }
+-
+-    // Create the appropriate backend
+-    match mode {
+-        ACCESS_MMAP => Box::new(MMapBackend::new()),
+-        ACCESS_STREAM => Box::new(StreamBackend::with_default_chunk_size()),
+-        ACCESS_FILE => Box::new(FileBackend::new()),
+-        _ => Box::new(HybridBackend::with_default_header_size()),
+-    }
++    Box::new(Default::default()) /* ~ changed by cargo-mutants ~ */
+ }
+ 
+ // 📦💾🗺️🪄

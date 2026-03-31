@@ -1,0 +1,22 @@
+--- src/psp/format_2025/backends.rs
++++ replace <impl Backend for StreamBackend>::read_slot -> Result<Vec<u8>> with Ok(vec![])
+@@ -355,18 +355,17 @@
+             Ok(buffer)
+         } else {
+             Err(FlavorError::Generic("Backend not opened".into()))
+         }
+     }
+ 
+     fn read_slot(&mut self, descriptor: &SlotDescriptor) -> Result<Vec<u8>> {
+         // For streaming, only read first chunk
+-        let size = std::cmp::min(descriptor.size as usize, self.chunk_size);
+-        self.read_at(descriptor.offset, size)
++        Ok(vec![]) /* ~ changed by cargo-mutants ~ */
+     }
+ }
+ 
+ /// Hybrid backend - uses mmap for index/metadata, file I/O for slots
+ pub struct HybridBackend {
+     file: Option<File>,
+     header_mmap: Option<Mmap>,
+     path: Option<std::path::PathBuf>,

@@ -1,4 +1,4 @@
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/api.rs
 FN:132,_RNvNtNtCseH9BiOqUglv_6flavor3api5tests28write_synthetic_pspf_package
 FN:165,_RNvNtNtCseH9BiOqUglv_6flavor3api5testss_36build_package_rejects_unknown_format
 FN:178,_RNvNtNtCseH9BiOqUglv_6flavor3api5testss_37launch_package_rejects_unknown_format
@@ -118,7 +118,7 @@ BRH:0
 LF:91
 LH:85
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/bin/flavor-rs-builder.rs
 FN:47,_RNCNvCs99x2uHjh4E9_17flavor_rs_builder4main0B3_
 FN:64,_RNvCs99x2uHjh4E9_17flavor_rs_builder3run
 FN:45,_RNvCs99x2uHjh4E9_17flavor_rs_builder4main
@@ -176,7 +176,7 @@ BRH:0
 LF:45
 LH:0
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/bin/flavor-rs-launcher.rs
 FN:59,_RNCNvCs13XS64Tqyx2_18flavor_rs_launcher3run0B3_
 FN:8,_RNCNvCs13XS64Tqyx2_18flavor_rs_launcher4main0B3_
 FN:25,_RNvCs13XS64Tqyx2_18flavor_rs_launcher3run
@@ -326,7 +326,7 @@ BRH:0
 LF:136
 LH:0
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/exceptions.rs
 FN:31,_RNvXNtCseH9BiOqUglv_6flavor10exceptionsNtB2_11FlavorErrorNtNtCsg8bQwBuw1gr_4core3fmt7Display3fmt
 FN:47,_RNvXs0_NtCseH9BiOqUglv_6flavor10exceptionsNtB5_11FlavorErrorINtNtCsg8bQwBuw1gr_4core7convert4FromNtNtNtCsgQXtAl2Hvo9_3std2io5error5ErrorE4from
 FN:53,_RNvXs1_NtCseH9BiOqUglv_6flavor10exceptionsNtB5_11FlavorErrorINtNtCsg8bQwBuw1gr_4core7convert4FromNtNtCsj4g5JnloXNH_10serde_json5error5ErrorE4from
@@ -361,7 +361,7 @@ BRH:0
 LF:19
 LH:11
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/logger.rs
 FN:107,_RNCNvMNtCseH9BiOqUglv_6flavor6loggerNtB4_10JsonLogger4init0B6_
 FN:104,_RNvMNtCseH9BiOqUglv_6flavor6loggerNtB2_10JsonLogger4init
 FN:166,_RNvNtCseH9BiOqUglv_6flavor6logger15is_json_logging
@@ -591,7 +591,7 @@ BRH:0
 LF:187
 LH:153
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/backends.rs
 FN:67,_RNCNvXNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258backendsNtB4_11MMapBackendNtNtCsg8bQwBuw1gr_4core3fmt5Debug3fmts_0Ba_
 FN:385,_RNCNvXs9_NtNtNtCseH9BiOqUglv_6flavor3psp11format_20258backendsNtB7_13HybridBackendNtNtCsg8bQwBuw1gr_4core3fmt5Debug3fmts_0Bd_
 FN:91,_RNvMs0_NtNtNtCseH9BiOqUglv_6flavor3psp11format_20258backendsNtB5_11MMapBackend8prefetch
@@ -1116,7 +1116,7 @@ BRH:0
 LF:427
 LH:348
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/builder/finalization.rs
 FN:196,_RNCNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20257builder12finalization16finalize_package0Bb_
 FN:198,_RNCNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20257builder12finalization16finalize_packages0_0Bb_
 FN:197,_RNCNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20257builder12finalization16finalize_packages_0Bb_
@@ -1356,7 +1356,7 @@ BRH:0
 LF:213
 LH:210
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/builder/metadata.rs
 FN:18,_RNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20257builder8metadata14get_build_info
 FN:52,_RNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20257builder8metadata15create_metadata
 FN:22,_RNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20257builder8metadata19get_build_info_with
@@ -1696,7 +1696,7 @@ BRH:0
 LF:296
 LH:276
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/builder/mod.rs
 FN:178,_RNCNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20257builder12get_launcher0B9_
 FN:102,_RNCNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20257builder13read_manifest0B9_
 FN:304,_RNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20257builder5tests14write_manifest
@@ -1947,7 +1947,7 @@ BRH:0
 LF:219
 LH:189
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/builder/slot_processor.rs
 FN:352,_RNvNtNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20257builder14slot_processor5tests13manifest_slot
 FN:367,_RNvNtNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20257builder14slot_processor5testss_41test_process_slots_self_ref_sets_defaults
 FN:438,_RNvNtNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20257builder14slot_processor5testss_47test_process_slots_rejects_slot_number_mismatch
@@ -2335,7 +2335,7 @@ BRH:0
 LF:347
 LH:306
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/checksums.rs
 FN:19,_RNvXNtNtNtCseH9BiOqUglv_6flavor3psp11format_20259checksumsNtB2_17ChecksumAlgorithmNtNtCsg8bQwBuw1gr_4core3fmt7Display3fmt
 FN:30,_RNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20259checksums14parse_checksum
 FN:145,_RNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20259checksums15verify_checksum
@@ -2476,7 +2476,7 @@ BRH:0
 LF:114
 LH:84
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/cli.rs
 FN:258,_RNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20253cli5tests17build_real_bundle
 FN:366,_RNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20253cli5testss_38cli_entry_points_work_on_a_real_bundle
 FN:307,_RNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20253cli5testss_48detect_launcher_type_recognizes_common_launchers
@@ -2747,7 +2747,7 @@ BRH:0
 LF:241
 LH:209
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/crypto.rs
 FN:36,_RNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20256crypto5testss_30test_sign_and_verify_roundtrip
 FN:51,_RNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20256crypto5testss_44test_verify_signature_rejects_invalid_length
 FN:23,_RNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20256crypto16verify_signature
@@ -2796,7 +2796,7 @@ BRH:0
 LF:31
 LH:31
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/debug.rs
 FN:28,_RNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20255debug10debug_dump
 FN:161,_RNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20255debug13analyze_slots
 FN:91,_RNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20255debug17format_index_json
@@ -2965,7 +2965,7 @@ BRH:0
 LF:144
 LH:92
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/defaults.rs
 FN:197,_RNvMNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258defaultsNtB2_15ValidationLevel5parse
 FN:209,_RNvMNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258defaultsNtB2_15ValidationLevel6as_str
 FN:221,_RNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258defaults20get_validation_level
@@ -3041,7 +3041,7 @@ BRH:0
 LF:52
 LH:52
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/execution/commands.rs
 FN:284,_RNCNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20259execution8commands15execute_command0Bb_
 FN:29,_RNCNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20259execution8commands22execute_setup_commands0Bb_
 FN:34,_RNCNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20259execution8commands22execute_setup_commandss0_0Bb_
@@ -3571,7 +3571,7 @@ BRH:0
 LF:465
 LH:391
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/execution/placeholders.rs
 FN:8,_RNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20259execution12placeholders23substitute_placeholders
 FNDA:12,_RNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20259execution12placeholders23substitute_placeholders
 FNF:1
@@ -3591,7 +3591,7 @@ BRH:0
 LF:10
 LH:7
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/execution/validation.rs
 FN:227,_RNvNtNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20259execution10validation5tests15sample_metadata
 FN:267,_RNvNtNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20259execution10validation5testss_45save_and_validate_package_checksum_round_trip
 FN:296,_RNvNtNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20259execution10validation5testss_47save_index_metadata_writes_expected_json_fields
@@ -3822,7 +3822,7 @@ BRH:0
 LF:203
 LH:190
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/extraction.rs
 FN:90,_RNCNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_202510extraction12extract_slot0B9_
 FN:438,_RNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_202510extraction5tests10gzip_bytes
 FN:444,_RNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_202510extraction5tests11write_octal
@@ -4259,7 +4259,7 @@ BRH:0
 LF:375
 LH:318
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/index.rs
 FN:366,_RNvMNtNtNtCseH9BiOqUglv_6flavor3psp11format_20255indexNtB2_5Index19verify_checksum_raw
 FN:77,_RNvMNtNtNtCseH9BiOqUglv_6flavor3psp11format_20255indexNtB2_5Index3new
 FN:303,_RNvMNtNtNtCseH9BiOqUglv_6flavor3psp11format_20255indexNtB2_5Index4pack
@@ -4606,7 +4606,7 @@ BRH:0
 LF:302
 LH:253
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/keys.rs
 FN:51,_RNCNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20254keys20load_keys_from_files0B9_
 FN:85,_RNCNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20254keys20load_keys_from_filess0_0B9_
 FN:90,_RNCNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20254keys20load_keys_from_filess1_0B9_
@@ -4799,7 +4799,7 @@ BRH:0
 LF:161
 LH:130
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/launcher/command.rs
 FN:196,_RNvNtNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258launcher7command5tests15sample_metadata
 FN:315,_RNvNtNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258launcher7command5testss_23test_platform_separator
 FN:285,_RNvNtNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258launcher7command5testss_35test_path_not_set_uses_only_bin_dir
@@ -5036,7 +5036,7 @@ BRH:0
 LF:209
 LH:192
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/launcher/extraction.rs
 FN:15,_RNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258launcher10extraction13extract_slots
 FN:83,_RNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258launcher10extraction16build_slot_paths
 FN:10,_RNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258launcher10extraction21normalize_slot_target
@@ -5209,7 +5209,7 @@ BRH:0
 LF:149
 LH:144
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/launcher/filesystem.rs
 FN:10,_RNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258launcher10filesystem12copy_dir_all
 FN:27,_RNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258launcher10filesystem12fix_shebangs
 FN:47,_RNCNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258launcher10filesystem12fix_shebangs0Bb_
@@ -5304,7 +5304,7 @@ BRH:0
 LF:77
 LH:73
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/launcher/mod.rs
 FN:51,_RNCNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258launcher19cache_dir_from_hint0B9_
 FN:52,_RNCNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258launcher19cache_dir_from_hints_0B9_
 FN:41,_RNCNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258launcher22cache_enabled_from_env0B9_
@@ -5746,7 +5746,7 @@ BRH:0
 LF:397
 LH:118
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/launcher/workenv.rs
 FN:136,_RNCNvNtNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258launcher7workenv5tests15sample_metadata0Bd_
 FN:19,_RNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258launcher7workenv16check_disk_space
 FN:13,_RNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258launcher7workenv17get_workenv_paths
@@ -5957,7 +5957,7 @@ BRH:0
 LF:174
 LH:168
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/locking.rs
 FN:106,_RNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20257locking12release_lock
 FN:182,_RNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20257locking16is_lock_acquired
 FN:48,_RNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20257locking16try_acquire_lock
@@ -6149,7 +6149,7 @@ BRH:0
 LF:157
 LH:122
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/manifest.rs
 FN:72,_RNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258manifest5testss_41manifest_slot_deserializes_default_fields
 FN:89,_RNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258manifest5testss_45build_manifest_deserializes_optional_sections
 FN:58,_RNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258manifest15default_purpose
@@ -6224,7 +6224,7 @@ BRH:0
 LF:59
 LH:59
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/metadata.rs
 FN:86,_RNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258metadata12default_true
 FN:198,_RNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258metadata5tests11sample_slot
 FN:232,_RNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258metadata5testss_35metadata_round_trips_full_structure
@@ -6378,7 +6378,7 @@ BRH:0
 LF:138
 LH:138
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/operations.rs
 FN:9,_RNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_202510operations15pack_operations
 FN:43,_RNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_202510operations17unpack_operations
 FN:77,_RNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_202510operations5tests12nonzero_byte
@@ -6488,7 +6488,7 @@ BRH:0
 LF:80
 LH:79
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/paths.rs
 FN:62,_RNvMNtNtNtCseH9BiOqUglv_6flavor3psp11format_20255pathsNtB2_12WorkenvPaths16package_metadata
 FN:111,_RNvMNtNtNtCseH9BiOqUglv_6flavor3psp11format_20255pathsNtB2_12WorkenvPaths17psp_metadata_file
 FN:84,_RNvMNtNtNtCseH9BiOqUglv_6flavor3psp11format_20255pathsNtB2_12WorkenvPaths3log
@@ -6677,7 +6677,7 @@ BRH:0
 LF:134
 LH:121
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/pe_resources.rs
 FN:114,_RNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_202512pe_resources22embed_pspf_as_resource
 FN:126,_RNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_202512pe_resources5testss_21test_non_windows_stub
 FNDA:2,_RNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_202512pe_resources22embed_pspf_as_resource
@@ -6699,7 +6699,7 @@ BRH:0
 LF:10
 LH:10
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/pe_utils.rs
 FN:697,_RNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258pe_utils5testss_21test_is_pe_executable
 FN:709,_RNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258pe_utils5testss_29test_needs_dos_stub_expansion
 FN:529,_RNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258pe_utils15expand_dos_stub
@@ -7038,7 +7038,7 @@ BRH:0
 LF:305
 LH:53
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/policy.rs
 FN:142,_RNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20256policy12merge_policy
 FN:220,_RNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20256policy14enforce_policy
 FN:73,_RNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20256policy17parse_policy_file
@@ -7459,7 +7459,7 @@ BRH:0
 LF:345
 LH:321
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/reader.rs
 FN:396,_RNvXs0_NtNtNtCseH9BiOqUglv_6flavor3psp11format_20256readerNtB5_6ReaderNtNtNtCsg8bQwBuw1gr_4core3ops4drop4Drop4drop
 FN:380,_RNvMs_NtNtNtCseH9BiOqUglv_6flavor3psp11format_20256readerNtB4_6Reader10debug_dump
 FN:385,_RNvMs_NtNtNtCseH9BiOqUglv_6flavor3psp11format_20256readerNtB4_6Reader7backend
@@ -7732,7 +7732,7 @@ BRH:0
 LF:232
 LH:141
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/runtime.rs
 FN:304,_RNCNvMNtNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20257runtime12runtime_impl10operationsNtB4_14UnsetOperation18unset_glob_pattern0Be_
 FN:310,_RNCNvMNtNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20257runtime12runtime_impl10operationsNtB4_14UnsetOperation18unset_glob_patterns_0Be_
 FN:107,_RNCNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20257runtime12runtime_impl19process_runtime_env0Bb_
@@ -8082,7 +8082,7 @@ BRH:0
 LF:297
 LH:254
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/slots.rs
 FN:192,_RNvMs_NtNtNtCseH9BiOqUglv_6flavor3psp11format_20255slotsNtB4_12SlotMetadata3new
 FN:201,_RNvMs_NtNtNtCseH9BiOqUglv_6flavor3psp11format_20255slotsNtB4_12SlotMetadata9with_path
 FN:213,_RNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20255slots13align_to_page
@@ -8215,7 +8215,7 @@ BRH:0
 LF:107
 LH:92
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/trust.rs
 FN:214,_RNCNvNtNtNtNtCseH9BiOqUglv_6flavor3psp11format_20255trust5testss_34test_compute_key_fingerprint_valid0Bb_
 FN:104,_RNCNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20255trust17load_pub_key_file0B9_
 FN:129,_RNCNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20255trust17parse_ed25519_pem0B9_
@@ -8482,7 +8482,7 @@ BRH:0
 LF:208
 LH:166
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/format_2025/verifier.rs
 FN:200,_RNCNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258verifier21verify_integrity_seal0B9_
 FN:214,_RNCNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258verifier21verify_integrity_seals0_0B9_
 FN:220,_RNCNvNtNtNtCseH9BiOqUglv_6flavor3psp11format_20258verifier21verify_integrity_seals1_0B9_
@@ -8966,7 +8966,7 @@ BRH:0
 LF:425
 LH:408
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/psp/mod.rs
 FN:70,_RNvNtNtCseH9BiOqUglv_6flavor3psp5tests23write_synthetic_package
 FN:91,_RNvNtNtCseH9BiOqUglv_6flavor3psp5testss_33detect_format_rejects_plain_files
 FN:79,_RNvNtNtCseH9BiOqUglv_6flavor3psp5testss_43detect_format_recognizes_valid_pspf_trailer
@@ -9034,7 +9034,7 @@ BRH:0
 LF:52
 LH:49
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/utils/mod.rs
 FN:7,_RNvNtCseH9BiOqUglv_6flavor5utils11is_env_true
 FN:40,_RNvNtCseH9BiOqUglv_6flavor5utils13get_cache_dir
 FN:23,_RNvNtCseH9BiOqUglv_6flavor5utils19get_platform_string
@@ -9136,7 +9136,7 @@ BRH:0
 LF:76
 LH:61
 end_of_record
-SF:/REDACTED_ABS_PATH
+SF:/Users/tim/code/gh/provide-io/flavorpack/src/flavor-rs/src/version.rs
 FN:36,_RNvNtNtCseH9BiOqUglv_6flavor7version5testss_38full_version_includes_the_base_version
 FN:42,_RNvNtNtCseH9BiOqUglv_6flavor7version5testss_54full_version_includes_optional_metadata_when_available
 FN:55,_RNvNtNtCseH9BiOqUglv_6flavor7version5testss_69full_version_with_test_inputs_truncates_commit_and_appends_build_time

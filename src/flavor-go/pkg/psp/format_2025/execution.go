@@ -25,38 +25,16 @@ var (
 	ErrLockAcquisition      = errors.New("failed to acquire lock")
 )
 
-var tryAcquireLockFn = TryAcquireLock
-var waitForExtractionFn = WaitForExtraction
-var checkWorkenvValidityAfterWaitFn = checkWorkenvValidity
-var chmodValidatedFn = chmodValidated
-var hasPSPFResourceFn = HasPSPFResource
-var readPSPFFromResourceFn = ReadPSPFFromResource
-var verifyIntegritySealFn = (*Reader).VerifyIntegritySeal
-var createTempFn = os.CreateTemp
-var removeAllFn = os.RemoveAll
-var runBundleReaderCloseFn = (*Reader).Close
-var tmpFileWriteFn = func(f *os.File, d []byte) (int, error) { return f.Write(d) }
-var tmpFileCloseFn = func(f *os.File) error { return f.Close() }
-
-func removeFileQuietly(path, context string, logger *slog.Logger) {
+func removeFileQuietly(path, context string, logger hclog.Logger) {
 	if err := os.Remove(path); err != nil {
-		logging.Trace(logger, "Ignoring cleanup error", "context", context, "path", path, "error", err)
+		logger.Trace("Ignoring cleanup error", "context", context, "path", path, "error", err)
 	}
 }
 
-func removeAllQuietly(path, context string, logger *slog.Logger) {
-	if err := removeAllFn(path); err != nil {
-		logging.Trace(logger, "Ignoring cleanup error", "context", context, "path", path, "error", err)
+func removeAllQuietly(path, context string, logger hclog.Logger) {
+	if err := os.RemoveAll(path); err != nil {
+		logger.Trace("Ignoring cleanup error", "context", context, "path", path, "error", err)
 	}
-}
-
-func ensurePathWithinWorkenv(path, workenvDir, original string) error {
-	cleanPath := filepath.Clean(path)
-	cleanBase := filepath.Clean(workenvDir)
-	if !strings.HasPrefix(cleanPath, cleanBase+string(os.PathSeparator)) && cleanPath != cleanBase {
-		return fmt.Errorf("path %q escapes work environment directory", original)
-	}
-	return nil
 }
 
 // Utility functions: see execution_utils.go

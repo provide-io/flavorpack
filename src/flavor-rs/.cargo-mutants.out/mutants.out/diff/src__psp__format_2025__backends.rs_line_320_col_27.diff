@@ -1,0 +1,21 @@
+--- src/psp/format_2025/backends.rs
++++ replace -= with += in StreamBackend::stream_slot
+@@ -312,17 +312,17 @@
+                 return None;
+             }
+ 
+             let to_read = std::cmp::min(chunk_size as u64, remaining) as usize;
+             let result = self.read_at(offset, to_read);
+ 
+             if result.is_ok() {
+                 offset += to_read as u64;
+-                remaining -= to_read as u64;
++                remaining += /* ~ changed by cargo-mutants ~ */ to_read as u64;
+             }
+ 
+             Some(result)
+         })
+     }
+ }
+ 
+ impl Backend for StreamBackend {

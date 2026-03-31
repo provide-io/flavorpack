@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -8,7 +5,6 @@ import (
 	"math"
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 )
 
@@ -59,24 +55,6 @@ func TestIntToUint64Checked(t *testing.T) {
 
 	if _, err := intToUint64Checked(-1, "slot index"); err == nil {
 		t.Fatal("expected negative value error")
-	}
-}
-
-func TestFloat64ToFileModeChecked(t *testing.T) {
-	t.Parallel()
-
-	got, err := float64ToFileModeChecked(0o640, "mode")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if got != 0o640 {
-		t.Fatalf("got %o, want 0640", got)
-	}
-
-	for _, value := range []float64{-1, math.MaxUint32 + 1, 12.5} {
-		if _, err := float64ToFileModeChecked(value, "mode"); err == nil {
-			t.Fatalf("expected range error for %v", value)
-		}
 	}
 }
 
@@ -155,11 +133,8 @@ func TestValidatedFileHelpers(t *testing.T) {
 	if err != nil {
 		t.Fatalf("statValidated() error = %v", err)
 	}
-	// Windows does not support Unix-style permission bits; skip mode check.
-	if runtime.GOOS != "windows" {
-		if info.Mode().Perm() != os.FileMode(FilePerms) {
-			t.Fatalf("unexpected mode %v", info.Mode().Perm())
-		}
+	if info.Mode().Perm() != os.FileMode(FilePerms) {
+		t.Fatalf("unexpected mode %v", info.Mode().Perm())
 	}
 	if _, err := os.Stat(nestedDir); err != nil {
 		t.Fatalf("expected nested dir to exist: %v", err)

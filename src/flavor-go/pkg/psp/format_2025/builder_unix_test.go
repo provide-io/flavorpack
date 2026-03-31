@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 //go:build !windows
 // +build !windows
 
@@ -11,7 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 func TestAtomicReplaceUnix(t *testing.T) {
@@ -28,7 +25,7 @@ func TestAtomicReplaceUnix(t *testing.T) {
 		t.Fatalf("WriteFile(dest) error = %v", err)
 	}
 
-	if err := atomicReplace(source, dest, logging.NewNullLogger()); err != nil {
+	if err := atomicReplace(source, dest, hclog.NewNullLogger()); err != nil {
 		t.Fatalf("atomicReplace() error = %v", err)
 	}
 

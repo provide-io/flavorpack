@@ -1,0 +1,21 @@
+--- src/psp/format_2025/backends.rs
++++ replace > with >= in create_backend
+@@ -465,17 +465,17 @@
+ 
+     if mode == ACCESS_AUTO {
+         // Auto-select based on file size and platform
+         if let Some(p) = path {
+             if let Ok(metadata) = std::fs::metadata(p) {
+                 let file_size = metadata.len();
+ 
+                 // Use streaming for very large files (>100MB)
+-                if file_size > 100 * 1024 * 1024 {
++                if file_size >= /* ~ changed by cargo-mutants ~ */ 100 * 1024 * 1024 {
+                     mode = ACCESS_STREAM;
+                 // Use mmap for files over 1MB
+                 } else if file_size > 1024 * 1024 {
+                     mode = ACCESS_MMAP;
+                 } else {
+                     mode = ACCESS_FILE;
+                 }
+             } else {
