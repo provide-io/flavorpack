@@ -117,6 +117,42 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
         }
     }
 
+    // Trust store check: verify the package signing key is trusted
+    {
+        use super::trust::is_key_trusted;
+        use sha2::{Digest, Sha256};
+
+        let pk = &index.public_key;
+        if !pk.iter().all(|&b| b == 0) {
+            let mut hasher = Sha256::new();
+            hasher.update(pk);
+            let fp = format!("{:x}", hasher.finalize());
+
+            match is_key_trusted(&fp, true) {
+                None => {
+                    // No trust store exists — backwards-compatible, allow execution
+                    debug!("🔑 No trusted-keys store found; skipping trust check");
+                }
+                Some(true) => {
+                    debug!("✅ Package signing key is trusted (fp={})", &fp[..16]);
+                }
+                Some(false) => {
+                    let msg = format!(
+                        "Package signing key is not in the trusted-keys store (fp={})",
+                        fp
+                    );
+                    if matches!(validation_level, ValidationLevel::Strict) {
+                        error!("❌ {}", msg);
+                        return Err(FlavorError::Generic(msg));
+                    } else {
+                        eprintln!("flavor: warning: {msg}");
+                        warn!("⚠️ {}", msg);
+                    }
+                }
+            }
+        }
+    }
+
     // Read metadata and clone to avoid borrow issues
     let metadata = reader.read_metadata()?.clone();
     info!(
