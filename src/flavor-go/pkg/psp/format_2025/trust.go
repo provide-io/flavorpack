@@ -134,7 +134,7 @@ func loadKeysFromDir(dir string, keys map[string]TrustedKey) (bool, error) {
 		path := filepath.Join(dir, name)
 		tk, err := loadKeyFromFile(path)
 		if err != nil {
-			// Skip unparsable files with a best-effort approach
+			fmt.Fprintf(os.Stderr, "flavor: warning: failed to load trusted key %s: %v\n", path, err)
 			continue
 		}
 		keys[tk.Fingerprint] = tk
