@@ -51,7 +51,7 @@ fn get_system_policy_path() -> PathBuf {
 }
 
 fn get_user_policy_path() -> Option<PathBuf> {
-    if let Ok(dir) = std::env::var("FLAVOR_CONFIG_DIR") {
+    if let Ok(dir) = std::env::var(crate::env_vars::CONFIG_DIR) {
         return Some(PathBuf::from(dir).join("policy.toml"));
     }
     if let Ok(xdg) = std::env::var("XDG_CONFIG_HOME") {
