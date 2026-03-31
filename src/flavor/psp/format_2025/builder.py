@@ -281,6 +281,10 @@ def create_index(
         index.attestation_key_fp = fp.encode("ascii")
     # else: leave attestation_key_fp as b"\x00" * 64 (unsigned package)
 
+    # Bind attestation SBOM digest to the index (64 ASCII hex chars)
+    if attestation_hex_digest:
+        index.attestation_sbom_digest = attestation_hex_digest.encode("ascii")
+
     # Set capabilities based on options
     capabilities = 0
     if spec.options.enable_mmap:
@@ -340,7 +344,7 @@ def _prepare_attestation_slot(
 
     # ---- launcher info -------------------------------------------------------
     launcher_type = "rust"
-    launcher_data = load_launcher_binary(launcher_type, explicit_path=spec.options.launcher_bin)
+    launcher_data = load_launcher_binary(launcher_type)
     launcher_version = extract_launcher_version(launcher_data)
     launcher_hash = f"sha256:{calculate_checksum(launcher_data, 'sha256')}"
 
