@@ -1,8 +1,8 @@
-# FEP-0003: PSPF/2025 Security Attestation Extension
+# FEP-0004: PSPF/2025 Security Attestation Extension
 
 **Status**: Standards Track
 **Type**: Extension Protocol
-**Created**: 2026-03-31
+**Created**: 2026-03-30
 **Version**: v0.1
 **Requires**: FEP-0001, FEP-0002
 
@@ -60,13 +60,13 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 ### 1.4 Relationship to Other FEPs
 
-- **FEP-0001**: Defines the binary format, index block structure, lifecycle values, and signature verification. This document extends FEP-0001 §4 (index block) and §5 (slot lifecycle table).
+- **FEP-0001**: Defines the binary format, index block structure, lifecycle values, and signature verification. This document extends FEP-0001 §4 (index block, including the slot descriptor lifecycle field defined in §4.5).
 - **FEP-0002**: Defines the JSON metadata schema. Provenance records defined here are standalone JSON objects within the attestation slot; they do not extend the FEP-0002 manifest schema.
 
 ## 2. Conventions and Terminology
 
 **Attestation slot**: A slot with lifecycle value 11, containing SBOM and provenance data.
-**Key fingerprint**: SHA-256 of the raw 32-byte Ed25519 public key, encoded as 64 lowercase hex ASCII characters.
+**Key fingerprint**: SHA-256 of the raw 32-byte Ed25519 public key, encoded as 64 lowercase hex ASCII characters. When stored in binary index fields (`attestation_key_fp`), fingerprints are 64 lowercase hex ASCII characters with no prefix. When stored in JSON fields (e.g., `signing_attestation_key_fp` in provenance records), fingerprints use the `sha256:` prefix (e.g., `sha256:abc123...`). Implementations MUST strip the `sha256:` prefix before comparing a provenance JSON fingerprint against a binary index field.
 **Operator policy**: Host-level TOML configuration that may tighten package-declared constraints.
 **Package-declared policy**: Constraints expressed by the package author in `pyproject.toml`.
 **SBOM**: Software Bill of Materials — a structured inventory of software components.
@@ -74,13 +74,13 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 ## 3. Attestation Lifecycle Value
 
-FEP-0001 §5 defines the lifecycle value table for slots. This extension adds one new value:
+FEP-0001 defines a `lifecycle` field in the slot descriptor (§4.5) with values 0–10 assigned by FEP-0001. This extension adds one new value:
 
 | Value | Constant | Name | Description |
 |---|---|---|---|
 | 11 | `LIFECYCLE_ATTESTATION` | `attestation` | Security attestation slot containing SBOM and build provenance |
 
-A launcher implementing only FEP-0001 (not this extension) will treat an attestation slot as an `init`-lifecycle slot, since lifecycle value 11 is within the unassigned range for FEP-0001. It will extract the slot on first run and remove it after execution, per FEP-0001 §6.1. This is the expected forward-compatible behaviour.
+A launcher implementing only FEP-0001 (not this extension) will treat an attestation slot as an `init`-lifecycle slot, since lifecycle value 11 is within the unassigned range for FEP-0001. It will extract the slot on first run and remove it after execution per the FEP-0001 init lifecycle semantics. This is the expected forward-compatible behaviour.
 
 The slot identifier for the attestation slot is `"_attestation"` and its target path is `"_attestation"`. A package MUST NOT contain more than one slot with lifecycle value 11.
 
@@ -323,11 +323,11 @@ This command is idempotent. It MUST:
 
 ### 11.1 Old launchers reading new packages
 
-Packages built with FEP-0003 support set the three attestation index fields within the FEP-0001 reserved region. Old launchers that predate this extension read the reserved region as all-zeros per FEP-0001 §4.3 and ignore it. They encounter lifecycle value 11 for the attestation slot, treat it as an unknown lifecycle, and handle it as `init` per FEP-0001 §6.1: extract on first run, remove after execution. This is benign — the attestation JSON file is extracted and then cleaned up.
+Packages built with FEP-0004 support set the three attestation index fields within the FEP-0001 reserved region. Old launchers that predate this extension read the reserved region as all-zeros per FEP-0001 §4.3 and ignore it. They encounter lifecycle value 11 for the attestation slot, treat it as an unknown lifecycle, and handle it using FEP-0001 init lifecycle semantics: extract on first run, remove after execution. This is benign — the attestation JSON file is extracted and then cleaned up.
 
 ### 11.2 New launchers reading old packages
 
-Packages built without FEP-0003 support have zero-filled attestation index fields and no attestation slot. A launcher implementing this extension MUST handle this gracefully:
+Packages built without FEP-0004 support have zero-filled attestation index fields and no attestation slot. A launcher implementing this extension MUST handle this gracefully:
 - Zero-filled `attestation_key_fp`, `attestation_sbom_digest`, and `attestation_policy_hash` fields MUST be treated as absent; no associated checks are performed.
 - Absence of an attestation slot is not an error unless `require_sbom = true` in operator policy (§7.2), in which case the launcher MUST block with a descriptive message.
 
