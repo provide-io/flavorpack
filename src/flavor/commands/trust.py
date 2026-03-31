@@ -79,10 +79,7 @@ def trust_list(global_: bool) -> None:
 def trust_remove(fingerprint: str, global_: bool) -> None:
     """Remove a key from the trusted-keys store by fingerprint."""
     store_dir = get_trusted_keys_dir(system=global_)
-    if global_:
-        keys = _load_keys_from_dir(get_system_config_dir() / "trusted-keys")
-    else:
-        keys = load_trusted_keys(include_system=False)
+    keys = load_trusted_keys(include_system=global_)
 
     if fingerprint not in keys:
         perr(f"Key not found: {fingerprint[:16]}...")
