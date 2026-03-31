@@ -168,6 +168,26 @@ Set these when running `.psp` packages for debugging:
 |----------|---------|--------|
 | `FOUNDATION_LOG_LEVEL` | Control package logging | `trace`, `debug`, `info`, `warning`, `error` |
 | `FLAVOR_WORKENV_DIR` | Custom cache location | Path to directory |
+| `FLAVOR_CACHE_DIR` | Override cache root | Path to directory (all platforms) |
+| `FLAVOR_INCLUDE_BUILD_HOST` | Include hostname in package build metadata | `1` to enable (off by default) |
+
+---
+
+## Cache Directory
+
+All three implementations (Python, Go, Rust) must use the same platform-aware cache
+root so that packages cached by one launcher are reused by another.
+
+| Platform | Default path | Override |
+|----------|-------------|---------|
+| **Linux / macOS** | `$XDG_CACHE_HOME/flavor` if set, otherwise `~/.cache/flavor` | `FLAVOR_CACHE_DIR` |
+| **Windows** | `%LOCALAPPDATA%\flavor` | `FLAVOR_CACHE_DIR` |
+
+Work environments are stored under `<cache-root>/workenvs/<name>_<version>/`.
+
+Hardcoding `~/.cache/flavor` anywhere in source is a bug — always call the
+platform-aware helper (`get_cache_dir()` in Python, `workenv.GetCacheRoot()` in Go,
+`get_cache_dir()` in Rust).
 
 ---
 

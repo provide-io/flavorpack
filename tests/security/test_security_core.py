@@ -361,10 +361,10 @@ class TestPSPFIntegrityVerifier:
         verifier = PSPFIntegrityVerifier()
         result = verifier.verify_integrity(bundle_path)
 
-        # Standard mode is lenient
-        assert result["valid"] is True
+        # Standard mode is fail-closed on exceptions
+        assert result["valid"] is False
         assert result["signature_valid"] is False
-        assert result["tamper_detected"] is False
+        assert result["tamper_detected"] is True
 
 
 class TestVerifyPackageIntegrity:
