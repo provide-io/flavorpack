@@ -174,14 +174,14 @@ pub const DEFAULT_LAUNCHER_TIMEOUT: f64 = 30.0; // seconds
 // =================================
 // Validation defaults
 // =================================
-pub const DEFAULT_VALIDATION_LEVEL: &str = "standard"; // Default validation level
+pub const DEFAULT_VALIDATION_LEVEL: &str = "strict"; // Default validation level
 
 /// ValidationLevel represents different levels of security validation
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ValidationLevel {
     /// Full security checks, fail on any issue (most secure)
     Strict,
-    /// Normal validation, warnings for minor issues (default)
+    /// Normal validation, warnings for minor issues
     Standard,
     /// Skip signature checks, warn on checksum mismatches
     Relaxed,
@@ -229,5 +229,5 @@ pub fn get_validation_level() -> ValidationLevel {
     }
 
     // Use default from constants
-    ValidationLevel::parse(DEFAULT_VALIDATION_LEVEL).unwrap_or(ValidationLevel::Standard)
+    ValidationLevel::parse(DEFAULT_VALIDATION_LEVEL).unwrap_or(ValidationLevel::Strict)
 }
