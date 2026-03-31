@@ -8,6 +8,7 @@
 This module provides both pure functions and a fluent builder interface
 for creating PSPF packages."""
 
+import hashlib
 import os
 from pathlib import Path
 import time
@@ -252,6 +253,12 @@ def create_index(spec: BuildSpec, slots: list[PreparedSlot], public_key: bytes) 
 
     # Store public key
     index.public_key = public_key
+
+    # Write key fingerprint into attestation field (zeros when no key present)
+    if public_key and public_key != b"\x00" * 32:
+        fp = hashlib.sha256(public_key).hexdigest()
+        index.attestation_key_fp = fp.encode("ascii")
+    # else: leave attestation_key_fp as b"\x00" * 64 (unsigned package)
 
     # Set capabilities based on options
     capabilities = 0
