@@ -80,11 +80,11 @@ def test_attestation_has_provenance_key() -> None:
 
 
 def test_attestation_with_signing_key_fingerprint() -> None:
-    """signing_key_fingerprint is stored as signing_attestation_key_fp inside provenance."""
+    """signing_key_fingerprint is stored inside the provenance sub-record."""
     fp = "cd" * 32
     content_bytes, _ = build_attestation(_minimal_package_info(), signing_key_fingerprint=fp)
     data = json.loads(content_bytes)
-    assert data["provenance"]["signing_attestation_key_fp"] == f"sha256:{fp}"
+    assert data["provenance"]["signing_key_fingerprint"] == fp
 
 
 def test_parse_attestation_roundtrip() -> None:
@@ -129,11 +129,11 @@ def test_attestation_provenance_platform() -> None:
     assert platform["arch"] == info["platform_arch"]
 
 
-def test_attestation_no_signing_key_defaults_to_null() -> None:
-    """When signing_key_fingerprint is None, provenance signing_attestation_key_fp is null."""
+def test_attestation_no_signing_key_defaults_to_empty_string() -> None:
+    """When signing_key_fingerprint is None, provenance stores empty string."""
     content_bytes, _ = build_attestation(_minimal_package_info(), signing_key_fingerprint=None)
     data = json.loads(content_bytes)
-    assert data["provenance"]["signing_attestation_key_fp"] is None
+    assert data["provenance"]["signing_key_fingerprint"] == ""
 
 
 def test_attestation_empty_package_info_uses_defaults() -> None:
