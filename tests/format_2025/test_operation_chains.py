@@ -107,8 +107,8 @@ class TestOperationChains:
 
     def test_builder_with_operations(self, test_builder: PSPFBuilder) -> None:
         """Test that PSPFBuilder works with operation chains."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            tmpdir = Path(tmpdir)
+        with tempfile.TemporaryDirectory() as tmpdir_str:
+            tmpdir = Path(tmpdir_str)
 
             # Create test file
             test_file = tmpdir / "test.txt"

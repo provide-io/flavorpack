@@ -231,14 +231,14 @@ pytest tests/test_specific.py -xvs --tb=short
 **Solutions**:
 ```bash
 # Check Go version
-go version  # Should be 1.23+
+go version  # Should be 1.26+
 
 # Check Rust version
-rustc --version  # Should be 1.85+ (edition 2024 support)
+rustc --version  # Should be 1.86+ (edition 2024 support)
 
 # Clean and rebuild
 cd src/flavor-go && go clean && cd ../..
-cd src/flavor-rust && cargo clean && cd ../..
+cd src/flavor-rs && cargo clean && cd ../..
 make build-helpers
 ```
 

@@ -31,7 +31,7 @@ python -m pytest tests/ -v
 Before running any tests, ensure you have completed the Windows 11 ARM64 build setup:
 
 - ✅ Python 3.11+ installed and in PATH
-- ✅ Go 1.23+ installed and in PATH
+- ✅ Go 1.26+ installed and in PATH
 - ✅ Rust 1.86+ with `aarch64-pc-windows-msvc` target
 - ✅ Git Bash (or WSL2/MSYS2) for running shell scripts
 - ✅ Helpers built in `dist/bin/` (via `./build.sh`)
@@ -39,7 +39,7 @@ Before running any tests, ensure you have completed the Windows 11 ARM64 build s
 **Verify setup:**
 ```bash
 python --version     # Should be 3.11+
-go version          # Should be 1.23+
+go version          # Should be 1.26+
 rustc --version     # Should be 1.86+
 ls dist/bin/flavor-*windows_arm64.exe  # Should show 4 files
 ```

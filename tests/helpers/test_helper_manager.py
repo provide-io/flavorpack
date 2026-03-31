@@ -255,9 +255,8 @@ class TestVersionExtraction:
     def test_extract_version_success(self, mock_run: MagicMock) -> None:
         """Test successful version extraction."""
         manager = self.setup_manager()
-        mock_path = Mock(spec=Path)
-        # Configure __str__ to return a string, not a Mock
-        type(mock_path).__str__ = Mock(return_value="/path/to/binary")  # ty: ignore[invalid-assignment]
+        mock_path = MagicMock(spec=Path)
+        object.__setattr__(mock_path, "__str__", MagicMock(return_value="/path/to/binary"))
 
         mock_result = Mock()
         mock_result.returncode = 0
@@ -271,9 +270,8 @@ class TestVersionExtraction:
     def test_extract_version_failure(self, mock_run: MagicMock) -> None:
         """Test version extraction failure."""
         manager = self.setup_manager()
-        mock_path = Mock(spec=Path)
-        # Configure __str__ to return a string, not a Mock
-        type(mock_path).__str__ = Mock(return_value="/path/to/binary")  # ty: ignore[invalid-assignment]
+        mock_path = MagicMock(spec=Path)
+        object.__setattr__(mock_path, "__str__", MagicMock(return_value="/path/to/binary"))
 
         mock_result = Mock()
         mock_result.returncode = 1

@@ -17,13 +17,12 @@ import random
 import sys
 import tempfile
 import time
+from typing import Any
 
 import pytest
 
-from flavor.config.defaults import DEFAULT_PAGE_SIZE
+from flavor.config.defaults import ACCESS_FILE, ACCESS_MMAP, DEFAULT_PAGE_SIZE
 from flavor.psp.format_2025.backends import (
-    ACCESS_FILE,
-    ACCESS_MMAP,
     FileBackend,
     MMapBackend,
     create_backend,
@@ -50,8 +49,7 @@ def measure_time(description: str) -> Iterator[None]:
     start = time.perf_counter()
     yield
     elapsed = time.perf_counter() - start
-    print(f"\n⏱️ {description}: {elapsed:.4f}s")
-    return elapsed
+    print(f"\n  {description}: {elapsed:.4f}s")
 
 
 @pytest.mark.mmap
@@ -82,16 +80,16 @@ class TestMMapPerformance:
             with measure_time("MMap sequential read (100MB)"):
                 data = []
                 for offset in range(0, size, 1024 * 1024):  # 1MB chunks
-                    chunk = mmap_backend.read_at(offset, min(1024 * 1024, size - offset))
-                    data.append(len(chunk))
+                    mmap_chunk = mmap_backend.read_at(offset, min(1024 * 1024, size - offset))
+                    data.append(len(mmap_chunk))
             assert sum(data) == size
 
             # Random access test
             with measure_time("MMap random access (1000 reads)"):
                 for _ in range(1000):
                     offset = random.randint(0, size - 4096)
-                    chunk = mmap_backend.read_at(offset, 4096)
-                    assert len(chunk) == 4096
+                    mmap_chunk = mmap_backend.read_at(offset, 4096)
+                    assert len(mmap_chunk) == 4096
 
             mmap_backend.close()
 
@@ -198,11 +196,11 @@ class TestMMapPerformance:
             path = Path(f.name)
 
         try:
-            results = queue.Queue()
+            results: queue.Queue[dict[str, Any]] = queue.Queue()
 
-            def worker(backend_type: str, worker_id: int, iterations: int = 100) -> None:
+            def worker(backend_type: int, worker_id: int, iterations: int = 100) -> None:
                 """Worker thread for concurrent access."""
-                backend = create_backend(backend_type, path)  # ty: ignore[invalid-argument-type]
+                backend = create_backend(backend_type, path)
                 backend.open(path)
 
                 start = time.perf_counter()
@@ -247,7 +245,7 @@ class TestMMapPerformance:
             while not results.empty():
                 r = results.get()
                 assert r["errors"] == 0, f"MMap worker {r['worker']} had {r['errors']} errors"
-                mmap_times.append(r["time"])
+                mmap_times.append(float(r["time"]))
 
             # Test with file backend
             threads = []
@@ -263,7 +261,7 @@ class TestMMapPerformance:
             while not results.empty():
                 r = results.get()
                 assert r["errors"] == 0, f"File worker {r['worker']} had {r['errors']} errors"
-                file_times.append(r["time"])
+                file_times.append(float(r["time"]))
 
             avg_mmap = sum(mmap_times) / len(mmap_times)
             avg_file = sum(file_times) / len(file_times)
@@ -376,13 +374,13 @@ class TestMMapPerformance:
                 offsets = list(range(0, size - read_size, stride))
 
             # Test mmap
-            backend = MMapBackend()
-            backend.open(path)
+            mmap_backend = MMapBackend()
+            mmap_backend.open(path)
 
             start = time.perf_counter()
             checksums = []
             for offset in offsets:
-                data = backend.read_at(offset, read_size)
+                data = mmap_backend.read_at(offset, read_size)
                 # Simple checksum
                 if isinstance(data, memoryview):
                     checksums.append(sum(data))
@@ -390,23 +388,20 @@ class TestMMapPerformance:
                     checksums.append(sum(data))
             mmap_time = time.perf_counter() - start
 
-            backend.close()
+            mmap_backend.close()
 
             # Test file backend
-            backend = FileBackend()
-            backend.open(path)
+            file_backend = FileBackend()
+            file_backend.open(path)
 
             start = time.perf_counter()
-            checksums2 = []
+            checksums2: list[int] = []
             for offset in offsets:
-                data = backend.read_at(offset, read_size)
-                if isinstance(data, memoryview):
-                    checksums2.append(sum(data))
-                else:
-                    checksums2.append(sum(data))
+                file_data = file_backend.read_at(offset, read_size)
+                checksums2.append(sum(file_data))
             file_time = time.perf_counter() - start
 
-            backend.close()
+            file_backend.close()
 
             # Verify same results
             assert checksums == checksums2, "Checksums should match"

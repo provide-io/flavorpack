@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""Helper functions for the packaging orchestrator build pipeline."""
 
 import os
 from pathlib import Path

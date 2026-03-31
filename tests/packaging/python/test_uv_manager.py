@@ -47,7 +47,8 @@ class TestUVManager:
         assert metadata.version == "0.1.45"
         assert metadata.platform == "linux"
         assert metadata.arch == "amd64"
-        assert "x86_64-unknown-linux-gnu" in metadata.download_url  # ty: ignore[unsupported-operator]
+        assert metadata.download_url is not None
+        assert "x86_64-unknown-linux-gnu" in metadata.download_url
         assert metadata.executable_name == "uv"
 
     @patch("platform.machine")
@@ -63,7 +64,8 @@ class TestUVManager:
         assert metadata.version == "0.1.45"
         assert metadata.platform == "darwin"
         assert metadata.arch == "arm64"
-        assert "aarch64-apple-darwin" in metadata.download_url  # ty: ignore[unsupported-operator]
+        assert metadata.download_url is not None
+        assert "aarch64-apple-darwin" in metadata.download_url
 
     @patch("platform.machine")
     @patch("platform.system")
@@ -78,7 +80,8 @@ class TestUVManager:
         assert metadata.version == "0.1.45"
         assert metadata.platform == "windows"
         assert metadata.arch == "amd64"
-        assert "x86_64-pc-windows-msvc" in metadata.download_url  # ty: ignore[unsupported-operator]
+        assert metadata.download_url is not None
+        assert "x86_64-pc-windows-msvc" in metadata.download_url
 
     @patch("platform.machine")
     @patch("platform.system")

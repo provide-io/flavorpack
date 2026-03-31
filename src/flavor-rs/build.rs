@@ -4,10 +4,7 @@ use std::path::Path;
 
 fn main() {
     // Read version from VERSION file at root of repo (two levels up from flavor-rs)
-    let version = if let Ok(v) = env::var("FLAVOR_VERSION") {
-        // Use environment variable if set
-        v
-    } else {
+    let version = env::var("FLAVOR_VERSION").unwrap_or_else(|_| {
         // Try to read from VERSION file
         let version_file = Path::new("../../VERSION");
         if version_file.exists() {
@@ -19,10 +16,10 @@ fn main() {
             // Fallback version
             "0.0.1".to_string()
         }
-    };
+    });
 
     // Pass version to the build
-    println!("cargo:rustc-env=FLAVOR_VERSION={}", version);
+    println!("cargo:rustc-env=FLAVOR_VERSION={version}");
     println!("cargo:rerun-if-changed=../../VERSION");
     println!("cargo:rerun-if-env-changed=FLAVOR_VERSION");
 }

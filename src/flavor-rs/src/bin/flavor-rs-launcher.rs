@@ -193,7 +193,9 @@ fn run() -> i32 {
                 ref s if s.contains("signature") || s.contains("checksum") => EXIT_SIGNATURE_ERROR,
                 ref s if s.contains("extract") => EXIT_EXTRACTION_ERROR,
                 ref s if s.contains("execute") || s.contains("spawn") => EXIT_EXECUTION_ERROR,
-                ref s if s.contains("i/o") || s.contains("file") || s.contains("permission") => EXIT_IO_ERROR,
+                ref s if s.contains("i/o") || s.contains("file") || s.contains("permission") => {
+                    EXIT_IO_ERROR
+                }
                 _ => EXIT_EXECUTION_ERROR,
             }
         }

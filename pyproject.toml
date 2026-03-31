@@ -42,7 +42,7 @@ dependencies = [
 keywords = ["packaging", "pspf", "flavor", "executable", "bundle"]
 
 [project.urls]
-Homepage = "https://github.com/provide-io/flavor"
+Homepage = "https://github.com/provide-io/flavorpack"
 
 [dependency-groups]
 dev = [
@@ -205,7 +205,7 @@ omit = [
 show_missing = true
 skip_covered = false
 precision = 2
-fail_under = 60  # Baseline: 61.74% → 63% (Phase 2 complete) as of 2025-10-21
+fail_under = 60
 exclude_also = [
     "pragma: no cover",
     "raise NotImplementedError",

@@ -17,11 +17,8 @@ import time
 
 import pytest
 
-from flavor.config.defaults import DEFAULT_PAGE_SIZE
+from flavor.config.defaults import ACCESS_AUTO, ACCESS_FILE, ACCESS_MMAP, DEFAULT_PAGE_SIZE
 from flavor.psp.format_2025.backends import (
-    ACCESS_AUTO,
-    ACCESS_FILE,
-    ACCESS_MMAP,
     MMapBackend,
     create_backend,
 )
@@ -378,7 +375,7 @@ class TestMMapEdgeCases:
         (10 * 1024 * 1024, 64 * 1024, ACCESS_AUTO),  # 10MB file, 64KB chunks, auto
     ],
 )
-def test_parameterized_read_patterns(file_size: int, chunk_size: int, backend_type: str) -> None:
+def test_parameterized_read_patterns(file_size: int, chunk_size: int, backend_type: int) -> None:
     """Parameterized test for various file sizes and access patterns."""
     with tempfile.NamedTemporaryFile(delete=False) as f:
         # Create file with predictable pattern
@@ -389,7 +386,7 @@ def test_parameterized_read_patterns(file_size: int, chunk_size: int, backend_ty
         path = Path(f.name)
 
     try:
-        backend = create_backend(backend_type, path)  # ty: ignore[invalid-argument-type]
+        backend = create_backend(backend_type, path)
         backend.open(path)
 
         # Sequential read test

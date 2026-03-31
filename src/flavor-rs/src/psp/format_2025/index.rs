@@ -383,7 +383,6 @@ impl Index {
         );
         calculated == expected
     }
-
 }
 
 impl Default for Index {
