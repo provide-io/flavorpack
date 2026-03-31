@@ -113,11 +113,12 @@ class TestPSPFIntegration:
         # HEADER_SIZE is a constant for the index block size, not an attribute
         assert index is not None
         # SLOT_DESCRIPTOR_SIZE is a constant, not an index attribute
-        assert index.slot_count == 3
+        # +1 for the implicit attestation slot appended by the builder
+        assert index.slot_count == 4
 
         # Read slot descriptors
         descriptors = reader.read_slot_descriptors()
-        assert len(descriptors) == 3
+        assert len(descriptors) == 4
 
         # Verify first slot
         assert descriptors[0].size > 0
