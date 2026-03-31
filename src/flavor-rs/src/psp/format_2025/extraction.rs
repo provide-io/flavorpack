@@ -401,9 +401,83 @@ fn resolve_in_workenv(dest_dir: &Path, target: &Path) -> Result<PathBuf> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use proptest::prelude::*;
+    use flate2::Compression;
+    use flate2::write::GzEncoder;
+    use std::io::Write;
     use tar::{Builder, EntryType, Header};
     use tempfile::tempdir;
+
+    fn make_tar_with_root_entry() -> Vec<u8> {
+        let mut archive_bytes = Vec::new();
+        {
+            let mut builder = Builder::new(&mut archive_bytes);
+
+            let mut root_header = Header::new_gnu();
+            root_header.set_entry_type(EntryType::Directory);
+            root_header.set_size(0);
+            root_header.set_mode(0o755);
+            root_header.set_cksum();
+            builder
+                .append_data(&mut root_header, ".", std::io::empty())
+                .expect("append root entry");
+
+            let payload = b"hello, extraction";
+            let mut file_header = Header::new_gnu();
+            file_header.set_size(payload.len() as u64);
+            file_header.set_mode(0o644);
+            file_header.set_cksum();
+            builder
+                .append_data(&mut file_header, "hello.txt", &payload[..])
+                .expect("append file entry");
+
+            builder.finish().expect("finish archive");
+        }
+        archive_bytes
+    }
+
+    fn gzip_bytes(bytes: &[u8]) -> Vec<u8> {
+        let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
+        encoder.write_all(bytes).expect("gzip payload");
+        encoder.finish().expect("finish gzip")
+    }
+
+    fn write_octal(field: &mut [u8], value: u64, width: usize) {
+        let mut encoded = format!("{value:0width$o}", width = width).into_bytes();
+        encoded.push(0);
+        if field.len() > encoded.len() {
+            encoded.push(b' ');
+        }
+        field.fill(0);
+        field[..encoded.len()].copy_from_slice(&encoded);
+    }
+
+    fn make_tar_with_path(path: &str, payload: &[u8]) -> Vec<u8> {
+        let mut header = [0u8; 512];
+
+        let path_bytes = path.as_bytes();
+        header[..path_bytes.len()].copy_from_slice(path_bytes);
+        write_octal(&mut header[100..108], 0o644, 7);
+        write_octal(&mut header[108..116], 0, 7);
+        write_octal(&mut header[116..124], 0, 7);
+        write_octal(&mut header[124..136], payload.len() as u64, 11);
+        write_octal(&mut header[136..148], 0, 11);
+        header[148..156].fill(b' ');
+        header[156] = b'0';
+        header[257..263].copy_from_slice(b"ustar\0");
+        header[263..265].copy_from_slice(b"00");
+
+        let checksum: u32 = header.iter().map(|&b| u32::from(b)).sum();
+        let checksum_bytes = format!("{checksum:06o}\0 ").into_bytes();
+        header[148..156].copy_from_slice(&checksum_bytes);
+
+        let mut archive = Vec::with_capacity(1024 + payload.len());
+        archive.extend_from_slice(&header);
+        archive.extend_from_slice(payload);
+        let padding = (512 - (payload.len() % 512)) % 512;
+        archive.extend(std::iter::repeat_n(0u8, padding));
+        archive.extend(std::iter::repeat_n(0u8, 1024));
+        archive
+    }
 
     #[test]
     fn test_resolve_in_workenv_rejects_parent_traversal() {
@@ -415,6 +489,22 @@ mod tests {
     fn test_resolve_in_workenv_rejects_absolute_paths() {
         let dest_dir = Path::new("/tmp/workenv");
         assert!(resolve_in_workenv(dest_dir, Path::new("/etc/passwd")).is_err());
+    }
+
+    #[test]
+    fn test_resolve_in_workenv_allows_nested_relative_paths() {
+        let dest_dir = Path::new("/tmp/workenv");
+        let resolved = resolve_in_workenv(dest_dir, Path::new("./bin/tool"))
+            .expect("relative path should resolve");
+        assert_eq!(resolved, Path::new("/tmp/workenv/bin/tool"));
+    }
+
+    #[test]
+    fn test_is_tarball_detects_magic_and_rejects_short_buffers() {
+        let mut tar_like = vec![0u8; 263];
+        tar_like[257..262].copy_from_slice(b"ustar");
+        assert!(is_tarball(&tar_like));
+        assert!(!is_tarball(b"short"));
     }
 
     #[test]
@@ -438,37 +528,119 @@ mod tests {
         assert!(result.is_err());
     }
 
-    proptest! {
-        /// Any accepted path must resolve under dest_dir.
-        #[test]
-        fn prop_resolve_always_under_dest(target in "([a-z0-9_./]{0,50})") {
-            let dest = Path::new("/tmp/workenv");
-            match resolve_in_workenv(dest, Path::new(&target)) {
-                Ok(resolved) => prop_assert!(
-                    resolved.starts_with(dest),
-                    "Resolved path {:?} escapes {:?}",
-                    resolved, dest
-                ),
-                Err(_) => {} // Rejection is always safe
-            }
+    #[test]
+    fn test_extract_tarball_rejects_hard_link_entries() {
+        let mut archive_bytes = Vec::new();
+        {
+            let mut builder = Builder::new(&mut archive_bytes);
+            let mut header = Header::new_gnu();
+            header.set_entry_type(EntryType::Link);
+            header.set_size(0);
+            header.set_mode(0o777);
+            header.set_cksum();
+            builder
+                .append_link(&mut header, "hard-link", "target.txt")
+                .expect("append hard link");
+            builder.finish().expect("finish archive");
         }
 
-        /// Paths with .. must always be rejected.
-        #[test]
-        fn prop_parent_traversal_always_rejected(
-            prefix in "[a-z]{0,5}",
-            suffix in "[a-z]{0,5}"
-        ) {
-            let target = format!("{prefix}/../{suffix}");
-            let dest = Path::new("/tmp/workenv");
-            prop_assert!(resolve_in_workenv(dest, Path::new(&target)).is_err());
-        }
+        let temp_dir = tempdir().expect("tempdir");
+        let result = extract_tarball(&archive_bytes, temp_dir.path());
+        assert!(result.is_err());
+    }
 
-        /// Absolute paths must always be rejected.
-        #[test]
-        fn prop_absolute_paths_always_rejected(path in "/[a-z/]{1,20}") {
-            let dest = Path::new("/tmp/workenv");
-            prop_assert!(resolve_in_workenv(dest, Path::new(&path)).is_err());
-        }
+    #[test]
+    fn test_extract_tarball_rejects_parent_directory_traversal() {
+        let archive_bytes = make_tar_with_path("../outside.txt", b"escape");
+
+        let temp_dir = tempdir().expect("tempdir");
+        let result = extract_tarball(&archive_bytes, temp_dir.path());
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_extract_tarball_rejects_absolute_paths() {
+        let archive_bytes = make_tar_with_path("/etc/passwd", b"escape");
+
+        let temp_dir = tempdir().expect("tempdir");
+        let result = extract_tarball(&archive_bytes, temp_dir.path());
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_extract_tarball_skips_root_dot_entry_and_writes_file() {
+        let archive_bytes = make_tar_with_root_entry();
+        let temp_dir = tempdir().expect("tempdir");
+
+        extract_tarball(&archive_bytes, temp_dir.path()).expect("extract tarball");
+        assert_eq!(
+            std::fs::read_to_string(temp_dir.path().join("hello.txt")).expect("read file"),
+            "hello, extraction"
+        );
+    }
+
+    #[test]
+    fn test_is_gzipped_tarball_distinguishes_tar_and_plain_gzip() {
+        let tar_bytes = make_tar_with_root_entry();
+        let gzipped_tar = gzip_bytes(&tar_bytes);
+        assert!(is_gzipped_tarball(&gzipped_tar).expect("gzipped tar"));
+
+        let plain_gzip = gzip_bytes(b"not a tar archive");
+        assert!(!is_gzipped_tarball(&plain_gzip).expect("plain gzip"));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_extract_single_file_writes_data_and_applies_descriptor_permissions() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let temp_dir = tempdir().expect("tempdir");
+        let target = temp_dir.path().join("nested/tool");
+        let mut descriptor = SlotDescriptor::new(0);
+        descriptor.permissions = 0o755u16 as u8;
+        descriptor.permissions_high = (0o755u16 >> 8) as u8;
+
+        extract_single_file(b"hello, world", &target, &[descriptor], 0)
+            .expect("extract single file");
+
+        assert_eq!(
+            std::fs::read_to_string(&target).expect("read extracted file"),
+            "hello, world"
+        );
+        let mode = std::fs::metadata(&target)
+            .expect("stat extracted file")
+            .permissions()
+            .mode()
+            & 0o777;
+        assert_eq!(mode, 0o755);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_extract_single_file_falls_back_to_default_permissions() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let temp_dir = tempdir().expect("tempdir");
+        let target = temp_dir.path().join("nested/default-tool");
+        let mut descriptor = SlotDescriptor::new(0);
+        descriptor.permissions = 0;
+        descriptor.permissions_high = 0;
+
+        extract_single_file(b"default", &target, &[descriptor], 0).expect("extract single file");
+
+        let mode = std::fs::metadata(&target)
+            .expect("stat extracted file")
+            .permissions()
+            .mode()
+            & 0o777;
+        assert_eq!(
+            mode,
+            u32::from(crate::psp::format_2025::defaults::DEFAULT_FILE_PERMS)
+        );
+    }
+
+    #[test]
+    fn test_is_gzipped_tarball_rejects_non_gzip_input() {
+        assert!(is_gzipped_tarball(b"plain bytes").is_err());
     }
 }

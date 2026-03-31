@@ -8,12 +8,19 @@
 This module provides both pure functions and a fluent builder interface
 for creating PSPF packages."""
 
+from __future__ import annotations
+
+import hashlib
+import json
 import os
 from pathlib import Path
+import sys
 import time
+from typing import Any
 
 from provide.foundation import logger
 from provide.foundation.crypto import format_checksum as calculate_checksum
+from provide.foundation.platform import get_arch_name, get_os_name
 
 from flavor.config.defaults import (
     ACCESS_AUTO,
@@ -21,12 +28,15 @@ from flavor.config.defaults import (
     CAPABILITY_MMAP,
     CAPABILITY_PAGE_ALIGNED,
     CAPABILITY_SIGNED,
+    ENV_WORKENV_BASE,
 )
 from flavor.exceptions import BuildError
 from flavor.psp.format_2025 import handlers
+from flavor.psp.format_2025.attestation import build_attestation
 from flavor.psp.format_2025.constants import (
     DEFAULT_MAX_MEMORY,
     DEFAULT_MIN_MEMORY,
+    LIFECYCLE_ATTESTATION,
 )
 from flavor.psp.format_2025.index import PSPFIndex
 from flavor.psp.format_2025.keys import resolve_keys
@@ -93,6 +103,10 @@ def build_package(spec: BuildSpec, output_path: Path) -> BuildResult:
         logger.error(f"Failed to prepare slots: {e}")
         raise
 
+    # Build attestation slot and append it (must be last so slot_count is final)
+    attestation_slot, attestation_hex_digest = _prepare_attestation_slot(spec, prepared_slots, public_key)
+    prepared_slots = [*prepared_slots, attestation_slot]
+
     # Write package
     logger.trace(
         "🔧 PSPF package configuration",
@@ -100,8 +114,8 @@ def build_package(spec: BuildSpec, output_path: Path) -> BuildResult:
         has_signature=bool(private_key),
     )
     try:
-        # Create index
-        index = create_index(spec, prepared_slots, public_key)
+        # Create index (attestation digest bound here)
+        index = create_index(spec, prepared_slots, public_key, attestation_hex_digest)
 
         # Write package using writer module
         package_size = write_package(spec, output_path, prepared_slots, index, private_key, public_key)
@@ -117,15 +131,20 @@ def build_package(spec: BuildSpec, output_path: Path) -> BuildResult:
         path=str(output_path),
     )
 
+    result_metadata: dict[str, Any] = {
+        "slot_count": len(prepared_slots),
+        "compression": spec.options.compression,
+    }
+    policy_raw = spec.metadata.get("policy", {})
+    if policy_raw:
+        result_metadata["policy"] = policy_raw
+
     return BuildResult(
         success=True,
         package_path=output_path,
         duration_seconds=duration,
         package_size_bytes=package_size,
-        metadata={
-            "slot_count": len(prepared_slots),
-            "compression": spec.options.compression,
-        },
+        metadata=result_metadata,
     )
 
 
@@ -195,8 +214,6 @@ def prepare_slots(slots: list[SlotMetadata], options: BuildOptions) -> list[Prep
         )
         checksum_str = calculate_checksum(data_to_checksum, "sha256")
         # Compute SHA-256 truncated to 8 bytes for binary descriptor
-        import hashlib
-
         hash_bytes = hashlib.sha256(data_to_checksum).digest()[:8]
         checksum_uint64 = int.from_bytes(hash_bytes, byteorder="little")
 
@@ -236,7 +253,12 @@ def prepare_slots(slots: list[SlotMetadata], options: BuildOptions) -> list[Prep
     return prepared
 
 
-def create_index(spec: BuildSpec, slots: list[PreparedSlot], public_key: bytes) -> PSPFIndex:
+def create_index(
+    spec: BuildSpec,
+    slots: list[PreparedSlot],
+    public_key: bytes,
+    attestation_hex_digest: str = "",
+) -> PSPFIndex:
     """
     Create PSPF index structure.
 
@@ -244,6 +266,7 @@ def create_index(spec: BuildSpec, slots: list[PreparedSlot], public_key: bytes) 
         spec: Build specification with metadata
         slots: Prepared slots with offsets
         public_key: Public key for verification
+        attestation_hex_digest: SHA-256 hex digest of the attestation slot content
 
     Returns:
         Populated PSPFIndex instance
@@ -252,6 +275,23 @@ def create_index(spec: BuildSpec, slots: list[PreparedSlot], public_key: bytes) 
 
     # Store public key
     index.public_key = public_key
+
+    # Write key fingerprint into attestation field (zeros when no key present)
+    if public_key and public_key != b"\x00" * 32:
+        fp = hashlib.sha256(public_key).hexdigest()
+        index.attestation_key_fp = fp.encode("ascii")
+    # else: leave attestation_key_fp as b"\x00" * 64 (unsigned package)
+
+    # Bind attestation SBOM digest to the index (64 ASCII hex chars)
+    if attestation_hex_digest:
+        index.attestation_sbom_digest = attestation_hex_digest.encode("ascii")
+
+    # Write policy_hash into index
+    policy_raw = spec.metadata.get("policy", {})
+    if policy_raw:
+        canonical_policy = json.dumps(policy_raw, sort_keys=True, separators=(",", ":"))
+        policy_hash = hashlib.sha256(canonical_policy.encode()).hexdigest()
+        index.attestation_policy_hash = policy_hash.encode("ascii").ljust(64, b"\x00")[:64]
 
     # Set capabilities based on options
     capabilities = 0
@@ -279,6 +319,108 @@ def create_index(spec: BuildSpec, slots: list[PreparedSlot], public_key: bytes) 
 # =============================================================================
 
 
+def _prepare_attestation_slot(
+    spec: BuildSpec,
+    prepared_slots: list[PreparedSlot],
+    public_key: bytes,
+) -> tuple[PreparedSlot, str]:
+    """Build the attestation slot and return it with its SHA-256 hex digest.
+
+    Assembles ``package_info`` from whatever the builder knows, then delegates
+    to :func:`~flavor.psp.format_2025.attestation.build_attestation` to produce
+    the canonical JSON content bytes and its digest.
+
+    Args:
+        spec: Build specification (provides name, version, launcher options).
+        prepared_slots: Already-prepared user slots (not mutated).
+        public_key: Ed25519 public key bytes (used to derive the fingerprint).
+
+    Returns:
+        A 2-tuple of *(prepared_slot, hex_digest)*.
+    """
+    from flavor.psp.format_2025.metadata.assembly import (
+        extract_launcher_version,
+        get_flavor_version,
+        load_launcher_binary,
+    )
+    from flavor.psp.format_2025.operations import string_to_operations
+
+    # ---- signing key fingerprint (may be None for unsigned packages) --------
+    signing_fp: str | None = None
+    if public_key and public_key != b"\x00" * 32:
+        signing_fp = hashlib.sha256(public_key).hexdigest()
+
+    # ---- launcher info -------------------------------------------------------
+    launcher_type = "rust"
+    launcher_data = load_launcher_binary(launcher_type, explicit_path=spec.options.launcher_bin)
+    launcher_version = extract_launcher_version(launcher_data)
+    launcher_hash = f"sha256:{calculate_checksum(launcher_data, 'sha256')}"
+
+    # ---- python version ------------------------------------------------------
+    py_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+
+    # ---- package_info dict ---------------------------------------------------
+    package_meta: dict[str, Any] = spec.metadata.get("package", {})
+    package_info: dict[str, Any] = {
+        "packages": [],  # No Python dep list available at this build stage
+        "python_version": py_version,
+        "python_hash": "",
+        "launcher_language": launcher_type,
+        "launcher_version": launcher_version,
+        "launcher_hash": launcher_hash,
+        "builder_name": "flavor-python",
+        "builder_version": get_flavor_version(),
+        "build_timestamp": int(time.time()),
+        "platform_os": get_os_name(),
+        "platform_arch": get_arch_name(),
+    }
+    # Honour any package-level name / version if available
+    if isinstance(package_meta, dict):
+        if "name" in package_meta:
+            package_info["package_name"] = package_meta["name"]
+        if "version" in package_meta:
+            package_info["package_version"] = package_meta["version"]
+
+    # ---- build attestation content ------------------------------------------
+    content_bytes, hex_digest = build_attestation(package_info, signing_key_fingerprint=signing_fp)
+
+    # ---- wrap as a PreparedSlot (raw / no compression) ----------------------
+    hash_bytes = hashlib.sha256(content_bytes).digest()[:8]
+    checksum_uint64 = int.from_bytes(hash_bytes, byteorder="little")
+
+    packed_ops = string_to_operations("none")
+
+    attestation_meta = SlotMetadata(
+        index=len(prepared_slots),
+        id="_attestation",
+        source="",
+        target="_attestation",
+        size=len(content_bytes),
+        checksum=hex_digest[:16],  # short hex prefix (display only)
+        operations="none",
+        purpose="data",
+        lifecycle="attestation",
+    )
+    attestation_meta.checksum = hex_digest[:16]
+
+    slot = PreparedSlot(
+        metadata=attestation_meta,
+        data=content_bytes,
+        compressed_data=None,
+        operations=packed_ops,
+        checksum=checksum_uint64,
+    )
+
+    logger.debug(
+        "🔐 Attestation slot prepared",
+        digest_prefix=hex_digest[:16],
+        size=len(content_bytes),
+        lifecycle=LIFECYCLE_ATTESTATION,
+    )
+
+    return slot, hex_digest
+
+
 def _load_slot_data(slot: SlotMetadata) -> bytes:
     """Load raw data for a slot."""
     if not slot.source:
@@ -289,7 +431,7 @@ def _load_slot_data(slot: SlotMetadata) -> bytes:
     slot_path = Path(slot.source) if slot.source else Path()
     if "{workenv}" in str(slot_path):
         # Priority: 1. FLAVOR_WORKENV_BASE env var, 2. Current working directory
-        base_dir = os.environ.get("FLAVOR_WORKENV_BASE", str(Path.cwd()))
+        base_dir = os.environ.get(ENV_WORKENV_BASE, str(Path.cwd()))
         slot_path = Path(str(slot_path).replace("{workenv}", base_dir))
         logger.debug(f"📍 Resolved slot path: {slot.source} -> {slot_path} (base: {base_dir})")
 

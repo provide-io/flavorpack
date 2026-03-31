@@ -38,6 +38,8 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: 🔧 Ensure gh CLI available
         run: type gh >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq gh)
@@ -125,6 +127,8 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: 📥 Download Flavor PSP
         uses: actions/download-artifact@v8
@@ -320,6 +324,8 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: 📥 Download all test results
         uses: actions/download-artifact@v8
@@ -597,6 +603,8 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: 📥 Download all test results
         uses: actions/download-artifact@v8

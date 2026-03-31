@@ -62,3 +62,85 @@ fn default_purpose() -> String {
 fn default_lifecycle() -> String {
     "runtime".to_string()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn manifest_slot_deserializes_default_fields() {
+        let slot: ManifestSlot = serde_json::from_value(json!({
+            "id": "launcher",
+            "source": "$SELF",
+            "target": "/app/bin/launcher"
+        }))
+        .expect("deserialize manifest slot");
+
+        assert_eq!(slot.slot, None);
+        assert_eq!(slot.operations, "");
+        assert_eq!(slot.purpose, "data");
+        assert_eq!(slot.lifecycle, "runtime");
+        assert_eq!(slot.permissions, None);
+        assert_eq!(slot.resolution, None);
+    }
+
+    #[test]
+    fn build_manifest_deserializes_optional_sections() {
+        let manifest: BuildManifest = serde_json::from_value(json!({
+            "package": {
+                "name": "demo",
+                "version": "1.2.3"
+            },
+            "execution": {
+                "command": "run",
+                "env": {
+                    "MODE": "test"
+                }
+            },
+            "slots": [
+                {
+                    "slot": 0,
+                    "id": "launcher",
+                    "source": "$SELF",
+                    "target": "/app/bin/launcher",
+                    "purpose": "code",
+                    "lifecycle": "startup"
+                }
+            ],
+            "setup_commands": [
+                {"kind": "prepare"}
+            ],
+            "cache_validation": {
+                "check_file": "marker.txt",
+                "expected_content": "ok"
+            },
+            "runtime": {
+                "env": {
+                    "set": {
+                        "MODE": "test"
+                    }
+                }
+            },
+            "workenv": {
+                "directories": [
+                    {"path": "/tmp/demo"}
+                ]
+            }
+        }))
+        .expect("deserialize build manifest");
+
+        assert_eq!(manifest.package.description, "");
+        assert_eq!(
+            manifest.execution.env.get("MODE").map(String::as_str),
+            Some("test")
+        );
+        assert_eq!(manifest.slots.len(), 1);
+        assert_eq!(manifest.slots[0].purpose, "code");
+        assert_eq!(manifest.slots[0].lifecycle, "startup");
+        assert!(manifest.cache_validation.is_some());
+        assert!(manifest.runtime.is_some());
+        assert!(manifest.workenv.is_some());
+        assert_eq!(manifest.setup_commands.len(), 1);
+    }
+}

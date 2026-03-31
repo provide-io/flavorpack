@@ -79,3 +79,43 @@ pub(super) fn fix_shebangs(bin_dir: &Path, old_prefix: &Path, new_prefix: &Path)
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{copy_dir_all, fix_shebangs};
+    use std::fs;
+
+    #[test]
+    fn copy_dir_all_recursively_copies_tree() {
+        let src = tempfile::tempdir().expect("src tempdir");
+        let dst = tempfile::tempdir().expect("dst tempdir");
+        let nested = src.path().join("nested");
+        fs::create_dir_all(&nested).expect("create nested dir");
+        fs::write(nested.join("file.txt"), b"payload").expect("write payload");
+
+        copy_dir_all(src.path(), &dst.path().join("copied")).expect("copy tree");
+
+        let copied = fs::read(dst.path().join("copied").join("nested").join("file.txt"))
+            .expect("read copied file");
+        assert_eq!(copied, b"payload");
+    }
+
+    #[test]
+    fn fix_shebangs_rewrites_matching_scripts_only() {
+        let temp = tempfile::tempdir().expect("tempdir");
+        let bin_dir = temp.path().join("bin");
+        fs::create_dir_all(&bin_dir).expect("create bin dir");
+        let script = bin_dir.join("tool");
+        let plain = bin_dir.join("README");
+        fs::write(&script, b"#!/old/prefix/python\nprint('ok')\n").expect("write script");
+        fs::write(&plain, b"plain file\n").expect("write plain file");
+
+        fix_shebangs(&bin_dir, "/old/prefix".as_ref(), "/new/prefix".as_ref())
+            .expect("fix shebangs");
+
+        let rewritten = fs::read_to_string(&script).expect("read rewritten script");
+        assert!(rewritten.starts_with("#!/new/prefix/python"));
+        let untouched = fs::read_to_string(&plain).expect("read plain file");
+        assert_eq!(untouched, "plain file\n");
+    }
+}

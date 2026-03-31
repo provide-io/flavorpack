@@ -13,6 +13,9 @@ use super::defaults::{ACCESS_AUTO, ACCESS_FILE, ACCESS_MMAP, ACCESS_STREAM, DEFA
 use super::slots::SlotDescriptor;
 use crate::exceptions::{FlavorError, Result};
 
+/// Maximum allocation size for a single read (4 GB)
+const MAX_SLOT_SIZE: u64 = 4 * 1024 * 1024 * 1024;
+
 /// Trait for PSPF bundle access backends
 pub trait Backend: Send + Sync {
     /// Open the bundle file
@@ -26,7 +29,15 @@ pub trait Backend: Send + Sync {
 
     /// Read slot data based on descriptor
     fn read_slot(&mut self, descriptor: &SlotDescriptor) -> Result<Vec<u8>> {
-        self.read_at(descriptor.offset, descriptor.size as usize)
+        let slot_size = descriptor.size;
+        if slot_size > MAX_SLOT_SIZE {
+            return Err(FlavorError::Generic(format!(
+                "Slot size {} exceeds maximum allowed size ({} bytes)",
+                slot_size, MAX_SLOT_SIZE
+            )));
+        }
+        let slot_offset = descriptor.offset;
+        self.read_at(slot_offset, slot_size as usize)
     }
 
     /// Get a view of data without copying (if supported)
@@ -123,6 +134,12 @@ impl Backend for MMapBackend {
 
     fn read_at(&mut self, offset: u64, size: usize) -> Result<Vec<u8>> {
         trace!("🔍 Safe file read_at: offset={}, size={}", offset, size);
+        if size as u64 > MAX_SLOT_SIZE {
+            return Err(FlavorError::Generic(format!(
+                "Read size {} exceeds maximum allowed ({} bytes)",
+                size, MAX_SLOT_SIZE
+            )));
+        }
         if let Some(file) = &mut self.file {
             let timer = Instant::now();
             file.seek(SeekFrom::Start(offset))
@@ -207,6 +224,12 @@ impl Backend for FileBackend {
 
     fn read_at(&mut self, offset: u64, size: usize) -> Result<Vec<u8>> {
         trace!("🗓️ File read_at: offset={}, size={}", offset, size);
+        if size as u64 > MAX_SLOT_SIZE {
+            return Err(FlavorError::Generic(format!(
+                "Read size {} exceeds maximum allowed ({} bytes)",
+                size, MAX_SLOT_SIZE
+            )));
+        }
 
         // Check cache first
         let cache_key = (offset, size);
@@ -336,9 +359,33 @@ impl Backend for StreamBackend {
     }
 
     fn read_slot(&mut self, descriptor: &SlotDescriptor) -> Result<Vec<u8>> {
-        // For streaming, only read first chunk
-        let size = std::cmp::min(descriptor.size as usize, self.chunk_size);
-        self.read_at(descriptor.offset, size)
+        // Read the full slot by assembling chunks so callers (extraction,
+        // verification) always receive complete data regardless of chunk_size.
+        let total = descriptor.size;
+        if total > MAX_SLOT_SIZE {
+            return Err(FlavorError::Generic(format!(
+                "Slot size {} exceeds maximum allowed size ({} bytes)",
+                total, MAX_SLOT_SIZE
+            )));
+        }
+        let mut buf = Vec::with_capacity(total as usize);
+        let mut remaining = total;
+        let mut offset = descriptor.offset;
+        while remaining > 0 {
+            let to_read = remaining.min(self.chunk_size as u64) as usize;
+            let chunk = self.read_at(offset, to_read)?;
+            if chunk.is_empty() {
+                return Err(FlavorError::Generic(format!(
+                    "Backend returned empty read at offset {:#x} (remaining {})",
+                    offset, remaining
+                )));
+            }
+            let n = chunk.len() as u64;
+            buf.extend_from_slice(&chunk);
+            offset += n;
+            remaining -= n;
+        }
+        Ok(buf)
     }
 }
 
@@ -408,6 +455,12 @@ impl Backend for HybridBackend {
     }
 
     fn read_at(&mut self, offset: u64, size: usize) -> Result<Vec<u8>> {
+        if size as u64 > MAX_SLOT_SIZE {
+            return Err(FlavorError::Generic(format!(
+                "Read size {} exceeds maximum allowed ({} bytes)",
+                size, MAX_SLOT_SIZE
+            )));
+        }
         // Use safe file I/O for all operations
         if let Some(file) = &mut self.file {
             file.seek(SeekFrom::Start(offset))
@@ -440,12 +493,12 @@ pub fn create_backend(mode: u8, path: Option<&Path>) -> Box<dyn Backend> {
             if let Ok(metadata) = std::fs::metadata(p) {
                 let file_size = metadata.len();
 
-                // Use mmap for files over 1MB
-                if file_size > 1024 * 1024 {
-                    mode = ACCESS_MMAP;
-                // Use streaming for very large files
-                } else if file_size > 100 * 1024 * 1024 {
+                // Use streaming for very large files (>100MB)
+                if file_size > 100 * 1024 * 1024 {
                     mode = ACCESS_STREAM;
+                // Use mmap for files over 1MB
+                } else if file_size > 1024 * 1024 {
+                    mode = ACCESS_MMAP;
                 } else {
                     mode = ACCESS_FILE;
                 }
@@ -467,3 +520,181 @@ pub fn create_backend(mode: u8, path: Option<&Path>) -> Box<dyn Backend> {
 }
 
 // 📦💾🗺️🪄
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::psp::format_2025::defaults::{ACCESS_AUTO, DEFAULT_CHUNK_SIZE};
+    use std::fs::{self, File};
+    use tempfile::tempdir;
+
+    fn write_temp_file(bytes: &[u8]) -> (tempfile::TempDir, std::path::PathBuf) {
+        let dir = tempdir().expect("tempdir");
+        let path = dir.path().join("bundle.bin");
+        fs::write(&path, bytes).expect("write temp file");
+        (dir, path)
+    }
+
+    #[test]
+    fn file_backend_reads_caches_and_clears_on_close() {
+        let (_dir, path) = write_temp_file(b"abcdefghij");
+        let mut backend = FileBackend::new();
+
+        backend.open(&path).expect("open");
+        let first = backend.read_at(2, 4).expect("first read");
+        let second = backend.read_at(2, 4).expect("cached read");
+
+        assert_eq!(first, b"cdef");
+        assert_eq!(second, b"cdef");
+        assert_eq!(backend.cache.len(), 1);
+
+        backend.close().expect("close");
+        assert!(backend.file.is_none());
+        assert!(backend.path.is_none());
+        assert!(backend.cache.is_empty());
+    }
+
+    #[test]
+    fn file_backend_evicts_cache_after_many_small_reads() {
+        let mut data = Vec::with_capacity(256);
+        data.extend((0u8..=255).cycle().take(200));
+        let (_dir, path) = write_temp_file(&data);
+        let mut backend = FileBackend::new();
+
+        backend.open(&path).expect("open");
+        for offset in 0..101u64 {
+            let _ = backend.read_at(offset, 1).expect("read");
+        }
+
+        assert_eq!(backend.cache.len(), 81);
+    }
+
+    #[test]
+    fn mmap_backend_reads_file_and_reports_view_error() {
+        let (_dir, path) = write_temp_file(b"0123456789");
+        let mut backend = MMapBackend::new();
+
+        backend.open(&path).expect("open");
+        assert_eq!(backend.read_at(4, 3).expect("read"), b"456");
+
+        let err = backend.view_at(0, 1).expect_err("view should fail");
+        assert!(
+            matches!(err, FlavorError::Generic(message) if message.contains("safe file backend"))
+        );
+
+        backend.close().expect("close");
+        assert!(backend.file.is_none());
+        assert!(backend.mmap.is_none());
+        assert!(backend.path.is_none());
+    }
+
+    #[test]
+    fn stream_backend_chunks_reads_and_truncates_slot_reads() {
+        let (_dir, path) = write_temp_file(b"abcdefghij");
+        let mut backend = StreamBackend::new(4);
+
+        backend.open(&path).expect("open");
+
+        let descriptor = SlotDescriptor {
+            size: 10,
+            offset: 0,
+            ..SlotDescriptor::new(1)
+        };
+
+        let chunks: Vec<_> = backend
+            .stream_slot(&descriptor)
+            .map(|chunk| chunk.expect("chunk"))
+            .collect();
+        assert_eq!(
+            chunks,
+            vec![b"abcd".to_vec(), b"efgh".to_vec(), b"ij".to_vec()]
+        );
+
+        // read_slot assembles all chunks into a complete buffer
+        let slot = backend.read_slot(&descriptor).expect("slot read");
+        assert_eq!(slot, b"abcdefghij");
+    }
+
+    #[test]
+    fn hybrid_backend_reads_file_and_reports_view_error() {
+        let (_dir, path) = write_temp_file(b"hello world");
+        let mut backend = HybridBackend::new(64);
+
+        backend.open(&path).expect("open");
+        assert_eq!(backend.read_at(6, 5).expect("read"), b"world");
+
+        let err = backend.view_at(0, 1).expect_err("view should fail");
+        assert!(
+            matches!(err, FlavorError::Generic(message) if message.contains("safe file backend"))
+        );
+
+        backend.close().expect("close");
+        assert!(backend.file.is_none());
+        assert!(backend.header_mmap.is_none());
+        assert!(backend.path.is_none());
+    }
+
+    #[test]
+    fn create_backend_auto_selects_expected_backends() {
+        let (_small_dir, small_path) = write_temp_file(b"tiny");
+
+        let small_backend = create_backend(ACCESS_AUTO, Some(&small_path));
+        let small_err = small_backend
+            .view_at(0, 1)
+            .expect_err("small files should use file backend");
+        assert!(
+            matches!(small_err, FlavorError::Generic(message) if message == "View not supported by this backend")
+        );
+
+        let medium_dir = tempdir().expect("tempdir");
+        let medium_path = medium_dir.path().join("medium.bin");
+        File::create(&medium_path)
+            .expect("create medium file")
+            .set_len(2 * 1024 * 1024)
+            .expect("set medium len");
+
+        let medium_backend = create_backend(ACCESS_AUTO, Some(&medium_path));
+        let medium_err = medium_backend
+            .view_at(0, 1)
+            .expect_err("medium files should use mmap backend");
+        assert!(
+            matches!(medium_err, FlavorError::Generic(message) if message.contains("safe file backend"))
+        );
+
+        let large_dir = tempdir().expect("tempdir");
+        let large_path = large_dir.path().join("large.bin");
+        File::create(&large_path)
+            .expect("create large file")
+            .set_len(101 * 1024 * 1024)
+            .expect("set large len");
+
+        let mut large_backend = create_backend(ACCESS_AUTO, Some(&large_path));
+        large_backend.open(&large_path).expect("open large backend");
+        let large_descriptor = SlotDescriptor {
+            size: (DEFAULT_CHUNK_SIZE as u64) + 10,
+            offset: 0,
+            ..SlotDescriptor::new(2)
+        };
+        // read_slot returns the full slot (all chunks assembled), not just the first chunk
+        let large_slot = large_backend
+            .read_slot(&large_descriptor)
+            .expect("stream slot");
+        assert_eq!(large_slot.len(), (DEFAULT_CHUNK_SIZE) + 10);
+    }
+
+    #[test]
+    fn read_slot_rejects_oversized_descriptors() {
+        let mut backend = FileBackend::new();
+        let descriptor = SlotDescriptor {
+            size: MAX_SLOT_SIZE + 1,
+            ..SlotDescriptor::new(99)
+        };
+
+        let err = backend
+            .read_slot(&descriptor)
+            .expect_err("oversized slot should fail");
+        assert!(
+            matches!(err, FlavorError::Generic(message) if message.contains("exceeds maximum allowed size"))
+        );
+    }
+}

@@ -29,6 +29,9 @@ pub struct Metadata {
     pub workenv: Option<WorkenvInfo>,
     #[serde(default)]
     pub setup_commands: Vec<Value>,
+    /// Package-declared execution policy (FEP-0004 §8).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub policy: Option<Value>,
 }
 
 /// Package information
@@ -123,7 +126,9 @@ pub struct BuildInfo {
 pub struct PlatformInfo {
     pub os: String,
     pub arch: String,
-    pub host: String,
+    /// Optional: only present when FLAVOR_INCLUDE_BUILD_HOST=1 was set at build time.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub host: Option<String>,
 }
 
 /// Launcher information
@@ -185,4 +190,163 @@ pub struct DirectorySpec {
     pub path: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mode: Option<String>, // Unix permission mode like "0700"
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    fn sample_slot() -> SlotMetadata {
+        SlotMetadata {
+            index: 0,
+            id: "launcher".to_string(),
+            source: "$SELF".to_string(),
+            target: "/app/bin/launcher".to_string(),
+            size: 0,
+            checksum: "sha256:deadbeef".to_string(),
+            operations: String::new(),
+            purpose: "code".to_string(),
+            lifecycle: "startup".to_string(),
+            permissions: Some("0755".to_string()),
+            resolution: Some("build".to_string()),
+            self_ref: Some(true),
+        }
+    }
+
+    #[test]
+    fn verification_defaults_require_verification_to_true() {
+        let verification: VerificationInfo = serde_json::from_value(json!({
+            "integrity_seal": {
+                "required": true,
+                "algorithm": "ed25519"
+            },
+            "signed": false
+        }))
+        .expect("deserialize verification info");
+
+        assert!(verification.require_verification);
+        assert_eq!(verification.integrity_seal.algorithm, "ed25519");
+        assert!(!verification.signed);
+    }
+
+    #[test]
+    fn metadata_round_trips_full_structure() {
+        let metadata = Metadata {
+            format: "PSPF/2025".to_string(),
+            format_version: Some("1.0.0".to_string()),
+            package: PackageInfo {
+                name: "demo".to_string(),
+                version: "1.2.3".to_string(),
+            },
+            slots: vec![sample_slot()],
+            execution: ExecutionInfo {
+                primary_slot: 0,
+                command: "run".to_string(),
+                env: HashMap::from([(String::from("MODE"), String::from("test"))]),
+            },
+            verification: Some(VerificationInfo {
+                integrity_seal: IntegritySealInfo {
+                    required: true,
+                    algorithm: "ed25519".to_string(),
+                },
+                signed: true,
+                require_verification: true,
+                trust_signatures: Some(TrustSignaturesInfo {
+                    required: false,
+                    signers: vec![SignerInfo {
+                        name: "primary".to_string(),
+                        key_id: "key-1".to_string(),
+                        algorithm: "ed25519".to_string(),
+                    }],
+                }),
+            }),
+            build: Some(BuildInfo {
+                tool: "flavor-rs".to_string(),
+                tool_version: "0.3.21".to_string(),
+                timestamp: "2026-03-31T00:00:00Z".to_string(),
+                deterministic: true,
+                platform: PlatformInfo {
+                    os: "linux".to_string(),
+                    arch: "x86_64".to_string(),
+                    host: Some("linux/x86_64 test-host".to_string()),
+                },
+            }),
+            launcher: Some(LauncherInfo {
+                tool: "launcher".to_string(),
+                tool_version: "1.0.0".to_string(),
+                size: 42,
+                checksum: "sha256:abcd".to_string(),
+                capabilities: vec!["mmap".to_string(), "signed".to_string()],
+            }),
+            compatibility: Some(CompatibilityInfo {
+                min_format_version: "1.0.0".to_string(),
+                features: vec!["strict".to_string()],
+            }),
+            cache_validation: Some(CacheValidationInfo {
+                check_file: "marker.txt".to_string(),
+                expected_content: "ok".to_string(),
+            }),
+            runtime: Some(RuntimeInfo {
+                env: Some(RuntimeEnv {
+                    unset: Some(vec!["OLD".to_string()]),
+                    map: Some(HashMap::from([(String::from("A"), String::from("B"))])),
+                    set: Some(HashMap::from([(String::from("C"), String::from("D"))])),
+                    pass: Some(vec!["PATH".to_string()]),
+                }),
+            }),
+            workenv: Some(WorkenvInfo {
+                directories: Some(vec![DirectorySpec {
+                    path: "/tmp/demo".to_string(),
+                    mode: Some("0700".to_string()),
+                }]),
+                env: Some(HashMap::from([(
+                    String::from("WORKENV"),
+                    String::from("1"),
+                )])),
+            }),
+            setup_commands: vec![json!({"kind": "prepare"})],
+            policy: Some(json!({"require_trusted_key": true})),
+        };
+
+        let encoded = serde_json::to_value(&metadata).expect("serialize metadata");
+        let decoded: Metadata = serde_json::from_value(encoded).expect("deserialize metadata");
+
+        assert_eq!(decoded.format, "PSPF/2025");
+        assert_eq!(decoded.package.name, "demo");
+        assert_eq!(decoded.package.version, "1.2.3");
+        assert_eq!(decoded.slots.len(), 1);
+        assert_eq!(decoded.slots[0].self_ref, Some(true));
+        assert_eq!(
+            decoded.execution.env.get("MODE").map(String::as_str),
+            Some("test")
+        );
+        assert!(
+            decoded
+                .verification
+                .expect("verification")
+                .require_verification
+        );
+        assert!(decoded.build.expect("build").deterministic);
+        assert_eq!(decoded.launcher.expect("launcher").tool, "launcher");
+        assert_eq!(
+            decoded
+                .compatibility
+                .expect("compatibility")
+                .features
+                .as_slice(),
+            ["strict"]
+        );
+        assert_eq!(
+            decoded
+                .cache_validation
+                .expect("cache validation")
+                .check_file,
+            "marker.txt"
+        );
+        assert!(decoded.runtime.is_some());
+        assert!(decoded.workenv.is_some());
+        assert_eq!(decoded.setup_commands.len(), 1);
+        assert!(decoded.policy.is_some());
+    }
 }

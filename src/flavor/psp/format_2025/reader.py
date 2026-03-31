@@ -184,18 +184,9 @@ class PSPFReader:
             actual_checksum = zlib.adler32(data_for_check) & 0xFFFFFFFF
 
             if expected_checksum != actual_checksum:
-                # In test environments, launcher binaries may differ between platforms
-                # Log warning instead of failing if we detect a test environment
-                import os
-
-                if os.environ.get("PYTEST_CURRENT_TEST") or os.environ.get("CI"):
-                    logger.warning(
-                        f"Index checksum mismatch (test environment): expected {expected_checksum}, got {actual_checksum}"
-                    )
-                else:
-                    raise ValueError(
-                        f"Index checksum mismatch: expected {expected_checksum}, got {actual_checksum}"
-                    )
+                raise ValueError(
+                    f"Index checksum mismatch: expected {expected_checksum}, got {actual_checksum}"
+                )
 
         return self._index
 
@@ -229,8 +220,10 @@ class PSPFReader:
 
         # Parse metadata (always gzipped JSON in current implementation)
         # Decompress first
-        with contextlib.suppress(gzip.BadGzipFile):
+        try:
             metadata_data = gzip.decompress(metadata_data)
+        except gzip.BadGzipFile as exc:
+            raise ValueError("Metadata section is not valid gzip data; bundle may be corrupt") from exc
 
         # Parse JSON
         self._metadata = json_loads(metadata_data.decode("utf-8"))
@@ -340,6 +333,32 @@ class PSPFReader:
     def stream_slot(self, slot_index: int, chunk_size: int = 8192) -> Any:
         """Stream a slot in chunks."""
         return self._extractor.stream_slot(slot_index, chunk_size)
+
+    def verify_attestation_policy_hash(self) -> None:
+        """Verify attestation_policy_hash in the index matches the package-declared policy.
+
+        If the index field is zero-filled (absent), this is a no-op.
+        Raises ValueError on mismatch or if field is non-zero but no policy in metadata.
+        """
+        import hashlib
+        import json
+
+        index = self.read_index()
+        stored = index.attestation_policy_hash.rstrip(b"\x00")
+        if not stored:
+            return
+
+        metadata = self.read_metadata()
+        policy_raw = metadata.get("policy", {})
+        if not policy_raw:
+            raise ValueError("attestation_policy_hash is non-zero but package metadata has no 'policy' key")
+
+        canonical = json.dumps(policy_raw, sort_keys=True, separators=(",", ":"))
+        computed = hashlib.sha256(canonical.encode()).hexdigest()
+        if computed != stored.decode("ascii"):
+            raise ValueError(
+                f"attestation_policy_hash mismatch: index={stored.decode()!r} computed={computed!r}"
+            )
 
     def verify_all_checksums(self) -> bool:
         """Verify all slot checksums."""
@@ -482,10 +501,11 @@ def verify_bundle(bundle_path: Path) -> bool:
 
         # Check signature if present
         try:
-            if reader.verify_signature():
-                pass
-        except Exception:
-            pass  # Signature optional
+            if not reader.verify_signature():
+                logger.error("❌ Signature verification failed")
+                return False
+        except Exception as e:
+            logger.warning(f"⚠️ Signature verification skipped: {e}")
 
         return True
 

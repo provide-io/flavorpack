@@ -100,6 +100,7 @@ def build_package_from_manifest(
         show_progress,
         key_seed,
         manifest_type,
+        json_manifest_path=manifest_path.absolute() if manifest_type == "json" else None,
     )
     orchestrator.build_package()
     return [output_flavor_path]
@@ -162,7 +163,9 @@ def clean_cache() -> None:
         print("Cache cleared successfully")
         ```
     """
-    cache_dir = Path.home() / ".cache" / "flavor"
+    from flavor.cache import get_cache_dir
+
+    cache_dir = get_cache_dir().parent
     if cache_dir.exists():
         safe_rmtree(cache_dir)
 
@@ -273,7 +276,7 @@ def _get_version_from_toml(project_config: dict[str, Any], manifest_path: Path, 
     # Try to get version from VERSION file
     version_file = manifest_path.parent / "VERSION"
     if version_file.exists():
-        return version_file.read_text().strip()
+        return version_file.read_text(encoding="utf-8").strip()
 
     # Try to get from package metadata if installed
     try:
@@ -358,6 +361,7 @@ def _create_orchestrator(
     show_progress: bool,
     key_seed: str | None,
     manifest_type: str,
+    json_manifest_path: Path | None = None,
 ) -> PackagingOrchestrator:
     """Create and configure the PackagingOrchestrator."""
     return PackagingOrchestrator(
@@ -375,6 +379,7 @@ def _create_orchestrator(
         show_progress=show_progress,
         key_seed=key_seed,
         manifest_type=manifest_type,
+        json_manifest_path=json_manifest_path,
     )
 
 

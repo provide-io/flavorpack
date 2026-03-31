@@ -15,6 +15,7 @@ from provide.foundation.file.directory import ensure_dir, safe_rmtree
 from provide.foundation.file.formats import read_json
 from provide.foundation.utils.environment import get_str
 
+from flavor.config.defaults import ENV_CACHE_COMPAT, ENV_CACHE_DIR
 from flavor.console import get_command_logger
 
 log = get_command_logger("cache")
@@ -24,16 +25,24 @@ def get_cache_dir() -> Path:
     """Get the cache directory for Flavor packages.
 
     Uses XDG Base Directory specification:
-    - FLAVOR_CACHE environment variable if set
+    - FLAVOR_CACHE_DIR environment variable if set (Python-native name)
+    - FLAVOR_CACHE environment variable if set (cross-language; set by Go/Rust launchers)
     - XDG_CACHE_HOME if set
     - ~/.cache/flavor/workenv by default
     """
-    # Check FLAVOR_CACHE override first
-    cache_dir = get_str("FLAVOR_CACHE")
+    # Check FLAVOR_CACHE_DIR override first (Python-native)
+    cache_dir = get_str(ENV_CACHE_DIR)
     if cache_dir:
         if log.is_trace_enabled():
-            log.trace(f"🗂️ Using FLAVOR_CACHE: {cache_dir}")
+            log.trace(f"🗂️ Using FLAVOR_CACHE_DIR: {cache_dir}")
         return Path(cache_dir)
+
+    # Check FLAVOR_CACHE (cross-language env var set by Go/Rust launchers in child env)
+    flavor_cache = get_str(ENV_CACHE_COMPAT)
+    if flavor_cache:
+        if log.is_trace_enabled():
+            log.trace(f"🗂️ Using FLAVOR_CACHE: {flavor_cache}")
+        return Path(flavor_cache)
 
     # Use XDG_CACHE_HOME if set (respects XDG Base Directory standard)
     xdg_cache = get_str("XDG_CACHE_HOME")
@@ -48,6 +57,14 @@ def get_cache_dir() -> Path:
     if log.is_trace_enabled():
         log.trace(f"🗂️ Using default cache: {default}")
     return default
+
+
+def get_xdg_cache_base() -> Path:
+    """Return the XDG cache base directory.
+
+    Uses XDG_CACHE_HOME if set, otherwise defaults to ~/.cache.
+    """
+    return Path(os.environ.get("XDG_CACHE_HOME", str(Path("~/.cache").expanduser())))
 
 
 class CacheManager:
@@ -193,7 +210,7 @@ class CacheManager:
         checksum_file = instance_metadata_dir / "instance" / "package.checksum"
         if checksum_file.exists():
             with contextlib.suppress(IOError):
-                info["checksum"] = checksum_file.read_text().strip()
+                info["checksum"] = checksum_file.read_text(encoding="utf-8").strip()
 
         # Check for the modern completion marker
         completion_marker = instance_metadata_dir / "instance" / "extract" / "complete"
