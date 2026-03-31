@@ -186,6 +186,22 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		} else {
 			logger.Debug("✅ Package integrity verified")
 		}
+
+		// Verify attestation SBOM digest (fail-closed: digest present but slot absent = error)
+		logger.Debug("🔍 Verifying attestation SBOM digest", "level", validationLevel)
+		if err := reader.VerifyAttestationSbomDigest(); err != nil {
+			switch validationLevel {
+			case ValidationMinimal, ValidationRelaxed:
+				fmt.Fprintf(os.Stderr, "⚠️ SECURITY WARNING: Failed to verify attestation SBOM digest: %v\n", err)
+				fmt.Fprintf(os.Stderr, "⚠️ Continuing due to validation level: %v\n", validationLevel)
+				logger.Warn("⚠️ Failed to verify attestation SBOM digest, continuing", "error", err, "level", validationLevel)
+			default: // ValidationStrict, ValidationStandard
+				logger.Error("❌ Failed to verify attestation SBOM digest", "error", err)
+				return nil, fmt.Errorf("failed to verify attestation SBOM digest: %w", err)
+			}
+		} else {
+			logger.Debug("✅ Attestation SBOM digest verified")
+		}
 	}
 
 	metadata, err := reader.ReadMetadata()
