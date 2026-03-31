@@ -10,6 +10,8 @@ Implements packed operation chains for slot transformations using v0 required op
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 from flavor.psp.format_2025.constants import (
     OP_BZIP2,
     OP_GZIP,
@@ -43,7 +45,7 @@ except ImportError:
     _HAS_PROTOBUF = False
 
 
-def pack_operations(operations: list[int]) -> int:
+def pack_operations(operations: Sequence[int]) -> int:
     """
     Pack a list of operations into a 64-bit integer.
 

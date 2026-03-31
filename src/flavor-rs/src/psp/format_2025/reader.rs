@@ -217,7 +217,10 @@ impl Reader {
                     debug!("✅ Decompressed data is valid JSON");
                 } else if json_data.contains("ustar") {
                     debug!("🚨 ERROR: Decompressed data contains tar signatures!");
-                    trace!("📄 First 200 chars: {}", &json_data[..200.min(json_data.len())]);
+                    trace!(
+                        "📄 First 200 chars: {}",
+                        &json_data[..200.min(json_data.len())]
+                    );
                 }
             }
 

@@ -17,8 +17,8 @@ This guide provides comprehensive instructions for setting up the development en
 
 - **Python 3.11 or higher**
 - **UV package manager**: `curl -LsSf https://astral.sh/uv/install.sh | sh`
-- **Go 1.23+**: For building Go helpers (see `src/flavor-go/go.mod`)
-- **Rust 1.85+**: For building Rust helpers (see `src/flavor-rs/Cargo.toml`)
+- **Go 1.26+**: For building Go helpers (see `src/flavor-go/go.mod`)
+- **Rust 1.86+**: For building Rust helpers (see `src/flavor-rs/Cargo.toml`)
 - **Git**: For version control
 
 ## Environment Setup

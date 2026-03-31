@@ -7,20 +7,7 @@
 Shows the evolution from text-based operation chains to packed integers"""
 
 import json
-from pathlib import Path
-import sys
 
-# Add generated proto modules to path
-sys.path.insert(0, str(Path(__file__).parent / "generated"))
-
-from generated import pspf_2025_pb2  # ty: ignore[unresolved-import]
-from generated.modules import (  # ty: ignore[unresolved-import]
-    crypto_pb2,
-    index_pb2,
-    metadata_pb2,
-    operations_pb2,
-    slots_pb2,
-)
 from google.protobuf import json_format
 
 # Import v0 constants for operation packing
@@ -29,10 +16,18 @@ from flavor.psp.format_2025.constants import (
     OP_GZIP,
     OP_TAR,
 )
+from flavor.psp.format_2025.generated import pspf_2025_pb2
+from flavor.psp.format_2025.generated.modules import (
+    crypto_pb2,
+    index_pb2,
+    metadata_pb2,
+    operations_pb2,
+    slots_pb2,
+)
 from flavor.psp.format_2025.operations import pack_operations
 
 
-def create_old_format_json() -> dict:
+def create_old_format_json() -> dict[str, object]:
     """Create JSON in the old format with string-based operations"""
     return {
         "format_version": "2024.1",

@@ -16,11 +16,11 @@ import pytest
 # ---------------------------------------------------------------------------
 
 
-def _run_memray_stress(
+def run_memray_stress(
     script: str,
     baseline_key: str,
     output_dir: Path,
-    baselines: dict,
+    baselines: dict[str, int],
     baselines_path: Path,
 ) -> None:
     """Run a memray stress script and compare .bin file size against baseline."""
@@ -57,7 +57,7 @@ def _run_memray_stress(
 # ---------------------------------------------------------------------------
 
 _runner_mod = types.ModuleType("wrknv.memray.runner")
-_runner_mod.run_memray_stress = _run_memray_stress  # type: ignore[attr-defined]
+_runner_mod.run_memray_stress = run_memray_stress  # type: ignore[attr-defined]
 
 _memray_mod = types.ModuleType("wrknv.memray")
 _memray_mod.runner = _runner_mod  # type: ignore[attr-defined]
@@ -87,10 +87,11 @@ def memray_baselines_path() -> Path:
 
 
 @pytest.fixture(scope="session")
-def memray_baseline(memray_baselines_path: Path) -> dict:
+def memray_baseline(memray_baselines_path: Path) -> dict[str, int]:
     """Loaded baseline dict (empty dict if file is missing or empty)."""
     if memray_baselines_path.exists():
         text = memray_baselines_path.read_text().strip()
         if text:
-            return json.loads(text)
+            result: dict[str, int] = json.loads(text)
+            return result
     return {}

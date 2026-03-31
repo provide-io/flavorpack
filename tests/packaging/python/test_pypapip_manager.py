@@ -6,10 +6,10 @@
 """Tests for PyPaPipManager critical functionality."""
 
 from pathlib import Path
+import sys
 import tempfile
 from unittest.mock import Mock, patch
 
-import flavor.packaging.python.pypapip_manager as _pip_mod
 from flavor.packaging.python.pypapip_manager import PyPaPipManager
 
 
@@ -34,7 +34,7 @@ class TestPyPaPipManager:
         python_exe = Path("/usr/bin/python3")
         packages = ["numpy", "scipy"]
 
-        with patch.object(_pip_mod.sys, "platform", "linux"):
+        with patch.object(sys, "platform", "linux"):
             cmd = self.pip_manager._get_pypapip_install_cmd(python_exe, packages)
 
         expected = ["/usr/bin/python3", "-m", "pip", "install", "numpy", "scipy"]
@@ -46,7 +46,7 @@ class TestPyPaPipManager:
         wheel_dir = Path("/tmp/wheels")
         source_dir = Path("/tmp/mypackage")
 
-        with patch.object(_pip_mod.sys, "platform", "linux"):
+        with patch.object(sys, "platform", "linux"):
             cmd = self.pip_manager._get_pypapip_wheel_cmd(python_exe, wheel_dir, source_dir, no_deps=False)
 
         expected = [
@@ -67,7 +67,7 @@ class TestPyPaPipManager:
         wheel_dir = Path("/tmp/wheels")
         source_dir = Path("/tmp/mypackage")
 
-        with patch.object(_pip_mod.sys, "platform", "linux"):
+        with patch.object(sys, "platform", "linux"):
             cmd = self.pip_manager._get_pypapip_wheel_cmd(python_exe, wheel_dir, source_dir, no_deps=True)
 
         expected = [
@@ -92,7 +92,7 @@ class TestPyPaPipManager:
         dest_dir = Path("/tmp/downloads")
         packages = ["requests"]
 
-        with patch.object(_pip_mod.sys, "platform", "linux"):
+        with patch.object(sys, "platform", "linux"):
             cmd = self.pip_manager._get_pypapip_download_cmd(
                 python_exe, dest_dir, packages=packages, binary_only=True
             )
@@ -123,7 +123,7 @@ class TestPyPaPipManager:
         dest_dir = Path("/tmp/downloads")
         packages = ["numpy"]
 
-        with patch.object(_pip_mod.sys, "platform", "linux"):
+        with patch.object(sys, "platform", "linux"):
             cmd = self.pip_manager._get_pypapip_download_cmd(
                 python_exe, dest_dir, packages=packages, binary_only=True
             )
@@ -157,7 +157,7 @@ class TestPyPaPipManager:
         dest_dir = Path("/tmp/downloads")
         packages = ["scipy"]
 
-        with patch.object(_pip_mod.sys, "platform", "linux"):
+        with patch.object(sys, "platform", "linux"):
             cmd = self.pip_manager._get_pypapip_download_cmd(
                 python_exe, dest_dir, packages=packages, binary_only=True
             )
@@ -187,7 +187,7 @@ class TestPyPaPipManager:
         dest_dir = Path("/tmp/downloads")
         packages = ["wheel"]
 
-        with patch.object(_pip_mod.sys, "platform", "linux"):
+        with patch.object(sys, "platform", "linux"):
             cmd = self.pip_manager._get_pypapip_download_cmd(
                 python_exe,
                 dest_dir,
@@ -219,7 +219,7 @@ class TestPyPaPipManager:
         dest_dir = Path("/tmp/downloads")
         requirements_file = Path("/tmp/requirements.txt")
 
-        with patch.object(_pip_mod.sys, "platform", "linux"):
+        with patch.object(sys, "platform", "linux"):
             cmd = self.pip_manager._get_pypapip_download_cmd(
                 python_exe, dest_dir, requirements_file=requirements_file, binary_only=True
             )
@@ -261,7 +261,7 @@ class TestPyPaPipManager:
                 "flavor.packaging.python.pypapip_manager.get_arch_name",
                 return_value="amd64",
             ),
-            patch.object(_pip_mod.sys, "platform", "linux"),
+            patch.object(sys, "platform", "linux"),
         ):
             cmd_310 = manager_310._get_pypapip_download_cmd(
                 Path("/usr/bin/python3"), Path("/tmp"), packages=["test"]
@@ -399,7 +399,7 @@ class TestPyPaPipManagerCriticalFeatures:
                 "flavor.packaging.python.pypapip_manager.get_arch_name",
                 return_value="amd64",
             ),
-            patch.object(_pip_mod.sys, "platform", "linux"),
+            patch.object(sys, "platform", "linux"),
         ):
             cmd = self.pip_manager._get_pypapip_download_cmd(
                 Path("/usr/bin/python3"), Path("/tmp"), packages=["test"]
@@ -422,7 +422,7 @@ class TestPyPaPipManagerCriticalFeatures:
         ]:
             mock_arch.return_value = arch
 
-            with patch.object(_pip_mod.sys, "platform", "linux"):
+            with patch.object(sys, "platform", "linux"):
                 cmd = self.pip_manager._get_pypapip_download_cmd(
                     Path("/usr/bin/python3"),
                     Path("/tmp"),

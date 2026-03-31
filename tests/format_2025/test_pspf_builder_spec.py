@@ -75,14 +75,12 @@ class TestBuildSpec:
 
     def test_build_spec_is_immutable(self) -> None:
         """BuildSpec should be truly immutable."""
-        if not BuildSpec:
-            pytest.skip("BuildSpec not implemented yet")
 
         spec = BuildSpec(metadata={"name": "app"})
 
         # Should not be able to modify attributes
         with pytest.raises((AttributeError, attrs.exceptions.FrozenInstanceError)):
-            spec.metadata = {"name": "other"}  # ty: ignore[invalid-assignment]
+            spec.metadata = {"name": "other"}  # type: ignore[misc]  # intentional: testing frozen attrs raises
 
         # Should not be able to modify nested structures
         spec.metadata["name"] = "modified"  # This modifies the dict
@@ -93,8 +91,6 @@ class TestBuildSpec:
 
     def test_build_spec_with_methods_return_new_instances(self) -> None:
         """with_* methods should return new instances."""
-        if not BuildSpec:
-            pytest.skip("BuildSpec not implemented yet")
 
         spec = BuildSpec(metadata={"name": "app"})
 
@@ -123,8 +119,6 @@ class TestBuildSpec:
 
     def test_build_spec_with_keys(self) -> None:
         """BuildSpec should support key configuration."""
-        if not BuildSpec or not KeyConfig:
-            pytest.skip("BuildSpec/KeyConfig not implemented yet")
 
         spec = BuildSpec()
         key_config = KeyConfig(key_seed="test123")
@@ -139,8 +133,6 @@ class TestKeyConfig:
 
     def test_key_config_options(self) -> None:
         """KeyConfig should support all key options."""
-        if not KeyConfig:
-            pytest.skip("KeyConfig not implemented yet")
 
         # Default should have no keys
         config = KeyConfig()
@@ -168,8 +160,6 @@ class TestBuildOptions:
 
     def test_build_options_defaults(self) -> None:
         """BuildOptions should have sensible defaults."""
-        if not BuildOptions:
-            pytest.skip("BuildOptions not implemented yet")
 
         options = BuildOptions()
         assert options.enable_mmap
@@ -180,8 +170,6 @@ class TestBuildOptions:
 
     def test_build_options_customization(self) -> None:
         """BuildOptions should be customizable."""
-        if not BuildOptions:
-            pytest.skip("BuildOptions not implemented yet")
 
         options = BuildOptions(enable_mmap=False, compression="none")
         assert not options.enable_mmap
@@ -203,8 +191,6 @@ class TestBuildPackageFunction:
         minimal_spec: BuildSpec,
     ) -> None:
         """build_package should be a pure function with no side effects."""
-        if not build_package:
-            pytest.skip("build_package not implemented yet")
 
         output1 = temp_dir / "out1.psp"
         output2 = temp_dir / "out2.psp"
@@ -222,8 +208,6 @@ class TestBuildPackageFunction:
 
     def test_build_package_validates_spec(self, temp_dir: Path) -> None:
         """build_package should validate the spec before building."""
-        if not build_package or not BuildSpec:
-            pytest.skip("build_package/BuildSpec not implemented yet")
 
         # Invalid spec (missing package name)
         invalid_spec = BuildSpec(metadata={})
@@ -239,8 +223,6 @@ class TestBuildPackageFunction:
         minimal_spec: BuildSpec,
     ) -> None:
         """build_package should create the output file."""
-        if not build_package:
-            pytest.skip("build_package not implemented yet")
 
         output = temp_dir / "test.psp"
         result = build_package(minimal_spec, output)
@@ -255,8 +237,6 @@ class TestValidateSpec:
 
     def test_validate_missing_package_name(self) -> None:
         """Should detect missing package name."""
-        if not validate_spec or not BuildSpec:
-            pytest.skip("validate_spec/BuildSpec not implemented yet")
 
         spec = BuildSpec(metadata={})
         errors = validate_spec(spec)
@@ -266,8 +246,6 @@ class TestValidateSpec:
 
     def test_validate_invalid_slots(self) -> None:
         """Should detect invalid slots."""
-        if not validate_spec or not BuildSpec:
-            pytest.skip("validate_spec/BuildSpec not implemented yet")
 
         with pytest.raises(ValueError):
             SlotMetadata(
@@ -284,8 +262,6 @@ class TestValidateSpec:
 
     def test_validate_valid_spec(self, minimal_spec: BuildSpec) -> None:
         """Should accept valid spec."""
-        if not validate_spec:
-            pytest.skip("validate_spec not implemented yet")
 
         errors = validate_spec(minimal_spec)
         assert len(errors) == 0
@@ -296,8 +272,6 @@ class TestResolveKeys:
 
     def test_resolve_explicit_keys(self) -> None:
         """Should use explicit keys when provided."""
-        if not resolve_keys or not KeyConfig:
-            pytest.skip("resolve_keys/KeyConfig not implemented yet")
 
         config = KeyConfig(private_key=b"explicit_private", public_key=b"explicit_public")
 
@@ -307,8 +281,6 @@ class TestResolveKeys:
 
     def test_resolve_deterministic_keys(self) -> None:
         """Should generate deterministic keys from seed."""
-        if not resolve_keys or not KeyConfig:
-            pytest.skip("resolve_keys/KeyConfig not implemented yet")
 
         config = KeyConfig(key_seed="test_seed")
 
@@ -323,8 +295,6 @@ class TestResolveKeys:
 
     def test_resolve_ephemeral_keys(self) -> None:
         """Should generate ephemeral keys when no config."""
-        if not resolve_keys or not KeyConfig:
-            pytest.skip("resolve_keys/KeyConfig not implemented yet")
 
         config = KeyConfig()  # No keys specified
 
@@ -339,8 +309,6 @@ class TestResolveKeys:
 
     def test_resolve_keys_priority(self) -> None:
         """Should respect key priority: explicit > seed > path > ephemeral."""
-        if not resolve_keys or not KeyConfig:
-            pytest.skip("resolve_keys/KeyConfig not implemented yet")
 
         # When both explicit and seed, explicit wins
         config = KeyConfig(private_key=b"explicit", public_key=b"public", key_seed="ignored")

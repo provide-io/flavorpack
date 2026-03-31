@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""PSPF 2025 metadata assembly and construction utilities."""
 
 from .assembly import (
     assemble_metadata,

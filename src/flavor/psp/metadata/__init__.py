@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""PSP metadata types, converters, validators, and path utilities."""
 
 __all__ = [
     "converters",

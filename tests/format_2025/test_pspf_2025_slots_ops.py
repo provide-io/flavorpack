@@ -200,8 +200,8 @@ class TestPSPFSlotsOperations:
 
         # Verify slot metadata includes caching info
         reader = PSPFReader(bundle_path)
-        metadata = reader.read_metadata()
-        slot_meta = metadata["slots"][0]
+        read_metadata = reader.read_metadata()
+        slot_meta = read_metadata["slots"][0]
         assert slot_meta["lifecycle"] == "runtime"  # Runtime slots available during execution
 
     def test_slot_metadata_serialization(self, test_builder: PSPFBuilder) -> None:
