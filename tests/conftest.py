@@ -120,10 +120,8 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
         )
         skipped_count = 0
         for item in items:
-            # Skip tests marked with requires_helpers
-            if "requires_helpers" in item.keywords or (
-                "integration" in item.keywords and "requires_helpers" not in item.keywords
-            ):
+            # Skip tests explicitly marked with requires_helpers
+            if "requires_helpers" in item.keywords:
                 item.add_marker(skip_helpers)
                 skipped_count += 1
 
