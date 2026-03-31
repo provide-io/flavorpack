@@ -25,43 +25,39 @@ fi
 echo "📝 Updating VERSION file to ${VERSION}"
 echo "${VERSION}" > VERSION
 
-# Update version in pyproject.toml
-echo "📝 Updating pyproject.toml"
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    # macOS
-    sed -i '' "s/^version = \".*\"/version = \"${VERSION}\"/" pyproject.toml
-else
-    # Linux
-    sed -i "s/^version = \".*\"/version = \"${VERSION}\"/" pyproject.toml
+# pyproject.toml uses dynamic version from VERSION file — no update needed
+
+# Update version in Rust helper
+CARGO_TOML="src/flavor-rs/Cargo.toml"
+if [ -f "$CARGO_TOML" ]; then
+    echo "📝 Updating $CARGO_TOML"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' "s/^version = \".*\"/version = \"${VERSION}\"/" "$CARGO_TOML"
+    else
+        sed -i "s/^version = \".*\"/version = \"${VERSION}\"/" "$CARGO_TOML"
+    fi
 fi
 
-# Update version in helper configurations if they exist
-for config in helpers/*/Cargo.toml; do
-    if [ -f "$config" ]; then
-        echo "📝 Updating $(basename $(dirname "$config"))/Cargo.toml"
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' "s/^version = \".*\"/version = \"${VERSION}\"/" "$config"
-        else
-            sed -i "s/^version = \".*\"/version = \"${VERSION}\"/" "$config"
-        fi
+RUST_VERSION_RS="src/flavor-rs/src/version.rs"
+if [ -f "$RUST_VERSION_RS" ]; then
+    echo "📝 Updating $RUST_VERSION_RS"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' "s/pub const VERSION: &str = \".*\"/pub const VERSION: \&str = \"${VERSION}\"/" "$RUST_VERSION_RS"
+    else
+        sed -i "s/pub const VERSION: &str = \".*\"/pub const VERSION: \&str = \"${VERSION}\"/" "$RUST_VERSION_RS"
     fi
-done
+fi
 
-for config in helpers/*/go.mod; do
-    if [ -f "$config" ]; then
-        # Go modules don't have version in go.mod, but we can update any version constants
-        dir=$(dirname "$config")
-        version_file="$dir/internal/version/version.go"
-        if [ -f "$version_file" ]; then
-            echo "📝 Updating $(basename "$dir")/internal/version/version.go"
-            if [[ "$OSTYPE" == "darwin"* ]]; then
-                sed -i '' "s/Version = \".*\"/Version = \"${VERSION}\"/" "$version_file"
-            else
-                sed -i "s/Version = \".*\"/Version = \"${VERSION}\"/" "$version_file"
-            fi
-        fi
+# Update version in Go helper
+GO_MAIN="src/flavor-go/cmd/flavor-go-builder/main.go"
+if [ -f "$GO_MAIN" ]; then
+    echo "📝 Updating $GO_MAIN"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' "s/const version = \".*\"/const version = \"${VERSION}\"/" "$GO_MAIN"
+    else
+        sed -i "s/const version = \".*\"/const version = \"${VERSION}\"/" "$GO_MAIN"
     fi
-done
+fi
 
 # Generate changelog entry template
 CHANGELOG_ENTRY="docs/CHANGELOG.md"
