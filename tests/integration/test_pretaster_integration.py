@@ -44,7 +44,6 @@ class TestPretasterIntegration:
             cwd=pretaster_dir,
             capture_output=True,
             text=True,
-            encoding="utf-8",
             timeout=300,  # 5 minute timeout
             env=env,
         )
@@ -86,7 +85,6 @@ class TestPretasterIntegration:
             [str(echo_package), "Hello from test!"],
             capture_output=True,
             text=True,
-            encoding="utf-8",
             timeout=30,
             env=env,
         )
@@ -122,7 +120,6 @@ class TestPretasterIntegration:
             [str(shell_package)],
             capture_output=True,
             text=True,
-            encoding="utf-8",
             timeout=30,
             env=env,
         )
@@ -158,7 +155,6 @@ class TestPretasterIntegration:
             [str(orchestrate_package)],
             capture_output=True,
             text=True,
-            encoding="utf-8",
             timeout=60,  # Longer timeout for complex test
             env=env,
         )
@@ -189,18 +185,12 @@ class TestPretasterIntegration:
             ["flavor", "inspect", str(package)],
             capture_output=True,
             text=True,
-            encoding="utf-8",
             timeout=30,
             env=env,
         )
 
-        # Should show package metadata, or fail gracefully for stale/invalid bundles
-        assert (
-            result.returncode == 0
-            or "not found" in result.stderr  # flavor may not be in PATH
-            or "Invalid MagicTrailer" in result.stderr  # stale bundle from old format
-            or "invalid" in result.stderr.lower()
-        )
+        # Should show package metadata
+        assert result.returncode == 0 or "not found" in result.stderr  # flavor may not be in PATH
 
 
 # 🌶️📦🔚

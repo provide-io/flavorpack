@@ -158,9 +158,7 @@ flavor inspect [OPTIONS] PACKAGE_FILE
 
 | Option | Description |
 |--------|-------------|
-| `--json` | Output full metadata as JSON |
-| `--sbom` | Print CycloneDX 1.6 SBOM JSON from the attestation slot |
-| `--provenance` | Print provenance JSON (builder, timestamp, platform) |
+| `--json` | Output as JSON format |
 
 #### Examples
 
@@ -700,65 +698,6 @@ Would remove 4 helper binaries (18.2 MB):
     - **After updates**: Clear old cached versions
     - **Disk space low**: Reclaim space from cached packages
     - **Helper issues**: Remove and rebuild helpers with `flavor helpers build`
-
----
-
-## Security Commands
-
-FlavorPack ships a suite of security sub-commands for managing trusted keys, execution policies, and package attestation.
-
-### One-Shot Setup
-
-```bash
-# Generate an Ed25519 key pair and create a default policy.toml in one step
-flavor init
-
-# System-wide setup (writes to /etc/flavor/)
-flavor init --global
-```
-
-### Policy Management
-
-```bash
-# Create a default policy.toml in ~/.config/flavor/
-flavor policy init
-
-# Show the effective merged policy (package + operator)
-flavor policy show
-
-# Check whether <package> can run under the current policy
-flavor policy check package.psp
-# Exit 0 = allowed; non-zero = blocked with reason printed to stderr
-```
-
-### Trusted Key Store
-
-```bash
-# Import a public key as a trusted signer
-flavor trust add signer.pub
-
-# List all trusted keys (fingerprint + path)
-flavor trust list
-
-# Remove a key by its SHA-256 fingerprint
-flavor trust remove <64-hex-char fingerprint>
-
-# Verify a package was signed by a trusted key
-flavor trust verify package.psp
-```
-
-### Package Inspection
-
-```bash
-# Print CycloneDX 1.6 SBOM JSON
-flavor inspect --sbom package.psp
-
-# Print provenance JSON (builder, timestamp, platform)
-flavor inspect --provenance package.psp
-
-# Print full metadata JSON
-flavor inspect --json package.psp
-```
 
 ---
 

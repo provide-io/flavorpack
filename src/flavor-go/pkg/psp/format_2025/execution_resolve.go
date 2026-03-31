@@ -22,19 +22,8 @@ import (
 //
 // This ensures that packages with Unix-style command paths work on Windows.
 func resolveExecutable(executable string, logger hclog.Logger) string {
-	// If the path is absolute and the file exists, use it directly.
-	// This handles workenv-relative commands like {workenv}/bin/taster which are
-	// already fully resolved absolute paths; extracting their basename and looking
-	// them up in PATH would fail because the workenv bin dir is not in PATH yet.
-	if strings.HasPrefix(executable, "/") {
-		if fi, err := os.Stat(executable); err == nil && !fi.IsDir() {
-			logger.Debug("✅ Executable exists at absolute path, using directly", "path", executable)
-			return executable
-		}
-	}
-
-	// Extract basename from Unix absolute paths that don't resolve directly.
-	// Example: /usr/bin/python3 when python3 is in PATH but not at that exact path.
+	// Extract basename from Unix absolute paths
+	// /usr/bin/python3 -> python3
 	execName := executable
 	if strings.HasPrefix(executable, "/") {
 		execName = filepath.Base(executable)

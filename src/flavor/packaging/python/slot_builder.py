@@ -21,7 +21,7 @@ from provide.foundation.file.formats import write_json
 from provide.foundation.platform import get_arch_name, get_os_name
 from provide.foundation.process import run
 
-from flavor.config.defaults import DEFAULT_DIR_PERMS, DEFAULT_EXECUTABLE_PERMS, ENV_WHEEL_CACHE
+from flavor.config.defaults import DEFAULT_DIR_PERMS, DEFAULT_EXECUTABLE_PERMS
 from flavor.packaging.python.environment_builder import PythonEnvironmentBuilder
 from flavor.packaging.python.pypapip_manager import _pip_base_cmd
 from flavor.packaging.python.uv_manager import UVManager
@@ -378,7 +378,7 @@ class PythonSlotBuilder:
             req_file = Path(tmp) / "build-backends-requirements.txt"
 
             uv_exe = self.uv_manager.get_uv_executable()
-            wheel_cache_dir = os.environ.get(ENV_WHEEL_CACHE)
+            wheel_cache_dir = os.environ.get("FLAVOR_WHEEL_CACHE")
 
             if wheel_cache_dir:
                 # Offline strategy: use pre-warmed FLAVOR_WHEEL_CACHE (no network access).
@@ -408,7 +408,7 @@ class PythonSlotBuilder:
                     "-d",
                     wheels_dir.as_posix(),
                 ]
-                logger.debug(f"Copying build-backends from {ENV_WHEEL_CACHE} (offline)", cache=wheel_cache_dir)
+                logger.debug("Copying build-backends from FLAVOR_WHEEL_CACHE (offline)", cache=wheel_cache_dir)
             else:
                 # Network strategy: download with hash verification from lockfile.
                 export_cmd = [

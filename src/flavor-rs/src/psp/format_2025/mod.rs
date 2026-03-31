@@ -20,11 +20,9 @@ pub mod operations;
 pub mod paths;
 pub mod pe_resources;
 pub mod pe_utils;
-pub mod policy;
 pub mod reader;
 pub mod runtime;
 pub mod slots;
-pub mod trust;
 pub mod verifier;
 
 // Re-export main functions

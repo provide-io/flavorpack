@@ -12,7 +12,6 @@ from pathlib import Path
 import click
 from provide.foundation.console import perr, pout
 
-from flavor.config.defaults import ENV_WORKENV_BASE
 from flavor.console import get_command_logger
 from flavor.exceptions import BuildError, PackagingError
 from flavor.package import build_package_from_manifest, verify_package
@@ -145,7 +144,7 @@ def _setup_workenv_base(workenv_base: str | None) -> None:
     if workenv_base:
         import os
 
-        os.environ[ENV_WORKENV_BASE] = workenv_base
+        os.environ["FLAVOR_WORKENV_BASE"] = workenv_base
 
 
 def _build_package_artifacts(

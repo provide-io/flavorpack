@@ -101,12 +101,10 @@ class TestCreateSlotTarballs:
         assert "uv" in slots
         assert "python" in slots
         assert "wheels" in slots
-        # uv is pre-compressed to gzip so external builders store correct format
-        assert slots["uv"].name == "uv.gz"
-        assert slots["uv"].exists()
+        assert slots["uv"] == uv_binary
         assert slots["python"] == python_tgz
         assert slots["wheels"].exists()
-        assert slots["wheels"].name == "wheels.tar.gz"
+        assert slots["wheels"].name == "wheels.tar"
 
     @patch("flavor.packaging.orchestrator_helpers.is_windows")
     def test_create_slot_tarballs_windows(self, mock_is_windows: Mock, tmp_path: Path) -> None:
@@ -134,8 +132,8 @@ class TestCreateSlotTarballs:
 
         slots = create_slot_tarballs(tmp_path, artifacts)
 
-        assert slots["uv"].name == "uv.exe.gz"
-        assert slots["uv"].exists()
+        assert slots["uv"] == uv_binary
+        assert slots["uv"].name == "uv.exe"
 
     @patch("flavor.packaging.orchestrator_helpers.is_windows")
     def test_create_slot_tarballs_missing_python(self, mock_is_windows: Mock, tmp_path: Path) -> None:
@@ -189,11 +187,11 @@ class TestCreateSlotTarballs:
 
         slots = create_slot_tarballs(tmp_path, artifacts)
 
-        # Verify wheels tarball was created (gzip-compressed .tar.gz)
+        # Verify wheels tarball was created
         assert slots["wheels"].exists()
         import tarfile
 
-        with tarfile.open(slots["wheels"], "r:gz") as tar:
+        with tarfile.open(slots["wheels"], "r") as tar:
             members = tar.getmembers()
             assert len(members) == 2
             names = [m.name for m in members]

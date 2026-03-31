@@ -34,8 +34,6 @@ VALID_OPS = [OP_TAR, OP_GZIP, OP_BZIP2, OP_XZ, OP_ZSTD]
 op_strategy = st.sampled_from(VALID_OPS)
 ops_list_strategy = st.lists(op_strategy, min_size=0, max_size=8)
 
-pytestmark = [pytest.mark.property, pytest.mark.ci]
-
 
 @pytest.mark.unit
 class TestOperationsHypothesis:

@@ -63,14 +63,10 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 	if logger == nil {
 		logger = hclog.L()
 	}
-	firstBytesLen := len(slotData)
-	if firstBytesLen > 16 {
-		firstBytesLen = 16
-	}
 	logger.Debug("🐹 Go launcher verifying slot checksum",
 		"slot_id", entry.ID,
 		"data_length", len(slotData),
-		"first_16_bytes", fmt.Sprintf("%02x", slotData[:firstBytesLen]),
+		"first_16_bytes", fmt.Sprintf("%02x", slotData[:16]),
 		"computed_checksum", fmt.Sprintf("%016x", actualChecksum),
 		"expected_checksum", fmt.Sprintf("%016x", entry.Checksum))
 
@@ -97,7 +93,7 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 				return nil, fmt.Errorf("failed to create gzip reader: %w", err)
 			}
 			decompressed, err := io.ReadAll(gz)
-			_ = gz.Close()
+			gz.Close()
 			if err != nil {
 				return nil, fmt.Errorf("failed to decompress gzip data: %w", err)
 			}
@@ -219,7 +215,7 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 	} else {
 		// Target has a subpath - join it with destDir
 		destPath = filepath.Join(destDir, targetPath)
-		extractDir = destPath
+		extractDir = filepath.Dir(destPath)
 	}
 
 	logger.Trace("🔍 Slot data check", "isTarball", isTar, "dataLen", len(decompressed), "destPath", destPath)
@@ -283,7 +279,21 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 					}
 				}
 			case tar.TypeSymlink:
-				return "", fmt.Errorf("tar entry %q contains a symlink — symlinks are not permitted in PSPF packages", hdr.Name)
+				// Ensure parent directory exists
+				if err := os.MkdirAll(filepath.Dir(target), os.FileMode(DirPerms)); err != nil {
+					return "", err
+				}
+
+				// Remove existing symlink if present
+				if err := os.Remove(target); err != nil && !os.IsNotExist(err) {
+					// Best effort cleanup - only log if not "file doesn't exist"
+					_ = err
+				}
+
+				// Create symlink
+				if err := os.Symlink(hdr.Linkname, target); err != nil {
+					return "", err
+				}
 			}
 		}
 

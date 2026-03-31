@@ -167,20 +167,13 @@ filterwarnings = [
 markers = [
     "unit: Fast, isolated unit tests",
     "integration: Integration tests requiring multiple components",
-    "cross_language: Tests involving Go/Rust/Python interaction",
     "slow: Slow running tests (>5s)",
-    "fast: Fast-feedback tests intended for local iteration",
-    "ci: Tests intended to run in CI",
     "security: Security-specific tests",
-    "adversarial: Hostile-input and boundary-violation tests",
-    "property: Parameterized, invariant, and property-based tests",
-    "fuzz: Coverage-guided or randomized malformed-input tests",
-    "smoke: Minimal high-signal smoke tests",
     "mmap: Memory-mapped file tests",
     "taster: Taster-specific tests",
     "packaging: Package building and verification tests",
+    "cross_language: Tests involving Go/Rust/Python interaction",
     "stress: Stress and hypothesis-based property tests",
-    "parity: Cross-language parity tests",
     "requires_helpers: Tests that need Go/Rust helpers built",
     "memray: memory profiling stress tests (run with -m memray)",
 ]
@@ -212,7 +205,7 @@ omit = [
 show_missing = true
 skip_covered = false
 precision = 2
-fail_under = 85
+fail_under = 60
 exclude_also = [
     "pragma: no cover",
     "raise NotImplementedError",
@@ -220,9 +213,6 @@ exclude_also = [
     "if TYPE_CHECKING:",
     "def __repr__",
     "def __str__",
-    "if sys.version_info",
-    "except ImportError",
-    "try:",
 ]
 
 

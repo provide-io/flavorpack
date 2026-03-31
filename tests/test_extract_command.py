@@ -73,11 +73,11 @@ class TestExtractCommand:
 
         assert result.exit_code == 0
         assert output_dir.exists()
-        assert "Extracting 4 slots" in result.output
+        assert "Extracting 3 slots" in result.output
 
         # Check that files were created
         files = list(output_dir.glob("*"))
-        assert len(files) >= 5  # 4 slots (incl. attestation) + metadata.json
+        assert len(files) >= 4  # 3 slots + metadata.json
 
         # Check metadata.json
         metadata_file = output_dir / "metadata.json"

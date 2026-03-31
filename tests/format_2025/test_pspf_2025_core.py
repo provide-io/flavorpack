@@ -413,8 +413,7 @@ class TestPSPFCore:
         reader = PSPFReader(bundle_path)
         assert reader.verify_magic_trailer()
         index = reader.read_index()
-        # Builder always writes an attestation slot (lifecycle=11), even for otherwise-empty bundles
-        assert index.slot_count == 1
+        assert index.slot_count == 0
 
         read_meta = reader.read_metadata()
         assert read_meta["package"]["name"] == "empty"

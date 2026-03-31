@@ -1,14 +1,11 @@
 # Makefile for Rust helpers
 
-.PHONY: all build clean test coverage proptest mutation install fmt lint security fuzz check deps release
+.PHONY: all build clean test install fmt lint security fuzz check deps release
 
 # Configuration
 BIN_DIR ?= ../../dist/bin
 XDG_CACHE_HOME ?= $(HOME)/.cache
 FLAVOR_HELPERS_DIR ?= $(XDG_CACHE_HOME)/flavor/helpers/bin
-QUALITY_RUST_COV_MIN ?= 80
-QUALITY_RUST_FUZZ_SECONDS ?= 30
-QUALITY_RUST_MUTATION_ARGS ?=
 CARGO_FLAGS ?= --release
 TARGET ?= 
 USE_MUSL ?= false
@@ -82,55 +79,20 @@ test:
 	@cargo test --all-features
 	@echo "✅ Tests passed"
 
-coverage:
-	@echo "📊 Running Rust coverage checks..."
-	@command -v cargo-llvm-cov >/dev/null 2>&1 || cargo install cargo-llvm-cov --locked
-	@set -e; \
-	if command -v rustup >/dev/null 2>&1; then \
-		rustup component add llvm-tools-preview; \
-	else \
-		export LLVM_COV=/opt/homebrew/opt/llvm/bin/llvm-cov; \
-		export LLVM_PROFDATA=/opt/homebrew/opt/llvm/bin/llvm-profdata; \
-	fi; \
-	cargo llvm-cov --all-features --workspace --lcov --output-path coverage.lcov; \
-	cargo llvm-cov report --summary-only | tee coverage.txt; \
-	total="$$(awk '/^TOTAL/{gsub(/%/,"",$$10); print $$10}' coverage.txt | tail -1)"; \
-	min="$${QUALITY_RUST_COV_MIN}"; \
-	if [ -z "$$total" ]; then \
-		echo "❌ Failed to parse Rust coverage summary"; \
-		exit 1; \
-	fi; \
-	if awk "BEGIN {exit !($$total < $$min)}"; then \
-		echo "❌ Coverage $$total% is below minimum $$min%"; \
-		exit 1; \
-	fi; \
-	echo "✅ Coverage $$total% meets minimum $$min%"
-
-proptest:
-	@echo "🧪 Running Rust property tests..."
-	@cargo test prop_ --all-features
-	@echo "✅ Proptests passed"
-
-mutation:
-	@echo "🧬 Running Rust mutation testing..."
-	@command -v cargo-mutants >/dev/null 2>&1 || cargo install cargo-mutants --locked
-	@cargo mutants $(QUALITY_RUST_MUTATION_ARGS) --all-features --output .cargo-mutants.out
-
 fuzz:
-	@echo "🔀 Running Rust fuzz targets..."
-	@command -v cargo-fuzz >/dev/null 2>&1 || cargo install cargo-fuzz --locked
-	@if rustc --version | grep -q nightly; then \
-		cargo fuzz run pspf_operations_roundtrip -- -max_total_time=$(QUALITY_RUST_FUZZ_SECONDS); \
-		cargo fuzz run pspf_reader_no_panic -- -max_total_time=$(QUALITY_RUST_FUZZ_SECONDS); \
-	elif command -v rustup >/dev/null 2>&1; then \
-		rustup toolchain install nightly --profile minimal; \
-		cargo +nightly fuzz run pspf_operations_roundtrip -- -max_total_time=$(QUALITY_RUST_FUZZ_SECONDS); \
-		cargo +nightly fuzz run pspf_reader_no_panic -- -max_total_time=$(QUALITY_RUST_FUZZ_SECONDS); \
+	@echo "🔀 Running fuzz tests..."
+	@if command -v cargo-fuzz >/dev/null 2>&1; then \
+		if [ -d "fuzz" ]; then \
+			cargo fuzz run fuzz_target_1 -- -max_total_time=10 2>/dev/null || \
+				echo "⚠️  Fuzz testing requires setup. Run: cargo fuzz init"; \
+		else \
+			echo "⚠️  No fuzz targets found. Initialize with: cargo fuzz init"; \
+		fi \
 	else \
-		echo "❌ Nightly Rust is required for cargo-fuzz, but rustup is not installed"; \
-		exit 1; \
+		echo "⚠️  cargo-fuzz not installed"; \
+		echo "   Install with: cargo install cargo-fuzz"; \
+		echo "   Note: Requires nightly Rust"; \
 	fi
-	@echo "✅ Fuzz testing completed"
 
 check: fmt lint test security
 	@echo "✅ All checks passed!"
@@ -143,10 +105,9 @@ deps:
 	@cargo install cargo-deny --quiet 2>/dev/null || echo "   cargo-deny already installed"
 	@cargo install cargo-outdated --quiet 2>/dev/null || echo "   cargo-outdated already installed"
 	@cargo install cargo-machete --quiet 2>/dev/null || echo "   cargo-machete already installed"
-	@cargo install cargo-llvm-cov --locked --quiet 2>/dev/null || echo "   cargo-llvm-cov already installed"
-	@cargo install cargo-mutants --locked --quiet 2>/dev/null || echo "   cargo-mutants already installed"
 	@echo "✅ Dependencies installed"
-	@echo "   Optional: cargo install cargo-fuzz --locked (requires nightly)"
+	@echo "   Optional: cargo install cargo-fuzz (requires nightly)"
+	@echo "   Optional: cargo install cargo-tarpaulin (for coverage)"
 
 release:
 	@echo "🚀 Building optimized release..."

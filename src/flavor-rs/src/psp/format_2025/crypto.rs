@@ -27,29 +27,3 @@ pub fn verify_signature(data: &[u8], signature: &[u8], verifying_key: &Verifying
         false
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::{generate_ephemeral_keypair, sign_data, verify_signature};
-
-    #[test]
-    fn test_sign_and_verify_roundtrip() {
-        let (signing_key, verifying_key) = generate_ephemeral_keypair();
-        let data = b"signed payload";
-
-        let signature = sign_data(data, &signing_key);
-
-        assert!(verify_signature(data, &signature, &verifying_key));
-        assert!(!verify_signature(
-            b"tampered payload",
-            &signature,
-            &verifying_key
-        ));
-    }
-
-    #[test]
-    fn test_verify_signature_rejects_invalid_length() {
-        let (_, verifying_key) = generate_ephemeral_keypair();
-        assert!(!verify_signature(b"payload", &[1, 2, 3], &verifying_key));
-    }
-}

@@ -42,7 +42,7 @@ func TryAcquireLock(paths *WorkenvPaths, logger hclog.Logger) (bool, error) {
 			if oldPid, err := strconv.Atoi(contents); err == nil {
 				if !IsProcessRunning(oldPid) {
 					logger.Info("🧹 Removing stale lock from dead process", "pid", oldPid)
-					_ = os.Remove(lockPath)
+					os.Remove(lockPath)
 				} else {
 					logger.Debug("🔒 Lock held by active process", "pid", oldPid)
 					return false, nil
@@ -50,12 +50,12 @@ func TryAcquireLock(paths *WorkenvPaths, logger hclog.Logger) (bool, error) {
 			} else {
 				// Invalid PID in lock file, remove it
 				logger.Info("🧹 Removing invalid lock file (couldn't parse PID)")
-				_ = os.Remove(lockPath)
+				os.Remove(lockPath)
 			}
 		} else {
 			// Can't read lock file, try to remove it
 			logger.Info("🧹 Removing unreadable lock file")
-			_ = os.Remove(lockPath)
+			os.Remove(lockPath)
 		}
 	}
 
@@ -68,11 +68,11 @@ func TryAcquireLock(paths *WorkenvPaths, logger hclog.Logger) (bool, error) {
 		}
 		return false, err
 	}
-	defer func() { _ = file.Close() }()
+	defer file.Close()
 
 	// Write our PID to the lock file
 	if _, err := fmt.Fprintf(file, "%d\n", pid); err != nil {
-		_ = os.Remove(lockPath)
+		os.Remove(lockPath)
 		return false, err
 	}
 
@@ -127,7 +127,7 @@ func MarkExtractionComplete(paths *WorkenvPaths, logger hclog.Logger) error {
 	if err != nil {
 		return err
 	}
-	defer func() { _ = file.Close() }()
+	defer file.Close()
 
 	if _, err := fmt.Fprintf(file, "%d\n", os.Getpid()); err != nil {
 		return err
@@ -149,7 +149,7 @@ func MarkExtractionIncomplete(paths *WorkenvPaths, logger hclog.Logger) {
 		logger.Warn("⚠️ Failed to create extract dir", "error", err)
 	}
 	// Remove the complete marker if it exists
-	_ = os.Remove(paths.CompleteFile())
+	os.Remove(paths.CompleteFile())
 	logger.Debug("⚠️ Marked extraction as incomplete")
 }
 

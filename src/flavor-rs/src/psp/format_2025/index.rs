@@ -63,13 +63,8 @@ pub struct Index {
     // Future cryptography space (512 bytes)
     pub future_crypto: [u8; 512], // Reserved for post-quantum signatures
 
-    // Attestation fields (192 bytes at offset 1376)
-    pub attestation_key_fp: [u8; 64], // SHA-256 fingerprint of signing key (hex ASCII)
-    pub attestation_sbom_digest: [u8; 64], // SHA-256 of attestation slot content
-    pub attestation_policy_hash: [u8; 64], // SHA-256 of canonical policy
-
-    // Reserved for future use (6624 bytes)
-    pub reserved: [u8; 6624], // Reduced from 6816 to accommodate attestation fields
+    // Reserved for future use (6816 bytes)
+    pub reserved: [u8; 6816], // Large buffer for future expansion
 }
 
 impl Index {
@@ -113,10 +108,7 @@ impl Index {
             compatibility: PSPF_VERSION,
             protocol_version: 1,
             future_crypto: [0; 512],
-            attestation_key_fp: [0; 64],
-            attestation_sbom_digest: [0; 64],
-            attestation_policy_hash: [0; 64],
-            reserved: [0; 6624],
+            reserved: [0; 6816],
         }
     }
 
@@ -285,16 +277,9 @@ impl Index {
                 .map_err(|_| FlavorError::Generic("Invalid protocol version bytes".into()))?,
         );
 
-        // Parse future crypto, attestation fields, and reserved
+        // Parse future crypto and reserved
         index.future_crypto.copy_from_slice(&data[864..1376]);
-        index.attestation_key_fp.copy_from_slice(&data[1376..1440]);
-        index
-            .attestation_sbom_digest
-            .copy_from_slice(&data[1440..1504]);
-        index
-            .attestation_policy_hash
-            .copy_from_slice(&data[1504..1568]);
-        index.reserved.copy_from_slice(&data[1568..8192]);
+        index.reserved.copy_from_slice(&data[1376..8192]);
 
         Ok(index)
     }
@@ -347,16 +332,13 @@ impl Index {
         bytes[856..860].copy_from_slice(&self.compatibility.to_le_bytes());
         bytes[860..864].copy_from_slice(&self.protocol_version.to_le_bytes());
 
-        // Pack future crypto, attestation fields, and reserved
+        // Pack future crypto and reserved
         bytes[864..1376].copy_from_slice(&self.future_crypto);
-        bytes[1376..1440].copy_from_slice(&self.attestation_key_fp);
-        bytes[1440..1504].copy_from_slice(&self.attestation_sbom_digest);
-        bytes[1504..1568].copy_from_slice(&self.attestation_policy_hash);
-        bytes[1568..8192].copy_from_slice(&self.reserved);
+        bytes[1376..8192].copy_from_slice(&self.reserved);
 
         // Calculate and update checksum (with checksum field zeroed)
         bytes[4..8].copy_from_slice(&[0, 0, 0, 0]);
-        let checksum = adler2::adler32_slice(&bytes[..]);
+        let checksum = adler::adler32_slice(&bytes[..]);
         bytes[4..8].copy_from_slice(&checksum.to_le_bytes());
 
         bytes
@@ -393,7 +375,7 @@ impl Index {
             }
         }
 
-        let calculated = adler2::adler32_slice(&data_copy);
+        let calculated = adler::adler32_slice(&data_copy);
         let expected = self.index_checksum;
         trace!(
             "Checksum: expected 0x{:08x}, calculated 0x{:08x}",

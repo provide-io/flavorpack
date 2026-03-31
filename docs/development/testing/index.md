@@ -30,7 +30,6 @@ tests/
 ├── mmap/                   # Memory mapping tests
 ├── taster/                 # TASTER comprehensive test suite
 ├── pretaster/              # PRETASTER cross-language validation
-├── parity/                 # Cross-language parity tests (generates Markdown report)
 └── conftest.py            # Pytest configuration
 ```
 
@@ -104,46 +103,6 @@ pytest tests/integration/test_cross_language.py
 # - Rust builder + Go launcher
 # - Rust builder + Rust launcher
 ```
-
-#### Parity Tests
-
-Verify that Python, Go, and Rust implement the same behavioral contract for
-verification, extraction safety, and platform conventions:
-
-```bash
-# Run parity tests
-pytest -m parity -v
-
-# Run with Markdown report generation
-pytest -m parity --parity-report -v
-# Report written to: reports/parity-report.md
-```
-
-The `--parity-report` flag generates a Markdown table at `reports/parity-report.md`
-showing per-language pass/fail/N_A status for each parity behavior. This report is
-generated as a CI artifact on every run of the flavor pipeline.
-
-Parity tests are annotated with markers that document expected behavior across languages
-even when a language cannot be directly tested from Python:
-
-```python
-@pytest.mark.parity
-@pytest.mark.parity_category("Verification Contract")
-@pytest.mark.parity_go("PASS")   # expected Go behavior
-@pytest.mark.parity_rust("PASS") # expected Rust behavior
-def test_magic_trailer_validation() -> None:
-    """All three implementations reject packages with invalid magic trailer."""
-    ...
-```
-
-When Go/Rust cannot be exercised directly, the expected behavior is documented in the
-test docstring and the marker status set to `N/A`. A `FAIL` status on any language
-triggers a failed test and a report row with status `has-fail`.
-
-See [`tests/parity/`](https://github.com/provide-io/flavorpack/tree/main/tests/parity)
-for the full test suite and
-[Architecture: Cross-Language Verification Contract](../../explanation/architecture/#cross-language-verification-contract)
-for the contract these tests enforce.
 
 ## Test Configuration
 

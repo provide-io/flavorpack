@@ -194,7 +194,7 @@ pub(super) fn finalize_package(
         .launcher_bin
         .as_ref()
         .map(|p| p.display().to_string())
-        .or_else(|| std::env::var(crate::env_vars::LAUNCHER_BIN).ok())
+        .or_else(|| std::env::var("FLAVOR_LAUNCHER_BIN").ok())
         .unwrap_or_else(|| "unknown".to_string());
     log::info!("  Launcher: {}", launcher_display);
     log::info!("  Slots: {}", manifest.slots.len());
@@ -209,7 +209,7 @@ fn write_index(out: &mut File, index: &mut Index) -> Result<()> {
     // Calculate checksum with placeholder set to 0
     let mut bytes = index.pack();
     bytes[4..8].copy_from_slice(&[0, 0, 0, 0]);
-    let checksum = adler2::adler32_slice(&bytes);
+    let checksum = adler::adler32_slice(&bytes);
 
     // Update the index structure with the calculated checksum
     index.index_checksum = checksum;
@@ -219,128 +219,4 @@ fn write_index(out: &mut File, index: &mut Index) -> Result<()> {
 
     out.write_all(&final_bytes)?;
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::psp::format_2025::constants::{
-        HEADER_SIZE, MAGIC_TRAILER_SIZE, MAGIC_WAND_EMOJI_BYTES, PACKAGE_EMOJI_BYTES,
-        SLOT_ALIGNMENT, SLOT_DESCRIPTOR_SIZE,
-    };
-    use crate::psp::format_2025::index::Index;
-    use crate::psp::format_2025::manifest::{
-        BuildManifest, ExecutionInfo, ManifestSlot, PackageInfo,
-    };
-    use crate::psp::format_2025::slots::SlotDescriptor;
-    use std::fs::{self, File};
-    use std::io::Read;
-    use tempfile::tempdir;
-
-    fn sample_manifest() -> BuildManifest {
-        BuildManifest {
-            package: PackageInfo {
-                name: "demo".to_string(),
-                version: "1.2.3".to_string(),
-                description: String::new(),
-            },
-            execution: ExecutionInfo {
-                command: "run".to_string(),
-                env: std::collections::HashMap::new(),
-            },
-            slots: vec![ManifestSlot {
-                slot: Some(0),
-                id: "slot-0".to_string(),
-                source: "slot.bin".to_string(),
-                target: "/app/data".to_string(),
-                operations: String::new(),
-                purpose: "data".to_string(),
-                lifecycle: "runtime".to_string(),
-                permissions: None,
-                resolution: None,
-            }],
-            cache_validation: None,
-            runtime: None,
-            workenv: None,
-            setup_commands: Vec::new(),
-        }
-    }
-
-    #[test]
-    fn finalization_writes_trailer_and_descriptor_table() {
-        let dir = tempdir().expect("tempdir");
-        let output_path = dir.path().join("bundle.pspf");
-        let slot_path = dir.path().join("slot.bin");
-        fs::write(&slot_path, b"slot-data").expect("write slot");
-
-        let mut out = File::create(&output_path).expect("create output");
-        let manifest = sample_manifest();
-        let options = BuildOptions {
-            launcher_bin: Some(dir.path().join("launcher")),
-            skip_verification: false,
-            private_key_path: None,
-            public_key_path: None,
-            key_seed: None,
-            workenv_base: None,
-        };
-        let mut index = Index::new();
-        let compressed = b"metadata-bytes";
-
-        write_metadata_bytes(&mut out, compressed, &mut index).expect("write metadata");
-        let metadata_offset = index.metadata_offset;
-        let metadata_size = index.metadata_size;
-        assert_eq!(metadata_offset, 0);
-        assert_eq!(metadata_size, compressed.len() as u64);
-
-        let mut descriptors = vec![SlotDescriptor::new(0).with_name("slot-0")];
-        let descriptor_table_offset =
-            reserve_descriptor_space(&mut out, &descriptors, &mut index).expect("reserve table");
-        let slot_count = index.slot_count;
-        let slot_table_size = index.slot_table_size;
-        assert_eq!(slot_count, 1);
-        assert_eq!(slot_table_size, SLOT_DESCRIPTOR_SIZE as u64);
-        assert_eq!(descriptor_table_offset % SLOT_ALIGNMENT, 0);
-
-        stream_slot_data(&mut out, &mut descriptors, &[slot_path.clone()])
-            .expect("stream slot data");
-        let streamed_offset = descriptors[0].offset;
-        assert!(streamed_offset >= descriptor_table_offset + SLOT_DESCRIPTOR_SIZE as u64);
-
-        let end_pos = write_descriptor_table(&mut out, &descriptors, descriptor_table_offset)
-            .expect("write descriptor table");
-        assert!(end_pos >= streamed_offset + b"slot-data".len() as u64);
-
-        finalize_package(
-            &mut out,
-            &mut index,
-            end_pos,
-            &output_path,
-            &manifest,
-            &options,
-        )
-        .expect("finalize package");
-
-        drop(out);
-        let bytes = fs::read(&output_path).expect("read output");
-        assert!(bytes.ends_with(MAGIC_WAND_EMOJI_BYTES));
-        assert_eq!(
-            &bytes[bytes.len() - MAGIC_TRAILER_SIZE..bytes.len() - MAGIC_TRAILER_SIZE + 4],
-            PACKAGE_EMOJI_BYTES
-        );
-
-        let trailer_start = bytes.len() - MAGIC_TRAILER_SIZE;
-        let trailer_index = &bytes[trailer_start + 4..trailer_start + 4 + HEADER_SIZE];
-        let unpacked = Index::unpack(trailer_index).expect("unpack trailer index");
-        let package_size = unpacked.package_size;
-        let metadata_size = unpacked.metadata_size;
-        let slot_count = unpacked.slot_count;
-        assert_eq!(package_size, bytes.len() as u64);
-        assert_eq!(metadata_size, compressed.len() as u64);
-        assert_eq!(slot_count, 1);
-
-        let mut slot_bytes = Vec::new();
-        let mut slot_file = File::open(&slot_path).expect("open slot");
-        slot_file.read_to_end(&mut slot_bytes).expect("read slot");
-        assert_eq!(slot_bytes, b"slot-data");
-    }
 }

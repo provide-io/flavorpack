@@ -334,32 +334,6 @@ class PSPFReader:
         """Stream a slot in chunks."""
         return self._extractor.stream_slot(slot_index, chunk_size)
 
-    def verify_attestation_policy_hash(self) -> None:
-        """Verify attestation_policy_hash in the index matches the package-declared policy.
-
-        If the index field is zero-filled (absent), this is a no-op.
-        Raises ValueError on mismatch or if field is non-zero but no policy in metadata.
-        """
-        import hashlib
-        import json
-
-        index = self.read_index()
-        stored = index.attestation_policy_hash.rstrip(b"\x00")
-        if not stored:
-            return
-
-        metadata = self.read_metadata()
-        policy_raw = metadata.get("policy", {})
-        if not policy_raw:
-            raise ValueError("attestation_policy_hash is non-zero but package metadata has no 'policy' key")
-
-        canonical = json.dumps(policy_raw, sort_keys=True, separators=(",", ":"))
-        computed = hashlib.sha256(canonical.encode()).hexdigest()
-        if computed != stored.decode("ascii"):
-            raise ValueError(
-                f"attestation_policy_hash mismatch: index={stored.decode()!r} computed={computed!r}"
-            )
-
     def verify_all_checksums(self) -> bool:
         """Verify all slot checksums."""
         return self._extractor.verify_all_checksums()

@@ -2,11 +2,8 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
-# mypy: disable-error-code="import-not-found"
 
 """Tests for the verify command with JSON output support."""
-
-from __future__ import annotations
 
 import json
 from pathlib import Path
@@ -202,7 +199,7 @@ class TestVerifyCommand:
             mock_verifier.verify_package.assert_called_once()
 
     def test_verify_signature_failed(self) -> None:
-        """Test output when package integrity verification fails."""
+        """Test output when signature verification fails."""
         runner = click.testing.CliRunner()
 
         with (
@@ -217,7 +214,7 @@ class TestVerifyCommand:
 
             result = runner.invoke(verify_command, [tmpfile.name])
             assert result.exit_code == 0
-            assert "❌ Integrity verification: FAILED" in result.output
+            assert "❌ Signature verification: FAILED" in result.output
             assert "❌ Index checksum invalid" in result.output
 
 

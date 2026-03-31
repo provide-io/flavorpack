@@ -14,8 +14,6 @@ from typing import Any, TextIO
 
 from provide.foundation.serialization import json_dumps
 
-from flavor.config.defaults import ENV_OUTPUT_FILE, ENV_OUTPUT_FORMAT
-
 
 class OutputFormat(Enum):
     """Supported output formats."""
@@ -149,8 +147,8 @@ def get_output_handler(
     """
     from provide.foundation.utils.environment import get_str
 
-    format_env = format_env or ENV_OUTPUT_FORMAT
-    file_env = file_env or ENV_OUTPUT_FILE
+    format_env = format_env or "FLAVOR_OUTPUT_FORMAT"
+    file_env = file_env or "FLAVOR_OUTPUT_FILE"
 
     format_str = (get_str(format_env, default="text") or "text").lower()
     output_format = OutputFormat.JSON if format_str == "json" else OutputFormat.TEXT

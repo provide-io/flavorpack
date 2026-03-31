@@ -60,13 +60,8 @@ type PSPFIndex struct {
 	// Future cryptography space (512 bytes)
 	FutureCrypto [512]byte // Reserved for post-quantum signatures
 
-	// Attestation fields (192 bytes, carved from reserved — backwards compatible; zeros = absent)
-	AttestationKeyFp      [64]byte // SHA-256 fingerprint of signing key (hex ASCII)
-	AttestationSbomDigest [64]byte // SHA-256 of attestation slot content
-	AttestationPolicyHash [64]byte // SHA-256 of canonical policy
-
-	// Reserved for future use (6624 bytes)
-	Reserved [6624]byte // Large buffer for future expansion
+	// Reserved for future use (6816 bytes)
+	Reserved [6816]byte // Large buffer for future expansion
 }
 
 // Pack serializes the index to bytes
@@ -116,12 +111,9 @@ func (idx *PSPFIndex) Pack() []byte {
 	binary.LittleEndian.PutUint32(buf[856:860], idx.Compatibility)
 	binary.LittleEndian.PutUint32(buf[860:864], idx.ProtocolVersion)
 
-	// Pack future crypto, attestation fields, and reserved
+	// Pack future crypto and reserved
 	copy(buf[864:1376], idx.FutureCrypto[:])
-	copy(buf[1376:1440], idx.AttestationKeyFp[:])
-	copy(buf[1440:1504], idx.AttestationSbomDigest[:])
-	copy(buf[1504:1568], idx.AttestationPolicyHash[:])
-	copy(buf[1568:8192], idx.Reserved[:])
+	copy(buf[1376:8192], idx.Reserved[:])
 
 	return buf
 }
@@ -175,12 +167,9 @@ func (idx *PSPFIndex) Unpack(data []byte) error {
 	idx.Compatibility = binary.LittleEndian.Uint32(data[856:860])
 	idx.ProtocolVersion = binary.LittleEndian.Uint32(data[860:864])
 
-	// Unpack future crypto, attestation fields, and reserved
+	// Unpack future crypto and reserved
 	copy(idx.FutureCrypto[:], data[864:1376])
-	copy(idx.AttestationKeyFp[:], data[1376:1440])
-	copy(idx.AttestationSbomDigest[:], data[1440:1504])
-	copy(idx.AttestationPolicyHash[:], data[1504:1568])
-	copy(idx.Reserved[:], data[1568:8192])
+	copy(idx.Reserved[:], data[1376:8192])
 
 	return nil
 }

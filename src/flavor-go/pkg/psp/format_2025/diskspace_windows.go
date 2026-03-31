@@ -10,8 +10,6 @@ import (
 var (
 	kernel32                = syscall.NewLazyDLL("kernel32.dll")
 	procGetDiskFreeSpaceExW = kernel32.NewProc("GetDiskFreeSpaceExW")
-
-	getAvailableDiskSpaceFn = getAvailableDiskSpace
 )
 
 // getAvailableDiskSpace returns available disk space in bytes for Windows

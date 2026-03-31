@@ -32,8 +32,6 @@ from provide.foundation.tools.base import (
     ToolNotFoundError,
 )
 
-from flavor.config.defaults import ENV_WHEEL_CACHE
-
 
 def _windows_system_env() -> dict[str, str]:
     """Return Windows system env vars required for subprocess DLL loading.
@@ -441,18 +439,18 @@ class UVManager(BaseToolManager):
         import os
         import sys
 
-        wheel_cache_dir = os.environ.get(ENV_WHEEL_CACHE)
+        wheel_cache_dir = os.environ.get("FLAVOR_WHEEL_CACHE")
         if not wheel_cache_dir:
-            logger.warning(f"💻 {ENV_WHEEL_CACHE} not set, skipping offline wheel strategy")
+            logger.warning("💻 FLAVOR_WHEEL_CACHE not set, skipping offline wheel strategy")
             return False
 
         cache_path = Path(wheel_cache_dir)
         whl_count = len(list(cache_path.glob("*.whl"))) if cache_path.exists() else 0
         if not cache_path.exists() or whl_count == 0:
-            logger.warning(f"💻 {ENV_WHEEL_CACHE} dir empty or missing: {cache_path} ({whl_count} wheels)")
+            logger.warning(f"💻 FLAVOR_WHEEL_CACHE dir empty or missing: {cache_path} ({whl_count} wheels)")
             return False
 
-        logger.warning(f"💻 Offline wheel copy from {ENV_WHEEL_CACHE}: {cache_path} ({whl_count} wheels)")
+        logger.warning(f"💻 Offline wheel copy from FLAVOR_WHEEL_CACHE: {cache_path} ({whl_count} wheels)")
         python_exe = Path(sys.executable)
         cmd = [
             str(python_exe),
@@ -470,10 +468,10 @@ class UVManager(BaseToolManager):
         ]
         result = run(cmd, check=False, capture_output=True, env=_windows_system_env() or None)
         if result.returncode == 0:
-            logger.warning(f"✅ Copied wheels from {ENV_WHEEL_CACHE} (offline)")
+            logger.warning("✅ Copied wheels from FLAVOR_WHEEL_CACHE (offline)")
             return True
         logger.warning(
-            f"{ENV_WHEEL_CACHE} copy failed (rc={result.returncode}): {result.stderr.strip()[:400]}"
+            f"FLAVOR_WHEEL_CACHE copy failed (rc={result.returncode}): {result.stderr.strip()[:400]}"
         )
         return False
 

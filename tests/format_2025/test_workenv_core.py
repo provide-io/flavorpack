@@ -31,12 +31,6 @@ class TestWorkEnvManagerInit:
 class TestSetupWorkenv:
     """Test setup_workenv method."""
 
-    @staticmethod
-    def _write_bundle(tmp_path: Path, name: str = "bundle.psp") -> Path:
-        bundle_path = tmp_path / name
-        bundle_path.write_bytes(b"pspf-test-bundle")
-        return bundle_path
-
     @patch("flavor.psp.format_2025.workenv.ensure_dir")
     def test_setup_workenv_with_valid_cache(self, mock_ensure_dir: Mock, tmp_path: Path) -> None:
         """Test setup with valid cache (no extraction)."""
@@ -50,15 +44,14 @@ class TestSetupWorkenv:
         }
         mock_reader.read_metadata.return_value = metadata
 
-        manager = WorkEnvManager(mock_reader)
-        bundle_path = self._write_bundle(tmp_path)
-        cache_root = tmp_path / "cache"
-        cache_dir = cache_root / f"testpkg_1.0.0_{manager._bundle_identity(bundle_path)}"
+        # Create cache validation file
+        cache_dir = Path.home() / ".cache" / "flavor" / "workenv" / "testpkg_1.0.0"
         cache_dir.mkdir(parents=True, exist_ok=True)
-        (cache_dir / ".version").write_text("1.0.0")
+        version_file = cache_dir / ".version"
+        version_file.write_text("1.0.0")
 
-        with patch("flavor.cache.get_cache_dir", return_value=cache_root):
-            result = manager.setup_workenv(bundle_path)
+        manager = WorkEnvManager(mock_reader)
+        result = manager.setup_workenv(tmp_path / "bundle.psp")
 
         # Should use cached environment
         assert result == cache_dir
@@ -88,11 +81,9 @@ class TestSetupWorkenv:
         mock_reader.extract_slot.side_effect = [slot1_path, slot2_path]
 
         manager = WorkEnvManager(mock_reader)
-        bundle_path = self._write_bundle(tmp_path)
 
         # Cache file doesn't exist, so extraction happens
-        with patch("flavor.cache.get_cache_dir", return_value=tmp_path / "cache"):
-            manager.setup_workenv(bundle_path)
+        manager.setup_workenv(tmp_path / "bundle.psp")
 
         # Should extract both slots
         assert mock_reader.extract_slot.call_count == 2
@@ -116,11 +107,9 @@ class TestSetupWorkenv:
         mock_reader.extract_slot.return_value = slot1_path
 
         manager = WorkEnvManager(mock_reader)
-        bundle_path = self._write_bundle(tmp_path)
 
         with patch.object(manager, "_run_setup_commands") as mock_run_setup:
-            with patch("flavor.cache.get_cache_dir", return_value=tmp_path / "cache"):
-                manager.setup_workenv(bundle_path)
+            manager.setup_workenv(tmp_path / "bundle.psp")
 
             # Should run setup commands
             mock_run_setup.assert_called_once()
@@ -144,11 +133,9 @@ class TestSetupWorkenv:
         mock_reader.extract_slot.side_effect = [slot1_path, slot2_path]
 
         manager = WorkEnvManager(mock_reader)
-        bundle_path = self._write_bundle(tmp_path)
 
         with patch.object(manager, "_cleanup_lifecycle_slots") as mock_cleanup:
-            with patch("flavor.cache.get_cache_dir", return_value=tmp_path / "cache"):
-                manager.setup_workenv(bundle_path)
+            manager.setup_workenv(tmp_path / "bundle.psp")
 
             # Should cleanup lifecycle slots
             mock_cleanup.assert_called_once()
