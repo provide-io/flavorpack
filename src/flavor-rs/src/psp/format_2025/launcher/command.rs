@@ -246,7 +246,10 @@ mod tests {
     /// The Windows branch is verified at compile time via `cfg!(windows)`.
     #[test]
     fn test_path_prepend_uses_correct_bin_dir_and_separator() {
-        let workenv_path = Path::new("/tmp/test_workenv");
+        // Use a platform-appropriate temp path so path separator assertions work on Windows.
+        let temp = tempfile::tempdir().expect("tempdir");
+        let workenv = temp.path().join("test_workenv");
+        let workenv_path: &Path = &workenv;
         let original_path = env::var("PATH").unwrap_or_default();
 
         let expected_bin_dir = if cfg!(windows) { "Scripts" } else { "bin" };
@@ -259,8 +262,8 @@ mod tests {
             assert_eq!(expected_bin_dir, "bin");
             assert_eq!(expected_sep, ":");
             assert!(
-                expected_path.starts_with("/tmp/test_workenv/bin:"),
-                "PATH should start with workenv/bin: but was: {expected_path}"
+                expected_path.contains("/test_workenv/bin:"),
+                "PATH should contain workenv/bin: but was: {expected_path}"
             );
         }
 
@@ -268,8 +271,11 @@ mod tests {
         {
             assert_eq!(expected_bin_dir, "Scripts");
             assert_eq!(expected_sep, ";");
+            // Use platform-joined path for correct separator assertion.
+            let sep = std::path::MAIN_SEPARATOR;
+            let expected_scripts = format!("{sep}test_workenv{sep}Scripts;");
             assert!(
-                expected_path.contains("\\test_workenv\\Scripts;"),
+                expected_path.contains(&expected_scripts),
                 "PATH should contain workenv\\Scripts; but was: {expected_path}"
             );
         }
@@ -344,11 +350,19 @@ mod tests {
         )
         .expect("prepare command");
 
-        assert!(executable.ends_with("echo"));
+        // On Windows, echo may resolve to echo.exe or similar; just check it contains "echo".
+        assert!(
+            executable.contains("echo"),
+            "expected executable to contain 'echo', got: {executable}"
+        );
         assert_eq!(args, vec![String::from("hello"), String::from("--flag")]);
+        // WORKENV_ONLY uses {workenv}/bin literal substitution (not path::join), so the
+        // forward slash from the fixture string is preserved even on Windows.
+        let workenv_str = workenv_path.to_string_lossy();
+        let expected_workenv_bin = format!("{workenv_str}/bin");
         assert_eq!(
             env_map.get("WORKENV_ONLY").expect("workenv env"),
-            "/tmp/flavor-workenv/bin"
+            &expected_workenv_bin
         );
         assert_eq!(
             env_map.get("EXEC_ONLY").expect("execution env"),
@@ -368,21 +382,21 @@ mod tests {
             env_map.get("FLAVOR_COMMAND_NAME").expect("command name"),
             "demo.psp"
         );
+        let expected_workenv = workenv_path.to_string_lossy().to_string();
         assert_eq!(
             env_map
                 .get(crate::env_vars::WORKENV)
                 .expect("flavor workenv"),
-            "/tmp/flavor-workenv"
+            &expected_workenv
         );
+        let path_val = env_map.get("PATH").expect("path");
+        let expected_scripts = workenv_path
+            .join(if cfg!(windows) { "Scripts" } else { "bin" })
+            .to_string_lossy()
+            .to_string();
         assert!(
-            env_map
-                .get("PATH")
-                .expect("path")
-                .starts_with("/tmp/flavor-workenv/bin:")
-                || env_map
-                    .get("PATH")
-                    .expect("path")
-                    .starts_with("/tmp/flavor-workenv/bin;")
+            path_val.starts_with(&expected_scripts),
+            "PATH should start with {expected_scripts} but was: {path_val}"
         );
     }
 }

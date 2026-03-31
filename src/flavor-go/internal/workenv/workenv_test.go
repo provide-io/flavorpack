@@ -42,6 +42,8 @@ func TestGetCacheRoot(t *testing.T) {
 			t.Fatalf("GetCacheRoot xdg mismatch: got %q want %q", got, want)
 		}
 	} else if runtime.GOOS == "windows" {
+		// On Windows, LOCALAPPDATA may be set; clear it to test fallback to TempDir.
+		t.Setenv("LOCALAPPDATA", "")
 		if got, want := GetCacheRoot(), filepath.Join(os.TempDir(), "flavor", "cache"); got != want {
 			t.Fatalf("GetCacheRoot windows fallback mismatch: got %q want %q", got, want)
 		}
@@ -57,6 +59,7 @@ func TestGetCacheRoot(t *testing.T) {
 			t.Fatalf("GetCacheRoot home mismatch: got %q want %q", got, want)
 		}
 	} else if runtime.GOOS == "windows" {
+		// LOCALAPPDATA already cleared above; fallback is TempDir.
 		if got, want := GetCacheRoot(), filepath.Join(os.TempDir(), "flavor", "cache"); got != want {
 			t.Fatalf("GetCacheRoot windows fallback mismatch: got %q want %q", got, want)
 		}

@@ -5,6 +5,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -133,8 +134,11 @@ func TestValidatedFileHelpers(t *testing.T) {
 	if err != nil {
 		t.Fatalf("statValidated() error = %v", err)
 	}
-	if info.Mode().Perm() != os.FileMode(FilePerms) {
-		t.Fatalf("unexpected mode %v", info.Mode().Perm())
+	// Windows does not support Unix-style permission bits; skip mode check.
+	if runtime.GOOS != "windows" {
+		if info.Mode().Perm() != os.FileMode(FilePerms) {
+			t.Fatalf("unexpected mode %v", info.Mode().Perm())
+		}
 	}
 	if _, err := os.Stat(nestedDir); err != nil {
 		t.Fatalf("expected nested dir to exist: %v", err)

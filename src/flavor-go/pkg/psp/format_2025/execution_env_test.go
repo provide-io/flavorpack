@@ -2,6 +2,7 @@ package format_2025
 
 import (
 	"bytes"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -9,7 +10,8 @@ import (
 )
 
 func TestSetFlavorCacheBeforeWorkenvSetsHostCache(t *testing.T) {
-	t.Setenv("FLAVOR_CACHE_DIR", "/tmp/flavor-cache-root")
+	cacheRoot := t.TempDir()
+	t.Setenv("FLAVOR_CACHE_DIR", cacheRoot)
 	logger := hclog.NewNullLogger()
 
 	got := setFlavorCacheBeforeWorkenv([]string{"PATH=/usr/bin"}, logger)
@@ -17,7 +19,8 @@ func TestSetFlavorCacheBeforeWorkenvSetsHostCache(t *testing.T) {
 	if !hasEnv(got, "FLAVOR_CACHE") {
 		t.Fatalf("expected FLAVOR_CACHE to be set")
 	}
-	if value := getenv(got, "FLAVOR_CACHE", ""); value != "/tmp/flavor-cache-root/workenv" {
+	want := filepath.Join(cacheRoot, "workenv")
+	if value := getenv(got, "FLAVOR_CACHE", ""); value != want {
 		t.Fatalf("unexpected FLAVOR_CACHE value %q", value)
 	}
 }

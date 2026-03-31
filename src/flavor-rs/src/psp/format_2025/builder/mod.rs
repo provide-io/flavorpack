@@ -376,6 +376,10 @@ mod tests {
         assert_eq!(slot_count, 1);
     }
 
+    // This test verifies that on non-Windows, the file is truncated before the
+    // "only supported on Windows" error is returned from embed_pspf_as_resource.
+    // On Windows, embed_pspf_as_resource succeeds, so this test is non-Windows only.
+    #[cfg(not(target_os = "windows"))]
     #[test]
     fn convert_to_resource_embedding_truncates_before_windows_error() {
         let dir = tempdir().expect("tempdir");
