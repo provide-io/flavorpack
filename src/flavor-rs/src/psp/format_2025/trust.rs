@@ -186,11 +186,23 @@ pub fn is_key_trusted(fingerprint: &str, include_system: bool) -> Option<bool> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ed25519_dalek::SigningKey;
+    use pem::{Pem, encode};
     use std::fs;
     use tempfile::TempDir;
 
     fn mock_raw_key() -> Vec<u8> {
         vec![0u8; 32]
+    }
+
+    fn spki_public_pem_from_seed(seed: [u8; 32]) -> String {
+        let signing_key = SigningKey::from_bytes(&seed);
+        let raw_key = signing_key.verifying_key().to_bytes();
+        let mut der = vec![
+            0x30, 0x2a, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x03, 0x21, 0x00,
+        ];
+        der.extend_from_slice(&raw_key);
+        encode(&Pem::new("PUBLIC KEY", der))
     }
 
     #[test]
@@ -285,5 +297,41 @@ mod tests {
             err.contains("DER structure"),
             "error should mention DER structure, got: {err}"
         );
+    }
+
+    #[test]
+    fn test_load_pub_key_file_reads_name_comment_and_fingerprint() {
+        let dir = TempDir::new().expect("tempdir");
+        let path = dir.path().join("alice.pub");
+        let seed = [9u8; 32];
+        let signing_key = SigningKey::from_bytes(&seed);
+        let public_key = signing_key.verifying_key().to_bytes();
+        let pem = format!("# Name: Alice\n{}", spki_public_pem_from_seed(seed));
+        fs::write(&path, pem).expect("write public key");
+
+        let key = load_pub_key_file(&path).expect("load public key");
+        assert_eq!(key.name.as_deref(), Some("Alice"));
+        assert_eq!(
+            key.fingerprint,
+            compute_key_fingerprint(&public_key).expect("fingerprint")
+        );
+        assert_eq!(key.path, path);
+    }
+
+    #[test]
+    fn test_load_keys_from_dir_reads_valid_pub_file() {
+        let dir = TempDir::new().expect("tempdir");
+        let key_path = dir.path().join("user.pub");
+        let seed = [11u8; 32];
+        let signing_key = SigningKey::from_bytes(&seed);
+        let public_key = signing_key.verifying_key().to_bytes();
+        let pem = spki_public_pem_from_seed(seed);
+        fs::write(&key_path, pem).expect("write public key");
+
+        let keys = load_keys_from_dir(dir.path());
+        assert_eq!(keys.len(), 1);
+        let fingerprint = compute_key_fingerprint(&public_key).expect("fingerprint");
+        let loaded = keys.get(&fingerprint).expect("key present");
+        assert_eq!(loaded.path, key_path);
     }
 }

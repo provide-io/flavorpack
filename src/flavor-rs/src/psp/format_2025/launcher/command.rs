@@ -353,19 +353,11 @@ mod tests {
         )
         .expect("prepare command");
 
-        // On Windows, echo may resolve to echo.exe or similar; just check it contains "echo".
-        assert!(
-            executable.contains("echo"),
-            "expected executable to contain 'echo', got: {executable}"
-        );
+        assert!(executable.ends_with("echo"));
         assert_eq!(args, vec![String::from("hello"), String::from("--flag")]);
-        // WORKENV_ONLY uses {workenv}/bin literal substitution (not path::join), so the
-        // forward slash from the fixture string is preserved even on Windows.
-        let workenv_str = workenv_path.to_string_lossy();
-        let expected_workenv_bin = format!("{workenv_str}/bin");
         assert_eq!(
             env_map.get("WORKENV_ONLY").expect("workenv env"),
-            &expected_workenv_bin
+            "/tmp/flavor-workenv/bin"
         );
         assert_eq!(
             env_map.get("EXEC_ONLY").expect("execution env"),
@@ -382,26 +374,24 @@ mod tests {
                 .to_string()
         );
         assert_eq!(
-            env_map
-                .get(crate::env_vars::COMMAND_NAME)
-                .expect("command name"),
+            env_map.get("FLAVOR_COMMAND_NAME").expect("command name"),
             "demo.psp"
         );
-        let expected_workenv = workenv_path.to_string_lossy().to_string();
         assert_eq!(
             env_map
                 .get(crate::env_vars::WORKENV)
                 .expect("flavor workenv"),
-            &expected_workenv
+            "/tmp/flavor-workenv"
         );
-        let path_val = env_map.get("PATH").expect("path");
-        let expected_scripts = workenv_path
-            .join(if cfg!(windows) { "Scripts" } else { "bin" })
-            .to_string_lossy()
-            .to_string();
         assert!(
-            path_val.starts_with(&expected_scripts),
-            "PATH should start with {expected_scripts} but was: {path_val}"
+            env_map
+                .get("PATH")
+                .expect("path")
+                .starts_with("/tmp/flavor-workenv/bin:")
+                || env_map
+                    .get("PATH")
+                    .expect("path")
+                    .starts_with("/tmp/flavor-workenv/bin;")
         );
     }
 }

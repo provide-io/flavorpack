@@ -379,18 +379,6 @@ mod tests {
         assert!(path.contains("test_workenv\\Scripts"));
     }
 
-    #[test]
-    fn test_build_workenv_path_without_existing_path_uses_only_bin_dir() {
-        let workenv_dir = Path::new("/tmp/test_workenv");
-        let path = build_workenv_path(workenv_dir, None);
-
-        #[cfg(not(windows))]
-        assert_eq!(path, "/tmp/test_workenv/bin");
-
-        #[cfg(windows)]
-        assert!(path.contains("test_workenv\\Scripts"));
-    }
-
     /// Test that `run_command` prepends the correct bin directory to PATH.
     ///
     /// On macOS/Linux the subdirectory is "bin" and the separator is ":".

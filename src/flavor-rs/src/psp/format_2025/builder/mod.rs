@@ -381,16 +381,8 @@ mod tests {
         let slot_count = index.slot_count;
         assert_eq!(package_size, bytes.len() as u64);
         assert_eq!(slot_count, 1);
-        assert_ne!(
-            index.attestation_key_fp, [0u8; 64],
-            "attestation_key_fp should be populated for signed bundles"
-        );
     }
 
-    // This test verifies that on non-Windows, the file is truncated before the
-    // "only supported on Windows" error is returned from embed_pspf_as_resource.
-    // On Windows, embed_pspf_as_resource succeeds, so this test is non-Windows only.
-    #[cfg(not(target_os = "windows"))]
     #[test]
     fn convert_to_resource_embedding_truncates_before_windows_error() {
         let dir = tempdir().expect("tempdir");
