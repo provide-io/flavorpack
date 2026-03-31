@@ -287,7 +287,7 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 			Tool:          "flavor-go",
 			ToolVersion:   "1.0.0",
 			Timestamp:     buildTimestamp,
-			Deterministic: false, // TODO: Add KeySeed to BuildConfig if needed
+			Deterministic: false,
 			Platform: PlatformInfo{
 				OS:   runtime.GOOS,
 				Arch: runtime.GOARCH,
