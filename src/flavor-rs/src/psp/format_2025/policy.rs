@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Package-declared constraints (from package metadata).
-#[derive(Default, Debug)]
+#[derive(Default, Debug, serde::Deserialize)]
 pub struct PackagePolicy {
     pub platforms: Vec<String>,
     pub refuse_root: bool,

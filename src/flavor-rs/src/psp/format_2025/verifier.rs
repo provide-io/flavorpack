@@ -83,6 +83,10 @@ pub fn verify(package_path: &Path) -> Result<VerifyResult> {
     verify_attestation_sbom_digest(&mut reader)?;
     debug!("Attestation SBOM digest: ✅ VERIFIED (or absent)");
 
+    // Verify attestation policy hash (fail-closed)
+    verify_attestation_policy_hash(&mut reader)?;
+    debug!("Attestation policy hash: ✅ VERIFIED (or absent)");
+
     // Verify trailing magic (8 bytes: 📦🪄)
     let trailing_magic_valid = verify_trailing_magic(&mut file)?;
     debug!(
@@ -311,6 +315,59 @@ fn verify_attestation_sbom_digest(reader: &mut super::reader::Reader) -> Result<
     Ok(())
 }
 
+/// Verify the attestation policy hash stored in the index against the package-declared policy.
+///
+/// Semantics (fail-closed):
+/// - hash present + policy present  → serialise policy to canonical JSON, hash it; mismatch = error
+/// - hash present + policy absent   → error (hash present but no policy to verify against)
+/// - hash absent  + policy absent   → OK (backwards-compatible: no policy hash bound)
+/// - hash absent  + policy present  → OK (hash not bound yet, treat as no-op)
+fn verify_attestation_policy_hash(reader: &mut super::reader::Reader) -> Result<()> {
+    let index = reader.read_index()?.clone();
+
+    // Check whether the stored hash field is non-zero.
+    let hash_field = &index.attestation_policy_hash;
+    let hash_present = hash_field.iter().any(|&b| b != 0);
+
+    if !hash_present {
+        // No hash bound — nothing to verify (backwards-compatible).
+        return Ok(());
+    }
+
+    // Hash is present; a policy must exist in the metadata.
+    let metadata = reader.read_metadata()?.clone();
+
+    let policy_value = metadata.policy.ok_or_else(|| {
+        FlavorError::Generic(
+            "attestation_policy_hash is set but package has no policy in metadata".to_string(),
+        )
+    })?;
+
+    // Serialise the policy value to canonical JSON.
+    // serde_json::to_string produces compact JSON; key ordering for objects is
+    // insertion-order (i.e. the order in the source JSON), which matches the
+    // builder that uses the same serde_json serialiser.
+    let canonical =
+        serde_json::to_string(&policy_value).map_err(|e| FlavorError::Generic(e.to_string()))?;
+
+    let computed_hash = Sha256::digest(canonical.as_bytes());
+    let computed_hex = hex::encode(computed_hash);
+
+    // Strip trailing null bytes from the stored field and interpret as ASCII hex.
+    let stored_hex = String::from_utf8_lossy(hash_field)
+        .trim_end_matches('\0')
+        .to_string();
+
+    if computed_hex != stored_hex {
+        return Err(FlavorError::Generic(format!(
+            "attestation_policy_hash mismatch: stored {:?}, computed {:?}",
+            stored_hex, computed_hex
+        )));
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -524,6 +581,131 @@ mod tests {
         assert!(
             err.to_string().contains("attestation"),
             "error should mention attestation: {err}"
+        );
+    }
+
+    // ─── Policy hash unit tests ───────────────────────────────────────────────
+
+    /// Build a minimal Reader whose metadata optionally includes a `"policy"` JSON
+    /// value and whose index has `attestation_policy_hash` set to `policy_hash_hex`
+    /// (pass `None` to leave zero-filled / absent).
+    fn build_policy_hash_reader(
+        policy_json: Option<&str>,
+        policy_hash_hex: Option<&str>,
+    ) -> (super::super::reader::Reader, tempfile::TempPath) {
+        use crate::psp::format_2025::constants::{HEADER_SIZE, MAGIC_TRAILER_SIZE, PSPF_VERSION};
+        use crate::psp::format_2025::index::Index;
+        use flate2::Compression;
+        use flate2::write::GzEncoder;
+        use sha2::{Digest as _, Sha256};
+        use std::io::Write;
+        use tempfile::NamedTempFile;
+
+        let mut file = NamedTempFile::new().expect("temp file");
+        let mut offset: u64 = 0;
+
+        // Build metadata JSON, inserting policy key when provided.
+        // Must include "format" and "execution" to satisfy Metadata deserialization.
+        let meta_json: Vec<u8> = if let Some(p) = policy_json {
+            format!(
+                r#"{{"format":"PSPF/2025","package":{{"name":"test","version":"0.0.1"}},"slots":[],"execution":{{"primary_slot":0,"command":"echo"}},"policy":{p}}}"#
+            )
+            .into_bytes()
+        } else {
+            br#"{"format":"PSPF/2025","package":{"name":"test","version":"0.0.1"},"slots":[],"execution":{"primary_slot":0,"command":"echo"}}"#.to_vec()
+        };
+
+        let mut gz_buf = Vec::new();
+        {
+            let mut enc = GzEncoder::new(&mut gz_buf, Compression::default());
+            enc.write_all(&meta_json).expect("gz write");
+            enc.finish().expect("gz finish");
+        }
+        let meta_offset = offset;
+        let meta_size = gz_buf.len() as u64;
+        file.write_all(&gz_buf).expect("write metadata");
+        offset += meta_size;
+
+        let trailer_offset = offset;
+
+        let mut index = Index::new();
+        index.format_version = PSPF_VERSION;
+        index.package_size = trailer_offset + MAGIC_TRAILER_SIZE as u64;
+        index.slot_table_offset = 0;
+        index.slot_table_size = 0;
+        index.slot_count = 0;
+        index.metadata_offset = meta_offset;
+        index.metadata_size = meta_size;
+
+        let meta_hash: [u8; 32] = Sha256::digest(&gz_buf).into();
+        index.metadata_checksum = meta_hash;
+
+        if let Some(hex_str) = policy_hash_hex {
+            let bytes = hex_str.as_bytes();
+            let len = bytes.len().min(64);
+            index.attestation_policy_hash[..len].copy_from_slice(&bytes[..len]);
+        }
+
+        let idx_bytes = index.pack();
+        let mut trailer = vec![0u8; MAGIC_TRAILER_SIZE];
+        trailer[..4].copy_from_slice(&[0xF0, 0x9F, 0x93, 0xA6]); // 📦
+        trailer[4..4 + HEADER_SIZE].copy_from_slice(&idx_bytes);
+        trailer[4 + HEADER_SIZE..].copy_from_slice(&[0xF0, 0x9F, 0xAA, 0x84]); // 🪄
+        file.write_all(&trailer).expect("write trailer");
+        file.flush().expect("flush");
+
+        let path = file.into_temp_path();
+        let reader = super::super::reader::Reader::new(path.as_ref()).expect("create reader");
+        (reader, path)
+    }
+
+    #[test]
+    fn test_verify_attestation_policy_hash_zero_field_skip() {
+        // No hash set → verification must be skipped regardless of policy presence.
+        let (mut reader, _path) = build_policy_hash_reader(None, None);
+        verify_attestation_policy_hash(&mut reader).expect("expected nil for zero policy hash");
+    }
+
+    #[test]
+    fn test_verify_attestation_policy_hash_match() {
+        let policy_json = r#"{"platforms":["linux_amd64"],"refuse_root":true}"#;
+        // Compute the expected hash the same way the function does.
+        let policy_value: serde_json::Value =
+            serde_json::from_str(policy_json).expect("parse policy");
+        let canonical = serde_json::to_string(&policy_value).expect("serialise");
+        let hash = Sha256::digest(canonical.as_bytes());
+        let hash_hex = hex::encode(hash);
+
+        let (mut reader, _path) = build_policy_hash_reader(Some(policy_json), Some(&hash_hex));
+        verify_attestation_policy_hash(&mut reader)
+            .expect("expected no error for matching policy hash");
+    }
+
+    #[test]
+    fn test_verify_attestation_policy_hash_mismatch() {
+        let policy_json = r#"{"platforms":["linux_amd64"]}"#;
+        let wrong_hex = hex::encode(Sha256::digest(b"")); // SHA-256 of empty string
+
+        let (mut reader, _path) = build_policy_hash_reader(Some(policy_json), Some(&wrong_hex));
+        let err = verify_attestation_policy_hash(&mut reader)
+            .expect_err("expected error for mismatched policy hash");
+        assert!(
+            err.to_string().contains("mismatch"),
+            "error should mention mismatch: {err}"
+        );
+    }
+
+    #[test]
+    fn test_verify_attestation_policy_hash_present_no_policy_fails() {
+        let fake_hash = hex::encode(Sha256::digest(b"anything")); // non-zero
+
+        // No policy in metadata but hash is set → fail-closed.
+        let (mut reader, _path) = build_policy_hash_reader(None, Some(&fake_hash));
+        let err = verify_attestation_policy_hash(&mut reader)
+            .expect_err("expected error when hash set but metadata has no policy");
+        assert!(
+            err.to_string().contains("policy"),
+            "error should mention policy: {err}"
         );
     }
 }

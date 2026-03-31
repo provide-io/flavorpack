@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 )
@@ -200,5 +201,48 @@ func (r *Reader) VerifyAttestationSbomDigest() error {
 		return fmt.Errorf("attestation SBOM digest mismatch: stored %q, computed %q", storedHex, computedHex)
 	}
 
+	return nil
+}
+
+// VerifyAttestationPolicyHash checks that the package-declared policy JSON hashes
+// to the value stored in index.AttestationPolicyHash. Returns nil if the field is
+// zero-filled (absent).
+//
+// Semantics (fail-closed):
+//   - hash present + policy present  → serialise policy to canonical JSON, hash it; mismatch = error
+//   - hash present + policy absent   → error (hash cannot be satisfied without a policy)
+//   - hash absent  + policy absent   → skip (backwards-compatible: no policy hash bound)
+//   - hash absent  + policy present  → skip (hash not bound yet, treat as no-op)
+func (r *Reader) VerifyAttestationPolicyHash() error {
+	index, err := r.ReadIndex()
+	if err != nil {
+		return fmt.Errorf("reading index: %w", err)
+	}
+
+	stored := bytes.TrimRight(index.AttestationPolicyHash[:], "\x00")
+	if len(stored) == 0 {
+		return nil // field absent — skip
+	}
+
+	metadata, err := r.ReadMetadata()
+	if err != nil {
+		return fmt.Errorf("reading metadata: %w", err)
+	}
+
+	if metadata.Policy == nil {
+		return fmt.Errorf("attestation_policy_hash is set but package has no policy in metadata")
+	}
+
+	// Serialize to canonical JSON (sorted keys — encoding/json sorts struct fields
+	// alphabetically, which is sufficient for a Go struct).
+	canonical, err := json.Marshal(metadata.Policy)
+	if err != nil {
+		return fmt.Errorf("serialising policy to JSON: %w", err)
+	}
+	computed := fmt.Sprintf("%x", sha256.Sum256(canonical))
+
+	if computed != string(stored) {
+		return fmt.Errorf("attestation_policy_hash mismatch: index=%s computed=%s", stored, computed)
+	}
 	return nil
 }
