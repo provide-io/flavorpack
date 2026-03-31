@@ -11,14 +11,6 @@ from datetime import UTC, datetime
 from typing import Any
 import uuid
 
-_ALG_NORMALIZE = {
-    "SHA256": "SHA-256",
-    "SHA512": "SHA-512",
-    "SHA384": "SHA-384",
-    "SHA1": "SHA-1",
-    "MD5": "MD5",
-}
-
 
 def _parse_hash(hash_str: str) -> tuple[str, str]:
     """Parse a hash string into (algorithm, value) tuple.
@@ -27,8 +19,7 @@ def _parse_hash(hash_str: str) -> tuple[str, str]:
     """
     if ":" in hash_str:
         alg, value = hash_str.split(":", 1)
-        alg = _ALG_NORMALIZE.get(alg.upper(), alg.upper())
-        return alg, value
+        return alg.upper(), value
     return "SHA-256", hash_str
 
 
@@ -100,13 +91,13 @@ def build_sbom(
         launcher_component["hashes"] = [{"alg": alg, "content": value}]
     components.append(launcher_component)
 
-    # Flavorpack builder
+    # FlavorPack builder
     components.append(
         {
             "type": "application",
             "name": package_info.get("builder_name", "flavor-python"),
             "version": package_info.get("builder_version", "unknown"),
-            "description": "Flavorpack PSPF builder",
+            "description": "FlavorPack PSPF builder",
         }
     )
 
