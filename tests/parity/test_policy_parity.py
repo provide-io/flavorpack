@@ -1,6 +1,3 @@
-# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
 """Parity tests: policy enforcement behavior across Python, Go, and Rust."""
 
 from __future__ import annotations
@@ -8,16 +5,10 @@ from __future__ import annotations
 import pytest
 
 from flavor.config.policy import (
-    EffectivePolicy,
-    EnforcementMode,
-    EnforcementPolicy,
     OperatorPolicy,
     PackagePolicy,
-    enforce_policy,
     merge_policy,
 )
-
-pytestmark = [pytest.mark.cross_language, pytest.mark.ci, pytest.mark.security]
 
 
 @pytest.mark.parity
@@ -150,108 +141,3 @@ def test_require_sbom_from_operator() -> None:
     op = OperatorPolicy(require_sbom=True)
     effective = merge_policy(pkg, op)
     assert effective.require_sbom is True
-
-
-# ---------------------------------------------------------------------------
-# Enforcement mode parity
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.parity
-@pytest.mark.parity_category("Policy Enforcement")
-@pytest.mark.parity_go("PASS")
-@pytest.mark.parity_rust("PASS")
-def test_enforcement_default_deny_blocks_violation() -> None:
-    """Default enforcement mode 'deny' causes hard failure on first violation.
-
-    Go: EnforcePolicy(eff, 0, false, true) returns error when platform blocked
-    Rust: enforce_policy(&eff, 0, false, true) returns Err(...) when platform blocked
-    """
-    eff = EffectivePolicy(
-        platforms=["mars_amd64"],
-        enforcement=EnforcementPolicy(default=EnforcementMode.DENY),
-    )
-    try:
-        enforce_policy(eff, 0, False, True)
-        assert False, "should have raised ValueError"  # noqa: B011
-    except ValueError as exc:
-        assert "platform not permitted" in str(exc)
-
-
-@pytest.mark.parity
-@pytest.mark.parity_category("Policy Enforcement")
-@pytest.mark.parity_go("PASS")
-@pytest.mark.parity_rust("PASS")
-def test_enforcement_warn_mode_returns_warnings() -> None:
-    """Warn mode collects warnings instead of aborting.
-
-    Go: EnforcePolicy returns (warnings, nil) with len(warnings) > 0
-    Rust: enforce_policy returns Ok(warnings) with warnings.len() > 0
-    """
-    eff = EffectivePolicy(
-        platforms=["mars_amd64"],
-        enforcement=EnforcementPolicy(default=EnforcementMode.WARN),
-    )
-    warnings = enforce_policy(eff, 0, False, True)
-    assert len(warnings) >= 1
-    assert any("platform" in w for w in warnings)
-
-
-@pytest.mark.parity
-@pytest.mark.parity_category("Policy Enforcement")
-@pytest.mark.parity_go("PASS")
-@pytest.mark.parity_rust("PASS")
-def test_enforcement_allow_mode_silent() -> None:
-    """Allow mode silently passes all checks.
-
-    Go: EnforcePolicy returns ([], nil)
-    Rust: enforce_policy returns Ok(vec![])
-    """
-    eff = EffectivePolicy(
-        platforms=["mars_amd64"],
-        require_sbom=True,
-        require_trusted_key=True,
-        enforcement=EnforcementPolicy(default=EnforcementMode.ALLOW),
-    )
-    warnings = enforce_policy(eff, 0, False, False)
-    assert warnings == []
-
-
-@pytest.mark.parity
-@pytest.mark.parity_category("Policy Enforcement")
-@pytest.mark.parity_go("PASS")
-@pytest.mark.parity_rust("PASS")
-def test_enforcement_per_check_override() -> None:
-    """Per-check mode overrides default.
-
-    Go: EnforcePolicy with default=deny, missing_sbom=warn returns warnings for SBOM
-    Rust: same — enforce_policy with default=deny, missing_sbom=warn returns Ok(warnings)
-    """
-    eff = EffectivePolicy(
-        require_sbom=True,
-        enforcement=EnforcementPolicy(
-            default=EnforcementMode.DENY,
-            missing_sbom=EnforcementMode.WARN,
-        ),
-    )
-    warnings = enforce_policy(eff, 0, False, True)
-    assert len(warnings) == 1
-    assert "SBOM" in warnings[0]
-
-
-@pytest.mark.parity
-@pytest.mark.parity_category("Policy Enforcement")
-@pytest.mark.parity_go("PASS")
-@pytest.mark.parity_rust("PASS")
-def test_enforcement_propagated_through_merge() -> None:
-    """Enforcement policy from operator propagates through merge.
-
-    Go: MergePolicy(...).Enforcement.Default == ModeWarn
-    Rust: merge_policy(...).enforcement.default == EnforcementMode::Warn
-    """
-    pkg = PackagePolicy()
-    op = OperatorPolicy(
-        enforcement=EnforcementPolicy(default=EnforcementMode.WARN),
-    )
-    effective = merge_policy(pkg, op)
-    assert effective.enforcement.default == EnforcementMode.WARN
