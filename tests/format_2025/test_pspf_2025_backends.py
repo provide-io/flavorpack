@@ -20,6 +20,7 @@ from flavor.config.defaults import (
     ACCESS_MMAP,
 )
 from flavor.psp.format_2025.backends import (
+    Backend,
     FileBackend,
     HybridBackend,
     MMapBackend,
