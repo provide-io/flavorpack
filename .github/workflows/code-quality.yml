@@ -31,7 +31,7 @@ on:
       - 'src/flavor-go/go.mod'
       - 'src/flavor-rs/Cargo.toml'
       - 'src/flavor-rs/fuzz/Cargo.toml'
-      - '.github/workflows/code-quality.yml'
+      - '.github/workflows/05-code-quality.yml'
   
   schedule:
     # Run daily at 2 AM UTC
@@ -669,17 +669,13 @@ jobs:
           echo "5. Add missing documentation" >> $GITHUB_STEP_SUMMARY
 
   python-quality-observability:
-    name: 🐍 Python Intent Observability
-    # Mutation testing is expensive; skip on PRs and run nightly/on-demand only.
-    if: github.event_name != 'pull_request'
-    runs-on: ubuntu-24.04
+    name: 🐍 Python Quality Observability
+    runs-on: ubuntu-latest
     timeout-minutes: 45
     continue-on-error: true
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
-        with:
-          persist-credentials: false
 
       - name: 📦 Setup uv + Python
         uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
@@ -703,11 +699,18 @@ jobs:
       - name: 📊 Summarize Python observability
         if: always()
         run: |
-          echo "## 🐍 Python Intent Observability" >> $GITHUB_STEP_SUMMARY
+          echo "## 🐍 Python Quality Observability" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- Commands: \`make quality-python-fast\`, \`make quality-python-deep\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Intent categories: Unit / Integration / Cross-Language / Security / Adversarial / Property / Fuzz / Mutation / Smoke" >> $GITHUB_STEP_SUMMARY
-          ci/summarize-python-coverage.sh coverage.json >> "$GITHUB_STEP_SUMMARY"
+          if [ -f coverage.json ]; then
+            python - <<'PY' >> $GITHUB_STEP_SUMMARY
+            import json
+            from pathlib import Path
+            data = json.loads(Path("coverage.json").read_text())
+            totals = data.get("totals", {})
+            print(f"- Coverage: {totals.get('percent_covered_display', 'unknown')}%")
+            PY
+          fi
 
       - name: 📤 Upload Python observability artifacts
         if: always()
@@ -723,17 +726,13 @@ jobs:
           if-no-files-found: warn
 
   go-quality-observability:
-    name: 🐹 Go Intent Observability
-    # Mutation testing is expensive; skip on PRs and run nightly/on-demand only.
-    if: github.event_name != 'pull_request'
-    runs-on: ubuntu-24.04
+    name: 🐹 Go Quality Observability
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     continue-on-error: true
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
-        with:
-          persist-credentials: false
 
       - name: 🐹 Setup Go
         uses: actions/setup-go@v6
@@ -747,15 +746,14 @@ jobs:
         run: make quality-go-fast
 
       - name: 🧪 Run Go deep quality
-        run: make quality-go-deep QUALITY_GO_FUZZTIME=15s QUALITY_GO_MUTATION_ARGS="./pkg/psp/format_2025"
+        run: make quality-go-deep QUALITY_GO_FUZZTIME=15s QUALITY_GO_MUTATION_ARGS="./pkg/psp/format_2025/..."
 
       - name: 📊 Summarize Go observability
         if: always()
         run: |
-          echo "## 🐹 Go Intent Observability" >> $GITHUB_STEP_SUMMARY
+          echo "## 🐹 Go Quality Observability" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- Commands: \`make quality-go-fast\`, \`make quality-go-deep\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Intent categories: Unit / Integration / Cross-Language / Security / Adversarial / Property / Fuzz / Mutation / Smoke" >> $GITHUB_STEP_SUMMARY
           if [ -f src/flavor-go/coverage.txt ]; then
             echo "- Coverage summary:" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
@@ -774,17 +772,13 @@ jobs:
           if-no-files-found: warn
 
   rust-quality-observability:
-    name: 🦀 Rust Intent Observability
-    # Mutation testing is expensive; skip on PRs and run nightly/on-demand only.
-    if: github.event_name != 'pull_request'
-    runs-on: ubuntu-24.04
+    name: 🦀 Rust Quality Observability
+    runs-on: ubuntu-latest
     timeout-minutes: 45
     continue-on-error: true
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
-        with:
-          persist-credentials: false
 
       - name: 🦀 Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -807,10 +801,9 @@ jobs:
       - name: 📊 Summarize Rust observability
         if: always()
         run: |
-          echo "## 🦀 Rust Intent Observability" >> $GITHUB_STEP_SUMMARY
+          echo "## 🦀 Rust Quality Observability" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- Commands: \`make quality-rust-fast\`, \`make quality-rust-deep\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Intent categories: Unit / Integration / Cross-Language / Security / Adversarial / Property / Fuzz / Mutation / Smoke" >> $GITHUB_STEP_SUMMARY
           if [ -f src/flavor-rs/coverage.txt ]; then
             echo "- Coverage summary:" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
@@ -831,26 +824,19 @@ jobs:
           if-no-files-found: warn
 
   quality-observability-report:
-    name: 📈 Intent Observability Report
+    name: 📈 Quality Observability Report
     needs: [python-quality-observability, go-quality-observability, rust-quality-observability]
-    # Only runs when the observability jobs themselves run (not on PRs).
-    if: github.event_name != 'pull_request' && always()
-    runs-on: ubuntu-24.04
+    if: always()
+    runs-on: ubuntu-latest
     steps:
       - name: 📊 Summarize observability jobs
         run: |
-          echo "# 📈 Intent Observability Report" >> $GITHUB_STEP_SUMMARY
+          echo "# 📈 Quality Observability Report" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Job | Result |" >> $GITHUB_STEP_SUMMARY
           echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| 🐍 Python | ${{ needs.python-quality-observability.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 🐹 Go | ${{ needs.go-quality-observability.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 🦀 Rust | ${{ needs.rust-quality-observability.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Intent Categories" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- Unit / Integration / Cross-Language" >> $GITHUB_STEP_SUMMARY
-          echo "- Security / Adversarial / Property" >> $GITHUB_STEP_SUMMARY
-          echo "- Fuzz / Mutation / Smoke" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "These jobs are observational in this rollout phase. They run the tools in strict mode, but they are not intended to be required merge checks yet." >> $GITHUB_STEP_SUMMARY
