@@ -22,6 +22,7 @@ from flavor.commands.init import init_command
 from flavor.commands.inspect import inspect_command
 from flavor.commands.keygen import keygen_command
 from flavor.commands.package import pack_command
+from flavor.commands.trust import trust_group
 from flavor.commands.utils import clean_command
 from flavor.commands.verify import verify_command
 from flavor.commands.workenv import workenv_group
@@ -106,6 +107,7 @@ cli.add_command(clean_command, name="clean")
 # Register command groups
 cli.add_command(workenv_group, name="workenv")
 cli.add_command(helper_group, name="helpers")
+cli.add_command(trust_group, name="trust")
 
 main = cli
 
