@@ -182,7 +182,7 @@ def create_builder_manifest(
                 "operations": "gzip",
                 "purpose": "tool",
                 "lifecycle": "cache",
-                "target": f"bin/{uv_exe}",  # For gzip encoding, this is treated as full file path
+                "target": f"{bin_dir}/{uv_exe}",  # For gzip encoding, this is treated as full file path
                 "type": "file",
                 "permissions": "0700",  # Owner-only executable permissions
             },
