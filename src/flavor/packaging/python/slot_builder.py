@@ -22,7 +22,6 @@ from provide.foundation.platform import get_arch_name, get_os_name
 from provide.foundation.process import run
 
 from flavor.config.defaults import DEFAULT_DIR_PERMS, DEFAULT_EXECUTABLE_PERMS
-from flavor.env_vars import WHEEL_CACHE
 from flavor.packaging.python.environment_builder import PythonEnvironmentBuilder
 from flavor.packaging.python.pypapip_manager import _pip_base_cmd
 from flavor.packaging.python.uv_manager import UVManager
@@ -379,7 +378,7 @@ class PythonSlotBuilder:
             req_file = Path(tmp) / "build-backends-requirements.txt"
 
             uv_exe = self.uv_manager.get_uv_executable()
-            wheel_cache_dir = os.environ.get(WHEEL_CACHE)
+            wheel_cache_dir = os.environ.get("FLAVOR_WHEEL_CACHE")
 
             if wheel_cache_dir:
                 # Offline strategy: use pre-warmed FLAVOR_WHEEL_CACHE (no network access).
