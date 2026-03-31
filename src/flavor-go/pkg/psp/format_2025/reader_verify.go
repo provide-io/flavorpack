@@ -10,7 +10,6 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"io"
 )
@@ -153,24 +152,12 @@ func (r *Reader) VerifyAttestationSbomDigest() error {
 	slotCount := int(index.SlotCount)
 	var attestationDesc *SlotDescriptor
 	for i := 0; i < slotCount; i++ {
-		slotTableOffset, err := uint64ToInt64Checked(index.SlotTableOffset, "slot table offset")
-		if err != nil {
-			return fmt.Errorf("seeking slot descriptor %d: %w", i, err)
-		}
-		entryDelta, err := intToUint64Checked(i*SlotDescriptorSize, "slot descriptor entry offset")
-		if err != nil {
-			return fmt.Errorf("seeking slot descriptor %d: %w", i, err)
-		}
-		entryDeltaOffset, err := uint64ToInt64Checked(entryDelta, "slot descriptor entry offset")
-		if err != nil {
-			return fmt.Errorf("seeking slot descriptor %d: %w", i, err)
-		}
-		entryOffset := slotTableOffset + entryDeltaOffset
-		if _, err := fileSeekFn(r.file, entryOffset, io.SeekStart); err != nil {
+		entryOffset := int64(index.SlotTableOffset) + int64(i*SlotDescriptorSize)
+		if _, err := r.file.Seek(entryOffset, io.SeekStart); err != nil {
 			return fmt.Errorf("seeking slot descriptor %d: %w", i, err)
 		}
 		var entryData [SlotDescriptorSize]byte
-		if _, err := fileReadFn(r.file, entryData[:]); err != nil {
+		if _, err := r.file.Read(entryData[:]); err != nil {
 			return fmt.Errorf("reading slot descriptor %d: %w", i, err)
 		}
 		desc, err := UnpackSlotDescriptor(entryData[:])
@@ -194,15 +181,11 @@ func (r *Reader) VerifyAttestationSbomDigest() error {
 	}
 
 	// Read the raw (as-stored) bytes of the attestation slot.
-	attestationOffset, err := uint64ToInt64Checked(attestationDesc.Offset, "attestation slot offset")
-	if err != nil {
-		return fmt.Errorf("seeking attestation slot data: %w", err)
-	}
-	if _, err := fileSeekFn(r.file, attestationOffset, io.SeekStart); err != nil {
+	if _, err := r.file.Seek(int64(attestationDesc.Offset), io.SeekStart); err != nil {
 		return fmt.Errorf("seeking attestation slot data: %w", err)
 	}
 	slotBytes := make([]byte, attestationDesc.Size)
-	if _, err := fileReadFn(r.file, slotBytes); err != nil {
+	if _, err := r.file.Read(slotBytes); err != nil {
 		return fmt.Errorf("reading attestation slot data: %w", err)
 	}
 
@@ -225,52 +208,5 @@ func (r *Reader) VerifyAttestationSbomDigest() error {
 		return fmt.Errorf("attestation SBOM digest mismatch: stored %q, computed %q", storedHex, computedHex)
 	}
 
-	return nil
-}
-
-// VerifyAttestationPolicyHash checks that the package-declared policy JSON hashes
-// to the value stored in index.AttestationPolicyHash. Returns nil if the field is
-// zero-filled (absent).
-//
-// Semantics (fail-closed):
-//   - hash present + policy present  → serialise policy to canonical JSON, hash it; mismatch = error
-//   - hash present + policy absent   → error (hash cannot be satisfied without a policy)
-//   - hash absent  + policy absent   → skip (backwards-compatible: no policy hash bound)
-//   - hash absent  + policy present  → skip (hash not bound yet, treat as no-op)
-func (r *Reader) VerifyAttestationPolicyHash() error {
-	index, err := r.ReadIndex()
-	if err != nil {
-		return fmt.Errorf("reading index: %w", err)
-	}
-
-	stored := bytes.TrimRight(index.AttestationPolicyHash[:], "\x00")
-	if len(stored) == 0 {
-		return nil // field absent — skip
-	}
-
-	metadata, err := r.ReadMetadata()
-	if err != nil {
-		return fmt.Errorf("reading metadata: %w", err)
-	}
-
-	if len(metadata.PolicyRaw) == 0 {
-		return fmt.Errorf("attestation_policy_hash is set but package has no policy in metadata")
-	}
-
-	// Unmarshal raw bytes to map[string]interface{}, then re-marshal.
-	// encoding/json sorts map keys alphabetically, matching Python's sort_keys=True.
-	var policyMap map[string]interface{}
-	if err := jsonUnmarshalFn(metadata.PolicyRaw, &policyMap); err != nil {
-		return fmt.Errorf("parsing raw policy JSON: %w", err)
-	}
-	canonical, err := json.Marshal(policyMap)
-	if err != nil {
-		return fmt.Errorf("serialising policy to canonical JSON: %w", err)
-	}
-	computed := fmt.Sprintf("%x", sha256.Sum256(canonical))
-
-	if computed != string(stored) {
-		return fmt.Errorf("attestation_policy_hash mismatch: index=%s computed=%s", stored, computed)
-	}
 	return nil
 }
