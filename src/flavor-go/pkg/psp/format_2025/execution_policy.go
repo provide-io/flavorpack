@@ -216,9 +216,9 @@ func EnforcePolicy(policy EffectivePolicy, buildTimestamp int64, hasSBOM bool) e
 		}
 	}
 
-	// 2. Root check
-	if policy.RefuseRoot && os.Getuid() == 0 {
-		return fmt.Errorf("refused to run as root")
+	// 2. Root / Administrator check
+	if policy.RefuseRoot && isPrivilegedUser() {
+		return fmt.Errorf("refused to run as root or Administrator")
 	}
 
 	// 3. Age check
