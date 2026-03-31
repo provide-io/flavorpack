@@ -179,11 +179,13 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
         }
     }
 
-    // Trust store check: verify the package signing key is trusted
-    {
+    // Trust store check: verify the package signing key is trusted.
+    // key_trusted is false only when the store exists AND the key is explicitly absent.
+    let key_trusted = {
         use super::trust;
 
         let pk = &index.public_key;
+        let mut trusted = true;
         if !pk.iter().all(|&b| b == 0) {
             match trust::compute_key_fingerprint(pk) {
                 Ok(fp) => match trust::is_key_trusted(&fp, true) {
@@ -195,6 +197,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
                         debug!("✅ Package signing key is trusted (fp={})", &fp[..16]);
                     }
                     Some(false) => {
+                        trusted = false;
                         let msg = format!(
                             "Package signing key is not in the trusted-keys store (fp={})",
                             fp
@@ -216,7 +219,8 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
                 }
             }
         }
-    }
+        trusted
+    };
 
     // Read metadata and clone to avoid borrow issues
     let metadata = reader.read_metadata()?.clone();
@@ -239,7 +243,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
         let effective = policy::merge_policy(pkg_policy, op_policy);
         let has_sbom = metadata.slots.iter().any(|s| s.lifecycle == "attestation");
         let build_timestamp = index.build_timestamp;
-        if let Err(e) = policy::enforce_policy(&effective, build_timestamp, has_sbom) {
+        if let Err(e) = policy::enforce_policy(&effective, build_timestamp, has_sbom, key_trusted) {
             eprintln!("policy violation: {}", e);
             std::process::exit(1);
         }
