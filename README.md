@@ -119,6 +119,22 @@ pytest -m security    # Security tests
 make validate-pspf
 ```
 
+## Quality Engineering
+
+Use the root quality targets to run the same cross-language workflows locally that CI now runs as observational jobs:
+
+```bash
+make quality-python-fast
+make quality-python-deep
+make quality-go-fast
+make quality-go-deep
+make quality-rust-fast
+make quality-rust-deep
+make quality-ci
+```
+
+The tools run in strict mode. In this rollout phase, the dedicated quality-observability jobs are wired into CI but are not intended to be required merge checks yet. A failing observability job means that the quality workflow itself surfaced an issue; merge policy remains a separate repository setting.
+
 ## 🙏 Acknowledgments
 
 FlavorPack is built on the shoulders of giants:

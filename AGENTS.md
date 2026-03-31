@@ -43,6 +43,20 @@ make validate-pspf
 make validate-pspf-combo
 ```
 
+### Quality Workflows
+```bash
+# Run the strict observational quality workflows locally
+make quality-python-fast
+make quality-python-deep
+make quality-go-fast
+make quality-go-deep
+make quality-rust-fast
+make quality-rust-deep
+make quality-ci
+```
+
+Use the root `make quality-*` targets instead of ad hoc coverage, mutation, fuzzing, or property-test commands when validating cross-language quality behavior.
+
 ### Linting and Formatting
 ```bash
 # Format code
