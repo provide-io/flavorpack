@@ -31,12 +31,12 @@ func BuildWithLogLevel(manifestPath, outputPath, launcherBin, privateKeyPath, pu
 	if cliLogLevel != "" {
 		logLevel = cliLogLevel
 		logSource = "CLI --log-level"
-	} else if envLevel := os.Getenv("FLAVOR_BUILDER_LOG_LEVEL"); envLevel != "" {
+	} else if envLevel := os.Getenv(EnvBuilderLogLevel); envLevel != "" {
 		logLevel = envLevel
-		logSource = "FLAVOR_BUILDER_LOG_LEVEL"
-	} else if envLevel := os.Getenv("FLAVOR_LOG_LEVEL"); envLevel != "" {
+		logSource = EnvBuilderLogLevel
+	} else if envLevel := os.Getenv(EnvLogLevel); envLevel != "" {
 		logLevel = envLevel
-		logSource = "FLAVOR_LOG_LEVEL"
+		logSource = EnvLogLevel
 	} else {
 		logLevel = "info"
 		logSource = "default"
@@ -59,7 +59,7 @@ func BuildWithLogLevel(manifestPath, outputPath, launcherBin, privateKeyPath, pu
 	var output io.Writer = os.Stderr
 
 	// Support log file output
-	if logPath := os.Getenv("FLAVOR_LOG_PATH"); logPath != "" {
+	if logPath := os.Getenv(EnvLogPath); logPath != "" {
 		if file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644); err == nil {
 			output = file
 		}
@@ -203,7 +203,7 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		// Allow seed from environment variable
 		actualSeed := keySeed
 		if keySeed == "env" {
-			actualSeed = os.Getenv("FLAVOR_KEY_SEED")
+			actualSeed = os.Getenv(EnvKeySeed)
 			if actualSeed == "" {
 				logger.Error("❌ FLAVOR_KEY_SEED environment variable not set")
 				os.Exit(1)

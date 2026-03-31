@@ -99,12 +99,14 @@ pub(super) fn create_metadata(
                 .and_then(|n| n.to_str())
                 .map(|s| s.to_string())
                 .or_else(|| {
-                    std::env::var("FLAVOR_LAUNCHER_BIN").ok().and_then(|s| {
-                        PathBuf::from(s)
-                            .file_name()
-                            .and_then(|n| n.to_str())
-                            .map(|s| s.to_string())
-                    })
+                    std::env::var(crate::env_vars::LAUNCHER_BIN)
+                        .ok()
+                        .and_then(|s| {
+                            PathBuf::from(s)
+                                .file_name()
+                                .and_then(|n| n.to_str())
+                                .map(|s| s.to_string())
+                        })
                 })
                 .unwrap_or_else(|| "unknown".to_string()),
             tool_version: env!("CARGO_PKG_VERSION").to_string(),

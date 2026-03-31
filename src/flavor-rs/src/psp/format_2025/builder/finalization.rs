@@ -194,7 +194,7 @@ pub(super) fn finalize_package(
         .launcher_bin
         .as_ref()
         .map(|p| p.display().to_string())
-        .or_else(|| std::env::var("FLAVOR_LAUNCHER_BIN").ok())
+        .or_else(|| std::env::var(crate::env_vars::LAUNCHER_BIN).ok())
         .unwrap_or_else(|| "unknown".to_string());
     log::info!("  Launcher: {}", launcher_display);
     log::info!("  Slots: {}", manifest.slots.len());
