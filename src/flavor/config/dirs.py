@@ -5,14 +5,11 @@
 
 """XDG-compliant config directory resolution for Flavor."""
 
-from __future__ import annotations
-
 from pathlib import Path
 import sys
 
 from provide.foundation.utils.environment import get_str
 
-from flavor.config.defaults import ENV_CONFIG_DIR, ENV_TRUSTED_KEYS_DIR
 from flavor.console import get_command_logger
 
 log = get_command_logger("config.dirs")
@@ -27,7 +24,7 @@ def get_config_dir() -> Path:
     - ~/.config/flavor by default
     """
     # Check FLAVOR_CONFIG_DIR override first
-    config_dir = get_str(ENV_CONFIG_DIR)
+    config_dir = get_str("FLAVOR_CONFIG_DIR")
     if config_dir:
         if log.is_trace_enabled():
             log.trace(f"🗂️ Using FLAVOR_CONFIG_DIR: {config_dir}")
@@ -82,7 +79,7 @@ def get_trusted_keys_dir(*, system: bool = False) -> Path:
         return result
 
     # Check FLAVOR_TRUSTED_KEYS_DIR override first
-    trusted_keys_dir = get_str(ENV_TRUSTED_KEYS_DIR)
+    trusted_keys_dir = get_str("FLAVOR_TRUSTED_KEYS_DIR")
     if trusted_keys_dir:
         if log.is_trace_enabled():
             log.trace(f"🗂️ Using FLAVOR_TRUSTED_KEYS_DIR: {trusted_keys_dir}")
@@ -97,16 +94,19 @@ def get_trusted_keys_dir(*, system: bool = False) -> Path:
 def get_policy_file(*, system: bool = False) -> Path:
     """Get the policy file path for Flavor.
 
-    Returns the path to policy.json in the appropriate config directory.
-
     Args:
         system: If True, return the system-level policy file.
                 If False (default), return the user-level policy file.
     """
-    config_dir = get_system_config_dir() if system else get_config_dir()
-    result = config_dir / "policy.json"
+    if system:
+        result = get_system_config_dir() / "policy.toml"
+        if log.is_trace_enabled():
+            log.trace(f"🗂️ Using system policy file: {result}")
+        return result
+
+    result = get_config_dir() / "policy.toml"
     if log.is_trace_enabled():
-        log.trace(f"🗂️ Using {'system' if system else 'user'} policy file: {result}")
+        log.trace(f"🗂️ Using user policy file: {result}")
     return result
 
 
