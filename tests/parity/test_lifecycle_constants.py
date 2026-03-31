@@ -1,6 +1,3 @@
-# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
 # tests/parity/test_lifecycle_constants.py
 """Parity test: LIFECYCLE_ATTESTATION = 11 across all three implementations."""
 
@@ -11,8 +8,6 @@ from flavor.psp.format_2025.constants import (
     LIFECYCLE_FROM_STRING,
     LIFECYCLE_NAMES,
 )
-
-pytestmark = [pytest.mark.cross_language, pytest.mark.ci, pytest.mark.unit]
 
 
 @pytest.mark.parity
