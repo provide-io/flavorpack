@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"compress/gzip"
 	"crypto/ed25519"
+	"crypto/sha256"
+	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"io"
 )
@@ -111,4 +114,91 @@ func (r *Reader) VerifyIntegritySeal() (bool, error) {
 		return false, ErrSignatureInvalid
 	}
 	return true, nil
+}
+
+// VerifyAttestationSbomDigest checks that the attestation slot's content matches
+// the SHA-256 digest stored in index.AttestationSbomDigest.
+//
+// Semantics (fail-closed):
+//   - digest present + slot present  → verify; mismatch is a hard error
+//   - digest present + slot absent   → hard error (digest cannot be satisfied)
+//   - digest absent  + slot absent   → skip (backwards-compatible: no attestation)
+//   - digest absent  + slot present  → skip (digest not bound yet, treat as no-op)
+func (r *Reader) VerifyAttestationSbomDigest() error {
+	index, err := r.ReadIndex()
+	if err != nil {
+		return err
+	}
+
+	// Check whether the stored digest is non-zero.
+	digestField := index.AttestationSbomDigest[:]
+	digestPresent := false
+	for _, b := range digestField {
+		if b != 0 {
+			digestPresent = true
+			break
+		}
+	}
+
+	// Scan all slot descriptors for a slot with lifecycle == LifecycleAttestation.
+	slotCount := int(index.SlotCount)
+	var attestationDesc *SlotDescriptor
+	for i := 0; i < slotCount; i++ {
+		entryOffset := int64(index.SlotTableOffset) + int64(i*SlotDescriptorSize)
+		if _, err := r.file.Seek(entryOffset, io.SeekStart); err != nil {
+			return fmt.Errorf("seeking slot descriptor %d: %w", i, err)
+		}
+		var entryData [SlotDescriptorSize]byte
+		if _, err := r.file.Read(entryData[:]); err != nil {
+			return fmt.Errorf("reading slot descriptor %d: %w", i, err)
+		}
+		desc, err := UnpackSlotDescriptor(entryData[:])
+		if err != nil {
+			return fmt.Errorf("unpacking slot descriptor %d: %w", i, err)
+		}
+		if desc.Lifecycle == LifecycleAttestation {
+			attestationDesc = desc
+			break
+		}
+	}
+
+	if !digestPresent {
+		// No digest bound — nothing to verify.
+		return nil
+	}
+
+	// Digest is present; the attestation slot must also be present.
+	if attestationDesc == nil {
+		return fmt.Errorf("attestation SBOM digest is set but no attestation slot (lifecycle=%d) found", LifecycleAttestation)
+	}
+
+	// Read the raw (as-stored) bytes of the attestation slot.
+	if _, err := r.file.Seek(int64(attestationDesc.Offset), io.SeekStart); err != nil {
+		return fmt.Errorf("seeking attestation slot data: %w", err)
+	}
+	slotBytes := make([]byte, attestationDesc.Size)
+	if _, err := r.file.Read(slotBytes); err != nil {
+		return fmt.Errorf("reading attestation slot data: %w", err)
+	}
+
+	// Verify the per-slot checksum first so we know the bytes are intact.
+	hash := sha256.Sum256(slotBytes)
+	actualChecksum := binary.LittleEndian.Uint64(hash[:8])
+	if actualChecksum != attestationDesc.Checksum {
+		return fmt.Errorf("attestation slot data checksum mismatch (slot integrity failure)")
+	}
+
+	// Compute SHA-256 of the raw (compressed-as-stored) slot content and compare
+	// against the hex-ASCII digest stored in the index.
+	slotDigest := sha256.Sum256(slotBytes)
+	computedHex := hex.EncodeToString(slotDigest[:])
+
+	// Strip trailing null bytes from the stored field and interpret as ASCII hex.
+	storedHex := string(bytes.TrimRight(digestField, "\x00"))
+
+	if computedHex != storedHex {
+		return fmt.Errorf("attestation SBOM digest mismatch: stored %q, computed %q", storedHex, computedHex)
+	}
+
+	return nil
 }
