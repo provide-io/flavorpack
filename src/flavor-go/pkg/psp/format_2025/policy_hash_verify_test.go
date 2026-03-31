@@ -109,10 +109,19 @@ func TestVerifyAttestationPolicyHash_Match(t *testing.T) {
 		RefuseRoot: true,
 	}
 
-	// Compute canonical JSON the same way the method does.
-	canonical, err := json.Marshal(policy)
+	// Compute canonical JSON the same way the method does:
+	// marshal to JSON, unmarshal to map, re-marshal (sorts keys alphabetically).
+	rawPolicy, err := json.Marshal(policy)
 	if err != nil {
 		t.Fatalf("marshal policy: %v", err)
+	}
+	var policyMap map[string]interface{}
+	if err := json.Unmarshal(rawPolicy, &policyMap); err != nil {
+		t.Fatalf("unmarshal policy to map: %v", err)
+	}
+	canonical, err := json.Marshal(policyMap)
+	if err != nil {
+		t.Fatalf("re-marshal policy map: %v", err)
 	}
 	h := sha256.Sum256(canonical)
 	correctHex := hex.EncodeToString(h[:])

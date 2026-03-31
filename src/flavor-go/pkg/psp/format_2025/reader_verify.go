@@ -229,15 +229,19 @@ func (r *Reader) VerifyAttestationPolicyHash() error {
 		return fmt.Errorf("reading metadata: %w", err)
 	}
 
-	if metadata.Policy == nil {
+	if len(metadata.PolicyRaw) == 0 {
 		return fmt.Errorf("attestation_policy_hash is set but package has no policy in metadata")
 	}
 
-	// Serialize to canonical JSON (sorted keys — encoding/json sorts struct fields
-	// alphabetically, which is sufficient for a Go struct).
-	canonical, err := json.Marshal(metadata.Policy)
+	// Unmarshal raw bytes to map[string]interface{}, then re-marshal.
+	// encoding/json sorts map keys alphabetically, matching Python's sort_keys=True.
+	var policyMap map[string]interface{}
+	if err := json.Unmarshal(metadata.PolicyRaw, &policyMap); err != nil {
+		return fmt.Errorf("parsing raw policy JSON: %w", err)
+	}
+	canonical, err := json.Marshal(policyMap)
 	if err != nil {
-		return fmt.Errorf("serialising policy to JSON: %w", err)
+		return fmt.Errorf("serialising policy to canonical JSON: %w", err)
 	}
 	computed := fmt.Sprintf("%x", sha256.Sum256(canonical))
 
