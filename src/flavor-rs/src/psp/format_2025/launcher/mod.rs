@@ -158,6 +158,26 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
 
     // Read metadata and clone to avoid borrow issues
     let metadata = reader.read_metadata()?.clone();
+
+    // Policy enforcement: merge package constraints with operator policy
+    {
+        use crate::psp::format_2025::policy;
+
+        let op_policy = policy::load_operator_policy();
+        let pkg_policy = {
+            // metadata.slots is Vec<super::metadata::SlotMetadata> with lifecycle: String
+            // There is no typed policy field on Metadata; default to empty PackagePolicy
+            policy::PackagePolicy::default()
+        };
+        let effective = policy::merge_policy(pkg_policy, op_policy);
+        let has_sbom = metadata.slots.iter().any(|s| s.lifecycle == "attestation");
+        let build_timestamp = index.build_timestamp;
+        if let Err(e) = policy::enforce_policy(&effective, build_timestamp, has_sbom) {
+            eprintln!("policy violation: {}", e);
+            std::process::exit(1);
+        }
+        debug!("✅ Policy enforcement passed");
+    }
     info!(
         "📦 Package: {} v{}",
         metadata.package.name, metadata.package.version
