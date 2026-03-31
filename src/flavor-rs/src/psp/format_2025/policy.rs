@@ -215,11 +215,13 @@ fn is_windows_admin() -> bool {
 
 /// Enforce policy against current runtime environment.
 /// Returns Err with a descriptive message on first violation.
+/// `key_trusted` is false only when the trusted store exists AND the key is explicitly absent.
 #[allow(unsafe_code)] // Required for libc::geteuid() FFI call
 pub fn enforce_policy(
     policy: &EffectivePolicy,
     build_timestamp: u64,
     has_sbom: bool,
+    key_trusted: bool,
 ) -> Result<(), String> {
     let current_platform = get_current_platform();
 
@@ -269,6 +271,14 @@ pub fn enforce_policy(
     if policy.require_sbom && !has_sbom {
         return Err(
             "package built without attestation slot — operator policy requires SBOM".to_string(),
+        );
+    }
+
+    // Trusted key check
+    if policy.require_trusted_key && !key_trusted {
+        return Err(
+            "operator policy requires a trusted signing key — package key is not in the trusted store"
+                .to_string(),
         );
     }
 
@@ -371,7 +381,7 @@ mod tests {
     #[test]
     fn test_enforce_policy_permissive() {
         let eff = EffectivePolicy::default();
-        assert!(enforce_policy(&eff, 0, false).is_ok());
+        assert!(enforce_policy(&eff, 0, false, true).is_ok());
     }
 
     #[test]
@@ -380,7 +390,7 @@ mod tests {
             platforms: vec!["__nonexistent__".to_string()],
             ..Default::default()
         };
-        assert!(enforce_policy(&eff, 0, false).is_err());
+        assert!(enforce_policy(&eff, 0, false, true).is_err());
     }
 
     #[test]
@@ -389,8 +399,8 @@ mod tests {
             require_sbom: true,
             ..Default::default()
         };
-        assert!(enforce_policy(&eff, 0, false).is_err());
-        assert!(enforce_policy(&eff, 0, true).is_ok());
+        assert!(enforce_policy(&eff, 0, false, true).is_err());
+        assert!(enforce_policy(&eff, 0, true, true).is_ok());
     }
 
     #[test]
@@ -401,7 +411,7 @@ mod tests {
         };
         // Make sure the variable is unset
         unsafe { env::remove_var("__FLAVOR_POLICY_TEST_NONEXISTENT__") };
-        assert!(enforce_policy(&eff, 0, false).is_err());
+        assert!(enforce_policy(&eff, 0, false, true).is_err());
     }
 
     #[test]
@@ -411,7 +421,7 @@ mod tests {
             require_env: vec!["__FLAVOR_POLICY_TEST__".to_string()],
             ..Default::default()
         };
-        assert!(enforce_policy(&eff, 0, false).is_ok());
+        assert!(enforce_policy(&eff, 0, false, true).is_ok());
         unsafe { env::remove_var("__FLAVOR_POLICY_TEST__") };
     }
 
@@ -422,7 +432,35 @@ mod tests {
             ..Default::default()
         };
         // Build timestamp of 1 (ancient) should exceed 0 day limit
-        assert!(enforce_policy(&eff, 1, false).is_err());
+        assert!(enforce_policy(&eff, 1, false, true).is_err());
+    }
+
+    #[test]
+    fn test_enforce_policy_require_trusted_key_untrusted() {
+        let eff = EffectivePolicy {
+            require_trusted_key: true,
+            ..Default::default()
+        };
+        assert!(enforce_policy(&eff, 0, false, false).is_err());
+    }
+
+    #[test]
+    fn test_enforce_policy_require_trusted_key_trusted() {
+        let eff = EffectivePolicy {
+            require_trusted_key: true,
+            ..Default::default()
+        };
+        assert!(enforce_policy(&eff, 0, false, true).is_ok());
+    }
+
+    #[test]
+    fn test_enforce_policy_require_trusted_key_not_required() {
+        let eff = EffectivePolicy {
+            require_trusted_key: false,
+            ..Default::default()
+        };
+        // Even untrusted key should pass when policy doesn't require it
+        assert!(enforce_policy(&eff, 0, false, false).is_ok());
     }
 
     #[test]
@@ -501,6 +539,6 @@ mod tests {
         };
         // On non-root Unix: should pass. On root Unix: would fail.
         // We cannot control UID in tests, so just verify the function runs without panic.
-        let _ = enforce_policy(&eff, 0, false);
+        let _ = enforce_policy(&eff, 0, false, true);
     }
 }

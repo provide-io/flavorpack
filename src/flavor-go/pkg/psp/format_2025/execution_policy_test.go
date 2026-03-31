@@ -71,31 +71,31 @@ func TestMergePolicy_Platforms_OnlyPackage(t *testing.T) {
 
 func TestEnforcePolicy_Permissive(t *testing.T) {
 	eff := EffectivePolicy{}
-	if err := EnforcePolicy(eff, 0, false); err != nil {
+	if err := EnforcePolicy(eff, 0, false, true); err != nil {
 		t.Errorf("expected no error, got: %v", err)
 	}
 }
 
 func TestEnforcePolicy_PlatformBlocked(t *testing.T) {
 	eff := EffectivePolicy{Platforms: []string{"__nonexistent_platform__"}}
-	if err := EnforcePolicy(eff, 0, false); err == nil {
+	if err := EnforcePolicy(eff, 0, false, true); err == nil {
 		t.Error("expected platform error")
 	}
 }
 
 func TestEnforcePolicy_SBOMRequired(t *testing.T) {
 	eff := EffectivePolicy{RequireSBOM: true}
-	if err := EnforcePolicy(eff, 0, false); err == nil {
+	if err := EnforcePolicy(eff, 0, false, true); err == nil {
 		t.Error("expected SBOM error")
 	}
-	if err := EnforcePolicy(eff, 0, true); err != nil {
+	if err := EnforcePolicy(eff, 0, true, true); err != nil {
 		t.Errorf("expected no error when hasSBOM=true, got: %v", err)
 	}
 }
 
 func TestEnforcePolicy_EnvVarMissing(t *testing.T) {
 	eff := EffectivePolicy{RequireEnv: []string{"__FLAVOR_TEST_VAR_NONEXISTENT__"}}
-	if err := EnforcePolicy(eff, 0, false); err == nil {
+	if err := EnforcePolicy(eff, 0, false, true); err == nil {
 		t.Error("expected env var error")
 	}
 }
@@ -103,7 +103,7 @@ func TestEnforcePolicy_EnvVarMissing(t *testing.T) {
 func TestEnforcePolicy_EnvVarPresent(t *testing.T) {
 	t.Setenv("__FLAVOR_TEST_VAR__", "1")
 	eff := EffectivePolicy{RequireEnv: []string{"__FLAVOR_TEST_VAR__"}}
-	if err := EnforcePolicy(eff, 0, false); err != nil {
+	if err := EnforcePolicy(eff, 0, false, true); err != nil {
 		t.Errorf("expected no error, got: %v", err)
 	}
 }
@@ -112,8 +112,30 @@ func TestEnforcePolicy_AgeExceeded(t *testing.T) {
 	zero := 0
 	eff := EffectivePolicy{MaxAgeDays: &zero}
 	// Build timestamp of 1 (ancient) should trigger age check
-	if err := EnforcePolicy(eff, 1, false); err == nil {
+	if err := EnforcePolicy(eff, 1, false, true); err == nil {
 		t.Error("expected age error")
+	}
+}
+
+func TestEnforcePolicy_RequireTrustedKey_UntrustedKey(t *testing.T) {
+	eff := EffectivePolicy{RequireTrustedKey: true}
+	if err := EnforcePolicy(eff, 0, false, false); err == nil {
+		t.Error("expected error when key is untrusted and require_trusted_key=true")
+	}
+}
+
+func TestEnforcePolicy_RequireTrustedKey_TrustedKey(t *testing.T) {
+	eff := EffectivePolicy{RequireTrustedKey: true}
+	if err := EnforcePolicy(eff, 0, false, true); err != nil {
+		t.Errorf("expected no error when key is trusted, got: %v", err)
+	}
+}
+
+func TestEnforcePolicy_RequireTrustedKey_NotRequired(t *testing.T) {
+	eff := EffectivePolicy{RequireTrustedKey: false}
+	// Even untrusted key should pass when policy doesn't require it
+	if err := EnforcePolicy(eff, 0, false, false); err != nil {
+		t.Errorf("expected no error when require_trusted_key=false, got: %v", err)
 	}
 }
 
