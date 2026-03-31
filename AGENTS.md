@@ -201,7 +201,6 @@ uv run pytest -m "fast and not slow"
 ```
 
 Shared taxonomy:
-
 - `unit`, `integration`, `cross_language`
 - `security`: intended security behavior
 - `adversarial`: hostile inputs and trust-boundary violations

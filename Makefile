@@ -39,7 +39,39 @@ test-cov-xml: ## Run Python tests with XML coverage for CI
 
 .PHONY: test-property-python
 test-property-python: ## Run Python property and hypothesis tests
-	PYTHONUTF8=1 uv run pytest -m stress tests/
+	PYTHONUTF8=1 uv run pytest -m "property or stress" tests/
+
+.PHONY: test-unit-python
+test-unit-python: ## Run Python unit tests by taxonomy marker
+	PYTHONUTF8=1 uv run pytest -m unit tests/
+
+.PHONY: test-integration-python
+test-integration-python: ## Run Python integration tests by taxonomy marker
+	PYTHONUTF8=1 uv run pytest -m integration tests/
+
+.PHONY: test-cross-language-python
+test-cross-language-python: ## Run Python cross-language and parity tests
+	PYTHONUTF8=1 uv run pytest -m "cross_language or parity" tests/
+
+.PHONY: test-security-python
+test-security-python: ## Run Python security tests
+	PYTHONUTF8=1 uv run pytest -m security tests/
+
+.PHONY: test-adversarial-python
+test-adversarial-python: ## Run Python adversarial hostile-input tests
+	PYTHONUTF8=1 uv run pytest -m adversarial tests/
+
+.PHONY: test-smoke-python
+test-smoke-python: ## Run Python smoke tests
+	PYTHONUTF8=1 uv run pytest -m smoke tests/
+
+.PHONY: test-fast-python
+test-fast-python: ## Run Python fast tests
+	PYTHONUTF8=1 uv run pytest -m "fast and not slow" tests/
+
+.PHONY: test-slow-python
+test-slow-python: ## Run Python slow tests
+	PYTHONUTF8=1 uv run pytest -m slow tests/
 
 # Mutation Testing (using mutmut directly)
 .PHONY: mutation-run
@@ -110,6 +142,75 @@ quality-rust: quality-rust-fast quality-rust-deep ## Run all strict Rust quality
 
 .PHONY: quality-ci
 quality-ci: quality-python quality-go quality-rust ## Run all cross-language quality workflows
+
+# ==================== Intent-Oriented Test Taxonomy ====================
+
+.PHONY: test-unit
+test-unit: ## Run repo unit-test surface by intent
+	$(MAKE) test-unit-python
+	@cd src/flavor-go && go test ./pkg/... ./internal/...
+	@cd src/flavor-rs && cargo test --lib --quiet
+
+.PHONY: test-integration
+test-integration: ## Run repo integration-test surface by intent
+	$(MAKE) test-integration-python
+	@cd src/flavor-go && go test ./cmd/... ./pkg/psp/format_2025 -count=1
+	@cd src/flavor-rs && cargo test --tests --quiet || cargo test --lib --quiet
+
+.PHONY: test-cross-language
+test-cross-language: ## Run parity and pretaster-driven cross-language checks
+	$(MAKE) test-cross-language-python
+	@$(MAKE) validate-pspf
+
+.PHONY: test-security
+test-security: ## Run security tests and native security scans by intent
+	$(MAKE) test-security-python
+	@$(MAKE) security-go
+	@$(MAKE) security-rust
+
+.PHONY: test-adversarial
+test-adversarial: ## Run hostile-input and boundary-violation tests by intent
+	$(MAKE) test-adversarial-python
+
+.PHONY: test-property
+test-property: ## Run parameterized and property-based tests by intent
+	$(MAKE) test-property-python
+	@$(MAKE) -C src/flavor-rs proptest
+
+.PHONY: test-fuzz
+test-fuzz: ## Run native fuzz targets by intent
+	$(MAKE) test-go-fuzz
+	@$(MAKE) -C src/flavor-rs fuzz QUALITY_RUST_FUZZ_SECONDS=$(QUALITY_RUST_FUZZ_SECONDS)
+
+.PHONY: test-mutation
+test-mutation: ## Run mutation testing by intent
+	$(MAKE) mutation-run QUALITY_PY_MUTATION_ARGS="$(QUALITY_PY_MUTATION_ARGS)"
+	@$(MAKE) -C src/flavor-go mutation QUALITY_GO_MUTATION_ARGS="$(QUALITY_GO_MUTATION_ARGS)"
+	@$(MAKE) -C src/flavor-rs mutation QUALITY_RUST_MUTATION_ARGS="$(QUALITY_RUST_MUTATION_ARGS)"
+
+.PHONY: test-smoke
+test-smoke: ## Run minimal high-signal smoke checks
+	$(MAKE) test-smoke-python
+	@cd src/flavor-go && go test ./cmd/flavor-go-builder ./cmd/flavor-go-launcher -count=1
+	@cd src/flavor-rs && cargo test --lib --quiet launcher:: -- --nocapture || cargo test --lib --quiet
+
+.PHONY: test-fast
+test-fast: ## Run fast test surface by intent
+	$(MAKE) test-fast-python
+	@$(MAKE) quality-go-fast
+	@$(MAKE) quality-rust-fast
+
+.PHONY: test-slow
+test-slow: ## Run explicitly slow tests by intent
+	$(MAKE) test-slow-python
+
+.PHONY: test-security-fast
+test-security-fast: ## Run fast security-oriented test surface
+	PYTHONUTF8=1 uv run pytest -m "security and not slow" tests/
+
+.PHONY: test-adversarial-fast
+test-adversarial-fast: ## Run fast adversarial test surface
+	PYTHONUTF8=1 uv run pytest -m "adversarial and not slow" tests/
 
 # ==================== Go Testing ====================
 

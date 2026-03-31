@@ -1,6 +1,3 @@
-# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -11,7 +8,7 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PYPROJECT = REPO_ROOT / "pyproject.toml"
 ROOT_MAKEFILE = REPO_ROOT / "Makefile"
-QUALITY_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "code-quality.yml"
+QUALITY_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "05-code-quality.yml"
 
 
 def test_pyproject_registers_shared_test_taxonomy_markers() -> None:
@@ -37,7 +34,7 @@ def test_pyproject_registers_shared_test_taxonomy_markers() -> None:
 
 
 def test_root_makefile_defines_intent_targets() -> None:
-    content = ROOT_MAKEFILE.read_text(encoding="utf-8")
+    content = ROOT_MAKEFILE.read_text()
 
     for target in (
         "test-unit:",
@@ -58,7 +55,7 @@ def test_root_makefile_defines_intent_targets() -> None:
 
 
 def test_quality_workflow_mentions_intent_categories_in_observability_report() -> None:
-    workflow = yaml.load(QUALITY_WORKFLOW.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+    workflow = yaml.load(QUALITY_WORKFLOW.read_text(), Loader=yaml.BaseLoader)
     report_job = workflow["jobs"]["quality-observability-report"]
     run_script = report_job["steps"][0]["run"]
 

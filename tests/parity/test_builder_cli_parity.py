@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).parents[2]
+pytestmark = [pytest.mark.cross_language, pytest.mark.ci, pytest.mark.integration]
 
 # Flags Python passes to external builders (from orchestrator.py build_cmd_args).
 # If a flag is renamed in Go or Rust the corresponding test below will fail immediately.
