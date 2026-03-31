@@ -73,13 +73,13 @@ func GetCacheRoot() string {
 // Priority: FLAVOR_CONFIG_DIR env → XDG_CONFIG_HOME/flavor → ~/.config/flavor
 // (Windows: %APPDATA%\flavor if no XDG_CONFIG_HOME)
 func GetConfigRoot() string {
-	if configDir := os.Getenv(envvars.EnvConfigDir); configDir != "" {
+	if configDir := os.Getenv("FLAVOR_CONFIG_DIR"); configDir != "" {
 		return configDir
 	}
 	if xdgConfig := os.Getenv("XDG_CONFIG_HOME"); xdgConfig != "" {
 		return filepath.Join(xdgConfig, "flavor")
 	}
-	switch currentGOOS {
+	switch runtime.GOOS {
 	case "windows":
 		if appData := os.Getenv("APPDATA"); appData != "" {
 			return filepath.Join(appData, "flavor")
@@ -89,22 +89,14 @@ func GetConfigRoot() string {
 			return filepath.Join(home, ".config", "flavor")
 		}
 	}
-	// Last resort: use os.UserHomeDir (reads /etc/passwd on Unix, %USERPROFILE% on Windows).
-	// Never fall back to a temp directory — a world-writable config root would allow
-	// trusted-key injection.
-	if home, err := os.UserHomeDir(); err == nil {
-		return filepath.Join(home, ".config", "flavor")
-	}
-	// Return a non-existent path that will cause trust-store lookups to find no keys
-	// rather than silently using a world-writable temp directory.
-	return filepath.Join(string(os.PathSeparator), "nonexistent", "flavor", "config")
+	return filepath.Join(os.TempDir(), "flavor", "config")
 }
 
 // GetSystemConfigRoot returns the system-wide config root directory.
 // Linux/macOS: /etc/flavor
 // Windows:     %PROGRAMDATA%\flavor
 func GetSystemConfigRoot() string {
-	if currentGOOS == "windows" {
+	if runtime.GOOS == "windows" {
 		if programData := os.Getenv("PROGRAMDATA"); programData != "" {
 			return filepath.Join(programData, "flavor")
 		}
