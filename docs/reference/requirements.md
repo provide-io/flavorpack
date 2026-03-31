@@ -169,25 +169,42 @@ Set these when running `.psp` packages for debugging:
 | `FOUNDATION_LOG_LEVEL` | Control package logging | `trace`, `debug`, `info`, `warning`, `error` |
 | `FLAVOR_WORKENV_DIR` | Custom cache location | Path to directory |
 | `FLAVOR_CACHE_DIR` | Override cache root | Path to directory (all platforms) |
+| `FLAVOR_CONFIG_DIR` | Override user config root (trusted-keys, policy.toml) | Path to directory (all platforms) |
+| `FLAVOR_TRUSTED_KEYS_DIR` | Override trusted-keys directory only | Path to directory |
 | `FLAVOR_INCLUDE_BUILD_HOST` | Include hostname in package build metadata | `1` to enable (off by default) |
 
 ---
 
-## Cache Directory
+## XDG Directories
 
-All three implementations (Python, Go, Rust) must use the same platform-aware cache
-root so that packages cached by one launcher are reused by another.
+FlavorPack follows XDG Base Directory conventions. All three implementations must use
+the same platform-aware path resolution.
 
-| Platform | Default path | Override |
-|----------|-------------|---------|
-| **Linux / macOS** | `$XDG_CACHE_HOME/flavor` if set, otherwise `~/.cache/flavor` | `FLAVOR_CACHE_DIR` |
+### Cache directory
+
+| Platform | Default | Override |
+|----------|---------|---------|
+| **Linux / macOS** | `$XDG_CACHE_HOME/flavor` → `~/.cache/flavor` | `FLAVOR_CACHE_DIR` |
 | **Windows** | `%LOCALAPPDATA%\flavor` | `FLAVOR_CACHE_DIR` |
 
 Work environments are stored under `<cache-root>/workenvs/<name>_<version>/`.
 
-Hardcoding `~/.cache/flavor` anywhere in source is a bug — always call the
-platform-aware helper (`get_cache_dir()` in Python, `workenv.GetCacheRoot()` in Go,
-`get_cache_dir()` in Rust).
+### Config directory (user-level)
+
+| Platform | Default | Override |
+|----------|---------|---------|
+| **Linux / macOS** | `$XDG_CONFIG_HOME/flavor` → `~/.config/flavor` | `FLAVOR_CONFIG_DIR` |
+| **Windows** | `%APPDATA%\flavor` | `FLAVOR_CONFIG_DIR` |
+
+Trusted keys and policy files are stored under `<config-root>/trusted-keys/` and
+`<config-root>/policy.toml`. The system-wide config is always `/etc/flavor/` (Linux/macOS)
+or `%PROGRAMDATA%\flavor\` (Windows).
+
+`FLAVOR_TRUSTED_KEYS_DIR` overrides the trusted-keys directory specifically (useful in CI
+without overriding the full config root).
+
+Hardcoding any of these paths is a bug — always call the platform-aware helper
+(`get_cache_dir()` / `get_config_dir()` in Python, equivalent in Go and Rust).
 
 ---
 

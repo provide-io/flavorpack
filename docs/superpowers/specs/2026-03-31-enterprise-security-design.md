@@ -75,16 +75,44 @@ One new slot lifecycle value: `attestation`. Treated identically to `init` at ex
 
 ## Pillar 1 — Trusted Key Store
 
+### Directory resolution
+
+FlavorPack follows XDG Base Directory conventions for all user-level config. The full
+directory layout across all purposes:
+
+| Purpose | Env override | XDG variable | Fallback |
+|---------|-------------|-------------|---------|
+| Cache (workenvs) | `FLAVOR_CACHE_DIR` | `XDG_CACHE_HOME` | `~/.cache/flavor` |
+| User config | `FLAVOR_CONFIG_DIR` | `XDG_CONFIG_HOME` | `~/.config/flavor` |
+| System config | — | — | `/etc/flavor` |
+
+`FLAVOR_CONFIG_DIR` and `FLAVOR_TRUSTED_KEYS_DIR` are the explicit overrides; the XDG
+variables are the standard fallback. Priority order (highest first):
+
+1. `FLAVOR_TRUSTED_KEYS_DIR` (explicit override, trusted-keys only)
+2. `$FLAVOR_CONFIG_DIR/trusted-keys/` if `FLAVOR_CONFIG_DIR` set
+3. `$XDG_CONFIG_HOME/flavor/trusted-keys/` if `XDG_CONFIG_HOME` set
+4. `~/.config/flavor/trusted-keys/` (XDG default)
+
+Policy file follows the same resolution order, replacing `trusted-keys/` with `policy.toml`.
+
 ### Key store layout
 
 ```
-/etc/flavor/trusted-keys/     # system-wide; managed by ops/MDM/Ansible
-~/.config/flavor/trusted-keys/  # per-user
-$FLAVOR_TRUSTED_KEYS_DIR      # override (highest priority)
+/etc/flavor/                        # system-wide; managed by ops/MDM/Ansible
+├── trusted-keys/
+└── policy.toml
+
+$XDG_CONFIG_HOME/flavor/            # user-level (default: ~/.config/flavor/)
+├── trusted-keys/
+└── policy.toml
 ```
 
-Each file is an Ed25519 public key in PEM format. Files must have a `.pub` extension.
-An optional `# Name: <label>` comment line in the file identifies the key owner in CLI output.
+`FLAVOR_TRUSTED_KEYS_DIR` overrides the trusted-keys directory only (useful in CI).
+`FLAVOR_CONFIG_DIR` overrides the entire user config root.
+
+Each trusted-keys file is an Ed25519 public key in PEM format with a `.pub` extension.
+An optional `# Name: <label>` comment line identifies the key owner in CLI output.
 
 ### Trust resolution at launch
 
@@ -296,10 +324,11 @@ sudo flavor init --global
 └── policy.toml       ← all options present, commented out, with documentation
 ```
 
-`flavor init` (user) creates:
+`flavor init` (user) creates the XDG config dir (respecting `FLAVOR_CONFIG_DIR` /
+`XDG_CONFIG_HOME`):
 
 ```
-~/.config/flavor/
+~/.config/flavor/       # or $XDG_CONFIG_HOME/flavor/ or $FLAVOR_CONFIG_DIR/
 ├── trusted-keys/
 └── policy.toml
 ```
@@ -312,6 +341,7 @@ Both are idempotent — safe to run multiple times; existing files and keys are 
 
 ### Python (`src/flavor/`)
 
+- XDG config dir resolution: new `config/dirs.py` (mirrors `cache/` pattern for `get_config_dir()`)
 - SBOM generation: new `psp/format_2025/sbom.py` using `cyclonedx-python-lib`
 - Provenance record assembly: extend `metadata/assembly.py`
 - Attestation slot creation: extend `pspf_builder.py`
