@@ -60,7 +60,6 @@ make test-slow
 ```
 
 ### Quality Workflows
-
 ```bash
 # Run the strict observational quality workflows locally
 make quality-python-fast
