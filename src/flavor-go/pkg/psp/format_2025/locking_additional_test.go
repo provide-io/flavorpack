@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -10,11 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 func TestLockLifecycleAndCleanup(t *testing.T) {
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/demo.pspf")
 
 	t.Run("acquire release and stale lock handling", func(t *testing.T) {

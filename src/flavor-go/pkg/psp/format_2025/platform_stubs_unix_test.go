@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 //go:build !windows
 // +build !windows
 
@@ -10,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 func TestSetUTF8ConsoleOutputNoopOnUnix(t *testing.T) {
@@ -22,7 +19,7 @@ func TestSetUTF8ConsoleOutputNoopOnUnix(t *testing.T) {
 func TestPEResourceStubsReturnUnixErrors(t *testing.T) {
 	t.Parallel()
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	if err := EmbedPSPFAsResource("/tmp/app", []byte("pspf"), logger); err == nil || !strings.Contains(err.Error(), "only supported on Windows") {
 		t.Fatalf("EmbedPSPFAsResource() error = %v", err)
 	}
