@@ -6,14 +6,11 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"testing"
-
-	"github.com/provide-io/flavor/go/flavor/pkg/envvars"
 )
 
 func TestGetWorkenvPath(t *testing.T) {
-	t.Setenv(envvars.EnvCacheDir, "/tmp/flavor-cache")
+	t.Setenv("FLAVOR_CACHE_DIR", "/tmp/flavor-cache")
 
 	if got, want := GetWorkenvPath("demo", "1.0.0", "abcdef123456"), filepath.Join("/tmp/flavor-cache", "abcdef12"); got != want {
 		t.Fatalf("GetWorkenvPath checksum prefix mismatch: got %q want %q", got, want)
@@ -31,13 +28,7 @@ func TestGetWorkenvPath(t *testing.T) {
 }
 
 func TestGetCacheRoot(t *testing.T) {
-	// Pin currentGOOS to the real OS so platform tests running concurrently
-	// cannot interfere with this test's expectations.
-	oldGOOS := currentGOOS
-	currentGOOS = runtime.GOOS
-	t.Cleanup(func() { currentGOOS = oldGOOS })
-
-	t.Setenv(envvars.EnvCacheDir, "/tmp/flavor-cache")
+	t.Setenv("FLAVOR_CACHE_DIR", "/tmp/flavor-cache")
 	t.Setenv("XDG_CACHE_HOME", "/tmp/xdg-cache")
 	t.Setenv("HOME", "/tmp/home")
 
@@ -45,14 +36,12 @@ func TestGetCacheRoot(t *testing.T) {
 		t.Fatalf("GetCacheRoot env override mismatch: got %q want %q", got, want)
 	}
 
-	t.Setenv(envvars.EnvCacheDir, "")
-	if runtime.GOOS == "linux" || runtime.GOOS == "freebsd" {
+	t.Setenv("FLAVOR_CACHE_DIR", "")
+	if runtime.GOOS == "linux" {
 		if got, want := GetCacheRoot(), filepath.Join("/tmp/xdg-cache", "flavor"); got != want {
 			t.Fatalf("GetCacheRoot xdg mismatch: got %q want %q", got, want)
 		}
 	} else if runtime.GOOS == "windows" {
-		// On Windows, LOCALAPPDATA may be set; clear it to test fallback to TempDir.
-		t.Setenv("LOCALAPPDATA", "")
 		if got, want := GetCacheRoot(), filepath.Join(os.TempDir(), "flavor", "cache"); got != want {
 			t.Fatalf("GetCacheRoot windows fallback mismatch: got %q want %q", got, want)
 		}
@@ -63,12 +52,11 @@ func TestGetCacheRoot(t *testing.T) {
 	}
 
 	t.Setenv("XDG_CACHE_HOME", "")
-	if runtime.GOOS == "linux" || runtime.GOOS == "freebsd" {
+	if runtime.GOOS == "linux" {
 		if got, want := GetCacheRoot(), filepath.Join("/tmp/home", ".cache", "flavor"); got != want {
 			t.Fatalf("GetCacheRoot home mismatch: got %q want %q", got, want)
 		}
 	} else if runtime.GOOS == "windows" {
-		// LOCALAPPDATA already cleared above; fallback is TempDir.
 		if got, want := GetCacheRoot(), filepath.Join(os.TempDir(), "flavor", "cache"); got != want {
 			t.Fatalf("GetCacheRoot windows fallback mismatch: got %q want %q", got, want)
 		}
@@ -79,19 +67,13 @@ func TestGetCacheRoot(t *testing.T) {
 	}
 
 	t.Setenv("HOME", "")
-	// With HOME unset, GetCacheRoot tries os.UserHomeDir (reads /etc/passwd on Unix)
-	// which typically succeeds. We just verify a non-empty result.
-	if got := GetCacheRoot(); got == "" {
-		t.Fatal("GetCacheRoot must return a non-empty path even with HOME unset")
+	if got, want := GetCacheRoot(), filepath.Join(os.TempDir(), "flavor", "cache"); got != want {
+		t.Fatalf("GetCacheRoot temp fallback mismatch: got %q want %q", got, want)
 	}
 }
 
 func TestGetConfigAndSystemRoots(t *testing.T) {
-	oldGOOS := currentGOOS
-	currentGOOS = runtime.GOOS
-	t.Cleanup(func() { currentGOOS = oldGOOS })
-
-	t.Setenv(envvars.EnvConfigDir, "/tmp/flavor-config")
+	t.Setenv("FLAVOR_CONFIG_DIR", "/tmp/flavor-config")
 	t.Setenv("XDG_CONFIG_HOME", "/tmp/xdg-config")
 	t.Setenv("HOME", "/tmp/home")
 
@@ -99,7 +81,7 @@ func TestGetConfigAndSystemRoots(t *testing.T) {
 		t.Fatalf("GetConfigRoot env override mismatch: got %q want %q", got, want)
 	}
 
-	t.Setenv(envvars.EnvConfigDir, "")
+	t.Setenv("FLAVOR_CONFIG_DIR", "")
 	if got, want := GetConfigRoot(), filepath.Join("/tmp/xdg-config", "flavor"); got != want {
 		t.Fatalf("GetConfigRoot xdg mismatch: got %q want %q", got, want)
 	}
@@ -118,12 +100,8 @@ func TestGetConfigAndSystemRoots(t *testing.T) {
 
 	t.Setenv("HOME", "")
 	t.Setenv("APPDATA", "")
-	// With no HOME/APPDATA, GetConfigRoot tries os.UserHomeDir() which reads
-	// /etc/passwd on Unix or %USERPROFILE% on Windows. If even that fails,
-	// it returns a non-existent sentinel path (never a temp directory).
-	configRoot := GetConfigRoot()
-	if strings.Contains(configRoot, os.TempDir()) {
-		t.Fatalf("GetConfigRoot must not fall back to temp directory, got %q", configRoot)
+	if got, want := GetConfigRoot(), filepath.Join(os.TempDir(), "flavor", "config"); got != want {
+		t.Fatalf("GetConfigRoot temp fallback mismatch: got %q want %q", got, want)
 	}
 
 	if runtime.GOOS == "windows" {

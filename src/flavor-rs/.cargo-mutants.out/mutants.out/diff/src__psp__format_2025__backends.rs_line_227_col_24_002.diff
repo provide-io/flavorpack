@@ -1,0 +1,21 @@
+--- src/psp/format_2025/backends.rs
++++ replace > with >= in <impl Backend for FileBackend>::read_at
+@@ -219,17 +219,17 @@
+         self.file = None;
+         self.path = None;
+         self.cache.clear();
+         Ok(())
+     }
+ 
+     fn read_at(&mut self, offset: u64, size: usize) -> Result<Vec<u8>> {
+         trace!("🗓️ File read_at: offset={}, size={}", offset, size);
+-        if size as u64 > MAX_SLOT_SIZE {
++        if size as u64 >= /* ~ changed by cargo-mutants ~ */ MAX_SLOT_SIZE {
+             return Err(FlavorError::Generic(format!(
+                 "Read size {} exceeds maximum allowed ({} bytes)",
+                 size, MAX_SLOT_SIZE
+             )));
+         }
+ 
+         // Check cache first
+         let cache_key = (offset, size);

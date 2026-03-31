@@ -1,0 +1,42 @@
+src/utils/mod.rs:41:5: replace get_cache_dir -> std::path::PathBuf with Default::default()
+src/version.rs:14:5: replace full_version -> String with String::new()
+src/version.rs:14:5: replace full_version -> String with "xyzzy".into()
+src/psp/format_2025/backends.rs:17:44: replace * with +
+src/psp/format_2025/backends.rs:17:37: replace * with +
+src/psp/format_2025/backends.rs:17:30: replace * with +
+src/psp/format_2025/backends.rs:33:22: replace > with == in Backend::read_slot
+src/psp/format_2025/backends.rs:33:22: replace > with >= in Backend::read_slot
+src/psp/format_2025/backends.rs:45:9: replace Backend::view_at -> Result<&[u8]> with Ok(Vec::leak(Vec::new()))
+src/psp/format_2025/backends.rs:45:9: replace Backend::view_at -> Result<&[u8]> with Ok(Vec::leak(vec![0]))
+src/psp/format_2025/backends.rs:45:9: replace Backend::view_at -> Result<&[u8]> with Ok(Vec::leak(vec![1]))
+src/psp/format_2025/backends.rs:129:9: replace <impl Backend for MMapBackend>::close -> Result<()> with Ok(())
+src/psp/format_2025/backends.rs:137:24: replace > with == in <impl Backend for MMapBackend>::read_at
+src/psp/format_2025/backends.rs:137:24: replace > with >= in <impl Backend for MMapBackend>::read_at
+src/psp/format_2025/backends.rs:159:9: replace <impl Backend for MMapBackend>::view_at -> Result<&[u8]> with Ok(Vec::leak(Vec::new()))
+src/psp/format_2025/backends.rs:159:9: replace <impl Backend for MMapBackend>::view_at -> Result<&[u8]> with Ok(Vec::leak(vec![0]))
+src/psp/format_2025/backends.rs:159:9: replace <impl Backend for MMapBackend>::view_at -> Result<&[u8]> with Ok(Vec::leak(vec![1]))
+src/psp/format_2025/backends.rs:219:9: replace <impl Backend for FileBackend>::close -> Result<()> with Ok(())
+src/psp/format_2025/backends.rs:227:24: replace > with == in <impl Backend for FileBackend>::read_at
+src/psp/format_2025/backends.rs:227:24: replace > with >= in <impl Backend for FileBackend>::read_at
+src/psp/format_2025/backends.rs:251:21: replace <= with > in <impl Backend for FileBackend>::read_at
+src/psp/format_2025/backends.rs:255:37: replace > with == in <impl Backend for FileBackend>::read_at
+src/psp/format_2025/backends.rs:255:37: replace > with < in <impl Backend for FileBackend>::read_at
+src/psp/format_2025/backends.rs:255:37: replace > with >= in <impl Backend for FileBackend>::read_at
+src/psp/format_2025/backends.rs:311:26: replace == with != in StreamBackend::stream_slot
+src/psp/format_2025/backends.rs:319:24: replace += with -= in StreamBackend::stream_slot
+src/psp/format_2025/backends.rs:319:24: replace += with *= in StreamBackend::stream_slot
+src/psp/format_2025/backends.rs:320:27: replace -= with += in StreamBackend::stream_slot
+src/psp/format_2025/backends.rs:320:27: replace -= with /= in StreamBackend::stream_slot
+src/psp/format_2025/backends.rs:339:9: replace <impl Backend for StreamBackend>::close -> Result<()> with Ok(())
+src/psp/format_2025/backends.rs:404:24: replace * with + in HybridBackend::with_default_header_size
+src/psp/format_2025/backends.rs:404:24: replace * with / in HybridBackend::with_default_header_size
+src/psp/format_2025/backends.rs:427:9: replace <impl Backend for HybridBackend>::close -> Result<()> with Ok(())
+src/psp/format_2025/backends.rs:434:24: replace > with == in <impl Backend for HybridBackend>::read_at
+src/psp/format_2025/backends.rs:434:24: replace > with >= in <impl Backend for HybridBackend>::read_at
+src/psp/format_2025/backends.rs:456:9: replace <impl Backend for HybridBackend>::view_at -> Result<&[u8]> with Ok(Vec::leak(Vec::new()))
+src/psp/format_2025/backends.rs:456:9: replace <impl Backend for HybridBackend>::view_at -> Result<&[u8]> with Ok(Vec::leak(vec![0]))
+src/psp/format_2025/backends.rs:456:9: replace <impl Backend for HybridBackend>::view_at -> Result<&[u8]> with Ok(Vec::leak(vec![1]))
+src/psp/format_2025/backends.rs:466:13: replace == with != in create_backend
+src/psp/format_2025/backends.rs:473:30: replace > with == in create_backend
+src/psp/format_2025/backends.rs:473:30: replace > with < in create_backend
+src/psp/format_2025/backends.rs:473:30: replace > with >= in create_backend

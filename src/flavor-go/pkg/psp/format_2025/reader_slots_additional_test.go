@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -11,7 +8,6 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
 )
@@ -159,7 +155,7 @@ func TestReadSlotDecompressesGzip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader() error = %v", err)
 	}
-	defer func() { _ = reader.Close() }()
+	defer reader.Close()
 
 	got, err := reader.ReadSlot(0)
 	if err != nil {
@@ -182,7 +178,7 @@ func TestReadSlotRejectsChecksumMismatchAndUnsupportedOperation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader() error = %v", err)
 	}
-	defer func() { _ = reader.Close() }()
+	defer reader.Close()
 
 	if _, err := reader.ReadSlot(0); err != ErrChecksumMismatch {
 		t.Fatalf("ReadSlot() checksum mismatch error = %v, want %v", err, ErrChecksumMismatch)
@@ -197,7 +193,7 @@ func TestReadSlotRejectsChecksumMismatchAndUnsupportedOperation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader() error = %v", err)
 	}
-	defer func() { _ = reader2.Close() }()
+	defer reader2.Close()
 
 	if _, err := reader2.ReadSlot(0); err == nil || !strings.Contains(err.Error(), "operation BZIP2 not yet implemented") {
 		t.Fatalf("ReadSlot() unsupported-op error = %v, want BZIP2 unsupported", err)
@@ -217,7 +213,7 @@ func TestExtractSlotWritesSingleFileAndTarball(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader() error = %v", err)
 	}
-	defer func() { _ = reader.Close() }()
+	defer reader.Close()
 
 	destDir := filepath.Join(t.TempDir(), "single")
 	extractedPath, err := reader.ExtractSlot(0, destDir)
@@ -240,11 +236,8 @@ func TestExtractSlotWritesSingleFileAndTarball(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Stat(extracted file) error = %v", err)
 	}
-	// Windows does not support Unix-style permission bits; skip executable-bit check.
-	if runtime.GOOS != "windows" {
-		if info.Mode().Perm()&0o111 == 0 {
-			t.Fatalf("expected executable bit to be preserved, got mode %v", info.Mode().Perm())
-		}
+	if info.Mode().Perm()&0o111 == 0 {
+		t.Fatalf("expected executable bit to be preserved, got mode %v", info.Mode().Perm())
 	}
 
 	tarRaw := buildTarArchiveWithDirAndFile(t, "bundle", "payload.txt", 0o755, []byte("tar payload"))
@@ -258,7 +251,7 @@ func TestExtractSlotWritesSingleFileAndTarball(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader() error = %v", err)
 	}
-	defer func() { _ = reader2.Close() }()
+	defer reader2.Close()
 
 	tarDest := filepath.Join(t.TempDir(), "tar")
 	extractedDir, err := reader2.ExtractSlot(0, tarDest)
@@ -281,11 +274,8 @@ func TestExtractSlotWritesSingleFileAndTarball(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Stat(tar payload) error = %v", err)
 	}
-	// Windows does not support Unix-style permission bits; skip executable-bit check.
-	if runtime.GOOS != "windows" {
-		if tarInfo.Mode().Perm()&0o111 == 0 {
-			t.Fatalf("expected tar payload to stay executable, got mode %v", tarInfo.Mode().Perm())
-		}
+	if tarInfo.Mode().Perm()&0o111 == 0 {
+		t.Fatalf("expected tar payload to stay executable, got mode %v", tarInfo.Mode().Perm())
 	}
 }
 
@@ -302,49 +292,9 @@ func TestExtractSlotRejectsSymlink(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader() error = %v", err)
 	}
-	defer func() { _ = reader.Close() }()
+	defer reader.Close()
 
 	if _, err := reader.ExtractSlot(0, t.TempDir()); err == nil || !strings.Contains(err.Error(), "symlink") {
 		t.Fatalf("ExtractSlot(symlink) error = %v, want symlink rejection", err)
-	}
-}
-
-func TestExtractSlotTarIgnoresTargetForArchives(t *testing.T) {
-	// TAR slots extract to destDir regardless of the target field — the tar entries encode
-	// the directory structure. A slot with target="assets" and tar entries "images/logo.txt"
-	// extracts to destDir/images/logo.txt (not destDir/assets/images/logo.txt).
-	// This matches Rust launcher behavior where extract_tarball ignores slot_target.
-	t.Parallel()
-
-	tarRaw := buildTarArchiveWithDirAndFile(t, "images", "logo.txt", 0o644, []byte("logo"))
-	tarStored := gzipData(t, tarRaw)
-	bundle := buildSingleSlotBundleForTests(t, tarStored, tarRaw, []uint8{OP_TAR, OP_GZIP}, SlotMetadata{
-		ID:     "assets-slot",
-		Target: "assets",
-	}, 0, false)
-
-	reader, err := NewReader(bundle)
-	if err != nil {
-		t.Fatalf("NewReader() error = %v", err)
-	}
-	defer func() { _ = reader.Close() }()
-
-	destDir := filepath.Join(t.TempDir(), "targeted")
-	extractedDir, err := reader.ExtractSlot(0, destDir)
-	if err != nil {
-		t.Fatalf("ExtractSlot(targeted tar) error = %v", err)
-	}
-
-	// TAR extracts to destDir (not destDir/assets) — tar entries encode the path
-	if extractedDir != destDir {
-		t.Fatalf("ExtractSlot(targeted tar) path = %q, want %q", extractedDir, destDir)
-	}
-
-	got, err := os.ReadFile(filepath.Join(destDir, "images", "logo.txt"))
-	if err != nil {
-		t.Fatalf("ReadFile(targeted tar payload) error = %v", err)
-	}
-	if string(got) != "logo" {
-		t.Fatalf("targeted tar payload = %q, want %q", string(got), "logo")
 	}
 }

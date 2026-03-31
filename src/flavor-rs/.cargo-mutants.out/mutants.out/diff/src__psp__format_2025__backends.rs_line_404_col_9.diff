@@ -1,0 +1,21 @@
+--- src/psp/format_2025/backends.rs
++++ replace HybridBackend::with_default_header_size -> Self with Default::default()
+@@ -396,17 +396,17 @@
+             file: None,
+             header_mmap: None,
+             path: None,
+             header_size,
+         }
+     }
+ 
+     pub fn with_default_header_size() -> Self {
+-        Self::new(1024 * 1024) // 1MB default
++        Default::default() /* ~ changed by cargo-mutants ~ */ // 1MB default
+     }
+ }
+ 
+ impl Backend for HybridBackend {
+     fn open(&mut self, path: &Path) -> Result<()> {
+         let file = File::open(path).map_err(FlavorError::IoError)?;
+ 
+         // Get file size

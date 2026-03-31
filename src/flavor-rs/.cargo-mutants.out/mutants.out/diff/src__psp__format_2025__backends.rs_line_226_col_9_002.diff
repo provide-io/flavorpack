@@ -1,0 +1,62 @@
+--- src/psp/format_2025/backends.rs
++++ replace <impl Backend for FileBackend>::read_at -> Result<Vec<u8>> with Ok(vec![1])
+@@ -218,58 +218,17 @@
+     fn close(&mut self) -> Result<()> {
+         self.file = None;
+         self.path = None;
+         self.cache.clear();
+         Ok(())
+     }
+ 
+     fn read_at(&mut self, offset: u64, size: usize) -> Result<Vec<u8>> {
+-        trace!("🗓️ File read_at: offset={}, size={}", offset, size);
+-        if size as u64 > MAX_SLOT_SIZE {
+-            return Err(FlavorError::Generic(format!(
+-                "Read size {} exceeds maximum allowed ({} bytes)",
+-                size, MAX_SLOT_SIZE
+-            )));
+-        }
+-
+-        // Check cache first
+-        let cache_key = (offset, size);
+-        if let Some(cached) = self.cache.get(&cache_key) {
+-            trace!("⚡ Cache hit for offset={}, size={}", offset, size);
+-            return Ok(cached.clone());
+-        }
+-
+-        if let Some(file) = &mut self.file {
+-            let timer = Instant::now();
+-            file.seek(SeekFrom::Start(offset))
+-                .map_err(FlavorError::IoError)?;
+-
+-            let mut buffer = vec![0u8; size];
+-            file.read_exact(&mut buffer).map_err(FlavorError::IoError)?;
+-            trace!("✅ File read {} bytes in {:?}", size, timer.elapsed());
+-
+-            // Cache small reads
+-            if size <= 4096 {
+-                self.cache.insert(cache_key, buffer.clone());
+-
+-                // Limit cache size
+-                if self.cache.len() > 100 {
+-                    // Remove oldest entries (simple FIFO)
+-                    let keys: Vec<_> = self.cache.keys().take(20).cloned().collect();
+-                    for key in keys {
+-                        self.cache.remove(&key);
+-                    }
+-                }
+-            }
+-
+-            Ok(buffer)
+-        } else {
+-            Err(FlavorError::Generic("Backend not opened".into()))
+-        }
++        Ok(vec![1]) /* ~ changed by cargo-mutants ~ */
+     }
+ }
+ 
+ /// Streaming backend - never loads full slots into memory
+ pub struct StreamBackend {
+     file: Option<File>,
+     path: Option<std::path::PathBuf>,
+     chunk_size: usize,

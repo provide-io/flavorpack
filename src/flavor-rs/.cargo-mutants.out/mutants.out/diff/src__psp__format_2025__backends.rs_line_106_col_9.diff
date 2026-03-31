@@ -1,0 +1,40 @@
+--- src/psp/format_2025/backends.rs
++++ replace <impl Backend for MMapBackend>::open -> Result<()> with Ok(())
+@@ -98,36 +98,17 @@
+     pub fn prefetch(&self, _offset: u64, _size: usize) -> Result<()> {
+         // No-op on non-Unix platforms
+         Ok(())
+     }
+ }
+ 
+ impl Backend for MMapBackend {
+     fn open(&mut self, path: &Path) -> Result<()> {
+-        let timer = Instant::now();
+-        let file = File::open(path).map_err(FlavorError::IoError)?;
+-
+-        let file_size = file.metadata().map_err(FlavorError::IoError)?.len();
+-        trace!("📂 Opening file for mmap: {} bytes", file_size);
+-
+-        // Note: Memory mapping removed to avoid unsafe code
+-        // Using file I/O for safety, with some performance trade-off
+-        debug!(
+-            "📁 File backend opened {} ({} bytes) in {:?}",
+-            path.display(),
+-            file_size,
+-            timer.elapsed()
+-        );
+-
+-        self.file = Some(file);
+-        self.mmap = None; // No memory mapping for safety
+-        self.path = Some(path.to_path_buf());
+-
+-        Ok(())
++        Ok(()) /* ~ changed by cargo-mutants ~ */
+     }
+ 
+     fn close(&mut self) -> Result<()> {
+         self.mmap = None;
+         self.file = None;
+         self.path = None;
+         Ok(())
+     }

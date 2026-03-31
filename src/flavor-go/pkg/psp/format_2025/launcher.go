@@ -21,8 +21,6 @@ import (
 
 var syscallExecFn = syscall.Exec
 var osExitFn = os.Exit
-var osGetWdFn = os.Getwd
-var launcherStderrWriter io.Writer = os.Stderr
 
 // LaunchWithLogLevel launches with explicit log level control
 func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource string) {

@@ -1,0 +1,21 @@
+--- src/psp/format_2025/backends.rs
++++ replace > with == in <impl Backend for HybridBackend>::read_at
+@@ -426,17 +426,17 @@
+     fn close(&mut self) -> Result<()> {
+         self.header_mmap = None;
+         self.file = None;
+         self.path = None;
+         Ok(())
+     }
+ 
+     fn read_at(&mut self, offset: u64, size: usize) -> Result<Vec<u8>> {
+-        if size as u64 > MAX_SLOT_SIZE {
++        if size as u64 == /* ~ changed by cargo-mutants ~ */ MAX_SLOT_SIZE {
+             return Err(FlavorError::Generic(format!(
+                 "Read size {} exceeds maximum allowed ({} bytes)",
+                 size, MAX_SLOT_SIZE
+             )));
+         }
+         // Use safe file I/O for all operations
+         if let Some(file) = &mut self.file {
+             file.seek(SeekFrom::Start(offset))

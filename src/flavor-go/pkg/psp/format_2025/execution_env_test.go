@@ -1,40 +1,34 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
 	"bytes"
-	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 func TestSetFlavorCacheBeforeWorkenvSetsHostCache(t *testing.T) {
-	cacheRoot := t.TempDir()
-	t.Setenv(EnvCacheDir, cacheRoot)
-	logger := logging.NewNullLogger()
+	t.Setenv("FLAVOR_CACHE_DIR", "/tmp/flavor-cache-root")
+	logger := hclog.NewNullLogger()
 
 	got := setFlavorCacheBeforeWorkenv([]string{"PATH=/usr/bin"}, logger)
 
-	if !hasEnv(got, EnvCache) {
+	if !hasEnv(got, "FLAVOR_CACHE") {
 		t.Fatalf("expected FLAVOR_CACHE to be set")
 	}
-	want := filepath.Join(cacheRoot, "workenv")
-	if value := getenv(got, EnvCache, ""); value != want {
+	if value := getenv(got, "FLAVOR_CACHE", ""); value != "/tmp/flavor-cache-root/workenv" {
 		t.Fatalf("unexpected FLAVOR_CACHE value %q", value)
 	}
 }
 
 func TestSetFlavorCacheBeforeWorkenvPreservesExistingValue(t *testing.T) {
-	logger := logging.NewNullLogger()
-	env := []string{EnvCache + "=/already/set"}
+	logger := hclog.NewNullLogger()
+	env := []string{"FLAVOR_CACHE=/already/set"}
 
 	got := setFlavorCacheBeforeWorkenv(env, logger)
 
-	if value := getenv(got, EnvCache, ""); value != "/already/set" {
+	if value := getenv(got, "FLAVOR_CACHE", ""); value != "/already/set" {
 		t.Fatalf("expected existing FLAVOR_CACHE to be preserved, got %q", value)
 	}
 }
@@ -58,7 +52,11 @@ func TestGetenvAndHasEnv(t *testing.T) {
 
 func TestLogEnvironmentTraceRedactsSensitiveValues(t *testing.T) {
 	var output bytes.Buffer
-	logger := logging.NewBufferLogger(&output, logging.LevelTrace)
+	logger := hclog.New(&hclog.LoggerOptions{
+		Name:   "test",
+		Level:  hclog.Trace,
+		Output: &output,
+	})
 
 	logEnvironmentTrace([]string{
 		"OPENAI_API_KEY=secret",

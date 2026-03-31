@@ -72,7 +72,7 @@ func (r *Reader) VerifyIntegritySeal() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if _, err := fileSeekFn(r.file, metadataOffset, io.SeekStart); err != nil {
+	if _, err := r.file.Seek(metadataOffset, io.SeekStart); err != nil {
 		return false, err
 	}
 
@@ -153,7 +153,19 @@ func (r *Reader) VerifyAttestationSbomDigest() error {
 	slotCount := int(index.SlotCount)
 	var attestationDesc *SlotDescriptor
 	for i := 0; i < slotCount; i++ {
-		entryOffset := int64(index.SlotTableOffset) + int64(i*SlotDescriptorSize)
+		slotTableOffset, err := uint64ToInt64Checked(index.SlotTableOffset, "slot table offset")
+		if err != nil {
+			return fmt.Errorf("seeking slot descriptor %d: %w", i, err)
+		}
+		entryDelta, err := intToUint64Checked(i*SlotDescriptorSize, "slot descriptor entry offset")
+		if err != nil {
+			return fmt.Errorf("seeking slot descriptor %d: %w", i, err)
+		}
+		entryDeltaOffset, err := uint64ToInt64Checked(entryDelta, "slot descriptor entry offset")
+		if err != nil {
+			return fmt.Errorf("seeking slot descriptor %d: %w", i, err)
+		}
+		entryOffset := slotTableOffset + entryDeltaOffset
 		if _, err := r.file.Seek(entryOffset, io.SeekStart); err != nil {
 			return fmt.Errorf("seeking slot descriptor %d: %w", i, err)
 		}
@@ -182,7 +194,11 @@ func (r *Reader) VerifyAttestationSbomDigest() error {
 	}
 
 	// Read the raw (as-stored) bytes of the attestation slot.
-	if _, err := r.file.Seek(int64(attestationDesc.Offset), io.SeekStart); err != nil {
+	attestationOffset, err := uint64ToInt64Checked(attestationDesc.Offset, "attestation slot offset")
+	if err != nil {
+		return fmt.Errorf("seeking attestation slot data: %w", err)
+	}
+	if _, err := r.file.Seek(attestationOffset, io.SeekStart); err != nil {
 		return fmt.Errorf("seeking attestation slot data: %w", err)
 	}
 	slotBytes := make([]byte, attestationDesc.Size)

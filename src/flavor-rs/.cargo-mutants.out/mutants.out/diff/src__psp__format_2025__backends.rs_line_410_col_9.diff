@@ -1,0 +1,34 @@
+--- src/psp/format_2025/backends.rs
++++ replace <impl Backend for HybridBackend>::open -> Result<()> with Ok(())
+@@ -402,30 +402,17 @@
+ 
+     pub fn with_default_header_size() -> Self {
+         Self::new(1024 * 1024) // 1MB default
+     }
+ }
+ 
+ impl Backend for HybridBackend {
+     fn open(&mut self, path: &Path) -> Result<()> {
+-        let file = File::open(path).map_err(FlavorError::IoError)?;
+-
+-        // Get file size
+-        let metadata = file.metadata().map_err(FlavorError::IoError)?;
+-        let _file_size = metadata.len() as usize;
+-
+-        // Note: Header memory mapping removed to avoid unsafe code
+-        // Using file I/O for all operations
+-
+-        self.file = Some(file);
+-        self.header_mmap = None; // No memory mapping for safety
+-        self.path = Some(path.to_path_buf());
+-
+-        Ok(())
++        Ok(()) /* ~ changed by cargo-mutants ~ */
+     }
+ 
+     fn close(&mut self) -> Result<()> {
+         self.header_mmap = None;
+         self.file = None;
+         self.path = None;
+         Ok(())
+     }
