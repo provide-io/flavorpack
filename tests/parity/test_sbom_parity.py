@@ -15,8 +15,6 @@ import pytest
 from flavor.psp.format_2025.attestation import build_attestation, parse_attestation
 from flavor.psp.format_2025.sbom import build_sbom
 
-pytestmark = [pytest.mark.cross_language, pytest.mark.ci, pytest.mark.security]
-
 
 def _minimal_package_info() -> dict[str, object]:
     return {
