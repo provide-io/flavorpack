@@ -8,6 +8,8 @@
 This module provides both pure functions and a fluent builder interface
 for creating PSPF packages."""
 
+from __future__ import annotations
+
 import hashlib
 import os
 from pathlib import Path
@@ -196,8 +198,6 @@ def prepare_slots(slots: list[SlotMetadata], options: BuildOptions) -> list[Prep
         )
         checksum_str = calculate_checksum(data_to_checksum, "sha256")
         # Compute SHA-256 truncated to 8 bytes for binary descriptor
-        import hashlib
-
         hash_bytes = hashlib.sha256(data_to_checksum).digest()[:8]
         checksum_uint64 = int.from_bytes(hash_bytes, byteorder="little")
 
