@@ -124,11 +124,17 @@ execution proceeds. The trust store is purely additive.
 
 ### CLI: `flavor trust`
 
+All commands default to the user store (`~/.config/flavor/trusted-keys/`). Pass `--global`
+to operate on the system store (`/etc/flavor/trusted-keys/`); requires root/sudo.
+
 ```bash
-flavor trust add ./signer.pub --name "CI pipeline"   # add to user store
-flavor trust list                                     # show all trusted keys + fingerprints
-flavor trust remove <fingerprint>                     # remove from user store
-flavor trust verify ./myapp.psp                      # check if package key is trusted
+flavor trust add ./signer.pub --name "CI pipeline"          # add to user store
+flavor trust add ./ci.pub --name "CI pipeline" --global     # add to system store (sudo)
+flavor trust list                                           # show all trusted keys + fingerprints
+flavor trust list --global                                  # show system store only
+flavor trust remove <fingerprint>                           # remove from user store
+flavor trust remove <fingerprint> --global                  # remove from system store (sudo)
+flavor trust verify ./myapp.psp                            # check if package key is trusted
 ```
 
 ---
@@ -263,10 +269,42 @@ First failure stops evaluation and exits with a descriptive error.
 ### CLI: `flavor policy`
 
 ```bash
-flavor policy show                  # print effective policy (package + operator merged)
-flavor policy check ./myapp.psp     # dry-run: would this package be allowed on this host?
-flavor policy init                  # scaffold /etc/flavor/policy.toml with comments
+flavor policy show                       # print effective policy (package + operator merged)
+flavor policy check ./myapp.psp          # dry-run: would this package be allowed on this host?
+flavor policy init                       # scaffold ~/.config/flavor/policy.toml (user)
+flavor policy init --global              # scaffold /etc/flavor/policy.toml (sudo)
 ```
+
+### CLI: `flavor init` (new top-level command)
+
+One-shot setup for deploying FlavorPack to a host. Intended as the first command an ops team
+runs when rolling out to a fleet.
+
+```bash
+# User-level setup (no sudo required)
+flavor init
+
+# System-wide setup (sudo required) — typical for managed hosts
+sudo flavor init --global
+```
+
+`flavor init --global` creates the full directory structure and scaffolds the policy file:
+
+```
+/etc/flavor/
+├── trusted-keys/     ← drop .pub files here; empty until keys are added
+└── policy.toml       ← all options present, commented out, with documentation
+```
+
+`flavor init` (user) creates:
+
+```
+~/.config/flavor/
+├── trusted-keys/
+└── policy.toml
+```
+
+Both are idempotent — safe to run multiple times; existing files and keys are not overwritten.
 
 ---
 
@@ -278,8 +316,9 @@ flavor policy init                  # scaffold /etc/flavor/policy.toml with comm
 - Provenance record assembly: extend `metadata/assembly.py`
 - Attestation slot creation: extend `pspf_builder.py`
 - Policy declaration: extend `spec.py` and `pyproject.toml` parsing
-- `flavor trust` subcommands: new `cli/trust.py`
-- `flavor policy` subcommands: new `cli/policy.py`
+- `flavor trust` subcommands (`add`, `list`, `remove`, `verify`, `--global`): new `cli/trust.py`
+- `flavor policy` subcommands (`show`, `check`, `init`, `--global`): new `cli/policy.py`
+- `flavor init` top-level command (`--global`): new `cli/init.py`
 - `flavor inspect --sbom / --provenance`: extend existing inspect command
 
 ### Go (`src/flavor-go/`)
