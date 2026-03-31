@@ -102,9 +102,7 @@ def test_is_key_trusted_no_store_returns_none() -> None:
 
 def test_load_keys_from_dir_non_ed25519_key(tmp_path: Path) -> None:
     """Non-Ed25519 keys are skipped with a warning."""
-    from cryptography.hazmat.backends import default_backend
-
-    rsa_key = generate_private_key(public_exponent=65537, key_size=2048, backend=default_backend())
+    rsa_key = generate_private_key(65537, 2048)
     rsa_pub = rsa_key.public_key()
     pub_bytes = rsa_pub.public_bytes(Encoding.PEM, PublicFormat.SubjectPublicKeyInfo)
     pub_file = tmp_path / "rsa_key.pub"
