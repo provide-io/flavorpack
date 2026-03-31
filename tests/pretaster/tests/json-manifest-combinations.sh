@@ -17,9 +17,6 @@ set -uo pipefail
 
 # Load test library
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Ensure CI-related vars are defined (test-lib.sh references them)
-CI="${CI:-}"
-GITHUB_ACTIONS="${GITHUB_ACTIONS:-}"
 source "$SCRIPT_DIR/test-lib.sh"
 
 echo "🗂️  Testing JSON Manifest Handling Across Builder/Launcher Combinations"
