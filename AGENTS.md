@@ -41,6 +41,19 @@ make validate-pspf
 
 # Test all builder/launcher combinations
 make validate-pspf-combo
+
+# Run intent-oriented test surfaces
+make test-unit
+make test-integration
+make test-cross-language
+make test-security
+make test-adversarial
+make test-property
+make test-fuzz
+make test-mutation
+make test-smoke
+make test-fast
+make test-slow
 ```
 
 ### Quality Workflows
@@ -167,7 +180,18 @@ uv run pytest -m unit
 uv run pytest -m integration
 uv run pytest -m cross_language
 uv run pytest -m security
+uv run pytest -m adversarial
+uv run pytest -m property
+uv run pytest -m "fast and not slow"
 ```
+
+Shared taxonomy:
+- `unit`, `integration`, `cross_language`
+- `security`: intended security behavior
+- `adversarial`: hostile inputs and trust-boundary violations
+- `property`: parameterized/invariant-driven behavior
+- `fuzz`, `mutation`, `smoke`
+- `fast`, `slow`, `ci` as cost/execution selectors
 - you will remember to NEVER do ad-hoc signing unless SPECIFICALLY REQUESTED, or you suggest it and I approve.
 - make sure to remember to use debug/trace logging instead of "print" statements when debugging.
 - use pretaster or taster instead of "simple tests." no PSPF tests in /tmp. ALL tests MUST use pretaster or taster - NEVER create standalone test files or test manifests.
