@@ -92,8 +92,32 @@ func BuildWithLogLevel(manifestPath, outputPath, launcherBin, privateKeyPath, pu
 	} else if !logging.IsJSONFormat(logLevel) {
 		logOutput = logging.NewPrefixWriter("🐹 ", builderStderrWriter)
 	}
-	logging.Setup(logLevel, logOutput)
-	logger := logging.NewLogger(context.Background(), "flavor-go.builder")
+
+	// Configure logger
+	var output io.Writer = os.Stderr
+
+	// Support log file output
+	if logPath := os.Getenv(EnvLogPath); logPath != "" {
+		if file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644); err == nil {
+			output = file
+		}
+	}
+
+	// Add 🐹 prefix to non-JSON output
+	if !jsonFormat {
+		output = logging.NewPrefixWriter("🐹 ", output)
+	}
+
+	logger := hclog.New(&hclog.LoggerOptions{
+		Name:       "flavor-go-builder",
+		Level:      hclog.LevelFromString(actualLevel),
+		JSONFormat: jsonFormat,
+		Output:     output,
+		TimeFormat: "2006-01-02T15:04:05Z", // UTC ISO format without timezone
+		TimeFn: func() time.Time {
+			return time.Now().UTC() // Force UTC time
+		},
+	})
 
 	// Log startup messages
 	logger.Info("🐹🐹🐹 Hello from Flavor's Go Builder 🐹🐹🐹")

@@ -210,7 +210,7 @@ impl Reader {
             let json_data = String::from_utf8(json_bytes)
                 .map_err(|e| FlavorError::Generic(format!("Metadata is not valid UTF-8: {}", e)))?;
 
-            if std::env::var("FLAVOR_DEBUG_METADATA").is_ok() {
+            if std::env::var(crate::env_vars::DEBUG_METADATA).is_ok() {
                 #[cfg(debug_assertions)]
                 if let Err(e) = std::fs::write("debug_metadata.json", &json_data) {
                     debug!("⚠️ Could not save decompressed metadata: {}", e);
