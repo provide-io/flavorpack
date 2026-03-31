@@ -56,7 +56,7 @@ def build_attestation(
         launcher_language=package_info.get("launcher_language", "unknown"),
         launcher_version=package_info.get("launcher_version", "unknown"),
         launcher_hash=package_info.get("launcher_hash", ""),
-        signing_key_fingerprint=signing_key_fingerprint or "",
+        signing_key_fingerprint=signing_key_fingerprint or None,
     )
 
     attestation: dict[str, Any] = {"provenance": provenance}
