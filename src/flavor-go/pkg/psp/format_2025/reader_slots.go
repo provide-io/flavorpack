@@ -238,6 +238,11 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 			}
 
 			target := filepath.Join(extractDir, hdr.Name)
+			cleanTarget := filepath.Clean(target)
+			cleanBase := filepath.Clean(extractDir)
+			if !strings.HasPrefix(cleanTarget, cleanBase+string(os.PathSeparator)) && cleanTarget != cleanBase {
+				return "", fmt.Errorf("tar entry %q escapes extraction directory", hdr.Name)
+			}
 
 			switch hdr.Typeflag {
 			case tar.TypeDir:

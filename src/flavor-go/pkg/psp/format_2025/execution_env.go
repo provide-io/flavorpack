@@ -4,6 +4,7 @@ package format_2025
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
@@ -30,7 +31,7 @@ func setFlavorCacheBeforeWorkenv(env []string, logger hclog.Logger) []string {
 		return env
 	}
 
-	flavorCache := fmt.Sprintf("%s/%s", homeValue, defaultCacheSubdir)
+	flavorCache := filepath.Join(homeValue, defaultCacheSubdir)
 	env = append(env, fmt.Sprintf("FLAVOR_CACHE=%s", flavorCache))
 	logger.Debug("🗂️ Setting FLAVOR_CACHE to HOST cache", "path", flavorCache)
 	return env

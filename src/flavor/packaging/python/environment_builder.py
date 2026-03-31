@@ -118,8 +118,6 @@ class PythonEnvironmentBuilder:
         Retries:
             Up to 3 attempts with exponential backoff for network errors
         """
-        import sys
-
         uv_cmd = self.find_uv_command()
         if uv_cmd is None:
             logger.error("UV command not found")
@@ -131,10 +129,9 @@ class PythonEnvironmentBuilder:
         # to x86_64 because ARM64 support is labelled "not yet mature" upstream.
         python_spec = self._resolve_uv_python_spec()
         if python_spec != self.python_version:
-            print(
-                f"[flavor-python] Windows ARM64 detected — requesting native Python: {python_spec}",
-                flush=True,
-                file=sys.stdout,
+            logger.info(
+                "Windows ARM64 detected — requesting native Python",
+                python_spec=python_spec,
             )
 
         # Strategy 1: install to custom dir
@@ -142,42 +139,36 @@ class PythonEnvironmentBuilder:
         logger.debug("💻🚀📋 Running command", command=" ".join(cmd_custom))
         try:
             result = run(cmd_custom, capture_output=True, env=_windows_system_env() or None)
-            print(
-                f"[flavor-python] uv python install (custom-dir) exit={result.returncode} "
-                f"stderr={result.stderr.strip()!r:.120}",
-                flush=True,
-                file=sys.stdout,
+            logger.debug(
+                "uv python install (custom-dir) completed",
+                exit_code=result.returncode,
+                stderr=result.stderr.strip()[:120] if result.stderr else "",
             )
 
             python_path = self._find_python_installation(uv_install_dir, uv_cmd)
             if python_path:
                 return python_path
         except Exception as e:
-            print(
-                f"[flavor-python] Strategy 1 failed: {e}",
-                flush=True,
-                file=sys.stdout,
-            )
+            logger.debug(f"Strategy 1 failed: {e}")
 
         # Strategy 2: install to uv's default managed location, then find it
         logger.debug("💻🚀📋 Strategy 2: installing to default managed location")
         try:
             cmd_default = [uv_cmd, "python", "install", python_spec]
             result2 = run(cmd_default, capture_output=True, env=_windows_system_env() or None)
-            print(
-                f"[flavor-python] uv python install (default) exit={result2.returncode} "
-                f"stderr={result2.stderr.strip()!r:.120}",
-                flush=True,
-                file=sys.stdout,
+            logger.debug(
+                "uv python install (default) completed",
+                exit_code=result2.returncode,
+                stderr=result2.stderr.strip()[:120] if result2.stderr else "",
             )
 
             find_cmd = [uv_cmd, "python", "find", python_spec, "--python-preference", "only-managed"]
             result3 = run(find_cmd, capture_output=True, env=_windows_system_env() or None)
             python_bin_str = result3.stdout.strip()
-            print(
-                f"[flavor-python] uv python find exit={result3.returncode} path={python_bin_str!r:.200}",
-                flush=True,
-                file=sys.stdout,
+            logger.debug(
+                "uv python find completed",
+                exit_code=result3.returncode,
+                path=python_bin_str[:200] if python_bin_str else "",
             )
 
             if result3.returncode == 0 and python_bin_str:
@@ -185,16 +176,11 @@ class PythonEnvironmentBuilder:
                 logger.info(f"Found Python via uv python find: {python_bin}")
                 return self._validate_python_installation(python_bin)
         except Exception as e:
-            print(
-                f"[flavor-python] Strategy 2 failed: {e}",
-                flush=True,
-                file=sys.stdout,
-            )
+            logger.debug(f"Strategy 2 failed: {e}")
 
-        print(
-            f"[flavor-python] Both strategies failed to locate Python {self.python_version}",
-            flush=True,
-            file=sys.stdout,
+        logger.info(
+            "Both strategies failed to locate Python",
+            python_version=self.python_version,
         )
         return None
 
@@ -361,7 +347,17 @@ class PythonEnvironmentBuilder:
         if python_bin.is_symlink():
             target = python_bin.resolve()
             logger.warning("🔗🔍⚠️ Python binary is a symlink", target=str(target))
-            if str(target).startswith("/usr") or str(target).startswith("/System"):
+            target_str = str(target)
+            # Check for system paths on macOS/Linux and Windows
+            is_system_path = (
+                target_str.startswith("/usr")
+                or target_str.startswith("/System")
+                or target_str.startswith("/opt/homebrew/Cellar")
+                or target_str.startswith("/home/linuxbrew")
+                or target_str.startswith("C:\\Windows")
+                or target_str.startswith("C:\\Program Files")
+            )
+            if is_system_path:
                 logger.error("🔗🚫❌ Python is a system symlink, not standalone!")
 
         # Go up to the installation root.
