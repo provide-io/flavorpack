@@ -150,7 +150,9 @@ impl WorkenvPaths {
 #[cfg(test)]
 mod tests {
     use super::WorkenvPaths;
-    use std::path::PathBuf;
+    use std::fs;
+    use std::path::{Path, PathBuf};
+    use tempfile::tempdir;
 
     #[test]
     fn test_paths_structure() {
@@ -175,5 +177,51 @@ mod tests {
             paths.lock_file(),
             PathBuf::from("/home/user/.cache/flavor/workenv/.myapp.pspf/instance/extract/lock")
         );
+    }
+
+    #[test]
+    fn test_paths_strip_pspf_suffix_and_handle_unknown_name() {
+        let cache = PathBuf::from("/cache");
+        let psp = WorkenvPaths::new(cache.clone(), Path::new("/tmp/tool.pspf"));
+        let no_name = WorkenvPaths::new(cache, Path::new("/"));
+
+        assert_eq!(psp.name(), "tool");
+        assert_eq!(psp.metadata(), PathBuf::from("/cache/workenv/.tool.pspf"));
+        assert_eq!(no_name.name(), "unknown");
+    }
+
+    #[test]
+    fn test_list_temp_extractions_returns_only_directories() {
+        let dir = tempdir().expect("tempdir");
+        let cache = dir.path().join("cache");
+        let paths = WorkenvPaths::new(cache.clone(), Path::new("/tmp/example.psp"));
+
+        let tmp_dir = paths.tmp();
+        fs::create_dir_all(tmp_dir.join("1111")).expect("create temp extraction");
+        fs::create_dir_all(tmp_dir.join("2222")).expect("create temp extraction");
+        fs::write(tmp_dir.join("note.txt"), b"ignore me").expect("write file");
+
+        let mut found = paths
+            .list_temp_extractions()
+            .expect("list temp extractions");
+        found.sort();
+
+        assert_eq!(found, vec![tmp_dir.join("1111"), tmp_dir.join("2222")]);
+    }
+
+    #[test]
+    fn test_metadata_and_workenv_existence_checks_follow_filesystem() {
+        let dir = tempdir().expect("tempdir");
+        let cache = dir.path().join("cache");
+        let paths = WorkenvPaths::new(cache.clone(), Path::new("/tmp/example.psp"));
+
+        assert!(!paths.workenv_exists());
+        assert!(!paths.metadata_exists());
+
+        fs::create_dir_all(paths.workenv()).expect("create workenv");
+        fs::create_dir_all(paths.metadata()).expect("create metadata");
+
+        assert!(paths.workenv_exists());
+        assert!(paths.metadata_exists());
     }
 }
