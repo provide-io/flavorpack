@@ -18,6 +18,7 @@ from provide.foundation.utils import get_version
 # Import all commands at module level
 from flavor.commands.extract import extract_all_command, extract_command
 from flavor.commands.helpers import helper_group
+from flavor.commands.init import init_command
 from flavor.commands.inspect import inspect_command
 from flavor.commands.keygen import keygen_command
 from flavor.commands.package import pack_command
@@ -93,6 +94,7 @@ def cli(ctx: click.Context) -> None:
 
 
 # Register simple commands
+cli.add_command(init_command, name="init")
 cli.add_command(keygen_command, name="keygen")
 cli.add_command(pack_command, name="pack")
 cli.add_command(verify_command, name="verify")
