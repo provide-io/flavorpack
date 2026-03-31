@@ -8,6 +8,8 @@
 This module provides both pure functions and a fluent builder interface
 for creating PSPF packages."""
 
+from __future__ import annotations
+
 import hashlib
 import os
 from pathlib import Path
