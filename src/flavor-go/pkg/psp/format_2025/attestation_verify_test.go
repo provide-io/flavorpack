@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -40,7 +37,7 @@ func buildAttestationBundle(t *testing.T, slotContents []byte, digestHex string)
 	if err != nil {
 		t.Fatalf("create temp file: %v", err)
 	}
-	defer func() { _ = f.Close() }()
+	defer f.Close()
 
 	var offset uint64
 
@@ -135,7 +132,7 @@ func TestVerifyAttestationSbomDigest_Match(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader: %v", err)
 	}
-	defer func() { _ = reader.Close() }()
+	defer reader.Close()
 
 	if err := reader.VerifyAttestationSbomDigest(); err != nil {
 		t.Errorf("expected no error for matching digest, got: %v", err)
@@ -154,7 +151,7 @@ func TestVerifyAttestationSbomDigest_Mismatch(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader: %v", err)
 	}
-	defer func() { _ = reader.Close() }()
+	defer reader.Close()
 
 	err = reader.VerifyAttestationSbomDigest()
 	if err == nil {
@@ -174,7 +171,7 @@ func TestVerifyAttestationSbomDigest_NoDigest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader: %v", err)
 	}
-	defer func() { _ = reader.Close() }()
+	defer reader.Close()
 
 	if err := reader.VerifyAttestationSbomDigest(); err != nil {
 		t.Errorf("expected no error when digest field is absent, got: %v", err)
@@ -189,7 +186,7 @@ func TestVerifyAttestationSbomDigest_DigestPresentNoSlot(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create temp file: %v", err)
 	}
-	defer func() { _ = f.Close() }()
+	defer f.Close()
 
 	// Write a single non-attestation slot (lifecycle = LifecycleRuntime = 2).
 	slotContent := []byte("payload")
@@ -208,7 +205,7 @@ func TestVerifyAttestationSbomDigest_DigestPresentNoSlot(t *testing.T) {
 	if _, err := f.Write(slotContent); err != nil {
 		t.Fatalf("write slot data: %v", err)
 	}
-	offset := uint64(len(slotContent))
+	var offset uint64 = uint64(len(slotContent))
 
 	slotTableOffset := offset
 	if _, err := f.Write(desc.Pack()); err != nil {
@@ -253,13 +250,13 @@ func TestVerifyAttestationSbomDigest_DigestPresentNoSlot(t *testing.T) {
 		t.Fatalf("write MagicTrailer: %v", err)
 	}
 	bundlePath := f.Name()
-	_ = f.Close()
+	f.Close()
 
 	reader, err := NewReader(bundlePath)
 	if err != nil {
 		t.Fatalf("NewReader: %v", err)
 	}
-	defer func() { _ = reader.Close() }()
+	defer reader.Close()
 
 	err = reader.VerifyAttestationSbomDigest()
 	if err == nil {
