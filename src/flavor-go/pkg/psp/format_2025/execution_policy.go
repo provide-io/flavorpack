@@ -78,7 +78,7 @@ func getSystemPolicyFile() string {
 }
 
 func getUserPolicyFile() string {
-	if configDir := os.Getenv("FLAVOR_CONFIG_DIR"); configDir != "" {
+	if configDir := os.Getenv(EnvConfigDir); configDir != "" {
 		return filepath.Join(configDir, "policy.toml")
 	}
 	if xdgConfig := os.Getenv("XDG_CONFIG_HOME"); xdgConfig != "" {

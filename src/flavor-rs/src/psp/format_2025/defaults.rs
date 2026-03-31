@@ -225,12 +225,8 @@ pub fn get_validation_level() -> ValidationLevel {
     use std::env;
 
     // Check FLAVOR_VALIDATION variable
-    validation_level_from_env_value(env::var(crate::env_vars::VALIDATION).ok().as_deref())
-}
-
-fn validation_level_from_env_value(value: Option<&str>) -> ValidationLevel {
-    if let Some(val) = value {
-        if let Some(level) = ValidationLevel::parse(val) {
+    if let Ok(val) = env::var(crate::env_vars::VALIDATION) {
+        if let Some(level) = ValidationLevel::parse(&val) {
             return level;
         }
     }

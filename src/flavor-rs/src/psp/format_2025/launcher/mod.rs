@@ -262,13 +262,8 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
     debug!("🔧 Command: {}", metadata.execution.command);
 
     // Get work environment paths
-    let custom_workenv = env::var(crate::env_vars::WORKENV).ok();
-    let paths = select_workenv_paths(
-        package_path,
-        custom_workenv.as_deref(),
-        options.workdir.as_deref(),
-    );
-    if let Some(ref custom_workenv) = custom_workenv {
+    let paths = if let Ok(custom_workenv) = env::var(crate::env_vars::WORKENV) {
+        // Use custom workenv path from environment variable
         info!(
             "📁 Using custom work environment from FLAVOR_WORKENV: {}",
             custom_workenv
@@ -312,7 +307,9 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
 
     // Check work environment validity
     // If FLAVOR_WORKENV_CACHE is set to false, always treat as invalid to force extraction
-    let use_cache = cache_enabled_from_env(env::var(crate::env_vars::WORKENV_CACHE).ok());
+    let use_cache = env::var(crate::env_vars::WORKENV_CACHE)
+        .map(|v| v.to_lowercase() != "false" && v != "0")
+        .unwrap_or(true);
 
     let workenv_valid = if use_cache {
         debug!("🔍 Checking cache validity");
