@@ -202,6 +202,22 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		} else {
 			logger.Debug("✅ Attestation SBOM digest verified")
 		}
+
+		// Verify attestation policy hash (fail-closed: hash present but no policy = error)
+		logger.Debug("🔍 Verifying attestation policy hash", "level", validationLevel)
+		if err := reader.VerifyAttestationPolicyHash(); err != nil {
+			switch validationLevel {
+			case ValidationMinimal, ValidationRelaxed:
+				fmt.Fprintf(os.Stderr, "⚠️ SECURITY WARNING: Failed to verify attestation policy hash: %v\n", err)
+				fmt.Fprintf(os.Stderr, "⚠️ Continuing due to validation level: %v\n", validationLevel)
+				logger.Warn("⚠️ Failed to verify attestation policy hash, continuing", "error", err, "level", validationLevel)
+			default: // ValidationStrict, ValidationStandard
+				logger.Error("❌ Failed to verify attestation policy hash", "error", err)
+				return nil, fmt.Errorf("failed to verify attestation policy hash: %w", err)
+			}
+		} else {
+			logger.Debug("✅ Attestation policy hash verified")
+		}
 	}
 
 	metadata, err := reader.ReadMetadata()

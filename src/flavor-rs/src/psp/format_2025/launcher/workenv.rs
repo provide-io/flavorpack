@@ -167,6 +167,7 @@ mod tests {
             runtime: None,
             workenv: None,
             setup_commands: Vec::new(),
+            policy: None,
         }
     }
 
