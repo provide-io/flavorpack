@@ -227,4 +227,25 @@ func TestGetUserPolicyFile_NoEnv(t *testing.T) {
 	_ = getUserPolicyFile()
 }
 
+func TestParseMinimalTOML_InlineComment(t *testing.T) {
+	content := "[execution]\nrefuse_root = true # disable if needed\n"
+	policy := OperatorPolicy{}
+	parseMinimalTOML([]byte(content), &policy)
+	if !policy.RefuseRoot {
+		t.Error("expected refuse_root=true after stripping inline comment")
+	}
+}
+
+func TestParseMinimalTOML_AllowPlatforms(t *testing.T) {
+	content := "[execution]\nallow_platforms = [\"linux_amd64\", \"linux_arm64\"]\n"
+	policy := OperatorPolicy{}
+	parseMinimalTOML([]byte(content), &policy)
+	if len(policy.AllowPlatforms) != 2 {
+		t.Errorf("expected 2 platforms, got %d: %v", len(policy.AllowPlatforms), policy.AllowPlatforms)
+	}
+	if policy.AllowPlatforms[0] != "linux_amd64" {
+		t.Errorf("expected linux_amd64, got %s", policy.AllowPlatforms[0])
+	}
+}
+
 func intPtr(n int) *int { return &n }
