@@ -161,4 +161,12 @@ VALIDATION_LEVELS = {
     VALIDATION_NONE: 4,
 }
 
+# =================================
+# Environment variable names
+# (constants used before config loads)
+# =================================
+ENV_CACHE_DIR = "FLAVOR_CACHE"
+ENV_CONFIG_DIR = "FLAVOR_CONFIG_DIR"
+ENV_TRUSTED_KEYS_DIR = "FLAVOR_TRUSTED_KEYS_DIR"
+
 # 🌶️📦🔚

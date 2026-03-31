@@ -15,7 +15,6 @@ from provide.foundation.file import temp_dir
 from provide.foundation.platform import get_platform_string, is_windows
 from provide.foundation.process import run
 
-from flavor.env_vars import BUILDER_BIN
 from flavor.exceptions import BuildError
 from flavor.helpers.manager import HelperManager
 from flavor.packaging.orchestrator_helpers import (
@@ -147,10 +146,10 @@ class PackagingOrchestrator:
         # Store for later use
         self._launcher_path = launcher_path
 
-        if self.builder_bin or os.environ.get(BUILDER_BIN):
+        if self.builder_bin or os.environ.get("FLAVOR_BUILDER_BIN"):
             logger.debug(
                 "🔨📍📋 Builder path",
-                builder=self.builder_bin or os.environ.get(BUILDER_BIN),
+                builder=self.builder_bin or os.environ.get("FLAVOR_BUILDER_BIN"),
             )
             self._build_with_external_builder()
         else:
