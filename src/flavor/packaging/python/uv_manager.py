@@ -314,7 +314,7 @@ class UVManager(BaseToolManager):
         """
 
         # Use current Python for UV execution
-        python_exe = Path("/usr/bin/python3")  # This will be replaced by actual discovery
+        python_exe = Path(sys.executable)
 
         venv_cmd = self._get_uv_venv_cmd(python_exe, venv_path, python_version)
 
@@ -624,8 +624,9 @@ class UVManager(BaseToolManager):
                             ):
                                 dst.write(src.read())
 
-                            # Make executable
-                            uv_path.chmod(0o755)
+                            # Make executable (Unix-like systems only)
+                            if sys.platform != "win32":
+                                uv_path.chmod(0o755)
 
                             return uv_path
 

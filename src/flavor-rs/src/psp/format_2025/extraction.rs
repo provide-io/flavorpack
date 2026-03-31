@@ -328,6 +328,16 @@ pub fn extract_tarball(data: &[u8], dest_dir: &Path) -> Result<()> {
             continue;
         }
 
+        // Path traversal protection: ensure the destination stays within dest_dir.
+        // We cannot use canonicalize() because the file may not exist yet, but
+        // PathBuf::starts_with already handles ".." components in the joined path.
+        if !dest_path.starts_with(dest_dir) {
+            return Err(FlavorError::Generic(format!(
+                "tar entry {:?} escapes extraction directory",
+                path
+            )));
+        }
+
         // Create parent directories if needed
         if let Some(parent) = dest_path.parent() {
             if !parent.exists() {
