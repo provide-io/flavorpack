@@ -8,10 +8,7 @@
 This module provides both pure functions and a fluent builder interface
 for creating PSPF packages."""
 
-from __future__ import annotations
-
 import hashlib
-import json
 import os
 from pathlib import Path
 import sys
@@ -281,17 +278,6 @@ def create_index(
         fp = hashlib.sha256(public_key).hexdigest()
         index.attestation_key_fp = fp.encode("ascii")
     # else: leave attestation_key_fp as b"\x00" * 64 (unsigned package)
-
-    # Bind attestation SBOM digest to the index (64 ASCII hex chars)
-    if attestation_hex_digest:
-        index.attestation_sbom_digest = attestation_hex_digest.encode("ascii")
-
-    # Write policy_hash into index
-    policy_raw = spec.metadata.get("policy", {})
-    if policy_raw:
-        canonical_policy = json.dumps(policy_raw, sort_keys=True, separators=(",", ":"))
-        policy_hash = hashlib.sha256(canonical_policy.encode()).hexdigest()
-        index.attestation_policy_hash = policy_hash.encode("ascii").ljust(64, b"\x00")[:64]
 
     # Set capabilities based on options
     capabilities = 0
