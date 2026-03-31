@@ -4,7 +4,7 @@ import "os"
 
 func getLauncherPath(unused string) string {
 	// Check environment variable
-	if launcherBin := os.Getenv(EnvLauncherBin); launcherBin != "" {
+	if launcherBin := os.Getenv("FLAVOR_LAUNCHER_BIN"); launcherBin != "" {
 		return launcherBin
 	}
 

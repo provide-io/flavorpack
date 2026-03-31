@@ -5,7 +5,6 @@
 
 """Helper functions for the packaging orchestrator build pipeline."""
 
-import gzip
 import os
 from pathlib import Path
 import tarfile
@@ -16,7 +15,6 @@ from provide.foundation.file.formats import write_json
 from provide.foundation.platform import is_windows
 from provide.foundation.serialization import json_dumps
 
-from flavor.config.defaults import ENV_BUILDER_BIN, ENV_LAUNCHER_BIN
 from flavor.exceptions import BuildError
 from flavor.packaging.defaults import DEFAULT_ENV_ISOLATION_UNSET
 
@@ -82,27 +80,21 @@ def create_slot_tarballs(temp_dir: Path, artifacts: dict[str, Path]) -> dict[str
 
     slots = {}
 
-    # UV binary: pre-compress with gzip so external builders (Go/Rust) store
-    # data that matches operations="gzip" — both builders stream source bytes
-    # directly without applying compression themselves.
-    uv_raw = artifacts["payload_dir"] / "bin" / uv_exe
-    uv_gz = temp_dir / f"{uv_exe}.gz"
-    with uv_raw.open("rb") as src, gzip.open(uv_gz, "wb") as dst:
-        dst.write(src.read())
-    slots["uv"] = uv_gz
+    # UV is a single binary (builder will compress it)
+    uv_path = artifacts["payload_dir"] / "bin" / uv_exe
+    slots["uv"] = uv_path
 
     python_tarball = artifacts.get("python_tgz")
     if not python_tarball:
         raise BuildError("Python runtime tarball not found")
-    slots["python"] = python_tarball  # already .tar.gz, matches operations="tgz"
+    slots["python"] = python_tarball
 
-    # Wheels: build a .tar.gz so stored bytes match operations="tgz"
-    wheels_tgz = temp_dir / "wheels.tar.gz"
-    with tarfile.open(wheels_tgz, "w:gz") as tar:
+    wheels_tarball = temp_dir / "wheels.tar"
+    with tarfile.open(wheels_tarball, "w") as tar:
         wheels_dir = artifacts["payload_dir"] / "wheels"
         for wheel in wheels_dir.glob("*.whl"):
             tar.add(wheel, arcname=f"wheels/{wheel.name}")
-    slots["wheels"] = wheels_tgz
+    slots["wheels"] = wheels_tarball
 
     return slots
 
@@ -137,8 +129,8 @@ def create_builder_manifest(
         runtime_command = f"{{workenv}}/{bin_dir}/{package_exe}"
 
     manifest = {
-        "package": {"name": package_name, "version": version},
-        "execution": {"command": runtime_command},
+        "name": package_name,
+        "version": version,
         "cache_validation": {
             "check_file": "{workenv}/metadata/installed",
             "expected_content": f"{package_name}-{version}",
@@ -182,6 +174,7 @@ def create_builder_manifest(
                 "content": "{package_name}-{version}",
             },
         ],
+        "command": runtime_command,
         "slots": [
             {
                 "id": "uv",
@@ -292,12 +285,12 @@ def find_builder_executable(builder_bin: str | None) -> Path:
         logger.info(f"Using custom builder: {path}")
         return path
 
-    env_bin = os.environ.get(ENV_BUILDER_BIN)
+    env_bin = os.environ.get("FLAVOR_BUILDER_BIN")
     if env_bin:
         path = Path(env_bin)
         if not path.exists():
             raise BuildError(f"Builder binary not found: {path.as_posix()}")
-        logger.info(f"Using builder from {ENV_BUILDER_BIN}: {path}")
+        logger.info(f"Using builder from FLAVOR_BUILDER_BIN: {path}")
         return path
 
     from flavor.helpers.manager import HelperManager
@@ -318,8 +311,8 @@ def find_builder_executable(builder_bin: str | None) -> Path:
                 "   • flavor helpers build         (if flavor CLI is available)\n"
                 "\n"
                 "💡 Or specify a custom builder with:\n"
-                f"   • --builder-bin /path/to/builder   (command line)\n"
-                f"   • {ENV_BUILDER_BIN}=/path/to/builder (environment variable)\n"
+                "   • --builder-bin /path/to/builder   (command line)\n"
+                "   • FLAVOR_BUILDER_BIN=/path/to/builder (environment variable)\n"
                 "\n"
                 f"🔍 Searched locations: {manager.helpers_bin.as_posix()}, {manager.installed_helpers_bin.as_posix()}"
             ) from e
@@ -333,11 +326,11 @@ def find_launcher_executable(launcher_bin: str | None) -> Path:
             raise BuildError(f"Launcher binary not found: {launcher_bin}")
         return path
 
-    env_bin = os.environ.get(ENV_LAUNCHER_BIN)
+    env_bin = os.environ.get("FLAVOR_LAUNCHER_BIN")
     if env_bin:
         path = Path(env_bin)
         if not path.exists():
-            raise BuildError(f"Launcher binary from {ENV_LAUNCHER_BIN} not found: {env_bin}")
+            raise BuildError(f"Launcher binary from FLAVOR_LAUNCHER_BIN not found: {env_bin}")
         return path
 
     from flavor.helpers.manager import HelperManager
@@ -358,8 +351,8 @@ def find_launcher_executable(launcher_bin: str | None) -> Path:
                 "   • flavor helpers build         (if flavor CLI is available)\n"
                 "\n"
                 "💡 Or specify a custom launcher with:\n"
-                f"   • --launcher-bin /path/to/launcher (command line)\n"
-                f"   • {ENV_LAUNCHER_BIN}=/path/to/launcher (environment variable)\n"
+                "   • --launcher-bin /path/to/launcher (command line)\n"
+                "   • FLAVOR_LAUNCHER_BIN=/path/to/launcher (environment variable)\n"
                 "\n"
                 f"🔍 Searched locations: {manager.helpers_bin.as_posix()}, {manager.installed_helpers_bin.as_posix()}"
             ) from e

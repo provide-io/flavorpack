@@ -5,7 +5,6 @@
 
 """Unit tests for the PackagingOrchestrator."""
 
-import sys
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -61,8 +60,7 @@ def setup_payload_dir(tmp_path: Path) -> Path:
     wheels_dir = payload_dir / "wheels"
     bin_dir.mkdir(parents=True)
     wheels_dir.mkdir()
-    uv_name = "uv.exe" if sys.platform == "win32" else "uv"
-    (bin_dir / uv_name).touch()
+    (bin_dir / "uv").touch()
     return payload_dir
 
 

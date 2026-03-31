@@ -9,7 +9,6 @@ package format_2025
 import (
 	"encoding/binary"
 	"fmt"
-	"math"
 
 	"github.com/hashicorp/go-hclog"
 )
@@ -84,10 +83,6 @@ func needsDOSStubExpansion(data []byte, logger hclog.Logger) bool {
 //
 // Returns error if operation fails
 func updateSectionOffsets(data []byte, paddingSize int, logger hclog.Logger) error {
-	if paddingSize < 0 {
-		return fmt.Errorf("padding size must be non-negative, got %d", paddingSize)
-	}
-
 	// Get PE header location
 	peOffset := int(binary.LittleEndian.Uint32(data[0x3C:0x40]))
 	coffOffset := peOffset + 4
@@ -116,9 +111,6 @@ func updateSectionOffsets(data []byte, paddingSize int, logger hclog.Logger) err
 
 		// Update if non-zero
 		if currentPtr > 0 {
-			if uint64(currentPtr)+uint64(paddingSize) > uint64(math.MaxUint32) {
-				return fmt.Errorf("section %d raw data pointer overflows uint32: 0x%x + %d", i, currentPtr, paddingSize)
-			}
 			newPtr := currentPtr + uint32(paddingSize)
 			binary.LittleEndian.PutUint32(data[ptrOffset:ptrOffset+4], newPtr)
 

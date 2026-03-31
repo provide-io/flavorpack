@@ -332,44 +332,6 @@ make validate-pspf-combo
 pretaster test --builder go --launcher rust
 ```
 
-## Cross-Language Verification Contract
-
-Every implementation — Python, Go, and Rust — must perform the same sequence of checks when reading a PSPF package. This contract ensures that a package built by any one implementation can be trusted by any other.
-
-### Verification Matrix
-
-| Check | Python | Go | Rust |
-|---|---|---|---|
-| Magic trailer present and valid | ✅ | ✅ | ✅ |
-| Index checksum (SHA-256) | ✅ | ✅ | ✅ |
-| Metadata checksum (SHA-256) | ✅ | ✅ | ✅ |
-| Per-slot checksums (SHA-256) | ✅ | ✅ | ✅ |
-| Ed25519 signature over index | ✅ | ✅ | ✅ |
-| Package size matches declared value | ✅ | ✅ | ✅ |
-
-### Fail-Closed Requirement
-
-All three implementations must be fail-closed: if an exception or unexpected error occurs at any point during verification, the result must be `valid=False` (or the language-equivalent falsy/error value). No implementation may fall through to a passing state on error. Fail-open verification is a security defect.
-
-### Cache Directory Paths
-
-Launchers extract package contents into a per-platform cache directory:
-
-| Platform | Default path | Override variable |
-|---|---|---|
-| Linux / macOS | `~/.cache/flavor` | `XDG_CACHE_HOME` or `FLAVOR_CACHE_DIR` |
-| Windows | `%LOCALAPPDATA%\flavor` | `FLAVOR_CACHE_DIR` |
-
-Both override variables take precedence over the platform default when set.
-
-### JSON Field Name Standard
-
-Execution environment variables in the package manifest are stored under the `"environment"` key. All three implementations must read and write this field by that exact name to preserve cross-language interoperability.
-
-### Parity Tests
-
-The `tests/parity/` directory contains cross-language parity tests that automatically verify this contract holds across all three implementations. These tests are run as part of the CI pipeline and must pass for any change that touches verification logic.
-
 ## Platform Support
 
 FlavorPack supports major operating systems and architectures:

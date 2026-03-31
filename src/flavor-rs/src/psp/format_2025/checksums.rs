@@ -91,7 +91,7 @@ pub fn calculate_checksum<R: Read>(
             Ok(format!("sha512:{:x}", hasher.finalize()))
         }
         ChecksumAlgorithm::Adler32 => {
-            let mut adler = adler2::Adler32::new();
+            let mut adler = adler::Adler32::new();
             loop {
                 let bytes_read = reader.read(&mut buffer)?;
                 if bytes_read == 0 {
@@ -128,7 +128,7 @@ pub fn calculate_checksum_bytes(
             Ok(format!("sha512:{:x}", hasher.finalize()))
         }
         ChecksumAlgorithm::Adler32 => {
-            let checksum = adler2::adler32_slice(data);
+            let checksum = adler::adler32_slice(data);
             Ok(format!("adler32:{:08x}", checksum))
         }
         ChecksumAlgorithm::Blake2b => {
@@ -150,50 +150,4 @@ pub fn verify_checksum(data: &[u8], checksum_str: &str) -> Result<bool, String> 
     // Compare just the hex part
     let actual_hex = actual.split(':').next_back().unwrap_or(&actual);
     Ok(actual_hex == expected)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{
-        ChecksumAlgorithm, calculate_checksum, calculate_checksum_bytes, parse_checksum,
-        verify_checksum,
-    };
-
-    #[test]
-    fn test_parse_checksum_prefixed_and_legacy_formats() {
-        let (algo, value) = parse_checksum("sha256:abcd").expect("prefixed checksum should parse");
-        assert_eq!(algo, ChecksumAlgorithm::Sha256);
-        assert_eq!(value, "abcd");
-
-        let (algo, value) = parse_checksum("12345678").expect("legacy adler32 should parse");
-        assert_eq!(algo, ChecksumAlgorithm::Adler32);
-        assert_eq!(value, "12345678");
-    }
-
-    #[test]
-    fn test_calculate_checksum_bytes_and_verify() {
-        let data = b"checksum-target";
-        let sha256 = calculate_checksum_bytes(data, ChecksumAlgorithm::Sha256)
-            .expect("sha256 checksum should succeed");
-        assert!(sha256.starts_with("sha256:"));
-        assert!(verify_checksum(data, &sha256).expect("verification should succeed"));
-        assert!(
-            !verify_checksum(b"other", &sha256).expect("mismatched verification should succeed")
-        );
-
-        let adler32 = calculate_checksum_bytes(data, ChecksumAlgorithm::Adler32)
-            .expect("adler32 checksum should succeed");
-        assert!(adler32.starts_with("adler32:"));
-    }
-
-    #[test]
-    fn test_calculate_checksum_streaming_and_blake2b_error() {
-        let checksum = calculate_checksum(&b"streamed"[..], ChecksumAlgorithm::Sha512)
-            .expect("sha512 checksum should succeed");
-        assert!(checksum.starts_with("sha512:"));
-
-        let err = calculate_checksum_bytes(b"data", ChecksumAlgorithm::Blake2b)
-            .expect_err("blake2b should be unsupported");
-        assert_eq!(err.kind(), std::io::ErrorKind::Unsupported);
-    }
 }

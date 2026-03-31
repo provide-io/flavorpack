@@ -17,8 +17,6 @@ from provide.foundation.crypto import format_checksum as calculate_checksum
 from provide.foundation.platform import get_arch_name, get_os_name, get_platform_string
 from provide.foundation.utils import get_version
 
-from flavor.cache import get_xdg_cache_base
-from flavor.config.defaults import ENV_INCLUDE_BUILD_HOST, ENV_LAUNCHER_BIN
 from flavor.psp.format_2025.spec import BuildSpec
 from flavor.psp.format_2025.validation import extract_package_metadata
 from flavor.psp.metadata.paths import validate_metadata_dict
@@ -32,93 +30,59 @@ def get_flavor_version() -> str:
     return get_version("flavorpack", caller_file=__file__)
 
 
-def _launcher_candidate_names(launcher_base: str, platform_str: str, is_windows: bool) -> list[str]:
-    """Return candidate binary filenames to try, most-specific first."""
-    names = [f"{launcher_base}-{platform_str}", launcher_base]
-    if is_windows:
-        names = [f"{launcher_base}-{platform_str}.exe", f"{launcher_base}.exe", *names]
-    return names
-
-
-def _semver_key(path: Path) -> tuple[int, ...]:
-    """Extract numeric version tuple from a versioned helper filename for sorting.
-
-    Expects filenames like ``flavor-rs-launcher-0.3.21-darwin_arm64``.
-    Returns (0,) if no version segment is found (sorts lowest).
-    """
-    import re
-
-    m = re.search(r"-(\d+\.\d+(?:\.\d+)?(?:\.\d+)*)-", path.name)
-    if m:
-        return tuple(int(p) for p in m.group(1).split("."))
-    return (0,)
-
-
-def _find_launcher_in_dir(
-    base_path: Path, launcher_base: str, platform_str: str, names: list[str], is_windows: bool
-) -> Path | None:
-    """Return the first matching launcher path under base_path, or None."""
-    for name in names:
-        p = base_path / name
-        if p.exists():
-            return p
-    if base_path.is_dir():
-        patterns = [f"{launcher_base}-*-{platform_str}"]
-        if is_windows:
-            patterns.insert(0, f"{launcher_base}-*-{platform_str}.exe")
-        for pattern in patterns:
-            matches = sorted(base_path.glob(pattern), key=_semver_key, reverse=True)
-            if matches:
-                return matches[0]
-    return None
-
-
-def load_launcher_binary(launcher_type: str, explicit_path: Path | None = None) -> bytes:  # pragma: no cover
+def load_launcher_binary(launcher_type: str) -> bytes:
     """Load launcher binary for the specified type."""
-    import sys
+    import os
 
     platform_str = get_platform_string()
-    is_windows = sys.platform == "win32"
 
+    # Map launcher types to binary names
     launcher_map = {
         "rust": "flavor-rs-launcher",
         "go": "flavor-go-launcher",
-        "python": "flavor-rs-launcher",
-        "node": "flavor-rs-launcher",
+        "python": "flavor-rs-launcher",  # Python uses Rust launcher
+        "node": "flavor-rs-launcher",  # Node uses Rust launcher
     }
+
     launcher_base = launcher_map.get(launcher_type, "flavor-rs-launcher")
 
-    # Explicit path (--launcher-bin CLI flag) takes highest priority
-    if explicit_path is not None and explicit_path.exists():
-        return explicit_path.read_bytes()
+    # Try both platform-specific and generic names
+    launcher_names = [
+        f"{launcher_base}-{platform_str}",  # Platform-specific first
+        launcher_base,  # Generic fallback
+    ]
 
-    # ENV_LAUNCHER_BIN set by CI environment
-    env_launcher = os.environ.get(ENV_LAUNCHER_BIN)
-    if env_launcher:
-        env_path = Path(env_launcher)
-        if env_path.exists():
-            return env_path.read_bytes()
+    # Get XDG_CACHE_HOME with fallback to ~/.cache
+    xdg_cache = os.environ.get("XDG_CACHE_HOME", str(Path("~/.cache").expanduser()))
 
-    launcher_names = _launcher_candidate_names(launcher_base, platform_str, is_windows)
-
+    # Search paths - prioritize helpers/bin first, then XDG cache location
     base_search_paths = [
-        Path.cwd() / "dist" / "bin",
+        Path.cwd() / "dist" / "bin",  # Built binaries (make build-helpers)
         Path.cwd() / "helpers" / "bin",
         Path.cwd().parent / "helpers" / "bin",
-        Path.cwd().parent.parent / "helpers" / "bin",
-        get_xdg_cache_base() / "flavor" / "helpers" / "bin",
-        Path.home() / ".cache" / "flavor" / "helpers" / "bin",
+        Path.cwd().parent.parent / "helpers" / "bin",  # For tests
+        Path(xdg_cache) / "flavor" / "helpers" / "bin",  # XDG cache location
+        Path.home() / ".cache" / "flavor" / "helpers" / "bin",  # Fallback cache
         Path.cwd() / "workenv" / "flavors" / platform_str,
-        Path.cwd() / "src" / "flavor" / "helpers" / "bin",
+        Path.cwd() / "helpers" / "bin",  # Development helpers
+        Path.cwd() / "src" / "flavor" / "helpers" / "bin",  # Installed helpers
         Path.cwd(),
     ]
 
+    # Try each launcher name in each search path
     for base_path in base_search_paths:
-        found = _find_launcher_in_dir(base_path, launcher_base, platform_str, launcher_names, is_windows)
-        if found:
-            return found.read_bytes()
+        for launcher_name in launcher_names:
+            path = base_path / launcher_name
+            if path.exists():
+                data = path.read_bytes()
+                assert isinstance(data, bytes)
+                return data
 
-    searched_paths = [str(base_path / name) for base_path in base_search_paths for name in launcher_names]
+    # Build helpful error message showing all searched paths
+    searched_paths = []
+    for base_path in base_search_paths:
+        for launcher_name in launcher_names:
+            searched_paths.append(str(base_path / launcher_name))
 
     raise FileNotFoundError(
         f"❌ Could not find {launcher_base} binary!\n"
@@ -129,7 +93,7 @@ def load_launcher_binary(launcher_type: str, explicit_path: Path | None = None) 
         "\n"
         "💡 Or specify a custom launcher with:\n"
         "   • --launcher-bin /path/to/launcher (command line)\n"
-        f"   • {ENV_LAUNCHER_BIN}=/path/to/launcher (environment variable)\n"
+        "   • FLAVOR_LAUNCHER_BIN=/path/to/launcher (environment variable)\n"
         "\n"
         f"🔍 Searched {len(searched_paths)} locations including:\n"
         f"   • {searched_paths[0] if searched_paths else 'No paths'}\n"
@@ -223,12 +187,12 @@ def create_build_metadata(deterministic: bool = False) -> dict[str, Any]:
     # Only add non-deterministic fields if not in deterministic mode
     if not deterministic:
         build_meta["timestamp"] = datetime.datetime.now(datetime.UTC).isoformat()
-        if os.environ.get(ENV_INCLUDE_BUILD_HOST) == "1":
+        if os.environ.get("FLAVOR_INCLUDE_BUILD_HOST") == "1":
             platform_info["host"] = socket.gethostname()
     else:
         # Use fixed timestamp for deterministic builds
         build_meta["timestamp"] = "2025-01-01T00:00:00+00:00"
-        if os.environ.get(ENV_INCLUDE_BUILD_HOST) == "1":
+        if os.environ.get("FLAVOR_INCLUDE_BUILD_HOST") == "1":
             platform_info["host"] = "deterministic-build"
 
     return build_meta
@@ -305,7 +269,7 @@ def assemble_metadata(spec: BuildSpec, slots: list[Any], launcher_info: dict[str
     }
 
     # Add optional sections if present
-    for section in ["cache_validation", "setup_commands", "runtime", "workenv", "policy"]:
+    for section in ["cache_validation", "setup_commands", "runtime", "workenv"]:
         if section in spec.metadata:
             metadata[section] = spec.metadata[section]
 

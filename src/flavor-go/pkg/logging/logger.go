@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
-	"github.com/provide-io/flavor/go/flavor/pkg/envvars"
 )
 
 // NewLogger creates a new hclog logger with standard settings
@@ -16,7 +15,7 @@ func NewLogger(name string, level string, output io.Writer) hclog.Logger {
 	}
 
 	// Determine if JSON format should be used
-	jsonFormat := os.Getenv(envvars.EnvJSONLog) == "1"
+	jsonFormat := os.Getenv("FLAVOR_JSON_LOG") == "1"
 
 	// Add prefix for non-JSON output
 	if !jsonFormat {
@@ -39,7 +38,7 @@ func NewLogger(name string, level string, output io.Writer) hclog.Logger {
 
 // GetLogLevel returns the configured log level from environment
 func GetLogLevel() string {
-	level := os.Getenv(envvars.EnvLogLevel)
+	level := os.Getenv("FLAVOR_LOG_LEVEL")
 	if level == "" {
 		level = "warn" // Default to warn for production safety
 	}

@@ -228,11 +228,8 @@ class TestWheelBuilder:
         """Test error when no requirements file or packages provided."""
         python_exe = Path("/usr/bin/python3")
 
-        with (
-            tempfile.TemporaryDirectory() as tmp_dir,
-            pytest.raises(ValueError, match="Either requirements_file or packages must be provided"),
-        ):
-            self.wheel_builder.resolve_dependencies(python_exe, output_dir=Path(tmp_dir))
+        with pytest.raises(ValueError, match="Either requirements_file or packages must be provided"):
+            self.wheel_builder.resolve_dependencies(python_exe)
 
     def test_download_wheels_for_resolved_deps(self) -> None:
         """Test downloading wheels for resolved dependencies."""

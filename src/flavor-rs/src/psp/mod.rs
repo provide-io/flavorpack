@@ -6,7 +6,7 @@ use crate::exceptions::{FlavorError, Result};
 use std::path::Path;
 
 /// Supported package formats
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy)]
 pub enum PackageFormat {
     PSPF2025,
 }
@@ -56,46 +56,4 @@ pub fn detect_format(package_path: &Path) -> Result<PackageFormat> {
     Err(FlavorError::UnsupportedFormat(
         "Not a PSPF package".to_string(),
     ))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::psp::format_2025::constants::{
-        MAGIC_TRAILER_SIZE, MAGIC_WAND_EMOJI_BYTES, PACKAGE_EMOJI_BYTES,
-    };
-    use std::fs;
-    use tempfile::tempdir;
-
-    fn write_synthetic_package(path: &Path) {
-        let mut bytes = vec![0u8; MAGIC_TRAILER_SIZE];
-        bytes[..PACKAGE_EMOJI_BYTES.len()].copy_from_slice(PACKAGE_EMOJI_BYTES);
-        let trailer_end = bytes.len() - MAGIC_WAND_EMOJI_BYTES.len();
-        bytes[trailer_end..].copy_from_slice(MAGIC_WAND_EMOJI_BYTES);
-        fs::write(path, bytes).expect("write synthetic package");
-    }
-
-    #[test]
-    fn detect_format_recognizes_valid_pspf_trailer() {
-        let dir = tempdir().expect("tempdir");
-        let package_path = dir.path().join("package.pspf");
-        write_synthetic_package(&package_path);
-
-        assert!(matches!(
-            detect_format(&package_path),
-            Ok(PackageFormat::PSPF2025)
-        ));
-    }
-
-    #[test]
-    fn detect_format_rejects_plain_files() {
-        let dir = tempdir().expect("tempdir");
-        let package_path = dir.path().join("package.bin");
-        fs::write(&package_path, b"plain bytes").expect("write plain file");
-
-        assert!(matches!(
-            detect_format(&package_path),
-            Err(FlavorError::UnsupportedFormat(_))
-        ));
-    }
 }

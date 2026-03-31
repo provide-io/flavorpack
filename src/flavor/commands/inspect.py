@@ -35,19 +35,13 @@ log = get_command_logger("inspect")
     is_flag=True,
     help="Output as JSON",
 )
-@click.option("--sbom", "show_sbom", is_flag=True, default=False, help="Print the CycloneDX SBOM.")
-@click.option("--provenance", "show_provenance", is_flag=True, default=False, help="Print build provenance.")
-def inspect_command(package_file: str, output_json: bool, show_sbom: bool, show_provenance: bool) -> None:
+def inspect_command(package_file: str, output_json: bool) -> None:
     """Quick inspection of a flavor package."""
     package_path = Path(package_file)
     log.debug("Inspecting package", package=str(package_path), output_json=output_json)
 
     try:
         with PSPFReader(package_path) as reader:
-            if show_sbom or show_provenance:
-                _output_attestation(reader, show_sbom=show_sbom, show_provenance=show_provenance)
-                return
-
             index = reader.read_index()
             metadata = reader.read_metadata()
             slot_descriptors = reader.read_slot_descriptors()
@@ -72,43 +66,6 @@ def inspect_command(package_file: str, output_json: bool, show_sbom: bool, show_
         log.error("Error inspecting package", package=package_file, error=str(e))
         perr(f"❌ Error inspecting package: {e}")
         raise click.Abort() from e
-
-
-def _get_attestation(reader: PSPFReader) -> dict[str, Any] | None:
-    """Read and parse the attestation slot, or return None if absent."""
-    from flavor.psp.format_2025.attestation import parse_attestation
-    from flavor.psp.format_2025.constants import LIFECYCLE_ATTESTATION
-
-    slot_descriptors = reader.read_slot_descriptors()
-    for i, slot in enumerate(slot_descriptors):
-        if slot.lifecycle == LIFECYCLE_ATTESTATION:
-            content_bytes = reader.read_slot(i)
-            return parse_attestation(content_bytes)
-    return None
-
-
-def _output_attestation(reader: PSPFReader, *, show_sbom: bool, show_provenance: bool) -> None:
-    """Print SBOM or provenance from the attestation slot."""
-    import json
-
-    attestation = _get_attestation(reader)
-    if attestation is None:
-        pout("No attestation slot found in this package.")
-        return
-
-    if show_sbom:
-        sbom = attestation.get("sbom")
-        if sbom is None:
-            pout("Package has no SBOM data.")
-        else:
-            pout(json.dumps(sbom, indent=2))
-
-    if show_provenance:
-        provenance = attestation.get("provenance")
-        if provenance is None:
-            pout("Package has no provenance data.")
-        else:
-            pout(json.dumps(provenance, indent=2))
 
 
 def _output_json_format(

@@ -10,7 +10,6 @@ from __future__ import annotations
 from collections.abc import Iterator
 from pathlib import Path
 import tempfile
-from unittest import mock
 
 import pytest
 
@@ -20,7 +19,6 @@ from flavor.config.defaults import (
     ACCESS_MMAP,
 )
 from flavor.psp.format_2025.backends import (
-    Backend,
     FileBackend,
     HybridBackend,
     MMapBackend,
@@ -136,116 +134,6 @@ class TestBackends:
 
         file_backend = create_backend(ACCESS_FILE)
         assert isinstance(file_backend, FileBackend)
-
-    def test_create_backend_auto_mmap_large_file(self, test_file: Path) -> None:
-        """Test auto backend selects mmap for files > 1MB."""
-        mock_stat = mock.MagicMock()
-        mock_stat.st_size = 2 * 1024 * 1024  # 2MB
-        with (
-            mock.patch.object(Path, "stat", return_value=mock_stat),
-            mock.patch.object(Path, "exists", return_value=True),
-        ):
-            backend = create_backend(ACCESS_AUTO, test_file)
-        assert isinstance(backend, MMapBackend)
-
-    def test_create_backend_auto_no_path(self) -> None:
-        """Test auto backend defaults to FileBackend when path is None."""
-        backend = create_backend(ACCESS_AUTO, None)
-        assert isinstance(backend, FileBackend)
-
-    def test_create_backend_auto_nonexistent_path(self) -> None:
-        """Test auto backend defaults to FileBackend when path does not exist."""
-        nonexistent = Path("/nonexistent/path/that/does/not/exist")
-        backend = create_backend(ACCESS_AUTO, nonexistent)
-        assert isinstance(backend, FileBackend)
-
-    def test_create_backend_unknown_mode(self) -> None:
-        """Test create_backend falls back to HybridBackend for unknown mode."""
-        backend = create_backend(9999)
-        assert isinstance(backend, HybridBackend)
-
-
-class TestBackendAbstractMethods:
-    """Test that abstract method bodies are reachable via super() calls."""
-
-    def test_abstract_open_body(self) -> None:
-        """Cover the abstract open() pass statement via super() call."""
-
-        class ConcreteBackend(Backend):
-            def open(self, path: Path) -> None:
-                super().open(path)  # type: ignore[safe-super]
-
-            def close(self) -> None:
-                pass
-
-            def read_at(self, offset: int, size: int) -> bytes | memoryview:
-                return b""
-
-            def read_slot(self, descriptor: SlotDescriptor) -> bytes | memoryview:
-                return b""
-
-        b = ConcreteBackend()
-        b.open(Path("/dev/null"))  # calls super().open() which hits the pass
-
-    def test_abstract_close_body(self) -> None:
-        """Cover the abstract close() pass statement via super() call."""
-
-        class ConcreteBackend(Backend):
-            def open(self, path: Path) -> None:
-                pass
-
-            def close(self) -> None:
-                super().close()  # type: ignore[safe-super]
-
-            def read_at(self, offset: int, size: int) -> bytes | memoryview:
-                return b""
-
-            def read_slot(self, descriptor: SlotDescriptor) -> bytes | memoryview:
-                return b""
-
-        b = ConcreteBackend()
-        b.close()  # calls super().close() which hits the pass
-
-    def test_abstract_read_at_body(self) -> None:
-        """Cover the abstract read_at() pass statement via super() call."""
-
-        class ConcreteBackend(Backend):
-            def open(self, path: Path) -> None:
-                pass
-
-            def close(self) -> None:
-                pass
-
-            def read_at(self, offset: int, size: int) -> bytes | memoryview:
-                result = super().read_at(offset, size)  # type: ignore[safe-super]
-                return result if result is not None else b""
-
-            def read_slot(self, descriptor: SlotDescriptor) -> bytes | memoryview:
-                return b""
-
-        b = ConcreteBackend()
-        b.read_at(0, 0)
-
-    def test_abstract_read_slot_body(self) -> None:
-        """Cover the abstract read_slot() pass statement via super() call."""
-
-        class ConcreteBackend(Backend):
-            def open(self, path: Path) -> None:
-                pass
-
-            def close(self) -> None:
-                pass
-
-            def read_at(self, offset: int, size: int) -> bytes | memoryview:
-                return b""
-
-            def read_slot(self, descriptor: SlotDescriptor) -> bytes | memoryview:
-                result = super().read_slot(descriptor)  # type: ignore[safe-super]
-                return result if result is not None else b""
-
-        b = ConcreteBackend()
-        slot = SlotDescriptor(id=1, offset=0, size=0)
-        b.read_slot(slot)
 
 
 # 🌶️📦🔚

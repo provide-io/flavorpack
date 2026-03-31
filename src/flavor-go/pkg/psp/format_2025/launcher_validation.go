@@ -34,7 +34,7 @@ const (
 // getValidationLevel determines the validation level from environment or defaults
 func getValidationLevel() ValidationLevel {
 	// Check FLAVOR_VALIDATION variable
-	if val := os.Getenv(EnvValidation); val != "" {
+	if val := os.Getenv("FLAVOR_VALIDATION"); val != "" {
 		switch strings.ToLower(val) {
 		case "strict":
 			return ValidationStrict

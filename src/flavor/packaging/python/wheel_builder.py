@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import importlib.metadata as importlib_metadata
 from pathlib import Path
+import tempfile
 from typing import Any
 
 from provide.foundation.file.directory import ensure_dir
@@ -147,10 +148,16 @@ class WheelBuilder:
                     wheel_cmd.extend([f"--{option}", str(value)])
 
         logger.debug("💻 Building wheel", command=" ".join(wheel_cmd))
-        run(wheel_cmd, check=True, capture_output=True)
+        result = run(wheel_cmd, check=True, capture_output=True)
 
         # Find the built wheel
         built_wheel = self._find_built_wheel(wheel_dir, source_path.name)
+
+        if result.stdout:
+            # Look for wheel filename in output
+            for line in result.stdout.strip().split("\n"):
+                if ".whl" in line:
+                    break
 
         return built_wheel
 
@@ -188,8 +195,7 @@ class WheelBuilder:
         python_exe: Path,
         requirements_file: Path | None = None,
         packages: list[str] | None = None,
-        *,
-        output_dir: Path,
+        output_dir: Path | None = None,
         use_uv_for_resolution: bool = True,
     ) -> Path:
         """
@@ -206,6 +212,11 @@ class WheelBuilder:
             Path to locked requirements file
         """
         logger.info("🔍📝 Resolving dependencies")
+
+        if output_dir is None:
+            # Use a temporary directory that will persist for the caller.
+            # The caller is responsible for cleanup via the returned path.
+            output_dir = Path(tempfile.mkdtemp(prefix="flavor-resolve-"))
 
         # Create input requirements file if packages provided
         if packages and not requirements_file:

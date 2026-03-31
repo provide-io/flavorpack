@@ -22,7 +22,6 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v6
         with:
-          persist-credentials: false
           fetch-depth: 0
       
       - name: 🔍 Get version
@@ -82,8 +81,6 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
-        with:
-          persist-credentials: false
       
       - name: 💾 Cache helpers
         id: cache
@@ -308,8 +305,6 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
-        with:
-          persist-credentials: false
       
       - name: 📥 Download all artifacts
         uses: actions/download-artifact@v8

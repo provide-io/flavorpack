@@ -57,7 +57,6 @@
 )]
 
 pub mod api;
-pub mod env_vars;
 pub mod exceptions;
 pub mod exit_codes;
 pub mod logger;

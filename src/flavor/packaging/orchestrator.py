@@ -12,10 +12,10 @@ from typing import Any
 from provide.foundation import logger, pout
 from provide.foundation.errors import log_only_error_context
 from provide.foundation.file import temp_dir
+from provide.foundation.file.formats import write_json
 from provide.foundation.platform import get_platform_string, is_windows
 from provide.foundation.process import run
 
-from flavor.config.defaults import ENV_BUILDER_BIN
 from flavor.exceptions import BuildError
 from flavor.helpers.manager import HelperManager
 from flavor.packaging.orchestrator_helpers import (
@@ -50,7 +50,6 @@ class PackagingOrchestrator:
         show_progress: bool = False,
         key_seed: str | None = None,
         manifest_type: str = "toml",
-        json_manifest_path: Path | None = None,
     ) -> None:
         self.package_integrity_key_path = package_integrity_key_path
         self.public_key_path = public_key_path
@@ -60,7 +59,6 @@ class PackagingOrchestrator:
         self.entry_point = entry_point
         self.build_config = build_config
         self.manifest_dir = manifest_dir
-        self.json_manifest_path = json_manifest_path
         self.python_version = python_version or self.DEFAULT_PYTHON_VERSION
         self.launcher_bin = launcher_bin
         self.builder_bin = builder_bin
@@ -147,10 +145,10 @@ class PackagingOrchestrator:
         # Store for later use
         self._launcher_path = launcher_path
 
-        if self.builder_bin or os.environ.get(ENV_BUILDER_BIN):
+        if self.builder_bin or os.environ.get("FLAVOR_BUILDER_BIN"):
             logger.debug(
                 "🔨📍📋 Builder path",
-                builder=self.builder_bin or os.environ.get(ENV_BUILDER_BIN),
+                builder=self.builder_bin or os.environ.get("FLAVOR_BUILDER_BIN"),
             )
             self._build_with_external_builder()
         else:
@@ -254,6 +252,7 @@ class PackagingOrchestrator:
                 raise BuildError(f"Package build failed: {'; '.join(result.errors)}")
 
             # Always show completion message, detailed info only with progress flag
+            Path(self.output_flavor_path).stat().st_size / (1024 * 1024)
             if self.show_progress and result.metadata and "duration_seconds" in result.metadata:
                 logger.info(f"⏱️  Build time: {result.metadata['duration_seconds']:.2f}s")
 
@@ -321,44 +320,62 @@ class PackagingOrchestrator:
             logger.info("Building flavor pack...")
             run(build_cmd_args, check=True, capture_output=True)
 
+            # Always show completion message
+            Path(self.output_flavor_path).stat().st_size / (1024 * 1024)
+
     def _build_with_json_manifest(self) -> None:
         """Build package using a JSON manifest directly with external builders."""
         logger.info("Building package with JSON manifest and external builder...")
 
-        # Use the original manifest path so the builder resolves slot source paths
-        # relative to the same directory as the manifest file (its natural CWD).
-        if self.json_manifest_path is None:
-            raise BuildError("json_manifest_path is required for JSON manifest builds")
+        # Write the manifest to a temporary file
+        with temp_dir(prefix="flavor_json_build_") as build_temp_dir:
+            # Transform nested JSON manifest to flat structure expected by external builders
+            flat_manifest = {
+                "name": self.build_config.get("package", {}).get("name", self.package_name),
+                "version": self.build_config.get("package", {}).get("version", self.version),
+                "command": self.build_config.get("execution", {}).get("command", self.entry_point),
+                "slots": self.build_config.get("slots", []),  # Default to empty slots array
+            }
 
-        manifest_path = self.json_manifest_path
-        logger.info(f"Using JSON manifest at: {manifest_path}")
+            # Add optional fields if present
+            if "environment" in self.build_config.get("execution", {}):
+                flat_manifest["env"] = self.build_config["execution"]["environment"]
 
-        packager_executable = find_builder_executable(self.builder_bin)
-        launcher_executable = self._launcher_path
+            # Write manifest directly to file
+            manifest_path = build_temp_dir / "manifest.json"
+            write_json(manifest_path, flat_manifest, indent=2)
+            logger.info(f"Using JSON manifest at: {manifest_path}")
 
-        detected_launcher_type = self._detect_launcher_type(launcher_executable)
-        logger.info(f"Detected launcher type: {detected_launcher_type}")
+            # Find executables
+            packager_executable = find_builder_executable(self.builder_bin)
+            launcher_executable = self._launcher_path
 
-        # Run builder with cwd=manifest_dir so relative slot source paths resolve.
-        build_cmd_args = [
-            packager_executable.as_posix(),
-            "--manifest",
-            manifest_path.as_posix(),
-            "--output",
-            self.output_flavor_path,
-            "--launcher-bin",
-            launcher_executable.as_posix(),
-        ]
+            detected_launcher_type = self._detect_launcher_type(launcher_executable)
+            logger.info(f"Detected launcher type: {detected_launcher_type}")
 
-        if self.key_seed:
-            build_cmd_args.extend(["--key-seed", self.key_seed])
-        elif self.package_integrity_key_path:
-            build_cmd_args.extend(["--private-key", self.package_integrity_key_path])
-            if self.public_key_path:
-                build_cmd_args.extend(["--public-key", self.public_key_path])
+            # Build command
+            build_cmd_args = [
+                packager_executable.as_posix(),
+                "--manifest",
+                manifest_path.as_posix(),
+                "--output",
+                self.output_flavor_path,
+                "--launcher-bin",
+                launcher_executable.as_posix(),
+            ]
 
-        logger.info("Building package...")
-        run(build_cmd_args, check=True, capture_output=True, cwd=self.manifest_dir)
+            if self.key_seed:
+                build_cmd_args.extend(["--key-seed", self.key_seed])
+            elif self.package_integrity_key_path:
+                build_cmd_args.extend(["--private-key", self.package_integrity_key_path])
+                if self.public_key_path:
+                    build_cmd_args.extend(["--public-key", self.public_key_path])
+
+            logger.info("Building package...")
+            run(build_cmd_args, check=True, capture_output=True)
+
+            # Always show completion message
+            Path(self.output_flavor_path).stat().st_size / (1024 * 1024)
 
 
 # 🌶️📦🔚

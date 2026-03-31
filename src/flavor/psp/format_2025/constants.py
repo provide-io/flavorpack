@@ -111,7 +111,6 @@ LIFECYCLE_EAGER = 7  # Load immediately on startup
 LIFECYCLE_DEV = 8  # Development mode only
 LIFECYCLE_CONFIG = 9  # User-modifiable config files
 LIFECYCLE_PLATFORM = 10  # Platform/OS specific content
-LIFECYCLE_ATTESTATION = 11  # Security attestation slot (SBOM + provenance)
 
 LIFECYCLE_NAMES = {
     LIFECYCLE_INIT: "init",
@@ -125,7 +124,6 @@ LIFECYCLE_NAMES = {
     LIFECYCLE_DEV: "dev",
     LIFECYCLE_CONFIG: "config",
     LIFECYCLE_PLATFORM: "platform",
-    LIFECYCLE_ATTESTATION: "attestation",
 }
 
 LIFECYCLE_FROM_STRING = {
@@ -140,7 +138,6 @@ LIFECYCLE_FROM_STRING = {
     "dev": LIFECYCLE_DEV,
     "config": LIFECYCLE_CONFIG,
     "platform": LIFECYCLE_PLATFORM,
-    "attestation": LIFECYCLE_ATTESTATION,
 }
 
 # =================================

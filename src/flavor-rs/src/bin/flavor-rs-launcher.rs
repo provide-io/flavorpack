@@ -24,10 +24,10 @@ fn main() {
 
 fn run() -> i32 {
     // Initialize logging as early as possible for debugging
-    if let Ok(level) = env::var(flavor::env_vars::LAUNCHER_LOG_LEVEL) {
-        flavor::logger::JsonLogger::init_with_level(&level, flavor::env_vars::LAUNCHER_LOG_LEVEL);
-    } else if let Ok(level) = env::var(flavor::env_vars::LOG_LEVEL) {
-        flavor::logger::JsonLogger::init_with_level(&level, flavor::env_vars::LOG_LEVEL);
+    if let Ok(level) = env::var("FLAVOR_LAUNCHER_LOG_LEVEL") {
+        flavor::logger::JsonLogger::init_with_level(&level, "FLAVOR_LAUNCHER_LOG_LEVEL");
+    } else if let Ok(level) = env::var("FLAVOR_LOG_LEVEL") {
+        flavor::logger::JsonLogger::init_with_level(&level, "FLAVOR_LOG_LEVEL");
     } else {
         flavor::logger::JsonLogger::init();
     }
@@ -55,8 +55,8 @@ fn run() -> i32 {
     };
 
     // Determine if running in CLI mode ONLY from the environment variable.
-    let cli_mode = env::var(flavor::env_vars::LAUNCHER_CLI)
-        .is_ok_and(|v| v == "1" || v.to_lowercase() == "true");
+    let cli_mode =
+        env::var("FLAVOR_LAUNCHER_CLI").is_ok_and(|v| v == "1" || v.to_lowercase() == "true");
 
     // --- CLI Mode Execution ---
     if cli_mode {

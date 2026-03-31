@@ -17,8 +17,6 @@ import pytest
 from flavor.psp.format_2025 import PSPFBuilder, PSPFLauncher, PSPFReader
 from flavor.psp.format_2025.keys import generate_ephemeral_keys
 
-pytestmark = [pytest.mark.security, pytest.mark.adversarial, pytest.mark.ci]
-
 
 class TestPackageSecurity:
     """Test package security features."""

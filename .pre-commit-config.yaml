@@ -1,23 +1,18 @@
-default_install_hook_types: [pre-commit, pre-push]
-
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.7
     hooks:
       - id: ruff-format
         name: ruff format
-        stages: [pre-commit]
       - id: ruff
         name: ruff lint
         args: [--fix, --exit-non-zero-on-fix]
-        stages: [pre-commit]
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.1
     hooks:
       - id: codespell
         additional_dependencies: ["tomli"]
-        stages: [pre-commit]
 
   - repo: local
     hooks:
@@ -29,7 +24,6 @@ repos:
         pass_filenames: false
         always_run: true
         types: [python]
-        stages: [pre-push]
 
       - id: bandit
         name: bandit
@@ -38,7 +32,6 @@ repos:
         pass_filenames: false
         always_run: true
         types: [python]
-        stages: [pre-push]
 
       # ── Go ─────────────────────────────────────────────────────────────
       - id: go-fmt
@@ -48,7 +41,6 @@ repos:
         pass_filenames: false
         always_run: true
         files: ^src/flavor-go/
-        stages: [pre-commit]
 
       - id: go-vet
         name: go vet
@@ -57,7 +49,6 @@ repos:
         pass_filenames: false
         always_run: true
         files: ^src/flavor-go/
-        stages: [pre-push]
 
       - id: go-build
         name: go build
@@ -66,7 +57,6 @@ repos:
         pass_filenames: false
         always_run: true
         files: ^src/flavor-go/
-        stages: [pre-push]
 
       - id: go-test
         name: go test
@@ -75,7 +65,6 @@ repos:
         pass_filenames: false
         always_run: true
         files: ^src/flavor-go/
-        stages: [pre-push]
 
       # ── Rust ───────────────────────────────────────────────────────────
       - id: rust-fmt
@@ -85,7 +74,6 @@ repos:
         pass_filenames: false
         always_run: true
         files: ^src/flavor-rs/
-        stages: [pre-commit]
 
       - id: rust-clippy
         name: cargo clippy
@@ -94,23 +82,20 @@ repos:
         pass_filenames: false
         always_run: true
         files: ^src/flavor-rs/
-        stages: [pre-push]
 
       - id: rust-test
         name: cargo test
-        entry: bash -c 'cd src/flavor-rs && RUST_TEST_THREADS=1 cargo test'
+        entry: bash -c 'cd src/flavor-rs && cargo test'
         language: system
         pass_filenames: false
         always_run: true
         files: ^src/flavor-rs/
-        stages: [pre-push]
 
       # ── Cross-language ─────────────────────────────────────────────────
       - id: version-sync
         name: version sync check
-        entry: python3 scripts/check_version_sync.py
+        entry: python scripts/check_version_sync.py
         language: system
         pass_filenames: false
         always_run: true
         files: (VERSION|Cargo\.toml|main\.go|version\.rs|pyproject\.toml)$
-        stages: [pre-commit, pre-push]

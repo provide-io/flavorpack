@@ -182,7 +182,7 @@ def validate_slots(slots: list[SlotMetadata]) -> list[str]:  # noqa: C901
             )
 
         # Check checksum format if provided
-        if slot.checksum and not isinstance(slot.checksum, str):  # pragma: no cover
+        if slot.checksum and not isinstance(slot.checksum, str):
             errors.append(f"🔐 Slot '{slot.id}' checksum must be a string")
 
     return errors

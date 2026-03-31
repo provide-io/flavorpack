@@ -42,9 +42,9 @@ class TestCreateBuilderManifest:
             key_paths=key_paths,
         )
 
-        assert manifest["package"]["name"] == "testpkg"
-        assert manifest["package"]["version"] == "1.0.0"
-        assert manifest["execution"]["command"] == "{workenv}/bin/testpkg"
+        assert manifest["name"] == "testpkg"
+        assert manifest["version"] == "1.0.0"
+        assert manifest["command"] == "{workenv}/bin/testpkg"
         assert "cache_validation" in manifest
         assert "workenv" in manifest
         assert "setup_commands" in manifest
@@ -85,7 +85,7 @@ class TestCreateBuilderManifest:
             key_paths=key_paths,
         )
 
-        assert manifest["execution"]["command"] == "{workenv}/bin/mytool"
+        assert manifest["command"] == "{workenv}/bin/mytool"
 
     @patch("flavor.packaging.orchestrator_helpers.is_windows", return_value=False)
     def test_create_builder_manifest_with_runtime_env_unset(

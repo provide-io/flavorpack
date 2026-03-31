@@ -213,10 +213,10 @@ class TestIntegration:
         assert metadata["package"]["name"] == "complete-app"
         assert metadata["package"]["version"] == "1.0.0"
 
-        # Should have correct slots (+1 for the implicit attestation slot)
+        # Should have correct slots
         metadata = reader.read_metadata()
         slots_metadata = metadata.get("slots", [])
-        assert len(slots_metadata) == 3
+        assert len(slots_metadata) == 2
         # Check both possible field names for backward compatibility
         assert any(s.get("name", s.get("id")) == "main" for s in slots_metadata)
         assert any(s.get("name", s.get("id")) == "config" for s in slots_metadata)

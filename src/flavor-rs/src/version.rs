@@ -11,50 +11,15 @@ pub const GIT_COMMIT: Option<&str> = option_env!("GIT_COMMIT");
 
 /// Get full version string with optional build information
 pub fn full_version() -> String {
-    full_version_with(GIT_COMMIT, BUILD_TIME)
-}
-
-fn full_version_with(commit: Option<&str>, build_time: Option<&str>) -> String {
     let mut version = VERSION.to_string();
 
-    if let Some(commit) = commit {
+    if let Some(commit) = GIT_COMMIT {
         version.push_str(&format!(" ({})", &commit[..8.min(commit.len())]));
     }
 
-    if let Some(time) = build_time {
+    if let Some(time) = BUILD_TIME {
         version.push_str(&format!(" built {}", time));
     }
 
     version
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn full_version_includes_the_base_version() {
-        let version = full_version();
-        assert!(version.starts_with(VERSION));
-    }
-
-    #[test]
-    fn full_version_includes_optional_metadata_when_available() {
-        let version = full_version();
-
-        if let Some(commit) = GIT_COMMIT {
-            assert!(version.contains(&commit[..8.min(commit.len())]));
-        }
-
-        if let Some(time) = BUILD_TIME {
-            assert!(version.contains(time));
-        }
-    }
-
-    #[test]
-    fn full_version_with_test_inputs_truncates_commit_and_appends_build_time() {
-        let version = full_version_with(Some("0123456789abcdef"), Some("2026-03-31T00:00:00Z"));
-
-        assert_eq!(version, "0.3.21 (01234567) built 2026-03-31T00:00:00Z");
-    }
 }

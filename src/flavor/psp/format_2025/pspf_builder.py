@@ -58,9 +58,7 @@ class PSPFBuilder:
         Merges provided kwargs with existing metadata.
         """
         new_spec = self._spec.with_metadata(**kwargs)
-        new_builder = PSPFBuilder(new_spec)
-        new_builder._temp_files, self._temp_files = self._temp_files, []
-        return new_builder
+        return PSPFBuilder(new_spec)
 
     def add_slot(
         self,
@@ -123,7 +121,7 @@ class PSPFBuilder:
         new_spec = self._spec.with_slot(slot)
         new_builder = PSPFBuilder(new_spec)
         # Transfer ownership of all temp files to the new builder
-        new_builder._temp_files, self._temp_files = self._temp_files, []
+        new_builder._temp_files = self._temp_files.copy()
         if temp_path is not None:
             new_builder._temp_files.append(temp_path)
         return new_builder
@@ -146,9 +144,7 @@ class PSPFBuilder:
         """
         key_config = KeyConfig(private_key=private, public_key=public, key_seed=seed, key_path=path)
         new_spec = self._spec.with_keys(key_config)
-        new_builder = PSPFBuilder(new_spec)
-        new_builder._temp_files, self._temp_files = self._temp_files, []
-        return new_builder
+        return PSPFBuilder(new_spec)
 
     def with_options(self, **kwargs: Any) -> PSPFBuilder:
         """
@@ -167,9 +163,7 @@ class PSPFBuilder:
         current_options = self._spec.options
         new_options = attrs.evolve(current_options, **kwargs)
         new_spec = self._spec.with_options(new_options)
-        new_builder = PSPFBuilder(new_spec)
-        new_builder._temp_files, self._temp_files = self._temp_files, []
-        return new_builder
+        return PSPFBuilder(new_spec)
 
     def build(self, output_path: str | Path) -> BuildResult:
         """

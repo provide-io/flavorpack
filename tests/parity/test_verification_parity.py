@@ -20,13 +20,6 @@ from flavor.psp.format_2025.constants import (
 )
 from flavor.psp.format_2025.index import PSPFIndex
 
-pytestmark = [
-    pytest.mark.cross_language,
-    pytest.mark.ci,
-    pytest.mark.security,
-    pytest.mark.adversarial,
-]
-
 
 # ---------------------------------------------------------------------------
 # Magic trailer validation

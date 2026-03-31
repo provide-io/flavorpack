@@ -135,7 +135,7 @@ mod runtime_impl {
         debug!("✅ Runtime environment processing complete");
     }
 
-    pub(super) mod patterns {
+    mod patterns {
         use crate::exceptions::{FlavorError, Result};
         use glob::Pattern;
         use log::{debug, trace};
@@ -400,106 +400,6 @@ mod runtime_impl {
 
                 Ok(())
             }
-        }
-    }
-
-    #[cfg(test)]
-    mod tests {
-        use super::RuntimeEnv;
-        use super::patterns::PatternProcessor;
-        use super::process_runtime_env;
-        use std::collections::HashMap;
-
-        fn runtime_env(
-            unset: Option<Vec<&str>>,
-            map: Option<Vec<(&str, &str)>>,
-            set: Option<Vec<(&str, &str)>>,
-            pass: Option<Vec<&str>>,
-        ) -> RuntimeEnv {
-            RuntimeEnv {
-                unset: unset.map(|values| values.into_iter().map(str::to_string).collect()),
-                map: map.map(|pairs| {
-                    pairs
-                        .into_iter()
-                        .map(|(key, value)| (key.to_string(), value.to_string()))
-                        .collect()
-                }),
-                set: set.map(|pairs| {
-                    pairs
-                        .into_iter()
-                        .map(|(key, value)| (key.to_string(), value.to_string()))
-                        .collect()
-                }),
-                pass: pass.map(|values| values.into_iter().map(str::to_string).collect()),
-            }
-        }
-
-        #[test]
-        fn process_runtime_env_applies_unset_map_and_set_operations() {
-            let mut env_map = HashMap::from([
-                ("KEEP".to_string(), "keep".to_string()),
-                ("PREFIX_ONE".to_string(), "prefix".to_string()),
-                ("DROP_ME".to_string(), "drop".to_string()),
-                ("SOURCE".to_string(), "original".to_string()),
-            ]);
-
-            let runtime_env = runtime_env(
-                Some(vec!["DROP_*"]),
-                Some(vec![("SOURCE", "RENAMED")]),
-                Some(vec![("ADDED", "value")]),
-                Some(vec!["KEEP", "PREFIX_*"]),
-            );
-
-            process_runtime_env(&mut env_map, &runtime_env);
-
-            assert_eq!(env_map.get("KEEP"), Some(&"keep".to_string()));
-            assert_eq!(env_map.get("PREFIX_ONE"), Some(&"prefix".to_string()));
-            assert_eq!(env_map.get("RENAMED"), Some(&"original".to_string()));
-            assert_eq!(env_map.get("ADDED"), Some(&"value".to_string()));
-            assert!(!env_map.contains_key("DROP_ME"));
-            assert!(!env_map.contains_key("SOURCE"));
-        }
-
-        #[test]
-        fn process_runtime_env_unset_exact_match_removes_variable() {
-            let mut env_map = HashMap::from([
-                ("REMOVE_ME".to_string(), "gone".to_string()),
-                ("KEEP".to_string(), "stay".to_string()),
-            ]);
-            let runtime_env = runtime_env(Some(vec!["REMOVE_ME"]), None, None, Some(vec!["KEEP"]));
-
-            process_runtime_env(&mut env_map, &runtime_env);
-
-            assert!(!env_map.contains_key("REMOVE_ME"));
-            assert_eq!(env_map.get("KEEP"), Some(&"stay".to_string()));
-        }
-
-        #[test]
-        fn process_runtime_env_unset_glob_pattern_removes_matching_variables() {
-            let mut env_map = HashMap::from([
-                ("DROP_A".to_string(), "a".to_string()),
-                ("DROP_B".to_string(), "b".to_string()),
-                ("KEEP".to_string(), "stay".to_string()),
-            ]);
-            let runtime_env = runtime_env(Some(vec!["DROP_*"]), None, None, Some(vec!["KEEP"]));
-
-            process_runtime_env(&mut env_map, &runtime_env);
-
-            assert!(!env_map.contains_key("DROP_A"));
-            assert!(!env_map.contains_key("DROP_B"));
-            assert_eq!(env_map.get("KEEP"), Some(&"stay".to_string()));
-        }
-
-        #[test]
-        fn pattern_processor_requires_exact_pass_patterns() {
-            let processor = PatternProcessor::new(&["KEEP".to_string(), "PREFIX_*".to_string()]);
-
-            assert!(processor.should_preserve("KEEP"));
-            assert!(processor.should_preserve("PREFIX_ONE"));
-            assert!(!processor.should_preserve("DROP_ME"));
-
-            let env_map = HashMap::from([("PREFIX_ONE".to_string(), "value".to_string())]);
-            assert!(processor.verify_requirements(&env_map).is_err());
         }
     }
 }

@@ -52,8 +52,6 @@ dist/bin/
 **/target/**/bin/
 # Allow Rust source directories
 !src/*/src/bin/
-# Go build artifacts in source tree (go build produces binaries in module root)
-src/flavor-go/flavor-go-*
 core
 *.local.json
 archive_*
@@ -80,4 +78,3 @@ memray-output/
 # Generated test artifacts
 coverage.json
 tests/pretaster/logs/
-.claude/worktrees/
