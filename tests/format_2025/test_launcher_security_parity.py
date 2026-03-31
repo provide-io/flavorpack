@@ -13,10 +13,18 @@ from unittest.mock import Mock, patch
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+import pytest
 
 from flavor.config.policy import OperatorPolicy
 from flavor.psp.format_2025.launcher import PSPFLauncher
 from flavor.psp.format_2025.workenv import WorkEnvManager
+
+pytestmark = [
+    pytest.mark.cross_language,
+    pytest.mark.ci,
+    pytest.mark.security,
+    pytest.mark.adversarial,
+]
 
 
 def _raw_public_key_bytes() -> bytes:
