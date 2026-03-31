@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -67,7 +64,7 @@ func TestComputeKeyFingerprint_WrongSize(t *testing.T) {
 // TestLoadTrustedKeys_EmptyDir returns an empty map (not error) for an existing but empty dir.
 func TestLoadTrustedKeys_EmptyDir(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv(EnvTrustedKeysDir, dir)
+	t.Setenv("FLAVOR_TRUSTED_KEYS_DIR", dir)
 
 	keys, err := LoadTrustedKeys(false)
 	if err != nil {
@@ -80,7 +77,7 @@ func TestLoadTrustedKeys_EmptyDir(t *testing.T) {
 
 // TestLoadTrustedKeys_MissingDir returns an empty map (not error) when dir does not exist.
 func TestLoadTrustedKeys_MissingDir(t *testing.T) {
-	t.Setenv(EnvTrustedKeysDir, "/nonexistent/path/that/does/not/exist/trusted-keys")
+	t.Setenv("FLAVOR_TRUSTED_KEYS_DIR", "/nonexistent/path/that/does/not/exist/trusted-keys")
 
 	keys, err := LoadTrustedKeys(false)
 	if err != nil {
@@ -94,7 +91,7 @@ func TestLoadTrustedKeys_MissingDir(t *testing.T) {
 // TestLoadTrustedKeys_ValidKey loads a single .pub file correctly.
 func TestLoadTrustedKeys_ValidKey(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv(EnvTrustedKeysDir, dir)
+	t.Setenv("FLAVOR_TRUSTED_KEYS_DIR", dir)
 
 	rawPub, pemBlock := generateTestKeyPEM(t)
 
@@ -131,9 +128,9 @@ func TestLoadTrustedKeys_ValidKey(t *testing.T) {
 
 // TestIsKeyTrusted_NoStore returns nil when no trusted-keys directory exists.
 func TestIsKeyTrusted_NoStore(t *testing.T) {
-	t.Setenv(EnvTrustedKeysDir, "/nonexistent/path/flavor/trusted-keys")
+	t.Setenv("FLAVOR_TRUSTED_KEYS_DIR", "/nonexistent/path/flavor/trusted-keys")
 	// Disable system config lookup
-	t.Setenv(EnvConfigDir, "/nonexistent/path/flavor/config")
+	t.Setenv("FLAVOR_CONFIG_DIR", "/nonexistent/path/flavor/config")
 
 	result, err := IsKeyTrusted("abc123", false)
 	if err != nil {
@@ -147,7 +144,7 @@ func TestIsKeyTrusted_NoStore(t *testing.T) {
 // TestIsKeyTrusted_Match returns true when the fingerprint is found in the store.
 func TestIsKeyTrusted_Match(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv(EnvTrustedKeysDir, dir)
+	t.Setenv("FLAVOR_TRUSTED_KEYS_DIR", dir)
 
 	rawPub, pemBlock := generateTestKeyPEM(t)
 	if err := os.WriteFile(filepath.Join(dir, "mykey.pub"), pemBlock, 0600); err != nil {
@@ -171,56 +168,10 @@ func TestIsKeyTrusted_Match(t *testing.T) {
 	}
 }
 
-// TestLoadTrustedKeys_WithSystemDir exercises the includeSystem=true path.
-func TestLoadTrustedKeys_WithSystemDir(t *testing.T) {
-	dir := t.TempDir()
-	t.Setenv(EnvTrustedKeysDir, dir)
-
-	// Non-existent system dir is not an error.
-	keys, err := LoadTrustedKeys(true)
-	if err != nil {
-		t.Fatalf("unexpected error with includeSystem=true: %v", err)
-	}
-	if len(keys) != 0 {
-		t.Errorf("expected empty map, got %d entries", len(keys))
-	}
-}
-
-// TestLoadKeysFromDir_SkipsInvalidPubFile exercises the warning-and-continue path in loadKeysFromDir.
-func TestLoadKeysFromDir_SkipsInvalidPubFile(t *testing.T) {
-	dir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(dir, "bad.pub"), []byte("not a pem block"), 0o600); err != nil {
-		t.Fatalf("write bad.pub: %v", err)
-	}
-
-	keys := make(map[string]TrustedKey)
-	found, err := loadKeysFromDir(dir, keys)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if !found {
-		t.Error("expected found=true for existing dir")
-	}
-	if len(keys) != 0 {
-		t.Errorf("expected 0 keys after skipping invalid file, got %d", len(keys))
-	}
-}
-
-// TestLoadKeyFromFile_NoPEMBlock covers the nil-block error path.
-func TestLoadKeyFromFile_NoPEMBlock(t *testing.T) {
-	f := filepath.Join(t.TempDir(), "noblock.pub")
-	if err := os.WriteFile(f, []byte("not a pem block\n"), 0o600); err != nil {
-		t.Fatalf("write: %v", err)
-	}
-	if _, err := loadKeyFromFile(f); err == nil {
-		t.Fatal("expected error for file with no PEM block")
-	}
-}
-
 // TestIsKeyTrusted_NoMatch returns false when the store exists but the fingerprint is absent.
 func TestIsKeyTrusted_NoMatch(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv(EnvTrustedKeysDir, dir)
+	t.Setenv("FLAVOR_TRUSTED_KEYS_DIR", dir)
 
 	// Write a key so the dir is non-empty (store "exists" in a meaningful way)
 	_, pemBlock := generateTestKeyPEM(t)

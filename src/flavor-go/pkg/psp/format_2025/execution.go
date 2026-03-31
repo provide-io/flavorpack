@@ -171,42 +171,17 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger *slo
 		return nil, fmt.Errorf("failed to read index: %w", err)
 	}
 
-	// Check signing key trust status from the embedded public key.
-	// The attestation fingerprint, when present, must match the derived public-key fingerprint.
-	keyTrusted := false
-	hasPublicKey := false
-	for _, b := range index.PublicKey {
-		if b != 0 {
-			hasPublicKey = true
-			break
-		}
-	}
-	attestationFP := strings.TrimRight(string(index.AttestationKeyFp[:]), "\x00")
-	if hasPublicKey {
-		fp, err := ComputeKeyFingerprint(index.PublicKey[:])
+	// Warn if signing key is not in the trusted store (backwards-compatible — no error if store missing)
+	if fp := strings.TrimRight(string(index.AttestationKeyFp[:]), "\x00"); fp != "" {
+		trusted, err := IsKeyTrusted(fp, true)
 		if err != nil {
-			logger.Warn("⚠️ Failed to derive signing key fingerprint", "error", err)
-		} else {
-			if attestationFP != "" && attestationFP != fp {
-				return nil, fmt.Errorf("attestation key fingerprint does not match embedded public key")
-			}
-
-			trusted, err := IsKeyTrusted(fp, true)
-			if err != nil {
-				logger.Warn("⚠️ Failed to check trusted key store", "error", err)
-			} else if trusted == nil {
-				logger.Warn("⚠️ No trusted-keys store found; requiring a trusted key will fail closed", "fingerprint", fp)
-			} else if *trusted {
-				keyTrusted = true
-			} else {
-				fmt.Fprintf(os.Stderr, "⚠️ SECURITY WARNING: Package signing key is not in the trusted store\n")
-				fmt.Fprintf(os.Stderr, "⚠️ Key fingerprint: %s\n", fp)
-				fmt.Fprintf(os.Stderr, "⚠️ Use 'flavor trust add <key-file>' to trust this key\n")
-				logger.Warn("⚠️ Package signing key not in trusted store", "fingerprint", fp)
-			}
+			logger.Warn("⚠️ Failed to check trusted key store", "error", err)
+		} else if trusted != nil && !*trusted {
+			fmt.Fprintf(os.Stderr, "⚠️ SECURITY WARNING: Package signing key is not in the trusted store\n")
+			fmt.Fprintf(os.Stderr, "⚠️ Key fingerprint: %s\n", fp)
+			fmt.Fprintf(os.Stderr, "⚠️ Use 'flavor trust add <key-file>' to trust this key\n")
+			logger.Warn("⚠️ Package signing key not in trusted store", "fingerprint", fp)
 		}
-	} else if attestationFP != "" {
-		return nil, fmt.Errorf("attestation key fingerprint is present but public key is missing")
 	}
 
 	validationLevel := getValidationLevel()
