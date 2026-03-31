@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -21,7 +18,7 @@ func buildTarWithSymlink(name, linkTarget string) []byte {
 		Name:     name,
 		Linkname: linkTarget,
 	})
-	_ = tw.Close()
+	tw.Close()
 	return buf.Bytes()
 }
 
@@ -31,7 +28,7 @@ func buildGzippedTarWithSymlink(name, linkTarget string) []byte {
 	var buf bytes.Buffer
 	gw := gzip.NewWriter(&buf)
 	_, _ = gw.Write(raw)
-	_ = gw.Close()
+	gw.Close()
 	return buf.Bytes()
 }
 
