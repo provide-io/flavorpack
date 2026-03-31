@@ -23,6 +23,13 @@ jobs:
   setup:
     name: 🔧 Setup & Get Flavor PSP
     runs-on: ubuntu-latest
+    # Only run taster when the triggering Flavor pipeline succeeded.
+    # workflow_run fires on all conclusions (success, failure, cancelled);
+    # this if-guard skips everything when Flavor failed or was cancelled.
+    # workflow_dispatch bypasses this (github.event_name != 'workflow_run').
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
     outputs:
       version: ${{ steps.version.outputs.version }}
       helper_version: ${{ steps.version.outputs.version }}
@@ -351,7 +358,7 @@ jobs:
           ls -la src/flavor/helpers/bin/ || echo "  (empty)"
 
       - name: 📦 Setup uv + Python
-        uses: astral-sh/setup-uv@v8
+        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
         with:
           python-version: '3.11'
 
