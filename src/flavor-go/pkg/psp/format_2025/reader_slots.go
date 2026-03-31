@@ -279,21 +279,7 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 					}
 				}
 			case tar.TypeSymlink:
-				// Ensure parent directory exists
-				if err := os.MkdirAll(filepath.Dir(target), os.FileMode(DirPerms)); err != nil {
-					return "", err
-				}
-
-				// Remove existing symlink if present
-				if err := os.Remove(target); err != nil && !os.IsNotExist(err) {
-					// Best effort cleanup - only log if not "file doesn't exist"
-					_ = err
-				}
-
-				// Create symlink
-				if err := os.Symlink(hdr.Linkname, target); err != nil {
-					return "", err
-				}
+				return "", fmt.Errorf("tar entry %q contains a symlink — symlinks are not permitted in PSPF packages", hdr.Name)
 			}
 		}
 
