@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Parity test: FLAVOR_* environment variable names are consistent across Go and Rust.
+"""Parity test: FLAVOR_* environment variable names are consistent across Go, Rust, and Python.
 
 Reads the actual source files and asserts that shared env var names appear in both
 codebases, and that the old `FLAVOR_CACHE` name (renamed to `FLAVOR_CACHE_DIR`) no
@@ -19,6 +19,19 @@ import pytest
 REPO_ROOT = Path(__file__).parents[2]
 GO_SRC = REPO_ROOT / "src/flavor-go"
 RUST_SRC = REPO_ROOT / "src/flavor-rs"
+PYTHON_SRC = REPO_ROOT / "src/flavor"
+
+# Env vars that must appear in Python source.
+# Note: Python uses FLAVOR_CACHE (not FLAVOR_CACHE_DIR) for its own cache directory;
+# FLAVOR_CACHE_DIR is a Go/Rust concept.  The list below covers vars that Python
+# reads or exposes as configuration knobs.
+PYTHON_SHARED_ENV_VARS = [
+    "FLAVOR_CONFIG_DIR",
+    "FLAVOR_TRUSTED_KEYS_DIR",
+    "FLAVOR_LAUNCHER_BIN",
+    "FLAVOR_WORKENV_BASE",
+    "FLAVOR_VALIDATION",
+]
 
 # Env vars that must appear in BOTH Go and Rust source
 SHARED_ENV_VARS = [
@@ -47,6 +60,25 @@ def _grep_src(root: Path, string: str) -> bool:
         except OSError:
             pass
     return False
+
+
+def _grep_py(string: str) -> bool:
+    """Return True if the exact string appears anywhere under PYTHON_SRC (.py files)."""
+    for f in PYTHON_SRC.rglob("*.py"):
+        try:
+            if string in f.read_text(errors="ignore"):
+                return True
+        except OSError:
+            pass
+    return False
+
+
+@pytest.mark.parity
+@pytest.mark.parity_category("Env Vars")
+@pytest.mark.parametrize("var", PYTHON_SHARED_ENV_VARS)
+def test_shared_env_var_in_python(var: str) -> None:
+    """Each shared env var must appear in Python source."""
+    assert _grep_py(var), f'"{var}" not found in Python source (src/flavor/)'
 
 
 @pytest.mark.parity
