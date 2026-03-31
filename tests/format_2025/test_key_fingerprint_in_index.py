@@ -13,12 +13,14 @@ from pathlib import Path
 import re
 import tempfile
 
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 import pytest
 
 from flavor.config.trust import compute_key_fingerprint
 from flavor.psp.format_2025.builder import create_index
 from flavor.psp.format_2025.keys import generate_deterministic_keys
 from flavor.psp.format_2025.pspf_builder import PSPFBuilder
+from flavor.psp.format_2025.reader import PSPFReader
 from flavor.psp.format_2025.spec import BuildSpec, KeyConfig
 
 # ---------------------------------------------------------------------------
@@ -66,8 +68,6 @@ class TestCreateIndexFingerprint:
 
     def test_fingerprint_matches_compute_key_fingerprint(self) -> None:
         """attestation_key_fp matches compute_key_fingerprint() of the same key."""
-        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-
         seed = "test-fingerprint-seed"
         _, pub_raw = generate_deterministic_keys(seed)
 
@@ -133,8 +133,6 @@ class TestBuilderFingerprintIntegration:
 
     def test_built_package_has_nonzero_fingerprint(self, built_package: Path) -> None:
         """The fingerprint in the on-disk index is not all zeros."""
-        from flavor.psp.format_2025.reader import PSPFReader
-
         with PSPFReader(built_package) as reader:
             index = reader.read_index()
 
@@ -142,8 +140,6 @@ class TestBuilderFingerprintIntegration:
 
     def test_built_package_fingerprint_matches_key(self, built_package: Path) -> None:
         """The fingerprint in the on-disk index matches the signing key."""
-        from flavor.psp.format_2025.reader import PSPFReader
-
         _, pub_raw = generate_deterministic_keys("integration-fp-seed")
         expected_fp = hashlib.sha256(pub_raw).hexdigest().encode("ascii")
 
@@ -154,8 +150,6 @@ class TestBuilderFingerprintIntegration:
 
     def test_built_package_fingerprint_is_valid_hex(self, built_package: Path) -> None:
         """The fingerprint in the on-disk index is 64 lowercase hex ASCII bytes."""
-        from flavor.psp.format_2025.reader import PSPFReader
-
         with PSPFReader(built_package) as reader:
             index = reader.read_index()
 
