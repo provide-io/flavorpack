@@ -1,6 +1,3 @@
-# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
 """Tests for CycloneDX 1.6 SBOM generation."""
 
 from __future__ import annotations
@@ -73,7 +70,7 @@ def test_sbom_package_has_purl_and_hash() -> None:
     pkg_component = next(c for c in sbom["components"] if c["name"] == "requests")
     assert pkg_component["purl"] == "pkg:pypi/requests@2.31.0"
     assert len(pkg_component["hashes"]) == 1
-    assert pkg_component["hashes"][0]["alg"] == "SHA-256"
+    assert pkg_component["hashes"][0]["alg"] == "SHA256"
 
 
 def test_sbom_package_has_license() -> None:
@@ -101,7 +98,7 @@ def test_sbom_python_runtime_has_hash() -> None:
     assert sbom is not None
     python_component = next(c for c in sbom["components"] if c["name"] == "python")
     assert "hashes" in python_component
-    assert python_component["hashes"][0]["alg"] == "SHA-256"
+    assert python_component["hashes"][0]["alg"] == "SHA256"
 
 
 def test_sbom_includes_launcher() -> None:
@@ -127,16 +124,16 @@ def test_sbom_launcher_has_hash() -> None:
     assert sbom is not None
     launcher = next(c for c in sbom["components"] if "launcher" in c["name"])
     assert "hashes" in launcher
-    assert launcher["hashes"][0]["alg"] == "SHA-256"
+    assert launcher["hashes"][0]["alg"] == "SHA256"
 
 
 def test_sbom_includes_builder() -> None:
-    """SBOM components include the Flavorpack builder."""
+    """SBOM components include the FlavorPack builder."""
     sbom = build_sbom(_minimal_package_info())
     assert sbom is not None
     builder = next(c for c in sbom["components"] if c.get("name") == "flavor-python")
     assert builder["version"] == "0.3.21"
-    assert builder["description"] == "Flavorpack PSPF builder"
+    assert builder["description"] == "FlavorPack PSPF builder"
 
 
 def test_sbom_is_json_serialisable() -> None:
@@ -246,6 +243,6 @@ def test_sbom_defaults_for_missing_info_keys() -> None:
     assert python_component["version"] == "unknown"
     launcher = next(c for c in sbom["components"] if "launcher" in c["name"])
     assert launcher["name"] == "flavor-unknown-launcher"
-    builder = next(c for c in sbom["components"] if c.get("description") == "Flavorpack PSPF builder")
+    builder = next(c for c in sbom["components"] if c.get("description") == "FlavorPack PSPF builder")
     assert builder["name"] == "flavor-python"
     assert builder["version"] == "unknown"
