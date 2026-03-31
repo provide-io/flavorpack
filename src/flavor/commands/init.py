@@ -86,10 +86,10 @@ def init_command(global_: bool) -> None:
     pout(f"\nFlavorPack {scope} config initialised at {config_root}")
     if not global_:
         pout("  Add trusted keys with: flavor trust add <key.pub>")
-        pout("  Edit policy with:      flavor policy init")
+        pout(f"  Edit policy:           {policy_file}")
     else:
         pout("  Add trusted keys with: sudo flavor trust add <key.pub> --global")
-        pout("  Edit policy with:      sudo flavor policy init --global")
+        pout(f"  Edit policy:           {policy_file}")
 
 
 # 🌶️📦🔚
