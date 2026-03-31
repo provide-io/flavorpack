@@ -12,6 +12,7 @@ from flavor.commands.init import init_command
 from flavor.commands.inspect import inspect_command
 from flavor.commands.keygen import keygen_command
 from flavor.commands.package import pack_command
+from flavor.commands.trust import trust_group
 from flavor.commands.utils import clean_command
 from flavor.commands.verify import verify_command
 from flavor.commands.workenv import workenv_group
@@ -23,6 +24,7 @@ __all__ = [
     "inspect_command",
     "keygen_command",
     "pack_command",
+    "trust_group",
     "verify_command",
     "workenv_group",
 ]
