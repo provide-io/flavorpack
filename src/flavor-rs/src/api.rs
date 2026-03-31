@@ -119,3 +119,82 @@ fn detect_package_format(package_path: &Path) -> Result<PackageFormat> {
         "Unknown package format".to_string(),
     ))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::psp::format_2025::constants::{
+        MAGIC_TRAILER_SIZE, MAGIC_WAND_EMOJI_BYTES, PACKAGE_EMOJI_BYTES,
+    };
+    use std::fs;
+    use tempfile::tempdir;
+
+    fn write_synthetic_pspf_package(path: &Path) {
+        let mut bytes = vec![0u8; MAGIC_TRAILER_SIZE as usize];
+        bytes[..PACKAGE_EMOJI_BYTES.len()].copy_from_slice(PACKAGE_EMOJI_BYTES);
+        let trailer_start = bytes.len() - MAGIC_WAND_EMOJI_BYTES.len();
+        bytes[trailer_start..].copy_from_slice(MAGIC_WAND_EMOJI_BYTES);
+        fs::write(path, bytes).unwrap();
+    }
+
+    #[test]
+    fn detect_package_format_recognizes_pspf_magic_trailer() {
+        let dir = tempdir().unwrap();
+        let package_path = dir.path().join("package.pspf");
+        write_synthetic_pspf_package(&package_path);
+
+        assert!(matches!(
+            detect_package_format(&package_path),
+            Ok(PackageFormat::PSPF2025)
+        ));
+    }
+
+    #[test]
+    fn detect_package_format_rejects_plain_files() {
+        let dir = tempdir().unwrap();
+        let package_path = dir.path().join("package.bin");
+        fs::write(&package_path, b"not a pspf package").unwrap();
+
+        assert!(matches!(
+            detect_package_format(&package_path),
+            Err(FlavorError::UnsupportedFormat(_))
+        ));
+    }
+
+    #[test]
+    fn build_package_rejects_unknown_format() {
+        let dir = tempdir().unwrap();
+        let manifest_path = dir.path().join("manifest.json");
+        let output_path = dir.path().join("output.pspf");
+        fs::write(&manifest_path, r#"{"format":"NOT-PSPF"}"#).unwrap();
+
+        assert!(matches!(
+            build_package(&manifest_path, &output_path, BuildOptions::default()),
+            Err(FlavorError::UnsupportedFormat(_))
+        ));
+    }
+
+    #[test]
+    fn launch_package_rejects_unknown_format() {
+        let dir = tempdir().unwrap();
+        let package_path = dir.path().join("package.bin");
+        fs::write(&package_path, b"plain bytes").unwrap();
+
+        assert!(matches!(
+            launch_package(&package_path, &[], LaunchOptions::default()),
+            Err(FlavorError::UnsupportedFormat(_))
+        ));
+    }
+
+    #[test]
+    fn verify_package_rejects_unknown_format() {
+        let dir = tempdir().unwrap();
+        let package_path = dir.path().join("package.bin");
+        fs::write(&package_path, b"plain bytes").unwrap();
+
+        assert!(matches!(
+            verify_package(&package_path),
+            Err(FlavorError::UnsupportedFormat(_))
+        ));
+    }
+}

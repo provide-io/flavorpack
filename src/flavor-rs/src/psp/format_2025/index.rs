@@ -356,7 +356,7 @@ impl Index {
 
         // Calculate and update checksum (with checksum field zeroed)
         bytes[4..8].copy_from_slice(&[0, 0, 0, 0]);
-        let checksum = adler::adler32_slice(&bytes[..]);
+        let checksum = adler2::adler32_slice(&bytes[..]);
         bytes[4..8].copy_from_slice(&checksum.to_le_bytes());
 
         bytes
@@ -393,7 +393,7 @@ impl Index {
             }
         }
 
-        let calculated = adler::adler32_slice(&data_copy);
+        let calculated = adler2::adler32_slice(&data_copy);
         let expected = self.index_checksum;
         trace!(
             "Checksum: expected 0x{:08x}, calculated 0x{:08x}",

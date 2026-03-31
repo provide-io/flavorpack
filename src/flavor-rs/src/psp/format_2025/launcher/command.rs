@@ -187,6 +187,56 @@ pub(super) fn prepare_command(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::psp::format_2025::metadata::{
+        ExecutionInfo, Metadata, PackageInfo, RuntimeEnv, RuntimeInfo, WorkenvInfo,
+    };
+    use std::collections::HashMap;
+    use std::path::PathBuf;
+
+    fn sample_metadata() -> Metadata {
+        Metadata {
+            format: "PSPF/2025".to_string(),
+            format_version: Some("1.0.0".to_string()),
+            package: PackageInfo {
+                name: "demo".to_string(),
+                version: "1.0.0".to_string(),
+            },
+            slots: Vec::new(),
+            execution: ExecutionInfo {
+                primary_slot: 0,
+                command: "echo hello".to_string(),
+                env: HashMap::from([(String::from("EXEC_ONLY"), String::from("execution"))]),
+            },
+            verification: None,
+            build: None,
+            launcher: None,
+            compatibility: None,
+            cache_validation: None,
+            runtime: Some(RuntimeInfo {
+                env: Some(RuntimeEnv {
+                    unset: None,
+                    map: None,
+                    set: Some(HashMap::from([(
+                        String::from("RUNTIME_SET"),
+                        String::from("runtime"),
+                    )])),
+                    pass: None,
+                }),
+            }),
+            workenv: Some(WorkenvInfo {
+                directories: None,
+                env: Some(HashMap::from([
+                    (String::from("WORKENV_ONLY"), String::from("{workenv}/bin")),
+                    (
+                        String::from(crate::env_vars::CACHE_DIR),
+                        String::from("should-not-override"),
+                    ),
+                ])),
+            }),
+            setup_commands: Vec::new(),
+            policy: None,
+        }
+    }
 
     /// Test that `prepare_command` (via `build_launch_command`) prepends the
     /// correct bin directory to PATH with the correct separator.
@@ -270,5 +320,69 @@ mod tests {
 
         #[cfg(windows)]
         assert_eq!(sep, ";");
+    }
+
+    #[test]
+    fn test_resolve_executable_returns_basename_when_absolute_path_missing() {
+        let resolved = resolve_executable("/definitely/not/installed/flavor-tool");
+        assert_eq!(resolved, "flavor-tool");
+    }
+
+    #[test]
+    fn test_prepare_command_applies_env_layers_and_path_prepend() {
+        let metadata = sample_metadata();
+        let workenv_path = Path::new("/tmp/flavor-workenv");
+        let package_path = PathBuf::from("/tmp/demo.psp");
+
+        let original_home = env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
+
+        let (executable, args, env_map) = prepare_command(
+            &metadata,
+            workenv_path,
+            &package_path,
+            &[String::from("--flag")],
+        )
+        .expect("prepare command");
+
+        assert!(executable.ends_with("echo"));
+        assert_eq!(args, vec![String::from("hello"), String::from("--flag")]);
+        assert_eq!(
+            env_map.get("WORKENV_ONLY").expect("workenv env"),
+            "/tmp/flavor-workenv/bin"
+        );
+        assert_eq!(
+            env_map.get("EXEC_ONLY").expect("execution env"),
+            "execution"
+        );
+        assert_eq!(env_map.get("RUNTIME_SET").expect("runtime set"), "runtime");
+        assert_eq!(
+            env_map
+                .get(crate::env_vars::CACHE_DIR)
+                .expect("cache dir should be set"),
+            &PathBuf::from(&original_home)
+                .join(crate::psp::format_2025::defaults::DEFAULT_CACHE_SUBDIR)
+                .to_string_lossy()
+                .to_string()
+        );
+        assert_eq!(
+            env_map.get("FLAVOR_COMMAND_NAME").expect("command name"),
+            "demo.psp"
+        );
+        assert_eq!(
+            env_map
+                .get(crate::env_vars::WORKENV)
+                .expect("flavor workenv"),
+            "/tmp/flavor-workenv"
+        );
+        assert!(
+            env_map
+                .get("PATH")
+                .expect("path")
+                .starts_with("/tmp/flavor-workenv/bin:")
+                || env_map
+                    .get("PATH")
+                    .expect("path")
+                    .starts_with("/tmp/flavor-workenv/bin;")
+        );
     }
 }
