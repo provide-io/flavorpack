@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Trusted key store for Flavorpack package signature verification."""
+"""Trusted key store for FlavorPack package signature verification."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ def compute_key_fingerprint(public_key: Ed25519PublicKey) -> str:
     The fingerprint is SHA-256 of the raw 32-byte key material, hex-encoded
     (64 ASCII characters, lowercase).
     """
-    raw = public_key.public_bytes(Encoding.Raw, PublicFormat.Raw)  # type: ignore[arg-type]
+    raw = public_key.public_bytes(Encoding.Raw, PublicFormat.Raw)
     return hashlib.sha256(raw).hexdigest()
 
 
