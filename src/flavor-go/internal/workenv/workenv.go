@@ -62,6 +62,42 @@ func GetCacheRoot() string {
 	return filepath.Join(os.TempDir(), "flavor", "cache")
 }
 
+// GetConfigRoot returns the user-level config root directory.
+// Priority: FLAVOR_CONFIG_DIR env → XDG_CONFIG_HOME/flavor → ~/.config/flavor
+// (Windows: %APPDATA%\flavor if no XDG_CONFIG_HOME)
+func GetConfigRoot() string {
+	if configDir := os.Getenv("FLAVOR_CONFIG_DIR"); configDir != "" {
+		return configDir
+	}
+	if xdgConfig := os.Getenv("XDG_CONFIG_HOME"); xdgConfig != "" {
+		return filepath.Join(xdgConfig, "flavor")
+	}
+	switch runtime.GOOS {
+	case "windows":
+		if appData := os.Getenv("APPDATA"); appData != "" {
+			return filepath.Join(appData, "flavor")
+		}
+	default:
+		if home := os.Getenv("HOME"); home != "" {
+			return filepath.Join(home, ".config", "flavor")
+		}
+	}
+	return filepath.Join(os.TempDir(), "flavor", "config")
+}
+
+// GetSystemConfigRoot returns the system-wide config root directory.
+// Linux/macOS: /etc/flavor
+// Windows:     %PROGRAMDATA%\flavor
+func GetSystemConfigRoot() string {
+	if runtime.GOOS == "windows" {
+		if programData := os.Getenv("PROGRAMDATA"); programData != "" {
+			return filepath.Join(programData, "flavor")
+		}
+		return filepath.Join("C:\\ProgramData", "flavor")
+	}
+	return "/etc/flavor"
+}
+
 // CreateWorkenv creates a workenv directory with proper structure
 func CreateWorkenv(path string, dirs []DirectorySpec) error {
 	// Create main workenv directory

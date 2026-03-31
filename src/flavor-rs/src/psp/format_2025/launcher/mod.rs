@@ -117,8 +117,72 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
         }
     }
 
+    // Trust store check: verify the package signing key is trusted
+    {
+        use super::trust;
+
+        let pk = &index.public_key;
+        if !pk.iter().all(|&b| b == 0) {
+            match trust::compute_key_fingerprint(pk) {
+                Ok(fp) => match trust::is_key_trusted(&fp, true) {
+                    None => {
+                        // No trust store exists — backwards-compatible, allow execution
+                        debug!("🔑 No trusted-keys store found; skipping trust check");
+                    }
+                    Some(true) => {
+                        debug!("✅ Package signing key is trusted (fp={})", &fp[..16]);
+                    }
+                    Some(false) => {
+                        let msg = format!(
+                            "Package signing key is not in the trusted-keys store (fp={})",
+                            fp
+                        );
+                        if matches!(validation_level, ValidationLevel::Strict) {
+                            error!("❌ {}", msg);
+                            return Err(FlavorError::Generic(msg));
+                        } else {
+                            eprintln!("flavor: warning: {msg}");
+                            warn!("⚠️ {}", msg);
+                        }
+                    }
+                },
+                Err(e) => {
+                    warn!(
+                        "⚠️ Failed to compute key fingerprint for trust check: {}",
+                        e
+                    );
+                }
+            }
+        }
+    }
+
     // Read metadata and clone to avoid borrow issues
     let metadata = reader.read_metadata()?.clone();
+
+    // Policy enforcement: merge package constraints with operator policy
+    {
+        use crate::psp::format_2025::policy;
+
+        let op_policy = policy::load_operator_policy();
+        let pkg_policy = {
+            // Deserialise the package-declared policy from the metadata "policy" JSON value.
+            // If the key is absent or cannot be parsed, default to a permissive empty policy.
+            if let Some(policy_value) = &metadata.policy {
+                serde_json::from_value::<policy::PackagePolicy>(policy_value.clone())
+                    .unwrap_or_default()
+            } else {
+                policy::PackagePolicy::default()
+            }
+        };
+        let effective = policy::merge_policy(pkg_policy, op_policy);
+        let has_sbom = metadata.slots.iter().any(|s| s.lifecycle == "attestation");
+        let build_timestamp = index.build_timestamp;
+        if let Err(e) = policy::enforce_policy(&effective, build_timestamp, has_sbom) {
+            eprintln!("policy violation: {}", e);
+            std::process::exit(1);
+        }
+        debug!("✅ Policy enforcement passed");
+    }
     info!(
         "📦 Package: {} v{}",
         metadata.package.name, metadata.package.version
