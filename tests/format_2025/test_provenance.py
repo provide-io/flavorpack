@@ -42,7 +42,7 @@ def test_provenance_has_required_fields() -> None:
     launcher = prov["launcher"]
     assert isinstance(launcher, dict)
     assert launcher["language"] == "go"
-    assert prov["signing_key_fingerprint"] == "cd" * 32
+    assert prov["signing_attestation_key_fp"] == "sha256:" + "cd" * 32
 
 
 def test_provenance_source_date_epoch_stored() -> None:
@@ -110,8 +110,8 @@ def test_provenance_timestamp_is_iso8601_utc() -> None:
     assert parsed.tzinfo is not None
 
 
-def test_provenance_empty_signing_key_fingerprint() -> None:
-    """Empty signing_key_fingerprint is preserved as-is."""
+def test_provenance_signing_key_fingerprint_none() -> None:
+    """signing_key_fingerprint=None results in signing_attestation_key_fp=None."""
     prov = build_provenance(
         builder_name="flavor-python",
         builder_version="0.3.21",
@@ -122,9 +122,27 @@ def test_provenance_empty_signing_key_fingerprint() -> None:
         launcher_language="go",
         launcher_version="1.24.1",
         launcher_hash="sha256:" + "ab" * 32,
-        signing_key_fingerprint="",
+        signing_key_fingerprint=None,
     )
-    assert prov["signing_key_fingerprint"] == ""
+    assert prov["signing_attestation_key_fp"] is None
+
+
+def test_provenance_signing_key_fingerprint_str() -> None:
+    """signing_key_fingerprint='abc...' results in signing_attestation_key_fp='sha256:abc...'."""
+    fp = "abc123" * 10
+    prov = build_provenance(
+        builder_name="flavor-python",
+        builder_version="0.3.21",
+        build_timestamp=1743379200,
+        platform_os="linux",
+        platform_arch="amd64",
+        python_version="3.11.12",
+        launcher_language="go",
+        launcher_version="1.24.1",
+        launcher_hash="sha256:" + "ab" * 32,
+        signing_key_fingerprint=fp,
+    )
+    assert prov["signing_attestation_key_fp"] == f"sha256:{fp}"
 
 
 def test_provenance_empty_launcher_hash() -> None:
