@@ -225,30 +225,18 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
     {
         use crate::psp::format_2025::policy;
 
-        let op_policy = policy::load_operator_policy()?;
+        let op_policy = policy::load_operator_policy();
         let pkg_policy = {
-            // Deserialise the package-declared policy from the metadata "policy" JSON value.
-            // If the key is absent or cannot be parsed, default to a permissive empty policy.
-            if let Some(policy_value) = &metadata.policy {
-                serde_json::from_value::<policy::PackagePolicy>(policy_value.clone())
-                    .unwrap_or_default()
-            } else {
-                policy::PackagePolicy::default()
-            }
+            // metadata.slots is Vec<super::metadata::SlotMetadata> with lifecycle: String
+            // There is no typed policy field on Metadata; default to empty PackagePolicy
+            policy::PackagePolicy::default()
         };
         let effective = policy::merge_policy(pkg_policy, op_policy);
         let has_sbom = metadata.slots.iter().any(|s| s.lifecycle == "attestation");
         let build_timestamp = index.build_timestamp;
-        match policy::enforce_policy(&effective, build_timestamp, has_sbom, key_trusted) {
-            Err(e) => {
-                eprintln!("policy violation: {}", e);
-                std::process::exit(1);
-            }
-            Ok(warnings) => {
-                for w in &warnings {
-                    eprintln!("policy warning: {}", w);
-                }
-            }
+        if let Err(e) = policy::enforce_policy(&effective, build_timestamp, has_sbom) {
+            eprintln!("policy violation: {}", e);
+            std::process::exit(1);
         }
         debug!("✅ Policy enforcement passed");
     }
