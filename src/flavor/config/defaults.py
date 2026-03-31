@@ -144,7 +144,7 @@ DEFAULT_LAUNCHER_TIMEOUT = 30.0
 # =================================
 # Validation defaults
 # =================================
-DEFAULT_VALIDATION_LEVEL = "standard"  # Default validation level
+DEFAULT_VALIDATION_LEVEL = "strict"  # Default validation level
 
 # Validation levels (matching Go/Rust implementations)
 VALIDATION_STRICT = "strict"  # Full security, fail on any issue
