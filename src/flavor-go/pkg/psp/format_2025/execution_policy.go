@@ -109,6 +109,10 @@ func parseMinimalTOML(data []byte, policy *OperatorPolicy) {
 		}
 		key := strings.TrimSpace(parts[0])
 		val := strings.TrimSpace(parts[1])
+		// Strip inline comments
+		if idx := strings.Index(val, "#"); idx != -1 {
+			val = strings.TrimSpace(val[:idx])
+		}
 
 		switch section + "." + key {
 		case "trust.require_trusted_key":
@@ -122,10 +126,31 @@ func parseMinimalTOML(data []byte, policy *OperatorPolicy) {
 			if _, err := fmt.Sscanf(val, "%d", &n); err == nil {
 				policy.MaxAgeDays = &n
 			}
+		case "execution.allow_platforms":
+			// Parse a TOML string list: ["linux_amd64", "linux_arm64"]
+			policy.AllowPlatforms = parseTOMLStringList(val)
 		case "attestation.require_sbom":
 			policy.RequireSBOM = val == "true"
 		}
 	}
+}
+
+// parseTOMLStringList parses a TOML array like ["a", "b"] or ['a', 'b'].
+func parseTOMLStringList(val string) []string {
+	val = strings.TrimSpace(val)
+	if !strings.HasPrefix(val, "[") || !strings.HasSuffix(val, "]") {
+		return nil
+	}
+	inner := val[1 : len(val)-1]
+	var result []string
+	for _, item := range strings.Split(inner, ",") {
+		item = strings.TrimSpace(item)
+		item = strings.Trim(item, `"'`)
+		if item != "" {
+			result = append(result, item)
+		}
+	}
+	return result
 }
 
 // MergePolicy produces an EffectivePolicy where stricter always wins.
