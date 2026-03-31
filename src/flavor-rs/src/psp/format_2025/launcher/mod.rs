@@ -179,49 +179,41 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
         }
     }
 
-    // Trust store check: determine whether the package signing key is trusted.
-    // The result feeds into the policy enforcement step below, which decides
-    // whether to deny, warn, or allow based on the operator policy.
-    // We intentionally do NOT hard-fail here — trust decisions belong to policy.
-    let key_trusted = {
-        use super::trust;
+    // Trust store check: verify the package signing key is trusted
+    {
+        use super::trust::is_key_trusted;
+        use sha2::{Digest, Sha256};
 
-        match trust::derive_index_key_fingerprint(&index) {
-            Ok(Some(fp)) => match trust::is_key_trusted(&fp, true) {
+        let pk = &index.public_key;
+        if !pk.iter().all(|&b| b == 0) {
+            let mut hasher = Sha256::new();
+            hasher.update(pk);
+            let fp = format!("{:x}", hasher.finalize());
+
+            match is_key_trusted(&fp, true) {
                 None => {
-                    // No trust store configured — key trust cannot be verified.
-                    // Policy enforcement below will decide whether to deny, warn, or allow.
-                    warn!(
-                        "⚠️ No trusted-keys store found; requiring a trusted key will fail closed"
-                    );
-                    false
+                    // No trust store exists — backwards-compatible, allow execution
+                    debug!("🔑 No trusted-keys store found; skipping trust check");
                 }
                 Some(true) => {
                     debug!("✅ Package signing key is trusted (fp={})", &fp[..16]);
-                    true
                 }
                 Some(false) => {
                     let msg = format!(
                         "Package signing key is not in the trusted-keys store (fp={})",
                         fp
                     );
-                    warn!("⚠️ {}", msg);
-                    false
+                    if matches!(validation_level, ValidationLevel::Strict) {
+                        error!("❌ {}", msg);
+                        return Err(FlavorError::Generic(msg));
+                    } else {
+                        eprintln!("flavor: warning: {msg}");
+                        warn!("⚠️ {}", msg);
+                    }
                 }
-            },
-            Ok(None) => {
-                warn!("⚠️ Package is unsigned; treating signing key as untrusted");
-                false
-            }
-            Err(e) => {
-                error!("❌ Invalid attestation key fingerprint metadata: {}", e);
-                return Err(FlavorError::Generic(format!(
-                    "invalid attestation key fingerprint metadata: {}",
-                    e
-                )));
             }
         }
-    };
+    }
 
     // Read metadata and clone to avoid borrow issues
     let metadata = reader.read_metadata()?.clone();
