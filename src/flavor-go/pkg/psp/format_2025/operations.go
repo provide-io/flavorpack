@@ -263,18 +263,3 @@ func OperationName(op uint8) string {
 	}
 	return "UNKNOWN"
 }
-
-// IsCompressionOp returns true if the operation is a compression operation
-func IsCompressionOp(op uint8) bool {
-	return op >= 0x10 && op <= 0x2F
-}
-
-// IsEncryptionOp returns true if the operation is an encryption operation
-func IsEncryptionOp(op uint8) bool {
-	return op >= 0x30 && op <= 0x4F
-}
-
-// IsBundleOp returns true if the operation is a bundle/archive operation
-func IsBundleOp(op uint8) bool {
-	return op >= 0x01 && op <= 0x0F
-}

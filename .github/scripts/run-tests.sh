@@ -5,6 +5,7 @@ set -e
 MARKER="${1:-}"
 PATH_FILTER="${2:-}"
 USER_FILTER="${3:-}"
+EXTRA_ARGS="${4:-}"
 
 # Build test command with comprehensive output options
 TEST_CMD="python -m pytest"
@@ -40,6 +41,11 @@ fi
 # Add user filter if provided
 if [ -n "$USER_FILTER" ]; then
     TEST_CMD="$TEST_CMD $USER_FILTER"
+fi
+
+# Add extra args (e.g. --parity-report)
+if [ -n "$EXTRA_ARGS" ]; then
+    TEST_CMD="$TEST_CMD $EXTRA_ARGS"
 fi
 
 if [ "$MARKER" = "integration" ] || [ "$MARKER" = "security" ] || [ "$MARKER" = "cross_language" ] || [[ "$PATH_FILTER" == "tests/format_2025" ]]; then

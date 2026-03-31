@@ -71,7 +71,8 @@ jobs:
               {"name": "security", "runner": "ubuntu-latest", "marker": "security", "timeout": 15},
               {"name": "format-2025", "runner": "ubuntu-latest", "path": "tests/format_2025", "timeout": 30},
               {"name": "packaging", "runner": "ubuntu-latest", "path": "tests/packaging", "timeout": 25},
-              {"name": "cross-language", "runner": "ubuntu-latest", "marker": "cross_language", "timeout": 30}
+              {"name": "cross-language", "runner": "ubuntu-latest", "marker": "cross_language", "timeout": 30},
+              {"name": "parity", "runner": "ubuntu-latest", "marker": "parity", "timeout": 10, "parity_report": true}
             ]
           }
           EOF
@@ -130,9 +131,21 @@ jobs:
       - name: 🧪 Run tests
         run: |
           source workenv/bin/activate
-          .github/scripts/run-tests.sh "${{ matrix.marker }}" "${{ matrix.path }}" "${{ inputs.test_filter }}"
+          EXTRA_ARGS=""
+          if [ "${{ matrix.parity_report }}" = "true" ]; then
+            EXTRA_ARGS="--parity-report"
+          fi
+          .github/scripts/run-tests.sh "${{ matrix.marker }}" "${{ matrix.path }}" "${{ inputs.test_filter }}" "$EXTRA_ARGS"
         env:
           FLAVOR_REQUIRE_HELPERS: "1"
+
+      - name: 📊 Upload parity report
+        if: matrix.parity_report == true && always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: parity-report-${{ github.run_id }}
+          path: reports/parity-report.md
+        continue-on-error: true
 
       - name: 📊 Collect Test Metadata
         if: always()

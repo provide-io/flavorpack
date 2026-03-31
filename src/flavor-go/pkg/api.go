@@ -15,11 +15,3 @@ func BuildPackageWithOptions(manifestPath, outputPath, launcherBin, privateKeyPa
 func BuildPackageWithLogLevel(manifestPath, outputPath, launcherBin, privateKeyPath, publicKeyPath, keySeed, logLevel string) {
 	format_2025.BuildWithLogLevel(manifestPath, outputPath, launcherBin, privateKeyPath, publicKeyPath, keySeed, logLevel)
 }
-
-func VerifyPackage(packagePath string) (bool, error) {
-	return true, nil
-}
-
-func LaunchPackage(packagePath string, args []string) (int, error) {
-	return 0, nil
-}

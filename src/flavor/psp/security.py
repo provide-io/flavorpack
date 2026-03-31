@@ -270,11 +270,10 @@ class PSPFIntegrityVerifier:
                 }
             else:
                 logger.warning(f"⚠️ Integrity verification error: {e}")
-                logger.warning("⚠️ Continuing due to validation level")
                 return {
-                    "valid": True,
+                    "valid": False,
                     "signature_valid": False,
-                    "tamper_detected": False,
+                    "tamper_detected": True,
                 }
 
 

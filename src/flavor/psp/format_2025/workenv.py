@@ -81,8 +81,6 @@ class WorkEnvManager:
 
             # Handle lifecycle-based cleanup
             self._cleanup_lifecycle_slots(workenv_dir, metadata, extracted_slots)
-        else:
-            pass
 
         return workenv_dir
 
@@ -111,7 +109,7 @@ class WorkEnvManager:
             logger.debug(f"🔍 Checking cache validity: {check_path}")
 
             if check_path.exists():
-                actual_content = check_path.read_text().strip()
+                actual_content = check_path.read_text(encoding="utf-8").strip()
                 if actual_content == expected_content.replace("{version}", package_version):
                     cache_valid = True
                 else:
@@ -209,9 +207,7 @@ class WorkEnvManager:
         runtime_env = metadata.get("runtime", {}).get("env", {})
         setup_env = self._prepare_setup_environment(workenv_dir, runtime_env)
 
-        for _i, cmd in enumerate(setup_commands):
-            pass
-
+        for cmd in setup_commands:
             if isinstance(cmd, dict):
                 cmd_type = cmd.get("type", "execute")
 

@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 	"sync/atomic"
-	"syscall"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
@@ -19,17 +18,6 @@ var lockAcquired int32
 // LockInfo represents lock file information
 type LockInfo struct {
 	PID int `json:"pid"`
-}
-
-// IsProcessRunning checks if a process with given PID is still running
-func IsProcessRunning(pid int) bool {
-	process, err := os.FindProcess(pid)
-	if err != nil {
-		return false
-	}
-	// On Unix, Signal(0) checks if process exists without actually sending a signal
-	err = process.Signal(syscall.Signal(0))
-	return err == nil
 }
 
 // TryAcquireLock attempts to acquire an exclusive lock for cache extraction

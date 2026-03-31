@@ -5,6 +5,7 @@
 
 """PSPF package writer for low-level binary serialization."""
 
+import functools
 import gzip
 from pathlib import Path
 from typing import Any, BinaryIO
@@ -41,16 +42,16 @@ from flavor.psp.format_2025.pe_utils import process_launcher_for_pspf
 from flavor.psp.format_2025.slots import SlotDescriptor
 from flavor.psp.format_2025.spec import BuildSpec, PreparedSlot
 
-# Cache Ed25519Signer instances by private key bytes to avoid
-# repeated Ed25519PrivateKey.from_private_bytes() calls across builds.
-_signer_cache: dict[bytes, Ed25519Signer] = {}
 
-
+@functools.lru_cache(maxsize=1)
 def _get_or_create_signer(private_key: bytes) -> Ed25519Signer:
     """Return a cached Ed25519Signer for the given private key bytes."""
-    if private_key not in _signer_cache:
-        _signer_cache[private_key] = Ed25519Signer(private_key=private_key)
-    return _signer_cache[private_key]
+    return Ed25519Signer(private_key=private_key)
+
+
+def clear_signer_cache() -> None:
+    """Clear the signer cache to release private key material from memory."""
+    _get_or_create_signer.cache_clear()
 
 
 def write_package(
@@ -124,6 +125,9 @@ def write_package(
 
     # Set executable permissions
     set_file_permissions(output_path, DEFAULT_EXECUTABLE_PERMS)
+
+    # Clear cached signer to avoid keeping private key material in memory
+    clear_signer_cache()
 
     return actual_size
 
