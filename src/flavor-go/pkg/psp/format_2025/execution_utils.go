@@ -15,13 +15,13 @@ func copyFile(src, dst string) error {
 	if err != nil {
 		return err
 	}
-	defer sourceFile.Close()
+	defer func() { _ = sourceFile.Close() }()
 
 	destFile, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
-	defer destFile.Close()
+	defer func() { _ = destFile.Close() }()
 
 	if _, err := io.Copy(destFile, sourceFile); err != nil {
 		return err
@@ -94,10 +94,10 @@ func fixShebangs(binDir, oldPrefix, newPrefix string, logger hclog.Logger) error
 
 		header := make([]byte, 2)
 		if _, err := file.Read(header); err != nil {
-			file.Close()
+			_ = file.Close()
 			continue
 		}
-		file.Close()
+		_ = file.Close()
 
 		if string(header) != "#!" {
 			continue
@@ -142,7 +142,7 @@ func fixShebangs(binDir, oldPrefix, newPrefix string, logger hclog.Logger) error
 
 // cleanupLifecycleSlots removes slots based on their lifecycle after setup
 func cleanupLifecycleSlots(workenvDir string, metadata *Metadata, slotPaths map[int]string, logger hclog.Logger) {
-	for i, slot := range metadata.Slots {
+	for _, slot := range metadata.Slots {
 		// Clean up init lifecycle slots - they're only needed during setup
 		if slot.Lifecycle == "init" {
 			slotPath := filepath.Join(workenvDir, slot.ID)
@@ -152,7 +152,7 @@ func cleanupLifecycleSlots(workenvDir string, metadata *Metadata, slotPaths map[
 				logger.Debug("✅ Removed init slot", "slot", slot.ID, "path", slotPath)
 			}
 			// Remove from slotPaths map so it's not used in execution
-			delete(slotPaths, i)
+			delete(slotPaths, slot.Slot)
 		}
 	}
 }

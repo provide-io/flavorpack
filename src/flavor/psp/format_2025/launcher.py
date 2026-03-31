@@ -14,15 +14,19 @@ from pathlib import Path
 import tarfile
 from typing import Any
 
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from provide.foundation import logger
 from provide.foundation.file import atomic_write
 from provide.foundation.file.directory import ensure_dir, ensure_parent_dir, safe_rmtree
 
 from flavor.config.defaults import DEFAULT_DISK_SPACE_MULTIPLIER
+from flavor.config.policy import enforce_policy, load_operator_policy, merge_policy, parse_package_policy
+from flavor.config.trust import compute_key_fingerprint, is_key_trusted
 from flavor.psp.format_2025.constants import DEFAULT_SLOT_DESCRIPTOR_SIZE
 from flavor.psp.format_2025.reader import PSPFReader
 from flavor.psp.format_2025.targets import normalize_workenv_target
 from flavor.psp.format_2025.workenv import WorkEnvManager
+from flavor.psp.security import verify_package_integrity
 
 
 class PSPFLauncher(PSPFReader):
@@ -30,12 +34,11 @@ class PSPFLauncher(PSPFReader):
 
     def __init__(self, bundle_path: Path | None = None) -> None:
         if bundle_path is None:
-            # Allow None for testing purposes, parent class will handle it
-            bundle_path_arg: Path | str = ""
-        else:
-            bundle_path_arg = bundle_path
-        super().__init__(bundle_path_arg)
-        self.cache_dir = Path.home() / ".cache" / "flavor"
+            raise ValueError("bundle_path is required")
+        super().__init__(bundle_path)
+        from flavor.cache import get_cache_dir
+
+        self.cache_dir = get_cache_dir().parent
         ensure_dir(self.cache_dir)
         self._workenv_manager = WorkEnvManager(self)
 
@@ -281,6 +284,35 @@ class PSPFLauncher(PSPFReader):
         """Substitute {slot:N} references in command."""
         return self._workenv_manager.substitute_slot_references(command, workenv_dir)
 
+    def _is_package_key_trusted(self) -> bool:
+        """Return whether the package signing key is trusted for operator-policy enforcement."""
+        index = self.read_index()
+        public_key = getattr(index, "public_key", b"")
+        if not public_key or set(public_key) == {0}:
+            return True
+
+        fingerprint = compute_key_fingerprint(Ed25519PublicKey.from_public_bytes(bytes(public_key)))
+        trusted = is_key_trusted(fingerprint)
+        return trusted is not False
+
+    def _enforce_launch_security(self, metadata: dict[str, Any]) -> None:
+        """Verify integrity and enforce launch-time operator/package policy."""
+        result = verify_package_integrity(self.bundle_path)
+        if not result.get("valid", False):
+            raise ValueError("package integrity verification failed")
+
+        index = self.read_index()
+        pkg_policy = parse_package_policy(metadata.get("policy", {}))
+        op_policy = load_operator_policy()
+        effective_policy = merge_policy(pkg_policy, op_policy)
+        has_sbom = any(slot.get("lifecycle") == "attestation" for slot in metadata.get("slots", []))
+        enforce_policy(
+            effective_policy,
+            int(getattr(index, "build_timestamp", 0)),
+            has_sbom,
+            self._is_package_key_trusted(),
+        )
+
     def execute(self, args: list[str] | None = None) -> dict[str, Any]:
         """Execute the bundle.
 
@@ -303,6 +335,8 @@ class PSPFLauncher(PSPFReader):
             if "execution" not in metadata:
                 logger.error("❌ No execution configuration in metadata")
                 raise ValueError("Bundle has no execution configuration")
+
+            self._enforce_launch_security(metadata)
 
             # Setup work environment (extracts slots and runs setup commands)
             workenv_dir = self.setup_workenv()

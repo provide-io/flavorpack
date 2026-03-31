@@ -29,6 +29,8 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: 🔧 Ensure gh CLI available
         run: type gh >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq gh)
@@ -71,7 +73,8 @@ jobs:
               {"name": "security", "runner": "ubuntu-latest", "marker": "security", "timeout": 15},
               {"name": "format-2025", "runner": "ubuntu-latest", "path": "tests/format_2025", "timeout": 30},
               {"name": "packaging", "runner": "ubuntu-latest", "path": "tests/packaging", "timeout": 25},
-              {"name": "cross-language", "runner": "ubuntu-latest", "marker": "cross_language", "timeout": 30}
+              {"name": "cross-language", "runner": "ubuntu-latest", "marker": "cross_language", "timeout": 30},
+              {"name": "parity", "runner": "ubuntu-latest", "marker": "parity", "timeout": 10, "parity_report": true}
             ]
           }
           EOF
@@ -92,6 +95,8 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       
       - name: 📥 Download helpers
         uses: actions/download-artifact@v8
@@ -130,9 +135,21 @@ jobs:
       - name: 🧪 Run tests
         run: |
           source workenv/bin/activate
-          .github/scripts/run-tests.sh "${{ matrix.marker }}" "${{ matrix.path }}" "${{ inputs.test_filter }}"
+          EXTRA_ARGS=""
+          if [ "${{ matrix.parity_report }}" = "true" ]; then
+            EXTRA_ARGS="--parity-report"
+          fi
+          .github/scripts/run-tests.sh "${{ matrix.marker }}" "${{ matrix.path }}" "${{ inputs.test_filter }}" "$EXTRA_ARGS"
         env:
           FLAVOR_REQUIRE_HELPERS: "1"
+
+      - name: 📊 Upload parity report
+        if: matrix.parity_report == true && always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: parity-report-${{ github.run_id }}
+          path: reports/parity-report.md
+        continue-on-error: true
 
       - name: 📊 Collect Test Metadata
         if: always()
@@ -206,6 +223,8 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       # setup-python MUST come before setup-uv here.
       # uv's python-build-standalone has no Python 3.11 ARM64 Windows build —
@@ -375,6 +394,8 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       
       # setup-python MUST come before setup-uv here.
       # uv's python-build-standalone has no Python 3.11 ARM64 Windows build —
@@ -507,6 +528,7 @@ jobs:
       - name: 📥 Checkout scripts
         uses: actions/checkout@v6
         with:
+          persist-credentials: false
           sparse-checkout: |
             .github/scripts
           sparse-checkout-cone-mode: false
@@ -541,6 +563,8 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       
       - name: 📥 Download test results
         uses: actions/download-artifact@v8
@@ -557,6 +581,15 @@ jobs:
           merge-multiple: true
         continue-on-error: true
       
+      - name: 🔍 Validate wheel contents
+        if: needs.build-wheels.result == 'success'
+        run: |
+          if ls wheel-artifacts/*.whl 2>/dev/null | head -1 | grep -q .; then
+            python3 tools/validate_wheel.py --all --dist-dir wheel-artifacts/
+          else
+            echo "No wheel files found to validate"
+          fi
+
       - name: 📥 Download Flavor packages
         if: needs.build-flavor.result == 'success'
         uses: actions/download-artifact@v8
@@ -564,7 +597,7 @@ jobs:
           pattern: flavor-${{ needs.setup.outputs.helper_version }}-*
           path: flavor-artifacts
           merge-multiple: true
-      
+
       - name: 📊 Generate summary
         run: |
           echo "## 🌶️ Flavor Pipeline Summary" >> $GITHUB_STEP_SUMMARY

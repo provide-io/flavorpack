@@ -8,10 +8,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
-)
-
-const (
-	defaultCacheSubdir = ".cache/flavor/workenv"
+	"github.com/provide-io/flavor/go/flavor/internal/workenv"
 )
 
 // setFlavorCacheBeforeWorkenv sets FLAVOR_CACHE to the HOST's cache directory.
@@ -19,20 +16,14 @@ const (
 // This ensures packaged tools can access cached packages from the HOST.
 func setFlavorCacheBeforeWorkenv(env []string, logger hclog.Logger) []string {
 	// Check if FLAVOR_CACHE is already set
-	if hasEnv(env, "FLAVOR_CACHE") {
+	if hasEnv(env, EnvCache) {
 		logger.Debug("🗂️ FLAVOR_CACHE already set, skipping")
 		return env
 	}
 
-	// Get HOME from parent environment BEFORE it gets overwritten by workenv
-	homeValue := getenv(env, "HOME", "")
-	if homeValue == "" {
-		logger.Warn("⚠️ HOME not found in environment, skipping FLAVOR_CACHE setup")
-		return env
-	}
-
-	flavorCache := filepath.Join(homeValue, defaultCacheSubdir)
-	env = append(env, fmt.Sprintf("FLAVOR_CACHE=%s", flavorCache))
+	// Use workenv.GetCacheRoot() for cross-platform cache directory consistency
+	flavorCache := filepath.Join(workenv.GetCacheRoot(), "workenv")
+	env = append(env, fmt.Sprintf("%s=%s", EnvCache, flavorCache))
 	logger.Debug("🗂️ Setting FLAVOR_CACHE to HOST cache", "path", flavorCache)
 	return env
 }

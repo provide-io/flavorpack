@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/internal/workenv"
 	"github.com/provide-io/flavor/go/flavor/pkg/utils/shellparse"
 )
 
@@ -20,6 +21,27 @@ var (
 	ErrMissingSlot          = errors.New("missing slot reference")
 	ErrLockAcquisition      = errors.New("failed to acquire lock")
 )
+
+func removeFileQuietly(path, context string, logger hclog.Logger) {
+	if err := os.Remove(path); err != nil {
+		logger.Trace("Ignoring cleanup error", "context", context, "path", path, "error", err)
+	}
+}
+
+func removeAllQuietly(path, context string, logger hclog.Logger) {
+	if err := os.RemoveAll(path); err != nil {
+		logger.Trace("Ignoring cleanup error", "context", context, "path", path, "error", err)
+	}
+}
+
+func ensurePathWithinWorkenv(path, workenvDir, original string) error {
+	cleanPath := filepath.Clean(path)
+	cleanBase := filepath.Clean(workenvDir)
+	if !strings.HasPrefix(cleanPath, cleanBase+string(os.PathSeparator)) && cleanPath != cleanBase {
+		return fmt.Errorf("path %q escapes work environment directory", original)
+	}
+	return nil
+}
 
 // Utility functions: see execution_utils.go
 // Cache functions: see execution_cache.go
@@ -61,17 +83,17 @@ func prepareBundlePath(exePath string, logger hclog.Logger) (string, func(), err
 		bytesWritten, err := tmpFile.Write(pspfData)
 		if err != nil {
 			logger.Error("Failed to write PSPF data to temp file", "error", err, "path", tmpPath)
-			tmpFile.Close()
+			_ = tmpFile.Close()
 			logger.Trace("Cleaning up temp file after write failure", "path", tmpPath)
-			os.Remove(tmpPath)
+			_ = os.Remove(tmpPath)
 			return "", nil, fmt.Errorf("failed to write PSPF to temp file: %w", err)
 		}
 		logger.Debug("Wrote PSPF data to temp file", "bytes", bytesWritten, "expected", len(pspfData))
 
 		if bytesWritten != len(pspfData) {
 			logger.Error("Incomplete write to temp file", "written", bytesWritten, "expected", len(pspfData))
-			tmpFile.Close()
-			os.Remove(tmpPath)
+			_ = tmpFile.Close()
+			_ = os.Remove(tmpPath)
 			return "", nil, fmt.Errorf("incomplete write: wrote %d bytes, expected %d", bytesWritten, len(pspfData))
 		}
 
@@ -79,7 +101,7 @@ func prepareBundlePath(exePath string, logger hclog.Logger) (string, func(), err
 		if err := tmpFile.Close(); err != nil {
 			logger.Error("Failed to close temp file", "error", err, "path", tmpPath)
 			logger.Trace("Cleaning up temp file after close failure", "path", tmpPath)
-			os.Remove(tmpPath)
+			_ = os.Remove(tmpPath)
 			return "", nil, fmt.Errorf("failed to close temp file: %w", err)
 		}
 		logger.Debug("Temp file closed successfully", "path", tmpPath)
@@ -133,6 +155,23 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		return nil, fmt.Errorf("failed to read index: %w", err)
 	}
 
+	// Check signing key trust status.
+	// keyTrusted is false only when the trusted store exists AND the key is explicitly absent.
+	// It stays true when: no attestation fingerprint, store missing (nil), or key is trusted.
+	keyTrusted := true
+	if fp := strings.TrimRight(string(index.AttestationKeyFp[:]), "\x00"); fp != "" {
+		trusted, err := IsKeyTrusted(fp, true)
+		if err != nil {
+			logger.Warn("⚠️ Failed to check trusted key store", "error", err)
+		} else if trusted != nil && !*trusted {
+			keyTrusted = false
+			fmt.Fprintf(os.Stderr, "⚠️ SECURITY WARNING: Package signing key is not in the trusted store\n")
+			fmt.Fprintf(os.Stderr, "⚠️ Key fingerprint: %s\n", fp)
+			fmt.Fprintf(os.Stderr, "⚠️ Use 'flavor trust add <key-file>' to trust this key\n")
+			logger.Warn("⚠️ Package signing key not in trusted store", "fingerprint", fp)
+		}
+	}
+
 	validationLevel := getValidationLevel()
 
 	switch validationLevel {
@@ -172,6 +211,38 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		} else {
 			logger.Debug("✅ Package integrity verified")
 		}
+
+		// Verify attestation SBOM digest (fail-closed: digest present but slot absent = error)
+		logger.Debug("🔍 Verifying attestation SBOM digest", "level", validationLevel)
+		if err := reader.VerifyAttestationSbomDigest(); err != nil {
+			switch validationLevel {
+			case ValidationMinimal, ValidationRelaxed:
+				fmt.Fprintf(os.Stderr, "⚠️ SECURITY WARNING: Failed to verify attestation SBOM digest: %v\n", err)
+				fmt.Fprintf(os.Stderr, "⚠️ Continuing due to validation level: %v\n", validationLevel)
+				logger.Warn("⚠️ Failed to verify attestation SBOM digest, continuing", "error", err, "level", validationLevel)
+			default: // ValidationStrict, ValidationStandard
+				logger.Error("❌ Failed to verify attestation SBOM digest", "error", err)
+				return nil, fmt.Errorf("failed to verify attestation SBOM digest: %w", err)
+			}
+		} else {
+			logger.Debug("✅ Attestation SBOM digest verified")
+		}
+
+		// Verify attestation policy hash (fail-closed: hash present but no policy = error)
+		logger.Debug("🔍 Verifying attestation policy hash", "level", validationLevel)
+		if err := reader.VerifyAttestationPolicyHash(); err != nil {
+			switch validationLevel {
+			case ValidationMinimal, ValidationRelaxed:
+				fmt.Fprintf(os.Stderr, "⚠️ SECURITY WARNING: Failed to verify attestation policy hash: %v\n", err)
+				fmt.Fprintf(os.Stderr, "⚠️ Continuing due to validation level: %v\n", validationLevel)
+				logger.Warn("⚠️ Failed to verify attestation policy hash, continuing", "error", err, "level", validationLevel)
+			default: // ValidationStrict, ValidationStandard
+				logger.Error("❌ Failed to verify attestation policy hash", "error", err)
+				return nil, fmt.Errorf("failed to verify attestation policy hash: %w", err)
+			}
+		} else {
+			logger.Debug("✅ Attestation policy hash verified")
+		}
 	}
 
 	metadata, err := reader.ReadMetadata()
@@ -181,25 +252,52 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 	}
 
 	logger.Info("📦 Package", "name", metadata.Package.Name, "version", metadata.Package.Version)
-	logger.Debug("🎯 Primary slot", "slot", metadata.Execution.PrimarySlot)
-	logger.Debug("🔧 Command", "command", metadata.Execution.Command)
+	if metadata.Execution != nil {
+		logger.Debug("🎯 Primary slot", "slot", metadata.Execution.PrimarySlot)
+		logger.Debug("🔧 Command", "command", metadata.Execution.Command)
+	} else {
+		logger.Debug("⚠️ No execution configuration present in metadata")
+	}
+
+	// Policy enforcement
+	opPolicy, policyErr := LoadOperatorPolicy()
+	if policyErr != nil {
+		fmt.Fprintf(os.Stderr, "WARN: failed to load operator policy: %v\n", policyErr)
+		opPolicy = OperatorPolicy{}
+	}
+
+	var pkgPolicy PackagePolicy
+	if metadata.Policy != nil {
+		pkgPolicy = *metadata.Policy
+	}
+
+	effective := MergePolicy(pkgPolicy, opPolicy)
+
+	hasSBOM := false
+	for _, slot := range metadata.Slots {
+		if slot.Lifecycle == "attestation" {
+			hasSBOM = true
+			break
+		}
+	}
+
+	if enforceErr := EnforcePolicy(effective, int64(index.BuildTimestamp), hasSBOM, keyTrusted); enforceErr != nil {
+		logger.Error("❌ Policy violation", "error", enforceErr)
+		return nil, fmt.Errorf("policy violation: %w", enforceErr)
+	}
+	logger.Debug("✅ Policy enforcement passed")
 
 	// Create WorkenvPaths structure
 	var paths *WorkenvPaths
-	if customWorkenv := os.Getenv("FLAVOR_WORKENV"); customWorkenv != "" {
+	if customWorkenv := os.Getenv(EnvWorkenv); customWorkenv != "" {
 		// Use custom workenv path from environment variable
 		logger.Info("📁 Using custom work environment from FLAVOR_WORKENV", "path", customWorkenv)
 		// Extract cache dir from custom workenv (go up two levels)
 		cacheDir := filepath.Dir(filepath.Dir(customWorkenv))
 		paths = NewWorkenvPaths(cacheDir, exePath)
 	} else {
-		// Get cache directory (XDG_CACHE_HOME or fallback)
-		cacheDir := os.Getenv("XDG_CACHE_HOME")
-		if cacheDir == "" {
-			homeDir, _ := os.UserHomeDir()
-			cacheDir = filepath.Join(homeDir, ".cache")
-		}
-		cacheDir = filepath.Join(cacheDir, "flavor")
+		// Get cache directory using workenv.GetCacheRoot() for cross-platform consistency
+		cacheDir := workenv.GetCacheRoot()
 		paths = NewWorkenvPaths(cacheDir, exePath)
 	}
 
@@ -220,9 +318,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 			// Substitute {workenv} placeholder in the path
 			dirPath := strings.ReplaceAll(dirSpec.Path, "{workenv}", workenvDir)
 			// Path traversal protection: ensure dirPath stays within workenvDir
-			cleanDir := filepath.Clean(dirPath)
-			cleanBase := filepath.Clean(workenvDir)
-			if !strings.HasPrefix(cleanDir, cleanBase+string(os.PathSeparator)) && cleanDir != cleanBase {
+			if err := ensurePathWithinWorkenv(dirPath, workenvDir, dirSpec.Path); err != nil {
 				return nil, fmt.Errorf("directory path %q escapes work environment directory", dirSpec.Path)
 			}
 			logger.Debug("📁 Creating directory", "path", dirPath)
@@ -247,7 +343,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 	}
 
 	// Check if we should use cache
-	useCache := os.Getenv("FLAVOR_WORKENV_CACHE") != "false" && os.Getenv("FLAVOR_WORKENV_CACHE") != "0"
+	useCache := os.Getenv(EnvWorkenvCache) != "false" && os.Getenv(EnvWorkenvCache) != "0"
 
 	workenvValid := false
 	if useCache {
@@ -309,24 +405,10 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		if err := savePackageChecksum(paths, index.IndexChecksum, logger); err != nil {
 			logger.Warn("⚠️ Failed to save package checksum", "error", err)
 		}
-
-		// Clean up init lifecycle slots after extraction (regardless of setup commands)
-		logger.Info("🧹 Cleaning up lifecycle slots...")
-		cleanupLifecycleSlots(workenvDir, metadata, slotPaths, logger)
 	} else {
 		logger.Info("✅ Work environment is valid, skipping persistent slot extraction")
-		for i, slot := range metadata.Slots {
-			if slot.Lifecycle == "volatile" {
-				logger.Debug("📦 Extracting volatile slot", "index", i, "id", slot.ID)
-				slotPath, err := reader.ExtractSlot(i, paths.Workenv())
-				if err != nil {
-					logger.Error("❌ Failed to extract slot", "error", fmt.Errorf("%w: %v", ErrSlotExtractionFailed, err))
-					return nil, fmt.Errorf("%w: %v", ErrSlotExtractionFailed, err)
-				}
-				slotPaths[slot.Slot] = slotPath
-			} else {
-				slotPaths[slot.Slot] = paths.Workenv()
-			}
+		for _, slot := range metadata.Slots {
+			slotPaths[slot.Slot] = paths.Workenv()
 		}
 	}
 
@@ -361,6 +443,10 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 						pattern, _ := enumerate["pattern"].(string)
 
 						path = strings.ReplaceAll(path, "{workenv}", workenvDir)
+						if err := ensurePathWithinWorkenv(path, workenvDir, path); err != nil {
+							logger.Error("❌ Enumerate path escapes work environment directory", "path", path, "error", err)
+							return nil, err
+						}
 
 						matches, err := filepath.Glob(filepath.Join(path, pattern))
 						if err != nil {
@@ -380,6 +466,10 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 					content, _ := cmd["content"].(string)
 
 					path = strings.ReplaceAll(path, "{workenv}", workenvDir)
+					if err := ensurePathWithinWorkenv(path, workenvDir, path); err != nil {
+						logger.Error("❌ Write-file path escapes work environment directory", "path", path, "error", err)
+						return nil, err
+					}
 					path = strings.ReplaceAll(path, "{package_name}", metadata.Package.Name)
 					path = strings.ReplaceAll(path, "{version}", metadata.Package.Version)
 
@@ -436,7 +526,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 				setupExec.Dir = userCwd
 
 				setupExec.Env = os.Environ()
-				setupExec.Env = append(setupExec.Env, fmt.Sprintf("FLAVOR_WORKENV=%s", workenvDir))
+				setupExec.Env = append(setupExec.Env, fmt.Sprintf("%s=%s", EnvWorkenv, workenvDir))
 
 				for i, env := range setupExec.Env {
 					if strings.HasPrefix(env, "PATH=") {
@@ -457,6 +547,9 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 			}
 		}
 
+		// Clean up init lifecycle slots after setup commands have run
+		logger.Info("🧹 Cleaning up lifecycle slots...")
+		cleanupLifecycleSlots(workenvDir, metadata, slotPaths, logger)
 	}
 
 	if metadata.Execution == nil {
@@ -519,15 +612,15 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 	cmd.Env = setFlavorCacheBeforeWorkenv(cmd.Env, logger)
 
 	// Add FLAVOR_* variables
-	cmd.Env = append(cmd.Env, fmt.Sprintf("FLAVOR_WORKENV=%s", workenvDir))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", EnvWorkenv, workenvDir))
 	logger.Debug("➕ Added FLAVOR_WORKENV", "path", workenvDir)
 
 	cmd.Env = append(cmd.Env,
-		fmt.Sprintf("FLAVOR_ORIGINAL_COMMAND=%s", originalCmd),
-		fmt.Sprintf("FLAVOR_COMMAND_NAME=%s", binaryName))
+		fmt.Sprintf("%s=%s", EnvOriginalCommand, originalCmd),
+		fmt.Sprintf("%s=%s", EnvCommandName, binaryName))
 	logger.Debug("🏷️ Added command name environment variables",
-		"FLAVOR_ORIGINAL_COMMAND", originalCmd,
-		"FLAVOR_COMMAND_NAME", binaryName)
+		EnvOriginalCommand, originalCmd,
+		EnvCommandName, binaryName)
 
 	// Prepend workenv/bin to PATH
 	pathFound := false

@@ -16,11 +16,15 @@ from provide.foundation import CLIContext, TelemetryConfig, get_hub
 from provide.foundation.utils import get_version
 
 # Import all commands at module level
+from flavor.commands.doctor import doctor_command
 from flavor.commands.extract import extract_all_command, extract_command
 from flavor.commands.helpers import helper_group
+from flavor.commands.init import init_command
 from flavor.commands.inspect import inspect_command
 from flavor.commands.keygen import keygen_command
 from flavor.commands.package import pack_command
+from flavor.commands.policy import policy_group
+from flavor.commands.trust import trust_group
 from flavor.commands.utils import clean_command
 from flavor.commands.verify import verify_command
 from flavor.commands.workenv import workenv_group
@@ -93,6 +97,8 @@ def cli(ctx: click.Context) -> None:
 
 
 # Register simple commands
+cli.add_command(doctor_command, name="doctor")
+cli.add_command(init_command, name="init")
 cli.add_command(keygen_command, name="keygen")
 cli.add_command(pack_command, name="pack")
 cli.add_command(verify_command, name="verify")
@@ -104,6 +110,8 @@ cli.add_command(clean_command, name="clean")
 # Register command groups
 cli.add_command(workenv_group, name="workenv")
 cli.add_command(helper_group, name="helpers")
+cli.add_command(trust_group, name="trust")
+cli.add_command(policy_group, name="policy")
 
 main = cli
 

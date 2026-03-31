@@ -19,7 +19,7 @@ func checkDiskSpace(paths *WorkenvPaths, metadata *Metadata, logger hclog.Logger
 
 	// Get available disk space
 	workenvPath := paths.Workenv()
-	available, err := getAvailableDiskSpace(workenvPath)
+	available, err := getAvailableDiskSpaceFn(workenvPath)
 	if err != nil {
 		logger.Warn("⚠️ Could not check disk space", "error", err)
 		return nil // Don't fail if we can't check
@@ -108,7 +108,7 @@ func savePackageChecksum(paths *WorkenvPaths, checksum uint32, logger hclog.Logg
 		logger.Debug("⚠️ Failed to open checksum file", "error", err)
 		return err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	if _, err := file.WriteString(checksumStr); err != nil {
 		logger.Debug("⚠️ Failed to write package checksum", "error", err)

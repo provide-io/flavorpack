@@ -10,6 +10,8 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+import pytest
+
 from flavor.config.defaults import (
     VALIDATION_MINIMAL,
     VALIDATION_NONE,
@@ -23,6 +25,8 @@ from flavor.psp.security import (
     get_validation_level,
     verify_package_integrity,
 )
+
+pytestmark = [pytest.mark.security, pytest.mark.ci]
 
 
 class TestValidationLevel:
@@ -361,10 +365,10 @@ class TestPSPFIntegrityVerifier:
         verifier = PSPFIntegrityVerifier()
         result = verifier.verify_integrity(bundle_path)
 
-        # Standard mode is lenient
-        assert result["valid"] is True
+        # Standard mode is fail-closed on exceptions
+        assert result["valid"] is False
         assert result["signature_valid"] is False
-        assert result["tamper_detected"] is False
+        assert result["tamper_detected"] is True
 
 
 class TestVerifyPackageIntegrity:

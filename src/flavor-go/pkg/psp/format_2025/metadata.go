@@ -1,5 +1,8 @@
 package format_2025
 
+import "encoding/json"
+
+// Metadata holds the top-level metadata structure.
 type Metadata struct {
 	Format          string               `json:"format"`
 	FormatVersion   string               `json:"format_version"`
@@ -14,6 +17,55 @@ type Metadata struct {
 	Launcher        *LauncherInfo        `json:"launcher,omitempty"`
 	Compatibility   *CompatibilityInfo   `json:"compatibility,omitempty"`
 	Workenv         *WorkenvInfo         `json:"workenv,omitempty"`
+	Policy          *PackagePolicy       `json:"policy,omitempty"`
+	PolicyRaw       json.RawMessage      `json:"-"` // raw bytes preserved by UnmarshalJSON
+}
+
+// UnmarshalJSON preserves the raw policy bytes alongside the parsed Policy struct.
+func (m *Metadata) UnmarshalJSON(data []byte) error {
+	// Use an alias to avoid infinite recursion.
+	type MetadataAlias struct {
+		Format          string               `json:"format"`
+		FormatVersion   string               `json:"format_version"`
+		Package         PackageInfo          `json:"package"`
+		CacheValidation *CacheValidationInfo `json:"cache_validation,omitempty"`
+		SetupCommands   []interface{}        `json:"setup_commands,omitempty"`
+		Slots           []SlotMetadata       `json:"slots"`
+		Execution       *ExecutionInfo       `json:"execution,omitempty"`
+		Runtime         *RuntimeInfo         `json:"runtime,omitempty"`
+		Verification    *VerificationInfo    `json:"verification,omitempty"`
+		Build           *BuildInfo           `json:"build,omitempty"`
+		Launcher        *LauncherInfo        `json:"launcher,omitempty"`
+		Compatibility   *CompatibilityInfo   `json:"compatibility,omitempty"`
+		Workenv         *WorkenvInfo         `json:"workenv,omitempty"`
+		Policy          json.RawMessage      `json:"policy,omitempty"`
+	}
+	var alias MetadataAlias
+	if err := json.Unmarshal(data, &alias); err != nil {
+		return err
+	}
+	m.Format = alias.Format
+	m.FormatVersion = alias.FormatVersion
+	m.Package = alias.Package
+	m.CacheValidation = alias.CacheValidation
+	m.SetupCommands = alias.SetupCommands
+	m.Slots = alias.Slots
+	m.Execution = alias.Execution
+	m.Runtime = alias.Runtime
+	m.Verification = alias.Verification
+	m.Build = alias.Build
+	m.Launcher = alias.Launcher
+	m.Compatibility = alias.Compatibility
+	m.Workenv = alias.Workenv
+	if len(alias.Policy) > 0 {
+		m.PolicyRaw = alias.Policy
+		var pkg PackagePolicy
+		if err := json.Unmarshal(alias.Policy, &pkg); err != nil {
+			return err
+		}
+		m.Policy = &pkg
+	}
+	return nil
 }
 
 type PackageInfo struct {
@@ -30,7 +82,7 @@ type CacheValidationInfo struct {
 type ExecutionInfo struct {
 	PrimarySlot int               `json:"primary_slot"`
 	Command     string            `json:"command"`
-	Environment map[string]string `json:"env,omitempty"`
+	Environment map[string]string `json:"environment,omitempty"`
 }
 
 type RuntimeInfo struct {

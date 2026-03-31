@@ -9,6 +9,7 @@ Handles work environment setup, caching, lifecycle management, and setup command
 
 from __future__ import annotations
 
+import hashlib
 import os
 from pathlib import Path
 import shlex
@@ -35,6 +36,14 @@ class WorkEnvManager:
         """Initialize with reference to PSPFReader."""
         self.reader = reader
 
+    def _bundle_identity(self, bundle_path: Path) -> str:
+        """Return a stable content identity for the bundle."""
+        digest = hashlib.sha256()
+        with bundle_path.open("rb") as handle:
+            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(chunk)
+        return digest.hexdigest()[:12]
+
     def setup_workenv(self, bundle_path: Path) -> Path:
         """Setup work environment for bundle execution.
 
@@ -58,7 +67,7 @@ class WorkEnvManager:
         from flavor.cache import get_cache_dir
 
         workenv_base = get_cache_dir()
-        workenv_dir = workenv_base / f"{package_name}_{package_version}"
+        workenv_dir = workenv_base / f"{package_name}_{package_version}_{self._bundle_identity(bundle_path)}"
         ensure_dir(workenv_dir)
 
         # Check cache validity
@@ -81,8 +90,6 @@ class WorkEnvManager:
 
             # Handle lifecycle-based cleanup
             self._cleanup_lifecycle_slots(workenv_dir, metadata, extracted_slots)
-        else:
-            pass
 
         return workenv_dir
 
@@ -111,7 +118,7 @@ class WorkEnvManager:
             logger.debug(f"🔍 Checking cache validity: {check_path}")
 
             if check_path.exists():
-                actual_content = check_path.read_text().strip()
+                actual_content = check_path.read_text(encoding="utf-8").strip()
                 if actual_content == expected_content.replace("{version}", package_version):
                     cache_valid = True
                 else:
@@ -209,9 +216,7 @@ class WorkEnvManager:
         runtime_env = metadata.get("runtime", {}).get("env", {})
         setup_env = self._prepare_setup_environment(workenv_dir, runtime_env)
 
-        for _i, cmd in enumerate(setup_commands):
-            pass
-
+        for cmd in setup_commands:
             if isinstance(cmd, dict):
                 cmd_type = cmd.get("type", "execute")
 
