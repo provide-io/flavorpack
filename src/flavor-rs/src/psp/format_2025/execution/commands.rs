@@ -404,6 +404,9 @@ mod tests {
 
         #[cfg(windows)]
         {
+            // Use platform-joined path for correct separator assertion.
+            let sep = std::path::MAIN_SEPARATOR;
+            let expected_scripts = format!("{sep}test_workenv{sep}Scripts;");
             assert!(
                 expected_path.contains(&expected_scripts),
                 "PATH should contain workenv\\Scripts; but was: {expected_path}"

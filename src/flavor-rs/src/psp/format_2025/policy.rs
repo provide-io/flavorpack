@@ -178,8 +178,10 @@ pub fn merge_policy(pkg: PackagePolicy, op: OperatorPolicy) -> EffectivePolicy {
 fn is_windows_admin() -> bool {
     use windows::Win32::Foundation::BOOL;
     use windows::Win32::Security::{
-        AllocateAndInitializeSid, CheckTokenMembership, DOMAIN_ALIAS_RID_ADMINS, FreeSid, PSID,
-        SECURITY_BUILTIN_DOMAIN_RID, SID_IDENTIFIER_AUTHORITY,
+        AllocateAndInitializeSid, CheckTokenMembership, FreeSid, PSID, SID_IDENTIFIER_AUTHORITY,
+    };
+    use windows::Win32::System::SystemServices::{
+        DOMAIN_ALIAS_RID_ADMINS, SECURITY_BUILTIN_DOMAIN_RID,
     };
 
     const NT_AUTHORITY: SID_IDENTIFIER_AUTHORITY = SID_IDENTIFIER_AUTHORITY {
@@ -191,8 +193,8 @@ fn is_windows_admin() -> bool {
         if AllocateAndInitializeSid(
             &NT_AUTHORITY,
             2,
-            SECURITY_BUILTIN_DOMAIN_RID,
-            DOMAIN_ALIAS_RID_ADMINS,
+            SECURITY_BUILTIN_DOMAIN_RID as u32,
+            DOMAIN_ALIAS_RID_ADMINS as u32,
             0,
             0,
             0,

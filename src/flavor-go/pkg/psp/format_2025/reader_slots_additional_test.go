@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -236,8 +237,11 @@ func TestExtractSlotWritesSingleFileAndTarball(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Stat(extracted file) error = %v", err)
 	}
-	if info.Mode().Perm()&0o111 == 0 {
-		t.Fatalf("expected executable bit to be preserved, got mode %v", info.Mode().Perm())
+	// Windows does not support Unix-style permission bits; skip executable-bit check.
+	if runtime.GOOS != "windows" {
+		if info.Mode().Perm()&0o111 == 0 {
+			t.Fatalf("expected executable bit to be preserved, got mode %v", info.Mode().Perm())
+		}
 	}
 
 	tarRaw := buildTarArchiveWithDirAndFile(t, "bundle", "payload.txt", 0o755, []byte("tar payload"))
@@ -274,8 +278,11 @@ func TestExtractSlotWritesSingleFileAndTarball(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Stat(tar payload) error = %v", err)
 	}
-	if tarInfo.Mode().Perm()&0o111 == 0 {
-		t.Fatalf("expected tar payload to stay executable, got mode %v", tarInfo.Mode().Perm())
+	// Windows does not support Unix-style permission bits; skip executable-bit check.
+	if runtime.GOOS != "windows" {
+		if tarInfo.Mode().Perm()&0o111 == 0 {
+			t.Fatalf("expected tar payload to stay executable, got mode %v", tarInfo.Mode().Perm())
+		}
 	}
 }
 
