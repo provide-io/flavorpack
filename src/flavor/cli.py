@@ -97,7 +97,6 @@ def cli(ctx: click.Context) -> None:
 
 
 # Register simple commands
-cli.add_command(doctor_command, name="doctor")
 cli.add_command(init_command, name="init")
 cli.add_command(keygen_command, name="keygen")
 cli.add_command(pack_command, name="pack")
