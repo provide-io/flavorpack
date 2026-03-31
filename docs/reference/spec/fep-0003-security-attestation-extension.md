@@ -80,7 +80,7 @@ FEP-0001 §5 defines the lifecycle value table for slots. This extension adds on
 |---|---|---|---|
 | 11 | `LIFECYCLE_ATTESTATION` | `attestation` | Security attestation slot containing SBOM and build provenance |
 
-A launcher that does not recognise lifecycle value 11 MUST treat the slot as `init` (extracted on first run, removed after execution) per FEP-0001 §6.1. This ensures old launchers handle attestation slots gracefully without error.
+A launcher implementing only FEP-0001 (not this extension) will treat an attestation slot as an `init`-lifecycle slot, since lifecycle value 11 is within the unassigned range for FEP-0001. It will extract the slot on first run and remove it after execution, per FEP-0001 §6.1. This is the expected forward-compatible behaviour.
 
 The slot identifier for the attestation slot is `"_attestation"` and its target path is `"_attestation"`. A package MUST NOT contain more than one slot with lifecycle value 11.
 
@@ -91,7 +91,7 @@ The FEP-0001 index block contains a 6816-byte reserved region (see FEP-0001 §4.
 | Offset within reserved | Size | Field | Description |
 |---|---|---|---|
 | 0 | 64 bytes | `attestation_key_fp` | SHA-256 of the Ed25519 public key (raw 32 bytes), hex-encoded ASCII |
-| 64 | 64 bytes | `attestation_sbom_digest` | SHA-256 of the attestation slot content (canonical JSON), hex-encoded ASCII |
+| 64 | 64 bytes | `attestation_sbom_digest` | SHA-256 of the entire attestation slot content (the full JSON bytes of the top-level object), hex-encoded ASCII |
 | 128 | 64 bytes | `attestation_policy_hash` | SHA-256 of the package-declared policy JSON (canonical form), hex-encoded ASCII |
 
 All three fields are optional. A zero-filled field (all 64 bytes are `0x00`) indicates that the field is absent. A launcher implementing this extension MUST skip the associated check for any absent field.
@@ -101,6 +101,8 @@ The remaining 6624 bytes of the reserved region (offsets 192–6815) remain rese
 ### 4.1 Field Encoding
 
 All three digest fields are encoded as lowercase hexadecimal ASCII. Builders MUST NOT use uppercase hex. Parsers SHOULD accept both cases for robustness but MUST emit lowercase.
+
+> **Fingerprint prefix convention**: The `attestation_key_fp` binary index field stores the raw hex fingerprint with **no prefix**. Fingerprints in provenance JSON fields (e.g. `signing_attestation_key_fp`) use the `sha256:` prefix (e.g. `sha256:abc123...`). Launchers performing consistency checks MUST strip the `sha256:` prefix from the provenance field before comparing it to the index field.
 
 ### 4.2 Builder Requirements
 
@@ -121,7 +123,7 @@ The attestation slot contains a single JSON file. The top-level object has two k
 }
 ```
 
-Either key MAY be absent (but not both — an empty attestation slot SHOULD NOT be created). If `sbom` is absent, the `attestation_sbom_digest` index field MUST be zero-filled.
+Either key MAY be absent (but not both — an empty attestation slot SHOULD NOT be created). If an attestation slot is present but contains no `sbom` object, `attestation_sbom_digest` in the index MUST be zero-filled.
 
 ### 5.1 SBOM Format
 
@@ -224,10 +226,17 @@ Launchers MUST NOT proceed past key store checks if the Ed25519 signature (FEP-0
 
 ## 7. Operator Policy
 
-An operator policy file named `policy.toml` configures enforcement at the host level. Two locations are consulted:
+An operator policy file named `policy.toml` configures enforcement at the host level. Two locations are consulted, resolved according to the table below:
 
-- **System policy**: `/etc/flavor/policy.toml` (Linux/macOS) or `%ProgramData%\flavor\policy.toml` (Windows)
-- **User policy**: resolved using the same precedence order as the trusted key store (§6), substituting `policy.toml` for the `trusted-keys/` directory
+| Scenario | Policy file path |
+|---|---|
+| System-wide (Linux/macOS) | `/etc/flavor/policy.toml` |
+| System-wide (Windows) | `%PROGRAMDATA%\flavor\policy.toml` |
+| User-level (Linux/macOS) | `$XDG_CONFIG_HOME/flavor/policy.toml` → `~/.config/flavor/policy.toml` |
+| User-level (Windows) | `%APPDATA%\flavor\policy.toml` |
+| Override (all platforms) | `$FLAVOR_CONFIG_DIR/policy.toml` (highest user-level precedence when set) |
+
+The resolution order for the user-level path mirrors the trusted key store (§6): `FLAVOR_CONFIG_DIR` takes priority, then `XDG_CONFIG_HOME/flavor/` (or `%APPDATA%\flavor\` on Windows), then the XDG default `~/.config/flavor/`.
 
 If both files exist, their fields are merged. For every field, the **stricter** value wins. Operator policy can only tighten package-declared constraints (§8), never loosen them.
 
@@ -289,9 +298,10 @@ A launcher implementing this extension MUST enforce the following steps in order
 2. **Attestation consistency** (§5.2): If `attestation_key_fp` in the index is non-zero and an attestation slot is present, verify that `provenance.signing_attestation_key_fp` (stripped of `sha256:` prefix) matches the index field. Reject if they differ.
 3. **Key store check** (§6.3): If a trusted-keys directory exists or `require_trusted_key = true` (from either policy source), check the package's signing key fingerprint against the store. Apply enforcement per §6.3.
 4. **Package-declared policy** (§8): Evaluate all constraints declared in the package metadata.
-5. **Operator policy overlay** (§7): Evaluate operator policy fields, applying the stricter value for any field also declared by the package.
-6. **SBOM digest verification** (§4): If `attestation_sbom_digest` in the index is non-zero, re-serialise the attestation slot content to canonical JSON, compute `SHA-256`, and compare to `attestation_sbom_digest`. Reject if they differ.
-7. **Execute**: Proceed with normal FEP-0001 extraction and execution.
+5. **Policy hash verification** (§4): If `attestation_policy_hash` in the index is non-zero, the launcher MUST compute the SHA-256 hash of the resolved effective policy and verify it matches `attestation_policy_hash`. A mismatch MUST cause execution to fail.
+6. **Operator policy overlay** (§7): Evaluate operator policy fields, applying the stricter value for any field also declared by the package.
+7. **SBOM digest verification** (§4): If `attestation_sbom_digest` in the index is non-zero, re-serialise the attestation slot content to canonical JSON, compute `SHA-256`, and compare to `attestation_sbom_digest`. Reject if they differ.
+8. **Execute**: Proceed with normal FEP-0001 extraction and execution.
 
 ## 10. `flavor init` Command
 
@@ -349,7 +359,7 @@ Operator policy cannot be protected by the package signature since it is host-co
 
 The `attestation_sbom_digest` index field binds the attestation slot content to the signed index block. An attacker who modifies the attestation slot content without updating the signature will cause the Ed25519 check (step 1, §9) to fail. An attacker who replaces the entire attestation slot and re-signs with a different key will be caught by the key store check (step 3) if the new key is not trusted.
 
-The `attestation_sbom_digest` check (step 6 of §9) provides defence-in-depth: even if the index block is somehow forged, the SBOM content is independently verified against the digest committed in the index.
+The `attestation_sbom_digest` check (step 7 of §9) provides defence-in-depth: even if the index block is somehow forged, the SBOM content is independently verified against the digest committed in the index.
 
 Consumers relying on SBOM data for compliance purposes SHOULD verify the full Ed25519 signature independently before processing the SBOM, and SHOULD record the `signing_attestation_key_fp` alongside any compliance artefacts.
 
