@@ -119,6 +119,44 @@ pytest -m security    # Security tests
 make validate-pspf
 ```
 
+### Test Taxonomy
+
+FlavorPack uses a shared test-intent taxonomy across Python, Go, and Rust. Use the root `make` targets instead of guessing which language-native runner to invoke first.
+
+```bash
+make test-unit
+make test-integration
+make test-cross-language
+make test-security
+make test-adversarial
+make test-property
+make test-fuzz
+make test-mutation
+make test-smoke
+make test-fast
+make test-slow
+```
+
+Intent categories:
+
+- `unit`: small isolated behaviors
+- `integration`: multi-component behavior in one implementation
+- `cross_language`: parity/interoperability across Python, Go, and Rust
+- `security`: trust, verification, integrity, permissions, policy
+- `adversarial`: hostile inputs and boundary-violation attempts
+- `property`: parameterized and invariant-driven tests
+- `fuzz`: native malformed-input discovery
+- `mutation`: test-suite strength checks
+- `smoke`: minimal high-signal sanity checks
+
+Cost selectors are separate from intent:
+
+- `fast`
+- `slow`
+- `ci`
+
+Use both `security` and `adversarial` when a test intentionally tries to violate a security boundary.
+
 ## Quality Engineering
 
 Use the root quality targets to run the same cross-language workflows locally that CI now runs as observational jobs:

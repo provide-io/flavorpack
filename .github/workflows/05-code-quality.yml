@@ -661,7 +661,7 @@ jobs:
           echo "5. Add missing documentation" >> $GITHUB_STEP_SUMMARY
 
   python-quality-observability:
-    name: 🐍 Python Quality Observability
+    name: 🐍 Python Intent Observability
     runs-on: ubuntu-latest
     timeout-minutes: 45
     continue-on-error: true
@@ -691,9 +691,10 @@ jobs:
       - name: 📊 Summarize Python observability
         if: always()
         run: |
-          echo "## 🐍 Python Quality Observability" >> $GITHUB_STEP_SUMMARY
+          echo "## 🐍 Python Intent Observability" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- Commands: \`make quality-python-fast\`, \`make quality-python-deep\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Intent categories: Unit / Integration / Cross-Language / Security / Adversarial / Property / Fuzz / Mutation / Smoke" >> $GITHUB_STEP_SUMMARY
           if [ -f coverage.json ]; then
             python - <<'PY' >> $GITHUB_STEP_SUMMARY
             import json
@@ -718,7 +719,7 @@ jobs:
           if-no-files-found: warn
 
   go-quality-observability:
-    name: 🐹 Go Quality Observability
+    name: 🐹 Go Intent Observability
     runs-on: ubuntu-latest
     timeout-minutes: 30
     continue-on-error: true
@@ -743,9 +744,10 @@ jobs:
       - name: 📊 Summarize Go observability
         if: always()
         run: |
-          echo "## 🐹 Go Quality Observability" >> $GITHUB_STEP_SUMMARY
+          echo "## 🐹 Go Intent Observability" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- Commands: \`make quality-go-fast\`, \`make quality-go-deep\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Intent categories: Unit / Integration / Cross-Language / Security / Adversarial / Property / Fuzz / Mutation / Smoke" >> $GITHUB_STEP_SUMMARY
           if [ -f src/flavor-go/coverage.txt ]; then
             echo "- Coverage summary:" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
@@ -764,7 +766,7 @@ jobs:
           if-no-files-found: warn
 
   rust-quality-observability:
-    name: 🦀 Rust Quality Observability
+    name: 🦀 Rust Intent Observability
     runs-on: ubuntu-latest
     timeout-minutes: 45
     continue-on-error: true
@@ -793,9 +795,10 @@ jobs:
       - name: 📊 Summarize Rust observability
         if: always()
         run: |
-          echo "## 🦀 Rust Quality Observability" >> $GITHUB_STEP_SUMMARY
+          echo "## 🦀 Rust Intent Observability" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- Commands: \`make quality-rust-fast\`, \`make quality-rust-deep\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Intent categories: Unit / Integration / Cross-Language / Security / Adversarial / Property / Fuzz / Mutation / Smoke" >> $GITHUB_STEP_SUMMARY
           if [ -f src/flavor-rs/coverage.txt ]; then
             echo "- Coverage summary:" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
@@ -816,19 +819,25 @@ jobs:
           if-no-files-found: warn
 
   quality-observability-report:
-    name: 📈 Quality Observability Report
+    name: 📈 Intent Observability Report
     needs: [python-quality-observability, go-quality-observability, rust-quality-observability]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: 📊 Summarize observability jobs
         run: |
-          echo "# 📈 Quality Observability Report" >> $GITHUB_STEP_SUMMARY
+          echo "# 📈 Intent Observability Report" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Job | Result |" >> $GITHUB_STEP_SUMMARY
           echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| 🐍 Python | ${{ needs.python-quality-observability.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 🐹 Go | ${{ needs.go-quality-observability.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| 🦀 Rust | ${{ needs.rust-quality-observability.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Intent Categories" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Unit / Integration / Cross-Language" >> $GITHUB_STEP_SUMMARY
+          echo "- Security / Adversarial / Property" >> $GITHUB_STEP_SUMMARY
+          echo "- Fuzz / Mutation / Smoke" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "These jobs are observational in this rollout phase. They run the tools in strict mode, but they are not intended to be required merge checks yet." >> $GITHUB_STEP_SUMMARY

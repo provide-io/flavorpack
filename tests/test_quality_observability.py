@@ -25,6 +25,19 @@ def test_root_makefile_defines_quality_targets() -> None:
     ):
         assert target in content
 
+    for target in (
+        "test-unit:",
+        "test-integration:",
+        "test-cross-language:",
+        "test-security:",
+        "test-adversarial:",
+        "test-property:",
+        "test-fuzz:",
+        "test-mutation:",
+        "test-smoke:",
+    ):
+        assert target in content
+
 
 def test_quality_workflow_includes_observability_jobs_and_paths() -> None:
     workflow = yaml.load(QUALITY_WORKFLOW.read_text(), Loader=yaml.BaseLoader)
