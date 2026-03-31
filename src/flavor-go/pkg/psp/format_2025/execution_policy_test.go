@@ -226,8 +226,9 @@ func TestGetUserPolicyFile_XDG(t *testing.T) {
 	t.Setenv("XDG_CONFIG_HOME", "/tmp/xdg")
 	t.Setenv("HOME", "")
 	path := getUserPolicyFile()
-	if path != "/tmp/xdg/flavor/policy.toml" {
-		t.Errorf("unexpected path: %s", path)
+	want := filepath.Join("/tmp/xdg", "flavor", "policy.toml")
+	if path != want {
+		t.Errorf("unexpected path: %s (want %s)", path, want)
 	}
 }
 
@@ -236,8 +237,9 @@ func TestGetUserPolicyFile_Home(t *testing.T) {
 	t.Setenv("XDG_CONFIG_HOME", "")
 	t.Setenv("HOME", "/home/user")
 	path := getUserPolicyFile()
-	if path != "/home/user/.config/flavor/policy.toml" {
-		t.Errorf("unexpected path: %s", path)
+	want := filepath.Join("/home/user", ".config", "flavor", "policy.toml")
+	if path != want {
+		t.Errorf("unexpected path: %s (want %s)", path, want)
 	}
 }
 
