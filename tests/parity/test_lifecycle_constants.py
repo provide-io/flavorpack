@@ -9,6 +9,8 @@ from flavor.psp.format_2025.constants import (
     LIFECYCLE_NAMES,
 )
 
+pytestmark = [pytest.mark.cross_language, pytest.mark.ci, pytest.mark.unit]
+
 
 @pytest.mark.parity
 @pytest.mark.parity_category("Format Constants")
