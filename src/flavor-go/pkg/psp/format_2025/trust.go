@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -18,9 +15,6 @@ import (
 	"github.com/provide-io/flavor/go/flavor/internal/workenv"
 )
 
-var computeKeyFingerprintFn = ComputeKeyFingerprint
-var getSystemConfigRootFn = workenv.GetSystemConfigRoot
-
 // TrustedKey holds metadata about a trusted public key loaded from the key store.
 type TrustedKey struct {
 	Fingerprint string
@@ -33,7 +27,7 @@ type TrustedKey struct {
 //
 //	→ XDG_CONFIG_HOME/flavor/trusted-keys → ~/.config/flavor/trusted-keys
 func GetTrustedKeysDir() string {
-	if dir := os.Getenv(EnvTrustedKeysDir); dir != "" {
+	if dir := os.Getenv("FLAVOR_TRUSTED_KEYS_DIR"); dir != "" {
 		return dir
 	}
 	return filepath.Join(workenv.GetConfigRoot(), "trusted-keys")
@@ -105,7 +99,7 @@ func loadKeyFromFile(path string) (TrustedKey, error) {
 		return TrustedKey{}, fmt.Errorf("key in %s is not an Ed25519 public key", path)
 	}
 
-	fp, err := computeKeyFingerprintFn([]byte(edPub))
+	fp, err := ComputeKeyFingerprint([]byte(edPub))
 	if err != nil {
 		return TrustedKey{}, fmt.Errorf("computing fingerprint for %s: %w", path, err)
 	}
@@ -140,7 +134,7 @@ func loadKeysFromDir(dir string, keys map[string]TrustedKey) (bool, error) {
 		path := filepath.Join(dir, name)
 		tk, err := loadKeyFromFile(path)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "flavor: warning: failed to load trusted key %s: %v\n", path, err)
+			// Skip unparsable files with a best-effort approach
 			continue
 		}
 		keys[tk.Fingerprint] = tk
@@ -158,7 +152,7 @@ func LoadTrustedKeys(includeSystem bool) (map[string]TrustedKey, error) {
 	}
 
 	if includeSystem {
-		sysDir := filepath.Join(getSystemConfigRootFn(), "trusted-keys")
+		sysDir := filepath.Join(workenv.GetSystemConfigRoot(), "trusted-keys")
 		if _, err := loadKeysFromDir(sysDir, keys); err != nil {
 			return keys, err
 		}
@@ -178,7 +172,7 @@ func IsKeyTrusted(fingerprint string, includeSystem bool) (*bool, error) {
 
 	sysExists := false
 	if includeSystem {
-		sysDir := filepath.Join(getSystemConfigRootFn(), "trusted-keys")
+		sysDir := filepath.Join(workenv.GetSystemConfigRoot(), "trusted-keys")
 		if _, err := os.Stat(sysDir); err == nil {
 			sysExists = true
 		}
