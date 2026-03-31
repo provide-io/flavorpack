@@ -364,8 +364,8 @@ class TestPrepareSetupEnvironmentPathHandling:
     """
 
     @patch("flavor.psp.format_2025.workenv.apply_environment_layers")
-    def test_unix_path_uses_bin_and_colon(self, mock_apply: Mock, tmp_path: Path) -> None:
-        """On Unix (default), PATH should be prepended with {workenv_dir}/bin: ."""
+    def test_native_path_uses_platform_bin_and_sep(self, mock_apply: Mock, tmp_path: Path) -> None:
+        """PATH should be prepended with the platform-appropriate bin dir and separator."""
         mock_apply.side_effect = lambda **kwargs: {
             **kwargs.get("base_env", {}),
             **kwargs.get("workenv_env", {}),
@@ -378,10 +378,12 @@ class TestPrepareSetupEnvironmentPathHandling:
 
         env = manager._prepare_setup_environment(workenv_dir, runtime_env={})
 
-        expected_bin = str(workenv_dir / "bin")
+        import sys
+        bin_dir = "Scripts" if sys.platform == "win32" else "bin"
+        expected_bin = str(workenv_dir / bin_dir)
         assert env["PATH"].startswith(expected_bin)
-        # The separator after the bin dir should be the native os.pathsep (colon on Unix)
-        rest = env["PATH"][len(expected_bin) :]
+        # The separator after the bin dir should be the native os.pathsep
+        rest = env["PATH"][len(expected_bin):]
         assert rest.startswith(os.pathsep)
 
     @patch("flavor.psp.format_2025.workenv.apply_environment_layers")

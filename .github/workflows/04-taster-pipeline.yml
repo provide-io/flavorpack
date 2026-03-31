@@ -350,11 +350,10 @@ jobs:
           echo "Helpers in src/flavor/helpers/bin/:"
           ls -la src/flavor/helpers/bin/ || echo "  (empty)"
 
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
+      - name: 📦 Setup uv + Python
+        uses: astral-sh/setup-uv@v8
         with:
           python-version: '3.11'
-          cache: 'pip'
 
       - name: 📦 Setup environment
         run: .github/scripts/setup-python-workenv.sh
