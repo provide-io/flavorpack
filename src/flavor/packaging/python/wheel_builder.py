@@ -148,16 +148,10 @@ class WheelBuilder:
                     wheel_cmd.extend([f"--{option}", str(value)])
 
         logger.debug("💻 Building wheel", command=" ".join(wheel_cmd))
-        result = run(wheel_cmd, check=True, capture_output=True)
+        run(wheel_cmd, check=True, capture_output=True)
 
         # Find the built wheel
         built_wheel = self._find_built_wheel(wheel_dir, source_path.name)
-
-        if result.stdout:
-            # Look for wheel filename in output
-            for line in result.stdout.strip().split("\n"):
-                if ".whl" in line:
-                    break
 
         return built_wheel
 

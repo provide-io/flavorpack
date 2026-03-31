@@ -252,7 +252,6 @@ class PackagingOrchestrator:
                 raise BuildError(f"Package build failed: {'; '.join(result.errors)}")
 
             # Always show completion message, detailed info only with progress flag
-            Path(self.output_flavor_path).stat().st_size / (1024 * 1024)
             if self.show_progress and result.metadata and "duration_seconds" in result.metadata:
                 logger.info(f"⏱️  Build time: {result.metadata['duration_seconds']:.2f}s")
 
@@ -320,9 +319,6 @@ class PackagingOrchestrator:
             logger.info("Building flavor pack...")
             run(build_cmd_args, check=True, capture_output=True)
 
-            # Always show completion message
-            Path(self.output_flavor_path).stat().st_size / (1024 * 1024)
-
     def _build_with_json_manifest(self) -> None:
         """Build package using a JSON manifest directly with external builders."""
         logger.info("Building package with JSON manifest and external builder...")
@@ -373,9 +369,6 @@ class PackagingOrchestrator:
 
             logger.info("Building package...")
             run(build_cmd_args, check=True, capture_output=True)
-
-            # Always show completion message
-            Path(self.output_flavor_path).stat().st_size / (1024 * 1024)
 
 
 # 🌶️📦🔚
