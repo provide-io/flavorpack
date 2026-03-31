@@ -1,0 +1,39 @@
+--- src/psp/format_2025/backends.rs
++++ replace <impl Backend for MMapBackend>::read_at -> Result<Vec<u8>> with Ok(vec![0])
+@@ -128,35 +128,17 @@
+     fn close(&mut self) -> Result<()> {
+         self.mmap = None;
+         self.file = None;
+         self.path = None;
+         Ok(())
+     }
+ 
+     fn read_at(&mut self, offset: u64, size: usize) -> Result<Vec<u8>> {
+-        trace!("🔍 Safe file read_at: offset={}, size={}", offset, size);
+-        if size as u64 > MAX_SLOT_SIZE {
+-            return Err(FlavorError::Generic(format!(
+-                "Read size {} exceeds maximum allowed ({} bytes)",
+-                size, MAX_SLOT_SIZE
+-            )));
+-        }
+-        if let Some(file) = &mut self.file {
+-            let timer = Instant::now();
+-            file.seek(SeekFrom::Start(offset))
+-                .map_err(FlavorError::IoError)?;
+-
+-            let mut buffer = vec![0u8; size];
+-            file.read_exact(&mut buffer).map_err(FlavorError::IoError)?;
+-            trace!("✅ Safe file read {} bytes in {:?}", size, timer.elapsed());
+-            Ok(buffer)
+-        } else {
+-            Err(FlavorError::Generic("Backend not opened".into()))
+-        }
++        Ok(vec![0]) /* ~ changed by cargo-mutants ~ */
+     }
+ 
+     fn view_at(&self, _offset: u64, _size: usize) -> Result<&[u8]> {
+         // Zero-copy view not available without memory mapping
+         Err(FlavorError::Generic(
+             "View not supported by safe file backend".into(),
+         ))
+     }

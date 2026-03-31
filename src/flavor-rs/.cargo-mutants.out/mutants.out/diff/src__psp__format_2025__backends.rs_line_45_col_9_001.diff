@@ -1,0 +1,23 @@
+--- src/psp/format_2025/backends.rs
++++ replace Backend::view_at -> Result<&[u8]> with Ok(Vec::leak(vec![0]))
+@@ -37,19 +37,17 @@
+             )));
+         }
+         let slot_offset = descriptor.offset;
+         self.read_at(slot_offset, slot_size as usize)
+     }
+ 
+     /// Get a view of data without copying (if supported)
+     fn view_at(&self, _offset: u64, _size: usize) -> Result<&[u8]> {
+-        Err(FlavorError::Generic(
+-            "View not supported by this backend".into(),
+-        ))
++        Ok(Vec::leak(vec![0])) /* ~ changed by cargo-mutants ~ */
+     }
+ }
+ 
+ /// Memory-mapped file access backend
+ pub struct MMapBackend {
+     file: Option<File>,
+     mmap: Option<Mmap>,
+     path: Option<std::path::PathBuf>,

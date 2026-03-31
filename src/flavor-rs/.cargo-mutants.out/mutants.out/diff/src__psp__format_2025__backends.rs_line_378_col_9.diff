@@ -1,0 +1,32 @@
+--- src/psp/format_2025/backends.rs
++++ replace <impl std::fmt::Debug for HybridBackend>::fmt -> std::fmt::Result with Ok(Default::default())
+@@ -370,28 +370,17 @@
+     file: Option<File>,
+     header_mmap: Option<Mmap>,
+     path: Option<std::path::PathBuf>,
+     header_size: usize,
+ }
+ 
+ impl std::fmt::Debug for HybridBackend {
+     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+-        f.debug_struct("HybridBackend")
+-            .field("file", &self.file.as_ref().map(|_| "<File>"))
+-            .field(
+-                "header_mmap",
+-                &self
+-                    .header_mmap
+-                    .as_ref()
+-                    .map(|m| format!("<Mmap {} bytes>", m.len())),
+-            )
+-            .field("path", &self.path)
+-            .field("header_size", &self.header_size)
+-            .finish()
++        Ok(Default::default()) /* ~ changed by cargo-mutants ~ */
+     }
+ }
+ 
+ impl HybridBackend {
+     pub fn new(header_size: usize) -> Self {
+         HybridBackend {
+             file: None,
+             header_mmap: None,

@@ -1,0 +1,207 @@
+
+*** src/psp/format_2025/backends.rs:226:9: replace <impl Backend for FileBackend>::read_at -> Result<Vec<u8>> with Ok(vec![])
+
+*** mutation diff:
+--- src/psp/format_2025/backends.rs
++++ replace <impl Backend for FileBackend>::read_at -> Result<Vec<u8>> with Ok(vec![])
+@@ -218,58 +218,17 @@
+     fn close(&mut self) -> Result<()> {
+         self.file = None;
+         self.path = None;
+         self.cache.clear();
+         Ok(())
+     }
+ 
+     fn read_at(&mut self, offset: u64, size: usize) -> Result<Vec<u8>> {
+-        trace!("🗓️ File read_at: offset={}, size={}", offset, size);
+-        if size as u64 > MAX_SLOT_SIZE {
+-            return Err(FlavorError::Generic(format!(
+-                "Read size {} exceeds maximum allowed ({} bytes)",
+-                size, MAX_SLOT_SIZE
+-            )));
+-        }
+-
+-        // Check cache first
+-        let cache_key = (offset, size);
+-        if let Some(cached) = self.cache.get(&cache_key) {
+-            trace!("⚡ Cache hit for offset={}, size={}", offset, size);
+-            return Ok(cached.clone());
+-        }
+-
+-        if let Some(file) = &mut self.file {
+-            let timer = Instant::now();
+-            file.seek(SeekFrom::Start(offset))
+-                .map_err(FlavorError::IoError)?;
+-
+-            let mut buffer = vec![0u8; size];
+-            file.read_exact(&mut buffer).map_err(FlavorError::IoError)?;
+-            trace!("✅ File read {} bytes in {:?}", size, timer.elapsed());
+-
+-            // Cache small reads
+-            if size <= 4096 {
+-                self.cache.insert(cache_key, buffer.clone());
+-
+-                // Limit cache size
+-                if self.cache.len() > 100 {
+-                    // Remove oldest entries (simple FIFO)
+-                    let keys: Vec<_> = self.cache.keys().take(20).cloned().collect();
+-                    for key in keys {
+-                        self.cache.remove(&key);
+-                    }
+-                }
+-            }
+-
+-            Ok(buffer)
+-        } else {
+-            Err(FlavorError::Generic("Backend not opened".into()))
+-        }
++        Ok(vec![]) /* ~ changed by cargo-mutants ~ */
+     }
+ }
+ 
+ /// Streaming backend - never loads full slots into memory
+ pub struct StreamBackend {
+     file: Option<File>,
+     path: Option<std::path::PathBuf>,
+     chunk_size: usize,
+
+
+*** /Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo test --no-run --verbose --package=flavor@0.3.21 --all-features
+       Fresh cfg-if v1.0.4
+       Fresh version_check v0.9.5
+       Fresh bitflags v2.11.0
+       Fresh unicode-ident v1.0.24
+       Fresh memchr v2.8.0
+       Fresh semver v1.0.27
+       Fresh utf8parse v0.2.2
+       Fresh regex-syntax v0.8.10
+       Fresh autocfg v1.5.0
+       Fresh is_terminal_polyfill v1.70.2
+       Fresh anstyle-query v1.1.5
+       Fresh colorchoice v1.0.5
+       Fresh anstyle v1.0.14
+       Fresh fastrand v2.3.0
+       Fresh libc v0.2.183
+       Fresh aho-corasick v1.1.4
+       Fresh anstyle-parse v1.0.0
+       Fresh rustc_version v0.4.1
+       Fresh once_cell v1.21.4
+       Fresh heck v0.5.0
+       Fresh clap_lex v1.1.0
+       Fresh adler2 v2.0.1
+       Fresh core-foundation-sys v0.8.7
+       Fresh errno v0.3.14
+       Fresh typenum v1.19.0
+       Fresh proc-macro2 v1.0.106
+       Fresh zerocopy v0.8.48
+       Fresh getrandom v0.3.4
+       Fresh getrandom v0.4.2
+       Fresh regex-automata v0.4.14
+       Fresh getrandom v0.2.17
+       Fresh anstream v1.0.0
+       Fresh cpufeatures v0.2.17
+       Fresh serde_core v1.0.228
+       Fresh zeroize v1.8.2
+       Fresh log v0.4.29
+       Fresh subtle v2.6.1
+       Fresh signature v2.2.0
+       Fresh simd-adler32 v0.3.9
+       Fresh strsim v0.11.1
+       Fresh generic-array v0.14.7
+       Fresh rustix v1.1.4
+       Fresh quote v1.0.45
+       Fresh ppv-lite86 v0.2.21
+       Fresh rand_core v0.9.5
+       Fresh rustix v0.38.44
+       Fresh rand_core v0.6.4
+       Fresh regex v1.12.3
+       Fresh num-traits v0.2.19
+       Fresh clap_builder v4.6.0
+       Fresh signal-hook-registry v1.4.8
+       Fresh miniz_oxide v0.8.9
+       Fresh zmij v1.0.21
+       Fresh ed25519 v2.2.3
+       Fresh iana-time-zone v0.1.65
+       Fresh filetime v0.2.27
+       Fresh crc32fast v1.5.0
+       Fresh wait-timeout v0.2.1
+       Fresh itoa v1.0.18
+       Fresh jiff v0.2.23
+       Fresh base64 v0.22.1
+       Fresh quick-error v1.2.3
+       Fresh either v1.15.0
+       Fresh crypto-common v0.1.7
+       Fresh syn v2.0.117
+       Fresh block-buffer v0.10.4
+       Fresh tempfile v3.27.0
+       Fresh rand_chacha v0.3.1
+       Fresh xattr v1.6.1
+       Fresh env_filter v1.0.1
+       Fresh home v0.5.11
+       Fresh fnv v1.0.7
+       Fresh bit-vec v0.8.0
+       Fresh anyhow v1.0.102
+       Fresh gethostname v0.5.0
+       Fresh rand_xorshift v0.4.0
+       Fresh signal-hook v0.3.18
+       Fresh chrono v0.4.44
+       Fresh rand v0.9.2
+       Fresh rand_chacha v0.9.0
+       Fresh flate2 v1.1.9
+       Fresh serde_json v1.0.149
+       Fresh pem v3.0.6
+       Fresh memmap2 v0.9.10
+       Fresh fs2 v0.4.3
+       Fresh glob v0.3.3
+       Fresh hex v0.4.3
+       Fresh digest v0.10.7
+       Fresh clap_derive v4.6.0
+       Fresh serde_derive v1.0.228
+       Dirty flavor v0.3.21 (/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp): the file `../../VERSION` is missing
+   Compiling flavor v0.3.21 (/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp)
+       Fresh tar v0.4.45
+       Fresh bit-set v0.8.0
+       Fresh rusty-fork v0.3.1
+       Fresh which v6.0.3
+       Fresh env_logger v0.11.10
+       Fresh rand v0.8.5
+       Fresh unarray v0.1.4
+     Running `/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/build/flavor-d6cea4267b429fe1/build-script-build`
+       Fresh curve25519-dalek v4.1.3
+       Fresh sha2 v0.10.9
+       Fresh clap v4.6.0
+       Fresh serde v1.0.228
+       Fresh proptest v1.11.0
+       Fresh ed25519-dalek v2.2.0
+     Running `/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name flavor --edition=2024 src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --test --cfg 'feature="default"' --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values("default"))' -C metadata=b72348e8a9d7df2e -C extra-filename=-19035fd48ff337ba --out-dir /private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps -C incremental=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/incremental -L dependency=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps --extern adler2=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libadler2-1237be17f08066aa.rlib --extern anyhow=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libanyhow-d9b6d410a1361442.rlib --extern chrono=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libchrono-b7affcfd136ee226.rlib --extern clap=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libclap-c2746911242c53dc.rlib --extern ed25519_dalek=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libed25519_dalek-42293ea3dc57f31c.rlib --extern env_logger=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libenv_logger-75173f29843c9a52.rlib --extern flate2=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libflate2-96cd3d855b9115ec.rlib --extern fs2=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libfs2-71900ee401453af8.rlib --extern gethostname=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libgethostname-e6576ba3912663df.rlib --extern glob=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libglob-56daeb017c976e69.rlib --extern hex=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libhex-6a16846156d7c862.rlib --extern libc=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/liblibc-26979bb06dae4666.rlib --extern log=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/liblog-8a7d20b8c005bc83.rlib --extern memmap2=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libmemmap2-413e3a480d8f5878.rlib --extern pem=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libpem-baee24606d736ef7.rlib --extern proptest=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libproptest-387450d3dcbd40ff.rlib --extern rand=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/librand-a25bcd883a2e2285.rlib --extern serde=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libserde-02be1dd65d3ef57a.rlib --extern serde_json=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libserde_json-469eaea1fff499db.rlib --extern sha2=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libsha2-28b9a530c85e9fef.rlib --extern signal_hook=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libsignal_hook-0a34b12e866764fc.rlib --extern tar=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libtar-9468371f38505d5a.rlib --extern tempfile=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libtempfile-f67b0e214d8dd2e3.rlib --extern which=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libwhich-a2a3c9536beaf592.rlib`
+     Running `/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name flavor --edition=2024 src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --cfg 'feature="default"' --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values("default"))' -C metadata=638a3856e0fcd0df -C extra-filename=-88d82f8937f7a117 --out-dir /private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps -C incremental=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/incremental -L dependency=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps --extern adler2=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libadler2-1237be17f08066aa.rmeta --extern anyhow=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libanyhow-d9b6d410a1361442.rmeta --extern chrono=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libchrono-b7affcfd136ee226.rmeta --extern clap=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libclap-c2746911242c53dc.rmeta --extern ed25519_dalek=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libed25519_dalek-42293ea3dc57f31c.rmeta --extern env_logger=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libenv_logger-75173f29843c9a52.rmeta --extern flate2=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libflate2-96cd3d855b9115ec.rmeta --extern fs2=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libfs2-71900ee401453af8.rmeta --extern gethostname=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libgethostname-e6576ba3912663df.rmeta --extern glob=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libglob-56daeb017c976e69.rmeta --extern hex=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libhex-6a16846156d7c862.rmeta --extern libc=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/liblibc-26979bb06dae4666.rmeta --extern log=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/liblog-8a7d20b8c005bc83.rmeta --extern memmap2=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libmemmap2-413e3a480d8f5878.rmeta --extern pem=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libpem-baee24606d736ef7.rmeta --extern rand=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/librand-a25bcd883a2e2285.rmeta --extern serde=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libserde-02be1dd65d3ef57a.rmeta --extern serde_json=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libserde_json-469eaea1fff499db.rmeta --extern sha2=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libsha2-28b9a530c85e9fef.rmeta --extern signal_hook=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libsignal_hook-0a34b12e866764fc.rmeta --extern tar=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libtar-9468371f38505d5a.rmeta --extern tempfile=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libtempfile-f67b0e214d8dd2e3.rmeta --extern which=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libwhich-a2a3c9536beaf592.rmeta`
+error: unused variable: `offset`
+   --> src/psp/format_2025/backends.rs:225:27
+    |
+225 |     fn read_at(&mut self, offset: u64, size: usize) -> Result<Vec<u8>> {
+    |                           ^^^^^^ help: if this is intentional, prefix it with an underscore: `_offset`
+    |
+note: the lint level is defined here
+   --> src/lib.rs:22:5
+    |
+ 22 |     warnings,
+    |     ^^^^^^^^
+    = note: `#[deny(unused_variables)]` implied by `#[deny(warnings)]`
+
+error: unused variable: `size`
+   --> src/psp/format_2025/backends.rs:225:40
+    |
+225 |     fn read_at(&mut self, offset: u64, size: usize) -> Result<Vec<u8>> {
+    |                                        ^^^^ help: if this is intentional, prefix it with an underscore: `_size`
+
+error: could not compile `flavor` (lib) due to 2 previous errors
+
+Caused by:
+  process didn't exit successfully: `/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name flavor --edition=2024 src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --cfg 'feature="default"' --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values("default"))' -C metadata=638a3856e0fcd0df -C extra-filename=-88d82f8937f7a117 --out-dir /private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps -C incremental=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/incremental -L dependency=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps --extern adler2=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libadler2-1237be17f08066aa.rmeta --extern anyhow=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libanyhow-d9b6d410a1361442.rmeta --extern chrono=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libchrono-b7affcfd136ee226.rmeta --extern clap=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libclap-c2746911242c53dc.rmeta --extern ed25519_dalek=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libed25519_dalek-42293ea3dc57f31c.rmeta --extern env_logger=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libenv_logger-75173f29843c9a52.rmeta --extern flate2=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libflate2-96cd3d855b9115ec.rmeta --extern fs2=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libfs2-71900ee401453af8.rmeta --extern gethostname=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libgethostname-e6576ba3912663df.rmeta --extern glob=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libglob-56daeb017c976e69.rmeta --extern hex=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libhex-6a16846156d7c862.rmeta --extern libc=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/liblibc-26979bb06dae4666.rmeta --extern log=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/liblog-8a7d20b8c005bc83.rmeta --extern memmap2=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libmemmap2-413e3a480d8f5878.rmeta --extern pem=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libpem-baee24606d736ef7.rmeta --extern rand=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/librand-a25bcd883a2e2285.rmeta --extern serde=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libserde-02be1dd65d3ef57a.rmeta --extern serde_json=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libserde_json-469eaea1fff499db.rmeta --extern sha2=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libsha2-28b9a530c85e9fef.rmeta --extern signal_hook=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libsignal_hook-0a34b12e866764fc.rmeta --extern tar=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libtar-9468371f38505d5a.rmeta --extern tempfile=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libtempfile-f67b0e214d8dd2e3.rmeta --extern which=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libwhich-a2a3c9536beaf592.rmeta` (exit status: 1)
+warning: build failed, waiting for other jobs to finish...
+error: could not compile `flavor` (lib test) due to 2 previous errors
+
+Caused by:
+  process didn't exit successfully: `/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name flavor --edition=2024 src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --test --cfg 'feature="default"' --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values("default"))' -C metadata=b72348e8a9d7df2e -C extra-filename=-19035fd48ff337ba --out-dir /private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps -C incremental=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/incremental -L dependency=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps --extern adler2=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libadler2-1237be17f08066aa.rlib --extern anyhow=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libanyhow-d9b6d410a1361442.rlib --extern chrono=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libchrono-b7affcfd136ee226.rlib --extern clap=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libclap-c2746911242c53dc.rlib --extern ed25519_dalek=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libed25519_dalek-42293ea3dc57f31c.rlib --extern env_logger=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libenv_logger-75173f29843c9a52.rlib --extern flate2=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libflate2-96cd3d855b9115ec.rlib --extern fs2=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libfs2-71900ee401453af8.rlib --extern gethostname=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libgethostname-e6576ba3912663df.rlib --extern glob=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libglob-56daeb017c976e69.rlib --extern hex=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libhex-6a16846156d7c862.rlib --extern libc=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/liblibc-26979bb06dae4666.rlib --extern log=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/liblog-8a7d20b8c005bc83.rlib --extern memmap2=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libmemmap2-413e3a480d8f5878.rlib --extern pem=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libpem-baee24606d736ef7.rlib --extern proptest=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libproptest-387450d3dcbd40ff.rlib --extern rand=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/librand-a25bcd883a2e2285.rlib --extern serde=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libserde-02be1dd65d3ef57a.rlib --extern serde_json=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libserde_json-469eaea1fff499db.rlib --extern sha2=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libsha2-28b9a530c85e9fef.rlib --extern signal_hook=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libsignal_hook-0a34b12e866764fc.rlib --extern tar=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libtar-9468371f38505d5a.rlib --extern tempfile=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libtempfile-f67b0e214d8dd2e3.rlib --extern which=/private/var/folders/sg/wy47gw996f78fznt898m8x540000gn/T/cargo-mutants-flavor-rs-AJnnRY.tmp/target/debug/deps/libwhich-a2a3c9536beaf592.rlib` (exit status: 1)
+
+*** result: Failure(101)

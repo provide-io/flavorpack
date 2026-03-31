@@ -1,0 +1,29 @@
+--- src/psp/format_2025/backends.rs
++++ replace Backend::read_slot -> Result<Vec<u8>> with Ok(vec![0])
+@@ -24,25 +24,17 @@
+     /// Close the bundle file
+     fn close(&mut self) -> Result<()>;
+ 
+     /// Read data at specific offset
+     fn read_at(&mut self, offset: u64, size: usize) -> Result<Vec<u8>>;
+ 
+     /// Read slot data based on descriptor
+     fn read_slot(&mut self, descriptor: &SlotDescriptor) -> Result<Vec<u8>> {
+-        let slot_size = descriptor.size;
+-        if slot_size > MAX_SLOT_SIZE {
+-            return Err(FlavorError::Generic(format!(
+-                "Slot size {} exceeds maximum allowed size ({} bytes)",
+-                slot_size, MAX_SLOT_SIZE
+-            )));
+-        }
+-        let slot_offset = descriptor.offset;
+-        self.read_at(slot_offset, slot_size as usize)
++        Ok(vec![0]) /* ~ changed by cargo-mutants ~ */
+     }
+ 
+     /// Get a view of data without copying (if supported)
+     fn view_at(&self, _offset: u64, _size: usize) -> Result<&[u8]> {
+         Err(FlavorError::Generic(
+             "View not supported by this backend".into(),
+         ))
+     }

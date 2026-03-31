@@ -1,0 +1,38 @@
+--- src/psp/format_2025/backends.rs
++++ replace <impl Backend for HybridBackend>::read_at -> Result<Vec<u8>> with Ok(vec![])
+@@ -426,34 +426,17 @@
+     fn close(&mut self) -> Result<()> {
+         self.header_mmap = None;
+         self.file = None;
+         self.path = None;
+         Ok(())
+     }
+ 
+     fn read_at(&mut self, offset: u64, size: usize) -> Result<Vec<u8>> {
+-        if size as u64 > MAX_SLOT_SIZE {
+-            return Err(FlavorError::Generic(format!(
+-                "Read size {} exceeds maximum allowed ({} bytes)",
+-                size, MAX_SLOT_SIZE
+-            )));
+-        }
+-        // Use safe file I/O for all operations
+-        if let Some(file) = &mut self.file {
+-            file.seek(SeekFrom::Start(offset))
+-                .map_err(FlavorError::IoError)?;
+-
+-            let mut buffer = vec![0u8; size];
+-            file.read_exact(&mut buffer).map_err(FlavorError::IoError)?;
+-
+-            Ok(buffer)
+-        } else {
+-            Err(FlavorError::Generic("Backend not opened".into()))
+-        }
++        Ok(vec![]) /* ~ changed by cargo-mutants ~ */
+     }
+ 
+     fn view_at(&self, _offset: u64, _size: usize) -> Result<&[u8]> {
+         // Zero-copy view not available without memory mapping
+         Err(FlavorError::Generic(
+             "View not available in safe file backend".into(),
+         ))
+     }

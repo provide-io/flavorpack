@@ -1,0 +1,25 @@
+--- src/psp/format_2025/backends.rs
++++ replace <impl std::fmt::Debug for FileBackend>::fmt -> std::fmt::Result with Ok(Default::default())
+@@ -166,21 +166,17 @@
+ pub struct FileBackend {
+     file: Option<File>,
+     path: Option<std::path::PathBuf>,
+     cache: HashMap<(u64, usize), Vec<u8>>,
+ }
+ 
+ impl std::fmt::Debug for FileBackend {
+     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+-        f.debug_struct("FileBackend")
+-            .field("file", &self.file.as_ref().map(|_| "<File>"))
+-            .field("path", &self.path)
+-            .field("cache_entries", &self.cache.len())
+-            .finish()
++        Ok(Default::default()) /* ~ changed by cargo-mutants ~ */
+     }
+ }
+ 
+ impl Default for FileBackend {
+     fn default() -> Self {
+         Self::new()
+     }
+ }

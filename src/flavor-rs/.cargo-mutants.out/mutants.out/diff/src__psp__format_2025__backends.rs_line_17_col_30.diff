@@ -1,0 +1,21 @@
+--- src/psp/format_2025/backends.rs
++++ replace * with +
+@@ -9,17 +9,17 @@
+ use std::path::Path;
+ use std::time::Instant;
+ 
+ use super::defaults::{ACCESS_AUTO, ACCESS_FILE, ACCESS_MMAP, ACCESS_STREAM, DEFAULT_CHUNK_SIZE};
+ use super::slots::SlotDescriptor;
+ use crate::exceptions::{FlavorError, Result};
+ 
+ /// Maximum allocation size for a single read (4 GB)
+-const MAX_SLOT_SIZE: u64 = 4 * 1024 * 1024 * 1024;
++const MAX_SLOT_SIZE: u64 = 4 + /* ~ changed by cargo-mutants ~ */ 1024 * 1024 * 1024;
+ 
+ /// Trait for PSPF bundle access backends
+ pub trait Backend: Send + Sync {
+     /// Open the bundle file
+     fn open(&mut self, path: &Path) -> Result<()>;
+ 
+     /// Close the bundle file
+     fn close(&mut self) -> Result<()>;

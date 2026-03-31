@@ -22,6 +22,18 @@ var (
 	ErrLockAcquisition      = errors.New("failed to acquire lock")
 )
 
+func removeFileQuietly(path, context string, logger hclog.Logger) {
+	if err := os.Remove(path); err != nil {
+		logger.Trace("Ignoring cleanup error", "context", context, "path", path, "error", err)
+	}
+}
+
+func removeAllQuietly(path, context string, logger hclog.Logger) {
+	if err := os.RemoveAll(path); err != nil {
+		logger.Trace("Ignoring cleanup error", "context", context, "path", path, "error", err)
+	}
+}
+
 // Utility functions: see execution_utils.go
 // Cache functions: see execution_cache.go
 

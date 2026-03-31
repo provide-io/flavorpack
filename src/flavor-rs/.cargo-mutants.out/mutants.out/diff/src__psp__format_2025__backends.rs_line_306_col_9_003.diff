@@ -1,0 +1,39 @@
+--- src/psp/format_2025/backends.rs
++++ replace StreamBackend::stream_slot -> impl Iterator<Item = Result<Vec<u8>>>+'a with ::std::iter::once(Ok(vec![1]))
+@@ -298,35 +298,17 @@
+         Self::new(DEFAULT_CHUNK_SIZE)
+     }
+ 
+     /// Stream slot data in chunks
+     pub fn stream_slot<'a>(
+         &'a mut self,
+         descriptor: &SlotDescriptor,
+     ) -> impl Iterator<Item = Result<Vec<u8>>> + 'a {
+-        let mut offset = descriptor.offset;
+-        let mut remaining = descriptor.size;
+-        let chunk_size = self.chunk_size;
+-
+-        std::iter::from_fn(move || {
+-            if remaining == 0 {
+-                return None;
+-            }
+-
+-            let to_read = std::cmp::min(chunk_size as u64, remaining) as usize;
+-            let result = self.read_at(offset, to_read);
+-
+-            if result.is_ok() {
+-                offset += to_read as u64;
+-                remaining -= to_read as u64;
+-            }
+-
+-            Some(result)
+-        })
++        ::std::iter::once(Ok(vec![1])) /* ~ changed by cargo-mutants ~ */
+     }
+ }
+ 
+ impl Backend for StreamBackend {
+     fn open(&mut self, path: &Path) -> Result<()> {
+         let file = File::open(path).map_err(FlavorError::IoError)?;
+ 
+         self.file = Some(file);

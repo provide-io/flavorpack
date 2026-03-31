@@ -1,0 +1,38 @@
+--- src/utils/mod.rs
++++ replace get_cache_dir -> std::path::PathBuf with Default::default()
+@@ -33,34 +33,10 @@
+     };
+ 
+     format!("{os}_{arch}")
+ }
+ 
+ /// Get the appropriate cache directory for the current platform
+ /// Uses XDG Base Directory Specification for consistency across all platforms
+ pub fn get_cache_dir() -> std::path::PathBuf {
+-    use std::path::PathBuf;
+-
+-    if let Ok(cache_dir) = env::var(crate::env_vars::CACHE_DIR) {
+-        return PathBuf::from(cache_dir);
+-    }
+-
+-    // Use XDG_CACHE_HOME if set, otherwise ~/.cache
+-    // This provides consistency across all Unix-like platforms (Linux, macOS, BSDs)
+-    if let Ok(xdg_cache) = env::var("XDG_CACHE_HOME") {
+-        return PathBuf::from(xdg_cache).join("flavor");
+-    }
+-
+-    if let Some(home) = env::var_os("HOME") {
+-        return PathBuf::from(home).join(".cache/flavor");
+-    }
+-
+-    #[cfg(target_os = "windows")]
+-    {
+-        if let Ok(local_app_data) = env::var("LOCALAPPDATA") {
+-            return PathBuf::from(local_app_data).join("flavor/cache");
+-        }
+-    }
+-
+-    // Fallback to temp directory
+-    env::temp_dir().join("flavor")
++    Default::default() /* ~ changed by cargo-mutants ~ */
+ }

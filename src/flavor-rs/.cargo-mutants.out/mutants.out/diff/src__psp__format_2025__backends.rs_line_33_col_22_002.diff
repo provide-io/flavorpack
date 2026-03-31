@@ -1,0 +1,21 @@
+--- src/psp/format_2025/backends.rs
++++ replace > with >= in Backend::read_slot
+@@ -25,17 +25,17 @@
+     fn close(&mut self) -> Result<()>;
+ 
+     /// Read data at specific offset
+     fn read_at(&mut self, offset: u64, size: usize) -> Result<Vec<u8>>;
+ 
+     /// Read slot data based on descriptor
+     fn read_slot(&mut self, descriptor: &SlotDescriptor) -> Result<Vec<u8>> {
+         let slot_size = descriptor.size;
+-        if slot_size > MAX_SLOT_SIZE {
++        if slot_size >= /* ~ changed by cargo-mutants ~ */ MAX_SLOT_SIZE {
+             return Err(FlavorError::Generic(format!(
+                 "Slot size {} exceeds maximum allowed size ({} bytes)",
+                 slot_size, MAX_SLOT_SIZE
+             )));
+         }
+         let slot_offset = descriptor.offset;
+         self.read_at(slot_offset, slot_size as usize)
+     }
