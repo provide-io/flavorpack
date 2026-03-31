@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -10,11 +7,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 func TestValidatePackageChecksumAndSavePackageChecksum(t *testing.T) {
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/demo.pspf")
 
 	if err := savePackageChecksum(paths, 0x12345678, logger); err != nil {
@@ -49,7 +46,7 @@ func TestValidatePackageChecksumAndSavePackageChecksum(t *testing.T) {
 func TestSaveIndexMetadataAndCheckWorkenvValidity(t *testing.T) {
 	t.Parallel()
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	cacheDir := t.TempDir()
 	paths := NewWorkenvPaths(cacheDir, "/tmp/demo.pspf")
 

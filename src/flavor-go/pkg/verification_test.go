@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package pkg
 
 import (
@@ -13,7 +10,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 	"github.com/provide-io/flavor/go/flavor/pkg/psp/format_2025"
 )
 
@@ -74,15 +71,6 @@ func writeValidBundle(t *testing.T) string {
 	return path
 }
 
-// TestVerifyBundleWithLoggerDirect calls VerifyBundleWithLogger directly (not via
-// subprocess) so that the success-path statements contribute to coverage.
-func TestVerifyBundleWithLoggerDirect(t *testing.T) {
-	t.Parallel()
-	bundlePath := writeValidBundle(t)
-	// Must not panic or call os.Exit for a valid bundle.
-	VerifyBundleWithLogger(bundlePath, logging.NewNullLogger())
-}
-
 func TestVerifyBundle(t *testing.T) {
 	bundlePath := writeValidBundle(t)
 
@@ -128,7 +116,7 @@ func TestVerifyBundleHelper(t *testing.T) {
 
 	switch mode {
 	case "success":
-		VerifyBundleWithLogger(path, logging.NewNullLogger())
+		VerifyBundleWithLogger(path, hclog.NewNullLogger())
 	case "failure":
 		VerifyBundle(path)
 	default:

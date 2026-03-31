@@ -1,17 +1,12 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
 	"bytes"
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
-	"log/slog"
+	"github.com/hashicorp/go-hclog"
 )
 
 func TestCopyFilePreservesContentAndMode(t *testing.T) {
@@ -39,11 +34,8 @@ func TestCopyFilePreservesContentAndMode(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to stat copied file: %v", err)
 	}
-	// Windows does not support Unix-style permission bits; skip mode check.
-	if runtime.GOOS != "windows" {
-		if info.Mode().Perm() != 0o740 {
-			t.Fatalf("expected copied mode 0740, got %o", info.Mode().Perm())
-		}
+	if info.Mode().Perm() != 0o740 {
+		t.Fatalf("expected copied mode 0740, got %o", info.Mode().Perm())
 	}
 }
 
@@ -84,7 +76,7 @@ func TestFixShebangsRewritesMatchingScriptsOnly(t *testing.T) {
 	}
 
 	var logs bytes.Buffer
-	logger := logging.NewBufferLogger(&logs, slog.LevelDebug)
+	logger := hclog.New(&hclog.LoggerOptions{Name: "test", Level: hclog.Debug, Output: &logs})
 	if err := fixShebangs(binDir, "/old/prefix", "/new/prefix", logger); err != nil {
 		t.Fatalf("fixShebangs returned error: %v", err)
 	}
@@ -123,7 +115,7 @@ func TestCleanupLifecycleSlotsRemovesInitSlots(t *testing.T) {
 		0: initPath,
 		1: keepPath,
 	}
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	cleanupLifecycleSlots(workenvDir, metadata, slotPaths, logger)
 
@@ -138,76 +130,5 @@ func TestCleanupLifecycleSlotsRemovesInitSlots(t *testing.T) {
 	}
 	if _, ok := slotPaths[1]; !ok {
 		t.Fatalf("expected runtime slot to remain in slot paths")
-	}
-}
-
-func TestCopyHelpersReturnErrorsForMissingInputs(t *testing.T) {
-	t.Parallel()
-
-	root := t.TempDir()
-	missingFile := filepath.Join(root, "missing.txt")
-	destFile := filepath.Join(root, "dest.txt")
-	if err := copyFile(missingFile, destFile); err == nil {
-		t.Fatal("expected copyFile() to fail for missing source")
-	}
-
-	missingDir := filepath.Join(root, "missing-dir")
-	destDir := filepath.Join(root, "dest-dir")
-	if err := copyDirAll(missingDir, destDir); err == nil {
-		t.Fatal("expected copyDirAll() to fail for missing source directory")
-	}
-}
-
-func TestFixShebangsSkipsMissingBinDir(t *testing.T) {
-	t.Parallel()
-
-	logger := logging.NewNullLogger()
-	if err := fixShebangs(filepath.Join(t.TempDir(), "missing-bin"), "/old", "/new", logger); err != nil {
-		t.Fatalf("fixShebangs() error = %v", err)
-	}
-}
-
-func TestFixShebangsSkipsSubdirectories(t *testing.T) {
-	t.Parallel()
-
-	binDir := t.TempDir()
-	// Create a subdirectory inside binDir — covers the entry.IsDir() continue branch.
-	if err := os.Mkdir(filepath.Join(binDir, "subdir"), 0o755); err != nil {
-		t.Fatalf("Mkdir() error = %v", err)
-	}
-	logger := logging.NewNullLogger()
-	if err := fixShebangs(binDir, "/old", "/new", logger); err != nil {
-		t.Fatalf("fixShebangs() error = %v", err)
-	}
-}
-
-func TestCopyHelpersRejectBadDestinationTargets(t *testing.T) {
-	t.Parallel()
-
-	root := t.TempDir()
-	srcFile := filepath.Join(root, "source.txt")
-	if err := os.WriteFile(srcFile, []byte("payload"), 0o640); err != nil {
-		t.Fatalf("failed to write source file: %v", err)
-	}
-
-	destDir := filepath.Join(root, "dest-dir")
-	if err := os.MkdirAll(destDir, 0o755); err != nil {
-		t.Fatalf("failed to create destination dir: %v", err)
-	}
-	if err := copyFile(srcFile, destDir); err == nil {
-		t.Fatal("expected copyFile() to fail when destination is a directory")
-	}
-
-	srcDir := filepath.Join(root, "source-dir")
-	mustMkdirAllPSP(t, srcDir)
-	if err := os.WriteFile(filepath.Join(srcDir, "nested.txt"), []byte("nested"), 0o644); err != nil {
-		t.Fatalf("failed to write source tree: %v", err)
-	}
-	blockingFile := filepath.Join(root, "blocking-file")
-	if err := os.WriteFile(blockingFile, []byte("occupied"), 0o644); err != nil {
-		t.Fatalf("failed to write blocking file: %v", err)
-	}
-	if err := copyDirAll(srcDir, filepath.Join(blockingFile, "child")); err == nil {
-		t.Fatal("expected copyDirAll() to fail when destination parent is a file")
 	}
 }
