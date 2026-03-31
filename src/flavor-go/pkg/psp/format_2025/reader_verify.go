@@ -18,24 +18,20 @@ func (r *Reader) VerifyMagicTrailer() (bool, error) {
 		return false, err
 	}
 
-	// Get file size
 	info, err := r.file.Stat()
 	if err != nil {
 		return false, err
 	}
 
-	// Read MagicTrailer (last 8200 bytes)
 	trailer := make([]byte, MagicTrailerSize)
 	if _, err := r.file.ReadAt(trailer, info.Size()-MagicTrailerSize); err != nil {
 		return false, err
 	}
 
-	// Verify magic sequence
-	// Check emoji magic (last 8 bytes of trailer = last 8 bytes of file)
-	emojiMagic := trailer[len(trailer)-8:]
-	expectedEmoji := []byte{0xF0, 0x9F, 0x93, 0xA6, 0xF0, 0x9F, 0xAA, 0x84} // 📦🪄
-
-	if !bytes.Equal(emojiMagic, expectedEmoji) {
+	if !bytes.Equal(trailer[:4], PackageEmojiBytes) {
+		return false, ErrInvalidEmojiMagic
+	}
+	if !bytes.Equal(trailer[MagicTrailerSize-4:], MagicWandEmojiBytes) {
 		return false, ErrInvalidEmojiMagic
 	}
 
@@ -66,7 +62,11 @@ func (r *Reader) VerifyIntegritySeal() (bool, error) {
 	}
 
 	// Read metadata archive
-	if _, err := r.file.Seek(int64(index.MetadataOffset), io.SeekStart); err != nil {
+	metadataOffset, err := uint64ToInt64Checked(index.MetadataOffset, "metadata offset")
+	if err != nil {
+		return false, err
+	}
+	if _, err := r.file.Seek(metadataOffset, io.SeekStart); err != nil {
 		return false, err
 	}
 
@@ -145,7 +145,19 @@ func (r *Reader) VerifyAttestationSbomDigest() error {
 	slotCount := int(index.SlotCount)
 	var attestationDesc *SlotDescriptor
 	for i := 0; i < slotCount; i++ {
-		entryOffset := int64(index.SlotTableOffset) + int64(i*SlotDescriptorSize)
+		slotTableOffset, err := uint64ToInt64Checked(index.SlotTableOffset, "slot table offset")
+		if err != nil {
+			return fmt.Errorf("seeking slot descriptor %d: %w", i, err)
+		}
+		entryDelta, err := intToUint64Checked(i*SlotDescriptorSize, "slot descriptor entry offset")
+		if err != nil {
+			return fmt.Errorf("seeking slot descriptor %d: %w", i, err)
+		}
+		entryDeltaOffset, err := uint64ToInt64Checked(entryDelta, "slot descriptor entry offset")
+		if err != nil {
+			return fmt.Errorf("seeking slot descriptor %d: %w", i, err)
+		}
+		entryOffset := slotTableOffset + entryDeltaOffset
 		if _, err := r.file.Seek(entryOffset, io.SeekStart); err != nil {
 			return fmt.Errorf("seeking slot descriptor %d: %w", i, err)
 		}
@@ -174,7 +186,11 @@ func (r *Reader) VerifyAttestationSbomDigest() error {
 	}
 
 	// Read the raw (as-stored) bytes of the attestation slot.
-	if _, err := r.file.Seek(int64(attestationDesc.Offset), io.SeekStart); err != nil {
+	attestationOffset, err := uint64ToInt64Checked(attestationDesc.Offset, "attestation slot offset")
+	if err != nil {
+		return fmt.Errorf("seeking attestation slot data: %w", err)
+	}
+	if _, err := r.file.Seek(attestationOffset, io.SeekStart); err != nil {
 		return fmt.Errorf("seeking attestation slot data: %w", err)
 	}
 	slotBytes := make([]byte, attestationDesc.Size)
