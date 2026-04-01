@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -918,15 +919,26 @@ func TestLaunchWithLogLevelNonCLIExitClassification(t *testing.T) {
 			wantCode: ExitExtractionError,
 		},
 		{
+			// syscallExecFn is only called in exec mode (process replacement).
+			// Windows always forces spawn mode (exec/execve unsupported), so
+			// mocking syscallExecFn has no effect on Windows — skip there.
 			name: "execution error",
-			exePath: buildSingleSlotBundleForTests(t, []byte("ok"), []byte("ok"), nil, SlotMetadata{
-				ID:     "exec-slot",
-				Target: "{workenv}",
-			}, 0o644, false),
+			exePath: func() string {
+				if runtime.GOOS == "windows" {
+					return "" // skipped below
+				}
+				return buildSingleSlotBundleForTests(t, []byte("ok"), []byte("ok"), nil, SlotMetadata{
+					ID:     "exec-slot",
+					Target: "{workenv}",
+				}, 0o644, false)
+			}(),
 			env: map[string]string{
 				EnvValidation: "none",
 			},
 			setup: func(t *testing.T) func() {
+				if runtime.GOOS == "windows" {
+					t.Skip("exec mode (syscallExecFn) not used on Windows; spawn mode is forced")
+				}
 				oldSyscallExecFn := syscallExecFn
 				syscallExecFn = func(binary string, argv []string, envv []string) error {
 					return errors.New("boom")

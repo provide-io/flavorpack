@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -147,10 +148,17 @@ func TestLauncherCLIAdditionalErrorPaths(t *testing.T) {
 		},
 		{
 			// showMetadata writes to os.Stderr directly.
-			name:      "show metadata missing bundle",
-			mode:      "show-metadata",
-			bundle:    missingBundle,
-			want:      "no such file",
+			// Windows reports "The system cannot find the file specified."
+			// Unix reports "no such file or directory" — accept either.
+			name:   "show metadata missing bundle",
+			mode:   "show-metadata",
+			bundle: missingBundle,
+			want: func() string {
+				if runtime.GOOS == "windows" {
+					return "cannot find the file"
+				}
+				return "no such file"
+			}(),
 			wantExit:  1,
 			wantError: true,
 		},
