@@ -70,7 +70,7 @@ class TestMockAccuracy:
         # Build with mock
         mock_output = temp_dir / "mock_package.psp"
 
-        def mock_launcher(launcher_type: str) -> bytes:
+        def mock_launcher(launcher_type: str, explicit_path: object = None) -> bytes:
             return MOCK_LAUNCHER_DATA
 
         with unittest.mock.patch.object(assembly, "load_launcher_binary", mock_launcher):
