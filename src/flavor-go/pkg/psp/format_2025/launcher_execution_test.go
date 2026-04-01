@@ -1,6 +1,7 @@
 package format_2025
 
 import (
+	"archive/tar"
 	"bytes"
 	"compress/gzip"
 	"crypto/sha256"
@@ -35,6 +36,28 @@ func gzipDataForExecutionTests(t *testing.T, src []byte) []byte {
 	}
 	if err := gw.Close(); err != nil {
 		t.Fatalf("gzip.Close() error = %v", err)
+	}
+	return buf.Bytes()
+}
+
+func buildTarArchiveWithFile(t *testing.T, fileName string, mode int64, content []byte) []byte {
+	t.Helper()
+
+	var buf bytes.Buffer
+	tw := tar.NewWriter(&buf)
+	header := &tar.Header{
+		Name: fileName,
+		Mode: mode,
+		Size: int64(len(content)),
+	}
+	if err := tw.WriteHeader(header); err != nil {
+		t.Fatalf("WriteHeader() error = %v", err)
+	}
+	if _, err := tw.Write(content); err != nil {
+		t.Fatalf("Write() error = %v", err)
+	}
+	if err := tw.Close(); err != nil {
+		t.Fatalf("Close() error = %v", err)
 	}
 	return buf.Bytes()
 }
@@ -491,6 +514,135 @@ func TestExtractAndMergeSlotsToWorkenvMergesContentAndWritesMetadata(t *testing.
 	}
 }
 
+func TestExtractAndMergeSlotsToWorkenvMovesSlotTopLevelFilesToWorkenvRoot(t *testing.T) {
+	cacheRoot := t.TempDir()
+	t.Setenv("FLAVOR_CACHE_DIR", cacheRoot)
+
+	slotZeroTar := buildTarArchiveWithFile(t, "tool.sh", 0o755, []byte("#!/bin/sh\nexit 0\n"))
+	slotOneTar := buildTarArchiveWithFile(t, "config.json", 0o644, []byte(`{"ok":true}`))
+
+	metadata := Metadata{
+		Format:        "PSPF/2025",
+		FormatVersion: "2025.0",
+		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
+		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Build:         &BuildInfo{Tool: "flavor-go"},
+	}
+
+	bundle := buildMultiSlotBundleForTests(t, []multiSlotBundleSpec{
+		{
+			meta:         SlotMetadata{ID: "slot-zero", Target: "{workenv}"},
+			storedData:   gzipDataForExecutionTests(t, slotZeroTar),
+			originalData: slotZeroTar,
+			operations:   []uint8{OP_TAR, OP_GZIP},
+			permissions:  0o755,
+		},
+		{
+			meta:         SlotMetadata{ID: "slot-one", Target: "{workenv}"},
+			storedData:   gzipDataForExecutionTests(t, slotOneTar),
+			originalData: slotOneTar,
+			operations:   []uint8{OP_TAR, OP_GZIP},
+			permissions:  0o644,
+		},
+	}, metadata)
+
+	logger := hclog.NewNullLogger()
+	reader, err := NewReaderWithLogger(bundle, logger)
+	if err != nil {
+		t.Fatalf("NewReaderWithLogger() error = %v", err)
+	}
+	t.Cleanup(func() {
+		if err := reader.Close(); err != nil {
+			t.Fatalf("Close() error = %v", err)
+		}
+	})
+
+	index, err := reader.ReadIndex()
+	if err != nil {
+		t.Fatalf("ReadIndex() error = %v", err)
+	}
+	readMetadata, err := reader.ReadMetadata()
+	if err != nil {
+		t.Fatalf("ReadMetadata() error = %v", err)
+	}
+
+	paths := NewWorkenvPaths(cacheRoot, bundle)
+	if _, err := extractAndMergeSlotsToWorkenv(reader, readMetadata, paths, index, logger); err != nil {
+		t.Fatalf("extractAndMergeSlotsToWorkenv() error = %v", err)
+	}
+
+	if got, err := os.ReadFile(filepath.Join(paths.Workenv(), "tool.sh")); err != nil || !strings.Contains(string(got), "exit 0") {
+		t.Fatalf("expected slot 0 top-level file in workenv root, err=%v content=%q", err, string(got))
+	}
+	if got, err := os.ReadFile(filepath.Join(paths.Workenv(), "config.json")); err != nil || !strings.Contains(string(got), `"ok":true`) {
+		t.Fatalf("expected slot 1 top-level file in workenv root, err=%v content=%q", err, string(got))
+	}
+}
+
+func TestExtractAndMergeSlotsToWorkenvMergesRegularTargetDirectories(t *testing.T) {
+	cacheRoot := t.TempDir()
+	t.Setenv("FLAVOR_CACHE_DIR", cacheRoot)
+
+	assetsTar := buildTarArchiveWithDirAndFile(t, "images", "logo.txt", 0o644, []byte("logo"))
+	metadata := Metadata{
+		Format:        "PSPF/2025",
+		FormatVersion: "2025.0",
+		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
+		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Build:         &BuildInfo{Tool: "flavor-go"},
+	}
+
+	bundle := buildMultiSlotBundleForTests(t, []multiSlotBundleSpec{
+		{
+			meta:         SlotMetadata{ID: "assets-slot", Target: "assets"},
+			storedData:   gzipDataForExecutionTests(t, assetsTar),
+			originalData: assetsTar,
+			operations:   []uint8{OP_TAR, OP_GZIP},
+			permissions:  0o755,
+		},
+	}, metadata)
+
+	logger := hclog.NewNullLogger()
+	reader, err := NewReaderWithLogger(bundle, logger)
+	if err != nil {
+		t.Fatalf("NewReaderWithLogger() error = %v", err)
+	}
+	t.Cleanup(func() {
+		if err := reader.Close(); err != nil {
+			t.Fatalf("Close() error = %v", err)
+		}
+	})
+
+	index, err := reader.ReadIndex()
+	if err != nil {
+		t.Fatalf("ReadIndex() error = %v", err)
+	}
+	readMetadata, err := reader.ReadMetadata()
+	if err != nil {
+		t.Fatalf("ReadMetadata() error = %v", err)
+	}
+
+	paths := NewWorkenvPaths(cacheRoot, bundle)
+	targetDir := filepath.Join(paths.Workenv(), "assets")
+	if err := os.MkdirAll(filepath.Join(targetDir, "images"), 0o755); err != nil {
+		t.Fatalf("MkdirAll(target) error = %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(targetDir, "images", "existing.txt"), []byte("existing"), 0o644); err != nil {
+		t.Fatalf("WriteFile(existing) error = %v", err)
+	}
+
+	if _, err := extractAndMergeSlotsToWorkenv(reader, readMetadata, paths, index, logger); err != nil {
+		t.Fatalf("extractAndMergeSlotsToWorkenv() error = %v", err)
+	}
+
+	if got, err := os.ReadFile(filepath.Join(targetDir, "images", "logo.txt")); err != nil || string(got) != "logo" {
+		t.Fatalf("expected merged regular target directory file, err=%v content=%q", err, string(got))
+	}
+	if got, err := os.ReadFile(filepath.Join(targetDir, "images", "existing.txt")); err != nil || string(got) != "existing" {
+		t.Fatalf("expected existing file to remain after merge, err=%v content=%q", err, string(got))
+	}
+}
+
 func TestExtractAndMergeSlotsToWorkenvCleansUpTempDirOnExtractionFailure(t *testing.T) {
 	cacheRoot := t.TempDir()
 
@@ -603,6 +755,121 @@ func TestExtractAndMergeSlotsToWorkenvFailsWhenTempExtractionCannotBeCreated(t *
 	paths := NewWorkenvPaths(fileRoot, bundle)
 	if _, err := extractAndMergeSlotsToWorkenv(reader, readMetadata, paths, index, logger); err == nil {
 		t.Fatal("expected extractAndMergeSlotsToWorkenv() to fail when temp extraction dir cannot be created")
+	}
+}
+
+func TestExtractAndMergeSlotsToWorkenvMovesRegularFilesToWorkenv(t *testing.T) {
+	cacheRoot := t.TempDir()
+	t.Setenv("FLAVOR_CACHE_DIR", cacheRoot)
+
+	metadata := Metadata{
+		Format:        "PSPF/2025",
+		FormatVersion: "2025.0",
+		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
+		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Build:         &BuildInfo{Tool: "flavor-go"},
+	}
+
+	bundle := buildMultiSlotBundleForTests(t, []multiSlotBundleSpec{
+		{
+			meta: SlotMetadata{
+				ID:     "plain-file",
+				Target: "plain.txt",
+			},
+			storedData:   []byte("payload"),
+			originalData: []byte("payload"),
+			permissions:  0o644,
+		},
+	}, metadata)
+
+	logger := hclog.NewNullLogger()
+	reader, err := NewReaderWithLogger(bundle, logger)
+	if err != nil {
+		t.Fatalf("NewReaderWithLogger() error = %v", err)
+	}
+	t.Cleanup(func() {
+		if err := reader.Close(); err != nil {
+			t.Fatalf("Close() error = %v", err)
+		}
+	})
+
+	index, err := reader.ReadIndex()
+	if err != nil {
+		t.Fatalf("ReadIndex() error = %v", err)
+	}
+	readMetadata, err := reader.ReadMetadata()
+	if err != nil {
+		t.Fatalf("ReadMetadata() error = %v", err)
+	}
+
+	paths := NewWorkenvPaths(cacheRoot, bundle)
+	if _, err := extractAndMergeSlotsToWorkenv(reader, readMetadata, paths, index, logger); err != nil {
+		t.Fatalf("extractAndMergeSlotsToWorkenv() error = %v", err)
+	}
+
+	got, err := os.ReadFile(filepath.Join(paths.Workenv(), "plain.txt"))
+	if err != nil {
+		t.Fatalf("ReadFile(plain.txt) error = %v", err)
+	}
+	if string(got) != "payload" {
+		t.Fatalf("plain.txt = %q, want %q", string(got), "payload")
+	}
+}
+
+func TestExtractAndMergeSlotsToWorkenvFailsWhenMetadataPathIsAFile(t *testing.T) {
+	cacheRoot := t.TempDir()
+	t.Setenv("FLAVOR_CACHE_DIR", cacheRoot)
+
+	metadata := Metadata{
+		Format:        "PSPF/2025",
+		FormatVersion: "2025.0",
+		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
+		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Build:         &BuildInfo{Tool: "flavor-go"},
+	}
+
+	bundle := buildMultiSlotBundleForTests(t, []multiSlotBundleSpec{
+		{
+			meta: SlotMetadata{
+				ID:     "plain-file",
+				Target: "{workenv}",
+			},
+			storedData:   []byte("payload"),
+			originalData: []byte("payload"),
+			permissions:  0o644,
+		},
+	}, metadata)
+
+	logger := hclog.NewNullLogger()
+	reader, err := NewReaderWithLogger(bundle, logger)
+	if err != nil {
+		t.Fatalf("NewReaderWithLogger() error = %v", err)
+	}
+	t.Cleanup(func() {
+		if err := reader.Close(); err != nil {
+			t.Fatalf("Close() error = %v", err)
+		}
+	})
+
+	index, err := reader.ReadIndex()
+	if err != nil {
+		t.Fatalf("ReadIndex() error = %v", err)
+	}
+	readMetadata, err := reader.ReadMetadata()
+	if err != nil {
+		t.Fatalf("ReadMetadata() error = %v", err)
+	}
+
+	paths := NewWorkenvPaths(cacheRoot, bundle)
+	if err := os.MkdirAll(filepath.Dir(paths.Metadata()), 0o755); err != nil {
+		t.Fatalf("MkdirAll(metadata parent) error = %v", err)
+	}
+	if err := os.WriteFile(paths.Metadata(), []byte("not a directory"), 0o600); err != nil {
+		t.Fatalf("WriteFile(metadata path) error = %v", err)
+	}
+
+	if _, err := extractAndMergeSlotsToWorkenv(reader, readMetadata, paths, index, logger); err == nil {
+		t.Fatal("expected extractAndMergeSlotsToWorkenv() to fail when metadata path is a file")
 	}
 }
 
@@ -757,6 +1024,335 @@ func TestRunBundleWithCwdRejectsInvalidSetupCommand(t *testing.T) {
 	logger := hclog.NewNullLogger()
 	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger); err == nil {
 		t.Fatal("expected runBundleWithCwd() to fail for invalid setup command syntax")
+	}
+}
+
+func TestRunBundleWithCwdIgnoresUnknownSetupCommandType(t *testing.T) {
+	t.Setenv("FLAVOR_CACHE_DIR", t.TempDir())
+	t.Setenv(EnvValidation, "none")
+	t.Setenv(EnvWorkenvCache, "false")
+
+	bundle := buildMultiSlotBundleForTests(t, []multiSlotBundleSpec{
+		{
+			meta: SlotMetadata{
+				ID:     "setup-slot",
+				Target: "{workenv}",
+			},
+			storedData:   []byte("payload"),
+			originalData: []byte("payload"),
+			permissions:  0o644,
+		},
+	}, Metadata{
+		Format:        "PSPF/2025",
+		FormatVersion: "2025.0",
+		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
+		SetupCommands: []interface{}{map[string]interface{}{"type": "mystery", "command": ""}, 123},
+		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Build:         &BuildInfo{Tool: "flavor-go"},
+	})
+
+	logger := hclog.NewNullLogger()
+	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
+	if err != nil {
+		t.Fatalf("runBundleWithCwd() error = %v", err)
+	}
+	if cmd == nil {
+		t.Fatal("expected exec.Cmd")
+	}
+}
+
+func TestRunBundleWithCwdRejectsPolicyViolation(t *testing.T) {
+	t.Setenv("FLAVOR_CACHE_DIR", t.TempDir())
+	t.Setenv(EnvValidation, "none")
+	t.Setenv(EnvWorkenvCache, "false")
+
+	bundle := buildMultiSlotBundleForTests(t, []multiSlotBundleSpec{
+		{
+			meta: SlotMetadata{
+				ID:     "policy-slot",
+				Target: "{workenv}",
+			},
+			storedData:   []byte("payload"),
+			originalData: []byte("payload"),
+			permissions:  0o644,
+		},
+	}, Metadata{
+		Format:        "PSPF/2025",
+		FormatVersion: "2025.0",
+		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
+		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Build:         &BuildInfo{Tool: "flavor-go"},
+		Policy: &PackagePolicy{
+			RequireEnv: []string{"MISSING_REQUIRED_ENV"},
+		},
+	})
+
+	logger := hclog.NewNullLogger()
+	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger); err == nil || !strings.Contains(err.Error(), "policy violation") {
+		t.Fatalf("runBundleWithCwd() error = %v, want policy violation", err)
+	}
+}
+
+func TestRunBundleWithCwdRejectsEscapingWorkenvDirectory(t *testing.T) {
+	t.Setenv("FLAVOR_CACHE_DIR", t.TempDir())
+	t.Setenv(EnvValidation, "none")
+	t.Setenv(EnvWorkenvCache, "false")
+
+	bundle := buildMultiSlotBundleForTests(t, []multiSlotBundleSpec{
+		{
+			meta: SlotMetadata{
+				ID:     "dir-slot",
+				Target: "{workenv}",
+			},
+			storedData:   []byte("payload"),
+			originalData: []byte("payload"),
+			permissions:  0o644,
+		},
+	}, Metadata{
+		Format:        "PSPF/2025",
+		FormatVersion: "2025.0",
+		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
+		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Build:         &BuildInfo{Tool: "flavor-go"},
+		Workenv: &WorkenvInfo{
+			Directories: []DirectorySpec{
+				{Path: "{workenv}/../escape"},
+			},
+		},
+	})
+
+	logger := hclog.NewNullLogger()
+	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger); err == nil || !strings.Contains(err.Error(), "escapes work environment directory") {
+		t.Fatalf("runBundleWithCwd() error = %v, want workenv escape rejection", err)
+	}
+}
+
+func TestRunBundleWithCwdRejectsEscapingWriteFileSetupPath(t *testing.T) {
+	t.Setenv("FLAVOR_CACHE_DIR", t.TempDir())
+	t.Setenv(EnvValidation, "none")
+	t.Setenv(EnvWorkenvCache, "false")
+
+	bundle := buildMultiSlotBundleForTests(t, []multiSlotBundleSpec{
+		{
+			meta: SlotMetadata{
+				ID:     "write-file-slot",
+				Target: "{workenv}",
+			},
+			storedData:   []byte("payload"),
+			originalData: []byte("payload"),
+			permissions:  0o644,
+		},
+	}, Metadata{
+		Format:        "PSPF/2025",
+		FormatVersion: "2025.0",
+		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
+		SetupCommands: []interface{}{
+			map[string]interface{}{
+				"type":    "write_file",
+				"path":    "{workenv}/../escape.txt",
+				"content": "payload",
+			},
+		},
+		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Build:     &BuildInfo{Tool: "flavor-go"},
+	})
+
+	logger := hclog.NewNullLogger()
+	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger); err == nil || !strings.Contains(err.Error(), "escapes work environment directory") {
+		t.Fatalf("runBundleWithCwd() error = %v, want setup write-file path rejection", err)
+	}
+}
+
+func TestRunBundleWithCwdRejectsEscapingEnumeratePath(t *testing.T) {
+	t.Setenv("FLAVOR_CACHE_DIR", t.TempDir())
+	t.Setenv(EnvValidation, "none")
+	t.Setenv(EnvWorkenvCache, "false")
+
+	bundle := buildMultiSlotBundleForTests(t, []multiSlotBundleSpec{
+		{
+			meta: SlotMetadata{
+				ID:     "enumerate-slot",
+				Target: "{workenv}",
+			},
+			storedData:   []byte("payload"),
+			originalData: []byte("payload"),
+			permissions:  0o644,
+		},
+	}, Metadata{
+		Format:        "PSPF/2025",
+		FormatVersion: "2025.0",
+		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
+		SetupCommands: []interface{}{
+			map[string]interface{}{
+				"type":    "enumerate_and_execute",
+				"command": "/bin/true",
+				"enumerate": map[string]interface{}{
+					"path":    "{workenv}/../escape",
+					"pattern": "*.txt",
+				},
+			},
+		},
+		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Build:     &BuildInfo{Tool: "flavor-go"},
+	})
+
+	logger := hclog.NewNullLogger()
+	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger); err == nil || !strings.Contains(err.Error(), "escapes work environment directory") {
+		t.Fatalf("runBundleWithCwd() error = %v, want enumerate path rejection", err)
+	}
+}
+
+func TestRunBundleWithCwdFailsWhenMetadataDirCannotBeCreated(t *testing.T) {
+	cacheRoot := t.TempDir()
+	t.Setenv("FLAVOR_CACHE_DIR", cacheRoot)
+	t.Setenv(EnvValidation, "none")
+	t.Setenv(EnvWorkenvCache, "false")
+
+	bundle := buildMultiSlotBundleForTests(t, []multiSlotBundleSpec{
+		{
+			meta: SlotMetadata{
+				ID:     "setup-slot",
+				Target: "{workenv}",
+			},
+			storedData:   []byte("payload"),
+			originalData: []byte("payload"),
+			permissions:  0o644,
+		},
+	}, Metadata{
+		Format:        "PSPF/2025",
+		FormatVersion: "2025.0",
+		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
+		SetupCommands: []interface{}{"/bin/true"},
+		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Build:         &BuildInfo{Tool: "flavor-go"},
+	})
+
+	paths := NewWorkenvPaths(cacheRoot, bundle)
+	if err := os.MkdirAll(paths.Workenv(), 0o755); err != nil {
+		t.Fatalf("MkdirAll(workenv) error = %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(paths.Workenv(), "metadata"), []byte("not a directory"), 0o600); err != nil {
+		t.Fatalf("WriteFile(metadata) error = %v", err)
+	}
+
+	logger := hclog.NewNullLogger()
+	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger); err == nil || !strings.Contains(err.Error(), "failed to create metadata directory") {
+		t.Fatalf("runBundleWithCwd() error = %v, want metadata directory failure", err)
+	}
+}
+
+func TestRunBundleWithCwdRejectsInvalidExecutionCommandSyntax(t *testing.T) {
+	t.Setenv("FLAVOR_CACHE_DIR", t.TempDir())
+	t.Setenv(EnvValidation, "none")
+	t.Setenv(EnvWorkenvCache, "false")
+
+	bundle := buildMultiSlotBundleForTests(t, []multiSlotBundleSpec{
+		{
+			meta: SlotMetadata{
+				ID:     "cmd-slot",
+				Target: "{workenv}",
+			},
+			storedData:   []byte("payload"),
+			originalData: []byte("payload"),
+			permissions:  0o644,
+		},
+	}, Metadata{
+		Format:        "PSPF/2025",
+		FormatVersion: "2025.0",
+		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
+		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: `"`},
+		Build:         &BuildInfo{Tool: "flavor-go"},
+	})
+
+	logger := hclog.NewNullLogger()
+	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger); err == nil || !strings.Contains(err.Error(), "failed to parse command") {
+		t.Fatalf("runBundleWithCwd() error = %v, want command parse failure", err)
+	}
+}
+
+func TestRunBundleWithCwdRejectsEmptyExecutionCommand(t *testing.T) {
+	t.Setenv("FLAVOR_CACHE_DIR", t.TempDir())
+	t.Setenv(EnvValidation, "none")
+	t.Setenv(EnvWorkenvCache, "false")
+
+	bundle := buildMultiSlotBundleForTests(t, []multiSlotBundleSpec{
+		{
+			meta: SlotMetadata{
+				ID:     "cmd-slot",
+				Target: "{workenv}",
+			},
+			storedData:   []byte("payload"),
+			originalData: []byte("payload"),
+			permissions:  0o644,
+		},
+	}, Metadata{
+		Format:        "PSPF/2025",
+		FormatVersion: "2025.0",
+		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
+		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: ""},
+		Build:         &BuildInfo{Tool: "flavor-go"},
+	})
+
+	logger := hclog.NewNullLogger()
+	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger); err == nil || !strings.Contains(err.Error(), "empty command") {
+		t.Fatalf("runBundleWithCwd() error = %v, want empty command", err)
+	}
+}
+
+func TestRunBundleWithCwdFailsWhenSetupCommandExecutionFails(t *testing.T) {
+	t.Setenv("FLAVOR_CACHE_DIR", t.TempDir())
+	t.Setenv(EnvValidation, "none")
+	t.Setenv(EnvWorkenvCache, "false")
+
+	bundle := buildMultiSlotBundleForTests(t, []multiSlotBundleSpec{
+		{
+			meta: SlotMetadata{
+				ID:     "setup-slot",
+				Target: "{workenv}",
+			},
+			storedData:   []byte("payload"),
+			originalData: []byte("payload"),
+			permissions:  0o644,
+		},
+	}, Metadata{
+		Format:        "PSPF/2025",
+		FormatVersion: "2025.0",
+		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
+		SetupCommands: []interface{}{"/definitely/missing/setup-binary"},
+		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Build:         &BuildInfo{Tool: "flavor-go"},
+	})
+
+	logger := hclog.NewNullLogger()
+	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger); err == nil || !strings.Contains(err.Error(), "setup command") {
+		t.Fatalf("runBundleWithCwd() error = %v, want setup command failure", err)
+	}
+}
+
+func TestRunBundleWithCwdValidationModesHandleIntegrityFailureDifferently(t *testing.T) {
+	cacheRoot := t.TempDir()
+	t.Setenv("FLAVOR_CACHE_DIR", cacheRoot)
+	t.Setenv(EnvWorkenvCache, "false")
+
+	bundle := buildSingleSlotBundleForTests(t, []byte("payload"), []byte("payload"), nil, SlotMetadata{
+		ID:     "checksum-slot",
+		Target: "{workenv}/bin/app.txt",
+	}, 0o644, false)
+
+	logger := hclog.NewNullLogger()
+
+	t.Setenv(EnvValidation, "strict")
+	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger); err == nil {
+		t.Fatal("expected strict validation to reject integrity failure")
+	}
+
+	t.Setenv(EnvValidation, "relaxed")
+	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
+	if err != nil {
+		t.Fatalf("expected relaxed validation to continue, got error = %v", err)
+	}
+	if cmd == nil {
+		t.Fatal("expected exec.Cmd under relaxed validation")
 	}
 }
 
