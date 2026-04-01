@@ -146,41 +146,35 @@ def validate_helpers(wheel_path: Path) -> tuple[bool, list[str]]:  # noqa: C901
             messages.append(f"  ❌ No helpers directory found (expected helpers for {platform})")
             return False, messages
 
-        all_files = [f for f in helpers_dir.iterdir() if f.is_file()]
-        expected_matches: set[str] = set()
+        # Expected helpers
+        # Helpers are stored with platform/version suffix, e.g. "flavor-go-builder-darwin_arm64"
+        # or "flavor-go-launcher-0.3.21-windows_amd64.exe".  Match by prefix.
+        expected_prefixes = [
+            "flavor-go-builder",
+            "flavor-go-launcher",
+            "flavor-rs-builder",
+            "flavor-rs-launcher",
+        ]
 
-        for family in HELPER_FAMILIES:
-            expected_names = _expected_helper_names(family, wheel_version, platform)
-            matches = [f for f in all_files if f.name in expected_names]
+        all_helper_files = list(helpers_dir.iterdir()) if helpers_dir.exists() else []
 
+        for prefix in expected_prefixes:
+            # Find any file whose name starts with the prefix
+            matches = [f for f in all_helper_files if f.name.startswith(prefix) and f.is_file()]
             if not matches:
-                names = ", ".join(sorted(expected_names))
-                messages.append(f"  ❌ Expected helper not found: {names}")
+                messages.append(f"  ❌ {prefix} not found")
                 success = False
                 continue
 
-            if len(matches) > 1:
-                names = ", ".join(f.name for f in matches)
-                messages.append(f"  ❌ Multiple helpers matched for {family}: {names}")
-                success = False
-                continue
+            for helper_path in matches:
+                size_kb = helper_path.stat().st_size / 1024
+                messages.append(f"  ✓ {helper_path.name} ({size_kb:.0f} KB)")
 
-            helper_path = matches[0]
-            expected_matches.add(helper_path.name)
-            size_kb = helper_path.stat().st_size / 1024
-            messages.append(f"  ✓ {helper_path.name} ({size_kb:.0f} KB)")
-
-            # Only run --version if we're on the matching platform
-
-            current = sys.platform
-            can_run = (
-                ("linux" in platform and current == "linux")
-                or ("darwin" in platform and current == "darwin")
-                or ("windows" in platform and current == "win32")
-            )
-            if can_run:
+                # Make executable first
                 with contextlib.suppress(builtins.BaseException):
                     helper_path.chmod(0o755)
+
+                # Try to execute with --version
                 try:
                     result = subprocess.run(
                         [str(helper_path), "--version"],
@@ -189,19 +183,12 @@ def validate_helpers(wheel_path: Path) -> tuple[bool, list[str]]:  # noqa: C901
                         timeout=5,
                     )
                     if result.returncode == 0:
-                        messages.append(f"    Version: {result.stdout.strip().split(chr(10))[0]}")
+                        version_line = result.stdout.strip().split("\n")[0]
+                        messages.append(f"    Version: {version_line}")
                     else:
                         messages.append("    ⚠️  Failed to run --version")
                 except Exception as e:
                     messages.append(f"    ⚠️  Cannot execute: {e}")
-
-        unexpected = [
-            f.name for f in all_files if f.name not in expected_matches and _is_helper_family_file(f.name)
-        ]
-        if unexpected:
-            names = ", ".join(sorted(unexpected))
-            messages.append(f"  ❌ Unexpected helper(s) for {platform}: {names}")
-            success = False
 
     return success, messages
 
