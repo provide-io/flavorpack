@@ -15,7 +15,7 @@ from provide.foundation.file.directory import ensure_dir, safe_rmtree
 from provide.foundation.file.formats import read_json
 from provide.foundation.utils.environment import get_str
 
-from flavor.config.defaults import ENV_CACHE_DIR
+from flavor.config.defaults import ENV_CACHE_COMPAT, ENV_CACHE_DIR
 from flavor.console import get_command_logger
 
 log = get_command_logger("cache")

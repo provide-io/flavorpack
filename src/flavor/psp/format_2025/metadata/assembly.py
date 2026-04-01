@@ -17,6 +17,7 @@ from provide.foundation.crypto import format_checksum as calculate_checksum
 from provide.foundation.platform import get_arch_name, get_os_name, get_platform_string
 from provide.foundation.utils import get_version
 
+from flavor.cache import get_xdg_cache_base
 from flavor.config.defaults import ENV_INCLUDE_BUILD_HOST, ENV_LAUNCHER_BIN
 from flavor.psp.format_2025.spec import BuildSpec
 from flavor.psp.format_2025.validation import extract_package_metadata
