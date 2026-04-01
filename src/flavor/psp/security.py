@@ -16,6 +16,7 @@ from provide.foundation.crypto import Ed25519Verifier
 
 from flavor.config import get_flavor_config
 from flavor.config.defaults import (
+    ENV_VALIDATION,
     VALIDATION_MINIMAL,
     VALIDATION_NONE,
     VALIDATION_RELAXED,
@@ -53,7 +54,7 @@ def get_validation_level() -> ValidationLevel:
     elif val == VALIDATION_MINIMAL:
         return ValidationLevel.MINIMAL
     elif val == VALIDATION_NONE:
-        logger.warning("⚠️ SECURITY WARNING: Validation disabled (FLAVOR_VALIDATION=none)")
+        logger.warning(f"⚠️ SECURITY WARNING: Validation disabled ({ENV_VALIDATION}=none)")
         logger.warning("⚠️ This is NOT RECOMMENDED for production use")
         return ValidationLevel.NONE
     else:  # VALIDATION_STANDARD or unknown
@@ -162,7 +163,7 @@ class PSPFIntegrityVerifier:
                                     )
                                     logger.warning("🚨 Package may be corrupted or tampered with")
                                     logger.warning(
-                                        "🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)"
+                                        f"🚨 Continuing with standard validation (use {ENV_VALIDATION}=strict to enforce)"
                                     )
                                 else:
                                     # Defensive: unreachable for current ValidationLevel values
@@ -205,7 +206,7 @@ class PSPFIntegrityVerifier:
                                         logger.warning(f"🚨 SECURITY WARNING: Slot {i} integrity check failed")
                                         logger.warning("🚨 Slot may be corrupted or tampered with")
                                         logger.warning(
-                                            "🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)"
+                                            f"🚨 Continuing with standard validation (use {ENV_VALIDATION}=strict to enforce)"
                                         )
                                         # Don't set tamper_detected for standard level
                                     else:  # RELAXED
