@@ -93,7 +93,7 @@ func MarkIncomplete(path string, reason string) error {
 	}
 
 	// Remove complete marker if it exists
-	os.Remove(filepath.Join(path, ".extraction.complete"))
+	_ = os.Remove(filepath.Join(path, ".extraction.complete"))
 
 	return os.WriteFile(markerPath, data, 0644)
 }
@@ -101,13 +101,13 @@ func MarkIncomplete(path string, reason string) error {
 // Clean removes invalid or incomplete workenvs
 func Clean(path string) error {
 	// Remove incomplete marker
-	os.Remove(filepath.Join(path, ".extraction.incomplete"))
+	_ = os.Remove(filepath.Join(path, ".extraction.incomplete"))
 
 	// Remove complete marker
-	os.Remove(filepath.Join(path, ".extraction.complete"))
+	_ = os.Remove(filepath.Join(path, ".extraction.complete"))
 
 	// Remove lock file if present
-	os.Remove(filepath.Join(path, ".extraction.lock"))
+	_ = os.Remove(filepath.Join(path, ".extraction.lock"))
 
 	// Optionally remove the entire directory
 	// return os.RemoveAll(path)

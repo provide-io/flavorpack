@@ -50,6 +50,8 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       
       - name: 🔍 Detect Project License
         id: detect
@@ -139,6 +141,8 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       
       - name: 📦 Setup uv + Python
         uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
@@ -335,6 +339,8 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       
       - name: 🐹 Setup Go
         uses: actions/setup-go@v6
@@ -424,6 +430,8 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       
       - name: 🦀 Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -530,6 +538,8 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       
       - name: 🛠️ Install SBOM Tools
         run: |

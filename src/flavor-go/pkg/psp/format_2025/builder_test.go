@@ -325,7 +325,7 @@ func TestDoBuildLoadsKeyFilesAndCarriesRuntimeMetadata(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader() error = %v", err)
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	index, err := reader.ReadIndex()
 	if err != nil {
@@ -394,7 +394,7 @@ func TestDoBuildUsesEnvSeedWhenRequested(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader() error = %v", err)
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	index, err := reader.ReadIndex()
 	if err != nil {
