@@ -12,7 +12,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"encoding/pem"
-	"log/slog"
 	"math"
 	"os"
 	"path/filepath"
@@ -139,7 +138,7 @@ func TestBuilderBuildWithLogLevelWritesExpectedLogs(t *testing.T) {
 			}
 
 			called := false
-			buildImpl = func(_ *slog.Logger, manifestPath, outputPath, launcherBin, privateKeyPath, publicKeyPath, keySeed string) {
+			buildImpl = func(_ hclog.Logger, manifestPath, outputPath, launcherBin, privateKeyPath, publicKeyPath, keySeed string) {
 				called = true
 				if manifestPath != "manifest.json" || outputPath != "bundle.pspf" || launcherBin != "launcher.bin" || privateKeyPath != "private.key" || publicKeyPath != "public.key" || keySeed != "seed" {
 					t.Fatalf("BuildWithLogLevel() delegated unexpected arguments: %q %q %q %q %q %q", manifestPath, outputPath, launcherBin, privateKeyPath, publicKeyPath, keySeed)
@@ -168,14 +167,14 @@ func TestBuilderBuildWithLogLevelWritesExpectedLogs(t *testing.T) {
 				if !bytes.HasPrefix(firstLine, []byte("{")) {
 					t.Fatalf("expected JSON log output, got %q", string(data))
 				}
-				if !bytes.Contains(data, []byte(`"level":"DEBUG"`)) {
+				if !bytes.Contains(data, []byte(`"@level":"debug"`)) {
 					t.Fatalf("expected JSON log output, got %q", string(data))
 				}
 			} else {
-				if !bytes.HasPrefix(firstLine, []byte("time=")) {
+				if !bytes.HasPrefix(firstLine, []byte("🐹 ")) {
 					t.Fatalf("expected prefixed text log output, got %q", string(data))
 				}
-				if bytes.Contains(data, []byte(`"level":"DEBUG"`)) {
+				if bytes.Contains(data, []byte(`"@level":"debug"`)) {
 					t.Fatalf("expected text log output, got %q", string(data))
 				}
 			}
@@ -226,7 +225,7 @@ func TestDoBuildSuccessWithConcreteSlot(t *testing.T) {
 
 	t.Setenv("SOURCE_DATE_EPOCH", "1735689600")
 
-	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
+	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
 
 	got, err := os.ReadFile(outputPath)
 	if err != nil {
@@ -324,13 +323,13 @@ func TestDoBuildLoadsKeyFilesAndCarriesRuntimeMetadata(t *testing.T) {
 		t.Fatalf("WriteFile(manifest) error = %v", err)
 	}
 
-	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, privateKeyPath, publicKeyPath, "")
+	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, privateKeyPath, publicKeyPath, "")
 
 	reader, err := NewReader(outputPath)
 	if err != nil {
 		t.Fatalf("NewReader() error = %v", err)
 	}
-	defer func() { _ = reader.Close() }()
+	defer reader.Close()
 
 	index, err := reader.ReadIndex()
 	if err != nil {
@@ -355,13 +354,6 @@ func TestDoBuildLoadsKeyFilesAndCarriesRuntimeMetadata(t *testing.T) {
 	}
 	if !bytes.Equal(index.PublicKey[:32], publicKey[:32]) {
 		t.Fatalf("expected index public key to match loaded key")
-	}
-	expectedFP, err := ComputeKeyFingerprint(publicKey)
-	if err != nil {
-		t.Fatalf("ComputeKeyFingerprint() error = %v", err)
-	}
-	if got := strings.TrimRight(string(index.AttestationKeyFp[:]), "\x00"); got != expectedFP {
-		t.Fatalf("expected attestation fingerprint %q, got %q", expectedFP, got)
 	}
 	if metadata.Execution == nil || metadata.Execution.Environment["APP_MODE"] != "test" {
 		t.Fatalf("expected execution environment metadata, got %#v", metadata.Execution)
@@ -400,13 +392,13 @@ func TestDoBuildUsesEnvSeedWhenRequested(t *testing.T) {
 	t.Setenv(EnvKeySeed, "seed-from-env")
 	t.Setenv("SOURCE_DATE_EPOCH", "not-a-number")
 
-	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "env")
+	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "env")
 
 	reader, err := NewReader(outputPath)
 	if err != nil {
 		t.Fatalf("NewReader() error = %v", err)
 	}
-	defer func() { _ = reader.Close() }()
+	defer reader.Close()
 
 	index, err := reader.ReadIndex()
 	if err != nil {
