@@ -52,6 +52,8 @@ dist/bin/
 **/target/**/bin/
 # Allow Rust source directories
 !src/*/src/bin/
+# Go build artifacts in source tree (go build produces binaries in module root)
+src/flavor-go/flavor-go-*
 core
 *.local.json
 archive_*

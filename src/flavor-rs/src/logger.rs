@@ -32,7 +32,7 @@ impl JsonLogger {
 
     /// Initialize the logger with specified level and source
     pub fn init_with_level(level_str: &str, source: &str) -> (String, String) {
-        let log_path = env::var("FLAVOR_LOG_PATH").ok();
+        let log_path = env::var(crate::env_vars::LOG_PATH).ok();
 
         // Parse JSON format from log level (e.g., "json:debug" or just "debug")
         let (use_json, actual_level) = if let Some(stripped) = level_str.strip_prefix("json:") {
@@ -99,8 +99,9 @@ impl JsonLogger {
     /// Initialize the JSON logger with default settings
     pub fn init() {
         // Check FLAVOR_LOG_LEVEL for JSON mode, default to trace for comprehensive diagnostics
-        let log_level = env::var("FLAVOR_LOG_LEVEL").unwrap_or_else(|_| "trace".to_string());
-        Self::init_with_level(&log_level, "FLAVOR_LOG_LEVEL");
+        let log_level =
+            env::var(crate::env_vars::LOG_LEVEL).unwrap_or_else(|_| "trace".to_string());
+        Self::init_with_level(&log_level, crate::env_vars::LOG_LEVEL);
     }
 }
 
@@ -159,7 +160,7 @@ impl Log for JsonLogger {
 
 /// Helper to check if JSON logging is enabled
 pub fn is_json_logging() -> bool {
-    env::var("FLAVOR_LOG_LEVEL")
+    env::var(crate::env_vars::LOG_LEVEL)
         .map(|v| v.starts_with("json"))
         .unwrap_or(false)
 }

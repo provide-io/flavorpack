@@ -217,7 +217,7 @@ ensure_helpers_built() {
        [ ! -f "$helpers_dir/bin/flavor-go-launcher-$platform$ext" ]; then
 
         # Check if we're in CI and helpers are pre-built
-        if [ -n "$CI" ] || [ -n "$GITHUB_ACTIONS" ]; then
+        if [ -n "${CI:-}" ]; then
             print_color "$YELLOW" "⚠️ Helpers not found at $helpers_dir/bin/"
             print_color "$YELLOW" "In CI, helpers should be pre-downloaded. Checking..."
             ls -la "$helpers_dir/bin/" 2>/dev/null || echo "bin/ directory doesn't exist"

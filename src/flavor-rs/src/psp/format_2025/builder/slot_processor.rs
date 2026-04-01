@@ -171,7 +171,7 @@ impl SlotProcessor {
     fn resolve_slot_path(&self, source: &str) -> Result<PathBuf> {
         let slot_path = if source.contains("{workenv}") {
             // Priority: 1. FLAVOR_WORKENV_BASE env var, 2. Current working directory
-            let base_dir = if let Ok(env_base) = std::env::var("FLAVOR_WORKENV_BASE") {
+            let base_dir = if let Ok(env_base) = std::env::var(crate::env_vars::WORKENV_BASE) {
                 info!("🔍 Using FLAVOR_WORKENV_BASE: {}", env_base);
                 PathBuf::from(env_base)
             } else {

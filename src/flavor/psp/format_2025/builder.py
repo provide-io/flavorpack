@@ -29,6 +29,7 @@ from flavor.config.defaults import (
     CAPABILITY_PAGE_ALIGNED,
     CAPABILITY_SIGNED,
 )
+from flavor.env_vars import WORKENV_BASE
 from flavor.exceptions import BuildError
 from flavor.psp.format_2025 import handlers
 from flavor.psp.format_2025.attestation import build_attestation
@@ -430,7 +431,7 @@ def _load_slot_data(slot: SlotMetadata) -> bytes:
     slot_path = Path(slot.source) if slot.source else Path()
     if "{workenv}" in str(slot_path):
         # Priority: 1. FLAVOR_WORKENV_BASE env var, 2. Current working directory
-        base_dir = os.environ.get("FLAVOR_WORKENV_BASE", str(Path.cwd()))
+        base_dir = os.environ.get(WORKENV_BASE, str(Path.cwd()))
         slot_path = Path(str(slot_path).replace("{workenv}", base_dir))
         logger.debug(f"📍 Resolved slot path: {slot.source} -> {slot_path} (base: {base_dir})")
 

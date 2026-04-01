@@ -106,17 +106,20 @@ pub(super) fn prepare_command(
     // Prepare environment
     let mut env_map: HashMap<String, String> = env::vars().collect();
 
-    // Set FLAVOR_CACHE to the HOST's cache directory BEFORE workenv env is applied
+    // Set FLAVOR_CACHE_DIR to the HOST's cache directory BEFORE workenv env is applied
     // This ensures we use the HOST's HOME, not the workenv's HOME
     // This ensures the packaged tool can access cached packages from the HOST
-    if !env_map.contains_key("FLAVOR_CACHE") {
+    if !env_map.contains_key(crate::env_vars::CACHE_DIR) {
         if let Some(home) = env_map.get("HOME") {
             let flavor_cache = std::path::PathBuf::from(home)
                 .join(crate::psp::format_2025::defaults::DEFAULT_CACHE_SUBDIR)
                 .to_string_lossy()
                 .to_string();
-            debug!("🗂️ Setting FLAVOR_CACHE to HOST cache: {}", flavor_cache);
-            env_map.insert("FLAVOR_CACHE".to_string(), flavor_cache);
+            debug!(
+                "🗂️ Setting FLAVOR_CACHE_DIR to HOST cache: {}",
+                flavor_cache
+            );
+            env_map.insert(crate::env_vars::CACHE_DIR.to_string(), flavor_cache);
         }
     }
 
@@ -134,8 +137,10 @@ pub(super) fn prepare_command(
             for (key, value) in workenv_env {
                 let expanded_value =
                     substitute_placeholders(value, workenv_path, &metadata.package);
-                // Don't override FLAVOR_CACHE if it's already set
-                if key != "FLAVOR_CACHE" || !env_map.contains_key("FLAVOR_CACHE") {
+                // Don't override FLAVOR_CACHE_DIR if it's already set
+                if key != crate::env_vars::CACHE_DIR
+                    || !env_map.contains_key(crate::env_vars::CACHE_DIR)
+                {
                     env_map.insert(key.clone(), expanded_value);
                 }
             }
@@ -149,7 +154,7 @@ pub(super) fn prepare_command(
 
     // Add FLAVOR_WORKENV
     env_map.insert(
-        "FLAVOR_WORKENV".to_string(),
+        crate::env_vars::WORKENV.to_string(),
         workenv_path.to_string_lossy().to_string(),
     );
 
