@@ -80,7 +80,7 @@ func TryAcquireLock(paths *WorkenvPaths, logger *slog.Logger) (bool, error) {
 	defer func() { _ = file.Close() }()
 
 	// Write our PID to the lock file
-	if _, err := lockFprintfFn(file, "%d\n", pid); err != nil {
+	if _, err := fmt.Fprintf(file, "%d\n", pid); err != nil {
 		_ = os.Remove(lockPath)
 		return false, err
 	}
