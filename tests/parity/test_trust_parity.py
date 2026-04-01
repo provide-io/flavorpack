@@ -18,6 +18,8 @@ import pytest
 
 from flavor.config.trust import compute_key_fingerprint, is_key_trusted
 
+pytestmark = [pytest.mark.cross_language, pytest.mark.ci, pytest.mark.security]
+
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 

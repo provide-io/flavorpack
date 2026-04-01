@@ -15,6 +15,8 @@ import pytest
 
 from flavor.cache import get_cache_dir
 
+pytestmark = [pytest.mark.cross_language, pytest.mark.ci, pytest.mark.integration]
+
 
 # ---------------------------------------------------------------------------
 # Cache dir respects XDG_CACHE_HOME

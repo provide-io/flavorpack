@@ -10,6 +10,8 @@ from flavor.config.policy import (
     merge_policy,
 )
 
+pytestmark = [pytest.mark.cross_language, pytest.mark.ci, pytest.mark.security]
+
 
 @pytest.mark.parity
 @pytest.mark.parity_category("Policy Enforcement")
