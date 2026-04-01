@@ -269,7 +269,7 @@ mod tests {
                 platform: PlatformInfo {
                     os: "linux".to_string(),
                     arch: "x86_64".to_string(),
-                    host: "linux/x86_64 test-host".to_string(),
+                    host: Some("linux/x86_64 test-host".to_string()),
                 },
             }),
             launcher: Some(LauncherInfo {
