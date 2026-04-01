@@ -136,3 +136,60 @@ func TestCleanupLifecycleSlotsRemovesInitSlots(t *testing.T) {
 		t.Fatalf("expected runtime slot to remain in slot paths")
 	}
 }
+
+func TestCopyHelpersReturnErrorsForMissingInputs(t *testing.T) {
+	t.Parallel()
+
+	root := t.TempDir()
+	missingFile := filepath.Join(root, "missing.txt")
+	destFile := filepath.Join(root, "dest.txt")
+	if err := copyFile(missingFile, destFile); err == nil {
+		t.Fatal("expected copyFile() to fail for missing source")
+	}
+
+	missingDir := filepath.Join(root, "missing-dir")
+	destDir := filepath.Join(root, "dest-dir")
+	if err := copyDirAll(missingDir, destDir); err == nil {
+		t.Fatal("expected copyDirAll() to fail for missing source directory")
+	}
+}
+
+func TestFixShebangsSkipsMissingBinDir(t *testing.T) {
+	t.Parallel()
+
+	logger := hclog.NewNullLogger()
+	if err := fixShebangs(filepath.Join(t.TempDir(), "missing-bin"), "/old", "/new", logger); err != nil {
+		t.Fatalf("fixShebangs() error = %v", err)
+	}
+}
+
+func TestCopyHelpersRejectBadDestinationTargets(t *testing.T) {
+	t.Parallel()
+
+	root := t.TempDir()
+	srcFile := filepath.Join(root, "source.txt")
+	if err := os.WriteFile(srcFile, []byte("payload"), 0o640); err != nil {
+		t.Fatalf("failed to write source file: %v", err)
+	}
+
+	destDir := filepath.Join(root, "dest-dir")
+	if err := os.MkdirAll(destDir, 0o755); err != nil {
+		t.Fatalf("failed to create destination dir: %v", err)
+	}
+	if err := copyFile(srcFile, destDir); err == nil {
+		t.Fatal("expected copyFile() to fail when destination is a directory")
+	}
+
+	srcDir := filepath.Join(root, "source-dir")
+	mustMkdirAllPSP(t, srcDir)
+	if err := os.WriteFile(filepath.Join(srcDir, "nested.txt"), []byte("nested"), 0o644); err != nil {
+		t.Fatalf("failed to write source tree: %v", err)
+	}
+	blockingFile := filepath.Join(root, "blocking-file")
+	if err := os.WriteFile(blockingFile, []byte("occupied"), 0o644); err != nil {
+		t.Fatalf("failed to write blocking file: %v", err)
+	}
+	if err := copyDirAll(srcDir, filepath.Join(blockingFile, "child")); err == nil {
+		t.Fatal("expected copyDirAll() to fail when destination parent is a file")
+	}
+}
