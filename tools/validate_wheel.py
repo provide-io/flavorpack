@@ -77,50 +77,48 @@ def validate_helpers(wheel_path: Path) -> tuple[bool, list[str]]:
             return True, messages  # Not an error for universal wheels
 
         # Expected helpers
-        expected = [
+        # Helpers are stored with platform/version suffix, e.g. "flavor-go-builder-darwin_arm64"
+        # or "flavor-go-launcher-0.3.21-windows_amd64.exe".  Match by prefix.
+        expected_prefixes = [
             "flavor-go-builder",
             "flavor-go-launcher",
             "flavor-rs-builder",
             "flavor-rs-launcher",
         ]
 
-        for helper in expected:
-            helper_path = helpers_dir / helper
-            if not helper_path.exists():
-                # Check with .exe extension
-                helper_path = helpers_dir / f"{helper}.exe"
+        all_helper_files = list(helpers_dir.iterdir()) if helpers_dir.exists() else []
 
-            if helper_path.exists():
-                # Check if executable
-                if not helper_path.is_file():
-                    messages.append(f"  ❌ {helper} is not a file")
-                    success = False
-                else:
-                    size_kb = helper_path.stat().st_size / 1024
-                    messages.append(f"  ✓ {helper} ({size_kb:.0f} KB)")
-
-                    # Make executable first
-                    with contextlib.suppress(builtins.BaseException):
-                        helper_path.chmod(0o755)
-
-                    # Try to execute with --version
-                    try:
-                        result = subprocess.run(
-                            [str(helper_path), "--version"],
-                            capture_output=True,
-                            text=True,
-                            timeout=5,
-                        )
-                        if result.returncode == 0:
-                            version_line = result.stdout.strip().split("\n")[0]
-                            messages.append(f"    Version: {version_line}")
-                        else:
-                            messages.append("    ⚠️  Failed to run --version")
-                    except Exception as e:
-                        messages.append(f"    ⚠️  Cannot execute: {e}")
-            else:
-                messages.append(f"  ❌ {helper} not found")
+        for prefix in expected_prefixes:
+            # Find any file whose name starts with the prefix
+            matches = [f for f in all_helper_files if f.name.startswith(prefix) and f.is_file()]
+            if not matches:
+                messages.append(f"  ❌ {prefix} not found")
                 success = False
+                continue
+
+            for helper_path in matches:
+                size_kb = helper_path.stat().st_size / 1024
+                messages.append(f"  ✓ {helper_path.name} ({size_kb:.0f} KB)")
+
+                # Make executable first
+                with contextlib.suppress(builtins.BaseException):
+                    helper_path.chmod(0o755)
+
+                # Try to execute with --version
+                try:
+                    result = subprocess.run(
+                        [str(helper_path), "--version"],
+                        capture_output=True,
+                        text=True,
+                        timeout=5,
+                    )
+                    if result.returncode == 0:
+                        version_line = result.stdout.strip().split("\n")[0]
+                        messages.append(f"    Version: {version_line}")
+                    else:
+                        messages.append("    ⚠️  Failed to run --version")
+                except Exception as e:
+                    messages.append(f"    ⚠️  Cannot execute: {e}")
 
     return success, messages
 
