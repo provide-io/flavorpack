@@ -170,6 +170,49 @@ pub fn merge_policy(pkg: PackagePolicy, op: OperatorPolicy) -> EffectivePolicy {
     }
 }
 
+/// Check whether the current process is running with Windows Administrator privileges.
+/// Uses `CheckTokenMembership` against the built-in Administrators SID (S-1-5-32-544).
+/// Passing `None` as the token handle checks the effective token of the current process.
+#[cfg(target_os = "windows")]
+#[allow(unsafe_code)]
+fn is_windows_admin() -> bool {
+    use windows::Win32::Foundation::BOOL;
+    use windows::Win32::Security::{
+        AllocateAndInitializeSid, CheckTokenMembership, DOMAIN_ALIAS_RID_ADMINS, FreeSid, PSID,
+        SECURITY_BUILTIN_DOMAIN_RID, SID_IDENTIFIER_AUTHORITY,
+    };
+
+    const NT_AUTHORITY: SID_IDENTIFIER_AUTHORITY = SID_IDENTIFIER_AUTHORITY {
+        Value: [0, 0, 0, 0, 0, 5],
+    };
+
+    unsafe {
+        let mut admin_sid = PSID::default();
+        if AllocateAndInitializeSid(
+            &NT_AUTHORITY,
+            2,
+            SECURITY_BUILTIN_DOMAIN_RID,
+            DOMAIN_ALIAS_RID_ADMINS,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            &mut admin_sid,
+        )
+        .is_err()
+        {
+            return false;
+        }
+
+        let mut is_member = BOOL::default();
+        let ok = CheckTokenMembership(None, admin_sid, &mut is_member);
+        let _ = FreeSid(admin_sid);
+        ok.is_ok() && is_member.as_bool()
+    }
+}
+
 /// Enforce policy against current runtime environment.
 /// Returns Err with a descriptive message on first violation.
 #[allow(unsafe_code)] // Required for libc::geteuid() FFI call
@@ -188,14 +231,15 @@ pub fn enforce_policy(
         ));
     }
 
-    // Root check
+    // Root / Administrator check
     #[cfg(unix)]
     if policy.refuse_root && unsafe { libc::geteuid() } == 0 {
         return Err("refused to run as root".to_string());
     }
-    // Windows: Administrator check is not yet implemented.
-    // TODO: implement using windows-sys CheckTokenMembership on the Administrators SID.
-    // FEP-0004 §7.2 requires blocking execution for Windows Administrators when refuse_root=true.
+    #[cfg(target_os = "windows")]
+    if policy.refuse_root && is_windows_admin() {
+        return Err("refused to run as Administrator".to_string());
+    }
 
     // Age check
     if let Some(max_days) = policy.max_age_days {
