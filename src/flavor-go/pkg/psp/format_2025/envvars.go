@@ -1,7 +1,9 @@
+// src/flavor-go/pkg/psp/format_2025/envvars.go
 package format_2025
 
 // Environment variable names used by the Flavor launcher and builder.
-// All FLAVOR_* env vars should be referenced via these constants, never as inline strings.
+// All FLAVOR_* env vars must be referenced via these constants, never as inline strings.
+// These re-export the canonical values from pkg/envvars for use within this package.
 const (
 	// Logging
 	EnvLogLevel         = "FLAVOR_LOG_LEVEL"
@@ -25,4 +27,18 @@ const (
 	EnvLauncherBin = "FLAVOR_LAUNCHER_BIN"
 	EnvKeySeed     = "FLAVOR_KEY_SEED"
 	EnvValidation  = "FLAVOR_VALIDATION"
+
+	// Launcher IPC / CLI mode
+	EnvLauncherCLI             = "FLAVOR_LAUNCHER_CLI"
+	EnvLauncherArgs            = "FLAVOR_LAUNCHER_ARGS"
+	EnvLauncherBundle          = "FLAVOR_LAUNCHER_BUNDLE"
+	EnvLauncherMode            = "FLAVOR_LAUNCHER_MODE"
+	EnvLauncherHelper          = "FLAVOR_LAUNCHER_HELPER"
+	EnvLauncherSubprocess      = "FLAVOR_LAUNCHER_SUBPROCESS"
+	EnvLauncherSpawnExitHelper = "FLAVOR_LAUNCHER_SPAWN_EXIT_HELPER"
+
+	// Runtime env vars injected into the child process
+	EnvCache           = "FLAVOR_CACHE"
+	EnvOriginalCommand = "FLAVOR_ORIGINAL_COMMAND"
+	EnvCommandName     = "FLAVOR_COMMAND_NAME"
 )

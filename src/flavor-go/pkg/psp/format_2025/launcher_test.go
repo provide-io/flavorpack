@@ -39,6 +39,6 @@ func TestLaunchWithLogLevelInfoOnBuiltBundle(t *testing.T) {
 		t.Fatalf("expected built bundle to exist: %v", err)
 	}
 
-	t.Setenv("FLAVOR_LAUNCHER_CLI", "1")
+	t.Setenv(EnvLauncherCLI, "1")
 	LaunchWithLogLevel(outputPath, []string{"info"}, "trace", "test")
 }
