@@ -383,7 +383,10 @@ mod tests {
     /// The Windows branch is verified at compile time via `cfg!(windows)`.
     #[test]
     fn test_run_command_path_has_correct_bin_dir_and_separator() {
-        let workenv_dir = Path::new("/tmp/test_workenv");
+        // Use a platform-appropriate temp path so path separator assertions work on Windows.
+        let temp = tempfile::tempdir().expect("tempdir");
+        let workenv = temp.path().join("test_workenv");
+        let workenv_dir: &Path = &workenv;
         let original_path = env::var("PATH").unwrap_or_default();
         let expected_path = build_workenv_path(workenv_dir, Some(&original_path));
 
@@ -391,15 +394,18 @@ mod tests {
         #[cfg(not(windows))]
         {
             assert!(
-                expected_path.starts_with("/tmp/test_workenv/bin:"),
-                "PATH should start with workenv/bin: but was: {expected_path}"
+                expected_path.contains("/test_workenv/bin:"),
+                "PATH should contain workenv/bin: but was: {expected_path}"
             );
         }
 
         #[cfg(windows)]
         {
+            // Use platform-joined path for correct separator assertion.
+            let sep = std::path::MAIN_SEPARATOR;
+            let expected_scripts = format!("{sep}test_workenv{sep}Scripts;");
             assert!(
-                expected_path.contains("\\test_workenv\\Scripts;"),
+                expected_path.contains(&expected_scripts),
                 "PATH should contain workenv\\Scripts; but was: {expected_path}"
             );
         }

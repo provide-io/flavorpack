@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/hashicorp/go-hclog"
@@ -34,8 +35,11 @@ func TestCopyFilePreservesContentAndMode(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to stat copied file: %v", err)
 	}
-	if info.Mode().Perm() != 0o740 {
-		t.Fatalf("expected copied mode 0740, got %o", info.Mode().Perm())
+	// Windows does not support Unix-style permission bits; skip mode check.
+	if runtime.GOOS != "windows" {
+		if info.Mode().Perm() != 0o740 {
+			t.Fatalf("expected copied mode 0740, got %o", info.Mode().Perm())
+		}
 	}
 }
 

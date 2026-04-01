@@ -71,6 +71,7 @@ fn select_workenv_paths(
 type SlotPaths = std::collections::HashMap<usize, PathBuf>;
 type ExtractionResult = ((SlotPaths, Vec<PathBuf>), PathBuf);
 
+#[cfg(unix)]
 fn executable_is_script(executable: &Path) -> bool {
     if let Ok(file) = fs::File::open(executable) {
         use std::io::{BufRead, BufReader};
@@ -634,6 +635,7 @@ mod tests {
     use std::fs;
     use tempfile::tempdir;
 
+    #[cfg(unix)]
     #[test]
     fn executable_is_script_detects_shebang_files() {
         let temp = tempdir().expect("tempdir");
@@ -643,6 +645,7 @@ mod tests {
         assert!(executable_is_script(&script));
     }
 
+    #[cfg(unix)]
     #[test]
     fn executable_is_script_rejects_plain_files() {
         let temp = tempdir().expect("tempdir");
@@ -652,6 +655,7 @@ mod tests {
         assert!(!executable_is_script(&binary));
     }
 
+    #[cfg(unix)]
     #[test]
     fn executable_is_script_rejects_missing_files() {
         let temp = tempdir().expect("tempdir");
