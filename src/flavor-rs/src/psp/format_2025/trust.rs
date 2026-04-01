@@ -128,13 +128,20 @@ fn load_pub_key_file(path: &Path) -> Result<TrustedKey, String> {
 fn parse_ed25519_pem(pem_bytes: &[u8]) -> Result<Vec<u8>, String> {
     let pem_str = std::str::from_utf8(pem_bytes).map_err(|e| e.to_string())?;
     let pem_obj = pem::parse(pem_str).map_err(|e| e.to_string())?;
-    // SubjectPublicKeyInfo (PUBLIC KEY): OID prefix (12 bytes) + 32-byte raw key.
-    // Raw key is always the last 32 bytes of the DER content.
     let der = pem_obj.contents();
-    if der.len() < 32 {
-        return Err(format!("PEM content too short: {} bytes", der.len()));
+    Ok(extract_ed25519_raw_key(der)?.to_vec())
+}
+
+fn extract_ed25519_raw_key(der: &[u8]) -> Result<&[u8], String> {
+    // Ed25519 OID: 1.3.101.112 → DER: 06 03 2b 65 70
+    const ED25519_OID: &[u8] = &[0x06, 0x03, 0x2b, 0x65, 0x70];
+    if !der.windows(ED25519_OID.len()).any(|w| w == ED25519_OID) {
+        return Err("key is not an Ed25519 public key (OID mismatch)".to_string());
     }
-    Ok(der[der.len() - 32..].to_vec())
+    if der.len() < 32 {
+        return Err("DER too short to contain Ed25519 key".to_string());
+    }
+    Ok(&der[der.len() - 32..])
 }
 
 /// Loads all trusted keys from user and optionally system store.
@@ -227,5 +234,22 @@ mod tests {
         let result = load_keys_from_dir(dir.path());
         // Bad file is skipped; map stays empty
         assert!(result.is_empty(), "bad key file should be skipped");
+    }
+
+    #[test]
+    fn test_extract_ed25519_raw_key_wrong_oid() {
+        // A DER blob without the Ed25519 OID should fail
+        let fake_der = vec![0x30u8, 0x01, 0x00];
+        let result = extract_ed25519_raw_key(&fake_der);
+        assert!(result.is_err(), "should reject non-Ed25519 key");
+    }
+
+    #[test]
+    fn test_extract_ed25519_raw_key_too_short_with_oid() {
+        // DER has correct OID but is too short to contain 32-byte key
+        let mut fake_der = vec![0x06u8, 0x03, 0x2b, 0x65, 0x70];
+        fake_der.extend_from_slice(&[0u8; 10]); // only 10 more bytes, not 32
+        let result = extract_ed25519_raw_key(&fake_der);
+        assert!(result.is_err(), "should reject DER that is too short");
     }
 }

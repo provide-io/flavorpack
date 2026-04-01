@@ -129,6 +129,9 @@ pub(super) fn create_metadata(
             .as_ref()
             .and_then(|v| serde_json::from_value::<WorkenvInfo>(v.clone()).ok()),
         setup_commands: manifest.setup_commands.clone(),
+        // Policy is not carried through the Rust builder manifest; launchers read it
+        // from the signed metadata JSON produced by the Python orchestrator.
+        policy: None,
     })
 }
 

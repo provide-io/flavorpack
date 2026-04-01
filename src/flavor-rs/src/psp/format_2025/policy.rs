@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Package-declared constraints (from package metadata).
-#[derive(Default, Debug)]
+#[derive(Default, Debug, serde::Deserialize)]
 pub struct PackagePolicy {
     pub platforms: Vec<String>,
     pub refuse_root: bool,
@@ -86,7 +86,13 @@ fn parse_policy_file(content: &str, policy: &mut OperatorPolicy) {
             continue;
         }
         let key = parts[0].trim();
-        let val = parts[1].trim();
+        // Strip inline comments from value
+        let raw_val = parts[1];
+        let val = if let Some(idx) = raw_val.find('#') {
+            raw_val[..idx].trim()
+        } else {
+            raw_val.trim()
+        };
         match (section.as_str(), key) {
             ("trust", "require_trusted_key") => policy.require_trusted_key = val == "true",
             ("trust", "use_os_keychain") => policy.use_os_keychain = val == "true",
@@ -96,10 +102,26 @@ fn parse_policy_file(content: &str, policy: &mut OperatorPolicy) {
                     policy.max_age_days = Some(n);
                 }
             }
+            ("execution", "allow_platforms") => {
+                policy.allow_platforms = parse_toml_string_list(val);
+            }
             ("attestation", "require_sbom") => policy.require_sbom = val == "true",
             _ => {}
         }
     }
+}
+
+fn parse_toml_string_list(val: &str) -> Vec<String> {
+    let val = val.trim();
+    if !val.starts_with('[') || !val.ends_with(']') {
+        return Vec::new();
+    }
+    let inner = &val[1..val.len() - 1];
+    inner
+        .split(',')
+        .map(|s| s.trim().trim_matches(|c| c == '"' || c == '\'').to_string())
+        .filter(|s| !s.is_empty())
+        .collect()
 }
 
 /// Load operator policy from system and user files.
@@ -171,6 +193,9 @@ pub fn enforce_policy(
     if policy.refuse_root && unsafe { libc::geteuid() } == 0 {
         return Err("refused to run as root".to_string());
     }
+    // Windows: Administrator check is not yet implemented.
+    // TODO: implement using windows-sys CheckTokenMembership on the Administrators SID.
+    // FEP-0004 §7.2 requires blocking execution for Windows Administrators when refuse_root=true.
 
     // Age check
     if let Some(max_days) = policy.max_age_days {
@@ -386,5 +411,52 @@ mod tests {
         let mut policy = OperatorPolicy::default();
         parse_policy_file(content, &mut policy);
         assert!(policy.require_trusted_key);
+    }
+
+    #[test]
+    fn test_parse_policy_file_inline_comment() {
+        let content = "[execution]\nrefuse_root = true # disable if needed\n";
+        let mut policy = OperatorPolicy::default();
+        parse_policy_file(content, &mut policy);
+        assert!(policy.refuse_root, "should strip inline comment");
+    }
+
+    #[test]
+    fn test_parse_policy_file_allow_platforms() {
+        let content = "[execution]\nallow_platforms = [\"linux_amd64\", \"linux_arm64\"]\n";
+        let mut policy = OperatorPolicy::default();
+        parse_policy_file(content, &mut policy);
+        assert_eq!(policy.allow_platforms, vec!["linux_amd64", "linux_arm64"]);
+    }
+
+    #[test]
+    fn test_parse_toml_string_list_single_quotes() {
+        let result = parse_toml_string_list("['darwin_arm64', 'linux_amd64']");
+        assert_eq!(result, vec!["darwin_arm64", "linux_amd64"]);
+    }
+
+    #[test]
+    fn test_parse_toml_string_list_empty() {
+        let result = parse_toml_string_list("[]");
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_parse_toml_string_list_invalid() {
+        let result = parse_toml_string_list("not_a_list");
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_enforce_policy_refuse_root_current_platform() {
+        // On Unix, we test the geteuid path. We cannot easily test the Windows path.
+        // This test documents the expected behavior.
+        let eff = EffectivePolicy {
+            refuse_root: true,
+            ..Default::default()
+        };
+        // On non-root Unix: should pass. On root Unix: would fail.
+        // We cannot control UID in tests, so just verify the function runs without panic.
+        let _ = enforce_policy(&eff, 0, false);
     }
 }
