@@ -381,6 +381,10 @@ mod tests {
         let slot_count = index.slot_count;
         assert_eq!(package_size, bytes.len() as u64);
         assert_eq!(slot_count, 1);
+        assert_ne!(
+            index.attestation_key_fp, [0u8; 64],
+            "attestation_key_fp should be populated for signed bundles"
+        );
     }
 
     // This test verifies that on non-Windows, the file is truncated before the
