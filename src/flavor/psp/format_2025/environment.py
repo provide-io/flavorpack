@@ -23,6 +23,7 @@ from provide.foundation.platform import (
     get_platform_string,
 )
 
+from flavor.config.defaults import ENV_ARCH, ENV_CPU_TYPE, ENV_OS, ENV_OS_VERSION, ENV_PLATFORM
 from flavor.utils.log_guards import is_trace_enabled
 
 plog = get_logger()
