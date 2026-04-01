@@ -85,7 +85,7 @@ repos:
 
       - id: rust-test
         name: cargo test
-        entry: bash -c 'cd src/flavor-rs && cargo test'
+        entry: bash -c 'cd src/flavor-rs && RUST_TEST_THREADS=1 cargo test'
         language: system
         pass_filenames: false
         always_run: true
