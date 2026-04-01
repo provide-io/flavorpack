@@ -146,7 +146,7 @@ fn get_launcher(options: &BuildOptions) -> Result<Vec<u8>> {
 
     let launcher_path = if let Some(ref explicit_path) = options.launcher_bin {
         explicit_path.clone()
-    } else if let Ok(explicit_path) = std::env::var("FLAVOR_LAUNCHER_BIN") {
+    } else if let Ok(explicit_path) = std::env::var(crate::env_vars::LAUNCHER_BIN) {
         PathBuf::from(explicit_path)
     } else {
         return Err(FlavorError::Generic(

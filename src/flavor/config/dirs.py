@@ -13,6 +13,7 @@ import sys
 from provide.foundation.utils.environment import get_str
 
 from flavor.console import get_command_logger
+from flavor.env_vars import CONFIG_DIR, TRUSTED_KEYS_DIR
 
 log = get_command_logger("config.dirs")
 
@@ -26,7 +27,7 @@ def get_config_dir() -> Path:
     - ~/.config/flavor by default
     """
     # Check FLAVOR_CONFIG_DIR override first
-    config_dir = get_str("FLAVOR_CONFIG_DIR")
+    config_dir = get_str(CONFIG_DIR)
     if config_dir:
         if log.is_trace_enabled():
             log.trace(f"🗂️ Using FLAVOR_CONFIG_DIR: {config_dir}")
@@ -81,7 +82,7 @@ def get_trusted_keys_dir(*, system: bool = False) -> Path:
         return result
 
     # Check FLAVOR_TRUSTED_KEYS_DIR override first
-    trusted_keys_dir = get_str("FLAVOR_TRUSTED_KEYS_DIR")
+    trusted_keys_dir = get_str(TRUSTED_KEYS_DIR)
     if trusted_keys_dir:
         if log.is_trace_enabled():
             log.trace(f"🗂️ Using FLAVOR_TRUSTED_KEYS_DIR: {trusted_keys_dir}")

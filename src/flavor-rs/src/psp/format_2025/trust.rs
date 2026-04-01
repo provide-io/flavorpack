@@ -24,14 +24,14 @@ pub struct TrustedKey {
 /// Priority: FLAVOR_TRUSTED_KEYS_DIR → FLAVOR_CONFIG_DIR/trusted-keys
 ///           → XDG_CONFIG_HOME/flavor/trusted-keys → ~/.config/flavor/trusted-keys
 pub fn get_trusted_keys_dir() -> PathBuf {
-    if let Ok(dir) = env::var("FLAVOR_TRUSTED_KEYS_DIR") {
+    if let Ok(dir) = env::var(crate::env_vars::TRUSTED_KEYS_DIR) {
         return PathBuf::from(dir);
     }
     get_config_root().join("trusted-keys")
 }
 
 fn get_config_root() -> PathBuf {
-    if let Ok(d) = env::var("FLAVOR_CONFIG_DIR") {
+    if let Ok(d) = env::var(crate::env_vars::CONFIG_DIR) {
         return PathBuf::from(d);
     }
     if let Ok(d) = env::var("XDG_CONFIG_HOME") {

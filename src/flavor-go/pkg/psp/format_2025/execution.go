@@ -260,7 +260,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 
 	// Create WorkenvPaths structure
 	var paths *WorkenvPaths
-	if customWorkenv := os.Getenv("FLAVOR_WORKENV"); customWorkenv != "" {
+	if customWorkenv := os.Getenv(EnvWorkenv); customWorkenv != "" {
 		// Use custom workenv path from environment variable
 		logger.Info("📁 Using custom work environment from FLAVOR_WORKENV", "path", customWorkenv)
 		// Extract cache dir from custom workenv (go up two levels)
@@ -316,7 +316,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 	}
 
 	// Check if we should use cache
-	useCache := os.Getenv("FLAVOR_WORKENV_CACHE") != "false" && os.Getenv("FLAVOR_WORKENV_CACHE") != "0"
+	useCache := os.Getenv(EnvWorkenvCache) != "false" && os.Getenv(EnvWorkenvCache) != "0"
 
 	workenvValid := false
 	if useCache {

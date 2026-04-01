@@ -40,7 +40,7 @@ pub fn get_platform_string() -> String {
 pub fn get_cache_dir() -> std::path::PathBuf {
     use std::path::PathBuf;
 
-    if let Ok(cache_dir) = env::var("FLAVOR_CACHE") {
+    if let Ok(cache_dir) = env::var(crate::env_vars::CACHE_DIR) {
         return PathBuf::from(cache_dir);
     }
 

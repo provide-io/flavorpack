@@ -76,6 +76,7 @@ from taster.commands.launcher_test import launcher_test_command
 from taster.commands.mmap import mmap_command
 from taster.commands.package import package_command
 from taster.commands.pipe import pipe_command
+from taster.commands.security import security_group
 from taster.commands.slot_test import slot_test_command
 
 
@@ -124,6 +125,7 @@ cli.add_command(exit_command)
 cli.add_command(file_command)
 cli.add_command(launcher_test_command)
 cli.add_command(slot_test_command)
+cli.add_command(security_group, name="security")
 
 
 def main() -> None:

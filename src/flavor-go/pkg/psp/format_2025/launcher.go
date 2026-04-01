@@ -25,12 +25,12 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 	if cliLogLevel != "" {
 		logLevel = cliLogLevel
 		logSource = cliLogSource
-	} else if envLevel := os.Getenv("FLAVOR_LAUNCHER_LOG_LEVEL"); envLevel != "" {
+	} else if envLevel := os.Getenv(EnvLauncherLogLevel); envLevel != "" {
 		logLevel = envLevel
-		logSource = "FLAVOR_LAUNCHER_LOG_LEVEL"
-	} else if envLevel := os.Getenv("FLAVOR_LOG_LEVEL"); envLevel != "" {
+		logSource = EnvLauncherLogLevel
+	} else if envLevel := os.Getenv(EnvLogLevel); envLevel != "" {
 		logLevel = envLevel
-		logSource = "FLAVOR_LOG_LEVEL"
+		logSource = EnvLogLevel
 	} else {
 		logLevel = "trace" // Default to trace for comprehensive diagnostics
 		logSource = "default"
@@ -53,7 +53,7 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 	var output io.Writer = os.Stderr
 
 	// Support log file output
-	if logPath := os.Getenv("FLAVOR_LOG_PATH"); logPath != "" {
+	if logPath := os.Getenv(EnvLogPath); logPath != "" {
 		if file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644); err == nil {
 			defer file.Close()
 			output = file
@@ -187,7 +187,7 @@ func Launch(exePath string, args []string) {
 // execBundle prepares and executes a bundle
 func execBundle(exePath string, args []string, userCwd string, logger hclog.Logger) error {
 	// Check execution mode
-	execMode := os.Getenv("FLAVOR_EXEC_MODE")
+	execMode := os.Getenv(EnvExecMode)
 	useSpawn := strings.ToLower(execMode) == "spawn"
 
 	// Force spawn mode on Windows (exec mode not supported)

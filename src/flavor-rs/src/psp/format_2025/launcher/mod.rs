@@ -200,7 +200,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
     debug!("🔧 Command: {}", metadata.execution.command);
 
     // Get work environment paths
-    let paths = if let Ok(custom_workenv) = env::var("FLAVOR_WORKENV") {
+    let paths = if let Ok(custom_workenv) = env::var(crate::env_vars::WORKENV) {
         // Use custom workenv path from environment variable
         info!(
             "📁 Using custom work environment from FLAVOR_WORKENV: {}",
@@ -255,7 +255,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
 
     // Check work environment validity
     // If FLAVOR_WORKENV_CACHE is set to false, always treat as invalid to force extraction
-    let use_cache = env::var("FLAVOR_WORKENV_CACHE")
+    let use_cache = env::var(crate::env_vars::WORKENV_CACHE)
         .map(|v| v.to_lowercase() != "false" && v != "0")
         .unwrap_or(true);
 
@@ -498,7 +498,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
         prepare_command(&metadata, &workenv_path, package_path, args)?;
 
     // Get execution mode
-    let exec_mode = env::var("FLAVOR_EXEC_MODE").unwrap_or_else(|_| "exec".to_string());
+    let exec_mode = env::var(crate::env_vars::EXEC_MODE).unwrap_or_else(|_| "exec".to_string());
     let use_exec = exec_mode.to_lowercase() != "spawn";
 
     if use_exec {
