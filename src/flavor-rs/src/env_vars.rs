@@ -33,3 +33,8 @@ pub const VALIDATION: &str = "FLAVOR_VALIDATION";
 
 /// Enable metadata debug output in reader
 pub const DEBUG_METADATA: &str = "FLAVOR_DEBUG_METADATA";
+
+/// Binary name passed to launched process
+pub const COMMAND_NAME: &str = "FLAVOR_COMMAND_NAME";
+/// Original command path passed to launched process
+pub const ORIGINAL_COMMAND: &str = "FLAVOR_ORIGINAL_COMMAND";
