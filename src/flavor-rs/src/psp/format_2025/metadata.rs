@@ -29,6 +29,9 @@ pub struct Metadata {
     pub workenv: Option<WorkenvInfo>,
     #[serde(default)]
     pub setup_commands: Vec<Value>,
+    /// Package-declared execution policy (FEP-0004 §8).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub policy: Option<Value>,
 }
 
 /// Package information
