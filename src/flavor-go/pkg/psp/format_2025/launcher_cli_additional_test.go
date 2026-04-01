@@ -1,17 +1,13 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 func runLauncherCLIAdditionalScenario(t *testing.T, mode, bundle string, args []string) (string, error) {
@@ -19,11 +15,11 @@ func runLauncherCLIAdditionalScenario(t *testing.T, mode, bundle string, args []
 
 	cmd := exec.Command(os.Args[0], "-test.run=TestLauncherCLIAdditionalHelper")
 	cmd.Env = filteredEnv(
-		EnvLauncherHelper+"=1",
-		EnvLauncherMode+"="+mode,
-		EnvLauncherBundle+"="+bundle,
-		EnvLauncherArgs+"="+strings.Join(args, "\x1f"),
-		EnvLauncherCLI+"=1",
+		"FLAVOR_LAUNCHER_HELPER=1",
+		"FLAVOR_LAUNCHER_MODE="+mode,
+		"FLAVOR_LAUNCHER_BUNDLE="+bundle,
+		"FLAVOR_LAUNCHER_ARGS="+strings.Join(args, "\x1f"),
+		"FLAVOR_LAUNCHER_CLI=1",
 	)
 
 	output, err := cmd.CombinedOutput()
@@ -31,19 +27,19 @@ func runLauncherCLIAdditionalScenario(t *testing.T, mode, bundle string, args []
 }
 
 func TestLauncherCLIAdditionalHelper(t *testing.T) {
-	if os.Getenv(EnvLauncherHelper) != "1" {
+	if os.Getenv("FLAVOR_LAUNCHER_HELPER") != "1" {
 		return
 	}
 
-	bundle := os.Getenv(EnvLauncherBundle)
-	rawArgs := os.Getenv(EnvLauncherArgs)
+	bundle := os.Getenv("FLAVOR_LAUNCHER_BUNDLE")
+	rawArgs := os.Getenv("FLAVOR_LAUNCHER_ARGS")
 	var args []string
 	if rawArgs != "" {
 		args = strings.Split(rawArgs, "\x1f")
 	}
 
-	logger := logging.NewNullLogger()
-	switch os.Getenv(EnvLauncherMode) {
+	logger := hclog.NewNullLogger()
+	switch os.Getenv("FLAVOR_LAUNCHER_MODE") {
 	case "launch":
 		LaunchWithLogLevel(bundle, args, "", "")
 	case "show-metadata":
@@ -58,7 +54,7 @@ func TestLauncherCLIAdditionalHelper(t *testing.T) {
 		}
 		extractSlot(bundle, args[0], args[1], logger)
 	default:
-		t.Fatalf("unsupported launcher CLI helper mode %q", os.Getenv(EnvLauncherMode))
+		t.Fatalf("unsupported launcher CLI helper mode %q", os.Getenv("FLAVOR_LAUNCHER_MODE"))
 	}
 }
 
@@ -151,17 +147,10 @@ func TestLauncherCLIAdditionalErrorPaths(t *testing.T) {
 		},
 		{
 			// showMetadata writes to os.Stderr directly.
-			// Windows reports "The system cannot find the file specified."
-			// Unix reports "no such file or directory" — accept either.
-			name:   "show metadata missing bundle",
-			mode:   "show-metadata",
-			bundle: missingBundle,
-			want: func() string {
-				if runtime.GOOS == "windows" {
-					return "cannot find the file"
-				}
-				return "no such file"
-			}(),
+			name:      "show metadata missing bundle",
+			mode:      "show-metadata",
+			bundle:    missingBundle,
+			want:      "no such file",
 			wantExit:  1,
 			wantError: true,
 		},
