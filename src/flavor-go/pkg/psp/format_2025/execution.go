@@ -134,12 +134,16 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		return nil, fmt.Errorf("failed to read index: %w", err)
 	}
 
-	// Warn if signing key is not in the trusted store (backwards-compatible — no error if store missing)
+	// Check signing key trust status.
+	// keyTrusted is false only when the trusted store exists AND the key is explicitly absent.
+	// It stays true when: no attestation fingerprint, store missing (nil), or key is trusted.
+	keyTrusted := true
 	if fp := strings.TrimRight(string(index.AttestationKeyFp[:]), "\x00"); fp != "" {
 		trusted, err := IsKeyTrusted(fp, true)
 		if err != nil {
 			logger.Warn("⚠️ Failed to check trusted key store", "error", err)
 		} else if trusted != nil && !*trusted {
+			keyTrusted = false
 			fmt.Fprintf(os.Stderr, "⚠️ SECURITY WARNING: Package signing key is not in the trusted store\n")
 			fmt.Fprintf(os.Stderr, "⚠️ Key fingerprint: %s\n", fp)
 			fmt.Fprintf(os.Stderr, "⚠️ Use 'flavor trust add <key-file>' to trust this key\n")
@@ -252,7 +256,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		}
 	}
 
-	if enforceErr := EnforcePolicy(effective, int64(index.BuildTimestamp), hasSBOM); enforceErr != nil {
+	if enforceErr := EnforcePolicy(effective, int64(index.BuildTimestamp), hasSBOM, keyTrusted); enforceErr != nil {
 		logger.Error("❌ Policy violation", "error", enforceErr)
 		return nil, fmt.Errorf("policy violation: %w", enforceErr)
 	}

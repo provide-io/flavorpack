@@ -17,7 +17,6 @@ from provide.foundation.crypto import format_checksum as calculate_checksum
 from provide.foundation.platform import get_arch_name, get_os_name, get_platform_string
 from provide.foundation.utils import get_version
 
-from flavor.env_vars import INCLUDE_BUILD_HOST
 from flavor.psp.format_2025.spec import BuildSpec
 from flavor.psp.format_2025.validation import extract_package_metadata
 from flavor.psp.metadata.paths import validate_metadata_dict
@@ -188,12 +187,12 @@ def create_build_metadata(deterministic: bool = False) -> dict[str, Any]:
     # Only add non-deterministic fields if not in deterministic mode
     if not deterministic:
         build_meta["timestamp"] = datetime.datetime.now(datetime.UTC).isoformat()
-        if os.environ.get(INCLUDE_BUILD_HOST) == "1":
+        if os.environ.get("FLAVOR_INCLUDE_BUILD_HOST") == "1":
             platform_info["host"] = socket.gethostname()
     else:
         # Use fixed timestamp for deterministic builds
         build_meta["timestamp"] = "2025-01-01T00:00:00+00:00"
-        if os.environ.get(INCLUDE_BUILD_HOST) == "1":
+        if os.environ.get("FLAVOR_INCLUDE_BUILD_HOST") == "1":
             platform_info["host"] = "deterministic-build"
 
     return build_meta

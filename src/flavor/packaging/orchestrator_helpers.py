@@ -16,7 +16,6 @@ from provide.foundation.file.formats import write_json
 from provide.foundation.platform import is_windows
 from provide.foundation.serialization import json_dumps
 
-from flavor.env_vars import BUILDER_BIN, LAUNCHER_BIN
 from flavor.exceptions import BuildError
 from flavor.packaging.defaults import DEFAULT_ENV_ISOLATION_UNSET
 
@@ -292,7 +291,7 @@ def find_builder_executable(builder_bin: str | None) -> Path:
         logger.info(f"Using custom builder: {path}")
         return path
 
-    env_bin = os.environ.get(BUILDER_BIN)
+    env_bin = os.environ.get("FLAVOR_BUILDER_BIN")
     if env_bin:
         path = Path(env_bin)
         if not path.exists():
@@ -333,7 +332,7 @@ def find_launcher_executable(launcher_bin: str | None) -> Path:
             raise BuildError(f"Launcher binary not found: {launcher_bin}")
         return path
 
-    env_bin = os.environ.get(LAUNCHER_BIN)
+    env_bin = os.environ.get("FLAVOR_LAUNCHER_BIN")
     if env_bin:
         path = Path(env_bin)
         if not path.exists():
