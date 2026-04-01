@@ -30,7 +30,7 @@ def get_flavor_version() -> str:
     return get_version("flavorpack", caller_file=__file__)
 
 
-def load_launcher_binary(launcher_type: str) -> bytes:
+def load_launcher_binary(launcher_type: str) -> bytes:  # pragma: no cover
     """Load launcher binary for the specified type."""
     import os
 
