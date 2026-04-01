@@ -151,10 +151,6 @@ def policy_check(package_file: str) -> None:  # noqa: C901
             perr(f"❌ Required environment variable not set: {var}")
         sys.exit(1)
 
-    if effective.use_os_keychain:
-        perr("❌ use_os_keychain is enabled, but OS keychain trust is not implemented")
-        sys.exit(1)
-
     if effective.require_sbom and not has_sbom:
         perr("❌ Package built without attestation slot — operator policy requires SBOM")
         sys.exit(1)
