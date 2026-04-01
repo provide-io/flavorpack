@@ -129,11 +129,15 @@ def _display_single_slot(slot: dict[str, Any]) -> None:
 
 def _display_signature_status(result: dict[str, Any]) -> None:
     """Display signature verification status."""
-    if result["signature_valid"]:
+    if result.get("valid", False):
         log.info("Signature verification successful")
     else:
-        log.error("Signature verification failed")
-        perr("\n❌ Signature verification failed")
+        log.error(
+            "Package integrity verification failed",
+            checksums_valid=result.get("checksums_valid"),
+            signature_valid=result.get("signature_valid"),
+        )
+        perr("\n❌ Package integrity verification failed")
         raise click.Abort()
 
 

@@ -117,8 +117,8 @@ def verify_package(package_path: Path) -> dict[str, Any]:
     Returns:
         Dictionary containing verification results with keys:
             - 'valid' (bool): Overall verification status
+            - 'checksums_valid' (bool): Slot checksum verification result
             - 'signature_valid' (bool): Signature verification result
-            - 'checksums_valid' (bool): Checksum verification result
             - 'format_valid' (bool): Format validation result
             - 'errors' (list): List of any errors encountered
 
@@ -162,7 +162,9 @@ def clean_cache() -> None:
         print("Cache cleared successfully")
         ```
     """
-    cache_dir = Path.home() / ".cache" / "flavor"
+    from flavor.cache import get_cache_dir
+
+    cache_dir = get_cache_dir().parent
     if cache_dir.exists():
         safe_rmtree(cache_dir)
 
@@ -273,7 +275,7 @@ def _get_version_from_toml(project_config: dict[str, Any], manifest_path: Path, 
     # Try to get version from VERSION file
     version_file = manifest_path.parent / "VERSION"
     if version_file.exists():
-        return version_file.read_text().strip()
+        return version_file.read_text(encoding="utf-8").strip()
 
     # Try to get from package metadata if installed
     try:

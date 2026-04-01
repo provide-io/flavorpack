@@ -44,8 +44,7 @@ def measure_time(description: str) -> Iterator[None]:
     start = time.perf_counter()
     yield
     elapsed = time.perf_counter() - start
-    print(f"\n⏱️ {description}: {elapsed:.4f}s")
-    return elapsed
+    print(f"\n  {description}: {elapsed:.4f}s")
 
 
 @pytest.mark.mmap

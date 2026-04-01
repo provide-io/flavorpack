@@ -288,8 +288,8 @@ class TestPSPFSecurity:
 
         # Launcher should detect invalid magic during integrity check
         launcher = PSPFLauncher(bundle_path)
-        result = launcher.verify_integrity()
-        assert not result["valid"], "Should fail integrity check with bad magic"
+        integrity = launcher.verify_integrity()
+        assert not integrity["valid"], "Should fail integrity check with bad magic"
 
     @patch.dict(os.environ, {"FLAVOR_VALIDATION": "standard"})
     def test_missing_integrity_seal(self, temp_dir: Path, test_builder: PSPFBuilder) -> None:
@@ -309,8 +309,8 @@ class TestPSPFSecurity:
 
         # Should work without seal if not required
         launcher = PSPFLauncher(bundle_path)
-        result = launcher.verify_integrity()
-        assert result["valid"]
+        integrity = launcher.verify_integrity()
+        assert integrity["valid"]
 
     def test_trust_signatures(self, temp_dir: Path, test_builder: PSPFBuilder) -> None:
         """Test trust signature handling."""

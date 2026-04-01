@@ -15,12 +15,11 @@ import tempfile
 
 import pytest
 
-from flavor.psp.format_2025.builder import build_package
 from flavor.psp.format_2025.pspf_builder import PSPFBuilder
 from flavor.psp.format_2025.slots import SlotMetadata
 
 # Import the new API
-from flavor.psp.format_2025.spec import BuildResult, BuildSpec, KeyConfig
+from flavor.psp.format_2025.spec import BuildSpec, KeyConfig
 
 # =============================================================================
 # Test Fixtures
@@ -79,8 +78,6 @@ class TestPSPFBuilder:
 
     def test_builder_create(self) -> None:
         """Should create new builder."""
-        if not PSPFBuilder:
-            pytest.skip("PSPFBuilder not implemented yet")
 
         builder = PSPFBuilder.create()
         assert builder is not None
@@ -88,8 +85,6 @@ class TestPSPFBuilder:
 
     def test_builder_fluent_interface(self, temp_dir: Path) -> None:
         """Should support fluent/chainable interface."""
-        if not PSPFBuilder:
-            pytest.skip("PSPFBuilder not implemented yet")
 
         output = temp_dir / "fluent.psp"
 
@@ -107,8 +102,6 @@ class TestPSPFBuilder:
 
     def test_builder_incremental(self, temp_dir: Path) -> None:
         """Should support incremental building."""
-        if not PSPFBuilder:
-            pytest.skip("PSPFBuilder not implemented yet")
 
         builder = PSPFBuilder.create()
 
@@ -131,8 +124,6 @@ class TestPSPFBuilder:
 
     def test_builder_immutable_chaining(self) -> None:
         """Each builder method should return new instance."""
-        if not PSPFBuilder:
-            pytest.skip("PSPFBuilder not implemented yet")
 
         builder1 = PSPFBuilder.create()
         builder2 = builder1.metadata(name="test")
@@ -149,8 +140,6 @@ class TestPSPFBuilder:
 
     def test_builder_with_path_slots(self, temp_dir: Path) -> None:
         """Should support adding slots from file paths."""
-        if not PSPFBuilder:
-            pytest.skip("PSPFBuilder not implemented yet")
 
         # Create test files
         file1 = temp_dir / "data.txt"
@@ -183,8 +172,6 @@ class TestIntegration:
 
     def test_full_build_pipeline(self, temp_dir: Path) -> None:
         """Test complete build pipeline."""
-        if not all([BuildSpec, build_package, PSPFBuilder]):
-            pytest.skip("Not all components implemented yet")
 
         # Create test data
         main_file = temp_dir / "main.py"
@@ -236,8 +223,6 @@ class TestIntegration:
 
     def test_error_handling(self, temp_dir: Path) -> None:
         """Test comprehensive error handling."""
-        if not all([PSPFBuilder, BuildResult]):
-            pytest.skip("Not all components implemented yet")
 
         # Missing required metadata
         result = PSPFBuilder.create().add_slot(id="data", data=b"content").build(temp_dir / "invalid.psp")
@@ -279,8 +264,6 @@ class TestPerformance:
     @pytest.mark.slow
     def test_large_package_build(self, temp_dir: Path) -> None:
         """Should handle large packages efficiently."""
-        if not PSPFBuilder:
-            pytest.skip("PSPFBuilder not implemented yet")
 
         # Create a large file (10MB)
         large_file = temp_dir / "large.bin"
@@ -307,8 +290,6 @@ class TestPerformance:
     @pytest.mark.slow
     def test_many_slots_build(self, temp_dir: Path) -> None:
         """Should handle many slots efficiently."""
-        if not PSPFBuilder:
-            pytest.skip("PSPFBuilder not implemented yet")
 
         builder = PSPFBuilder.create().metadata(name="many-slots")
 

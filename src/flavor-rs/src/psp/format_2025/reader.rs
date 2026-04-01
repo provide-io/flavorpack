@@ -173,7 +173,8 @@ impl Reader {
                     );
                 }
 
-                // Save raw data
+                // Save raw data (only in debug builds)
+                #[cfg(debug_assertions)]
                 if let Err(e) = std::fs::write("debug_metadata_raw.bin", &metadata_data) {
                     debug!("⚠️ Could not save raw metadata: {}", e);
                 } else {
@@ -200,11 +201,14 @@ impl Reader {
             use std::io::Read;
 
             trace!("🎈 Decompressing gzip metadata...");
-            let mut decoder = GzDecoder::new(&metadata_data[..]);
-            let mut json_data = String::new();
-            decoder.read_to_string(&mut json_data)?;
+            let decoder = GzDecoder::new(&metadata_data[..]);
+            let mut json_bytes = Vec::new();
+            decoder.take(1024 * 1024).read_to_end(&mut json_bytes)?;
+            let json_data = String::from_utf8(json_bytes)
+                .map_err(|e| FlavorError::Generic(format!("Metadata is not valid UTF-8: {}", e)))?;
 
             if std::env::var("FLAVOR_DEBUG_METADATA").is_ok() {
+                #[cfg(debug_assertions)]
                 if let Err(e) = std::fs::write("debug_metadata.json", &json_data) {
                     debug!("⚠️ Could not save decompressed metadata: {}", e);
                 } else {
@@ -217,7 +221,10 @@ impl Reader {
                     debug!("✅ Decompressed data is valid JSON");
                 } else if json_data.contains("ustar") {
                     debug!("🚨 ERROR: Decompressed data contains tar signatures!");
-                    trace!("📄 First 200 chars: {}", &json_data[..200.min(json_data.len())]);
+                    trace!(
+                        "📄 First 200 chars: {}",
+                        &json_data[..200.min(json_data.len())]
+                    );
                 }
             }
 
@@ -328,7 +335,10 @@ impl Reader {
                 );
                 descriptors.push(descriptor);
             } else {
-                debug!("⚠️ Warning: Could not parse descriptor #{}", i);
+                return Err(FlavorError::Generic(format!(
+                    "Failed to parse slot descriptor #{} at offset {:#x}",
+                    i, offset
+                )));
             }
         }
 

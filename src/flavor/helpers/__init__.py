@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""TODO: Add module docstring."""
+"""Go and Rust helper binary discovery, management, and embedding."""
 
 from flavor.helpers.manager import HelperInfo, HelperManager
 

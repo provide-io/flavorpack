@@ -14,7 +14,7 @@ Follow these steps to get FlavorPack up and running:
 Install FlavorPack and its native helper binaries. Supports installation from source (currently the only option), with PyPI and other methods coming soon.
 
 **Time**: ~10 minutes
-**Prerequisites**: Python 3.11+, UV, Go 1.23+, Rust 1.85+
+**Prerequisites**: Python 3.11+, UV, Go 1.26+, Rust 1.86+
 
 [→ Installation Guide](installation/){ .md-button .md-button--primary }
 
@@ -81,7 +81,7 @@ Need to integrate FlavorPack into CI/CD?
 ## Common Questions
 
 ??? question "What are the system requirements?"
-    **Minimum**: Python 3.11, UV 0.8.13, Go 1.23, Rust 1.85
+    **Minimum**: Python 3.11, UV 0.8.13, Go 1.26, Rust 1.86
     **Recommended**: Python 3.12+, latest UV, Go, and Rust
     **Platforms**: Linux (full), macOS (full), Windows (beta)
 

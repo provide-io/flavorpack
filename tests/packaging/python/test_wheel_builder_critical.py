@@ -7,12 +7,12 @@
 
 import importlib.metadata
 from pathlib import Path
+import sys
 import tempfile
 from unittest.mock import Mock, patch
 
 import pytest
 
-import flavor.packaging.python.pypapip_manager as _pip_mod
 from flavor.packaging.python.wheel_builder import WheelBuilder
 
 
@@ -136,7 +136,7 @@ class TestWheelBuilderCriticalFeatures:
             wheel_file.touch()
 
             python_exe = Path("/usr/bin/python3")
-            with patch.object(_pip_mod.sys, "platform", "linux"):
+            with patch.object(sys, "platform", "linux"):
                 result = self.wheel_builder.build_wheel_from_source(python_exe, source_path, wheel_dir)
 
             assert result == wheel_file
@@ -213,7 +213,7 @@ class TestWheelBuilderCriticalFeatures:
     def test_manager_separation_maintained(self) -> None:
         """CRITICAL: PyPA pip and UV managers must remain separate and distinct."""
         # Verify both managers are separate instances
-        assert self.wheel_builder.pypapip is not self.wheel_builder.uv
+        assert id(self.wheel_builder.pypapip) != id(self.wheel_builder.uv)
 
         # Verify they have different capabilities
         assert hasattr(self.wheel_builder.pypapip, "_get_pypapip_download_cmd")

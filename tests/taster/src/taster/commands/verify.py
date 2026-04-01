@@ -141,8 +141,8 @@ def _render_text_result(result: dict[str, Any]) -> None:
             pout(f"  Slots: {len(slots)}")
 
         pout("\n🔍 Additional Checks:", color="yellow")
-        if not verification.get("signature_valid", True):
-            pout("  ❌ Signature verification: FAILED")
+        if not verification.get("valid", verification.get("signature_valid", True)):
+            pout("  ❌ Integrity verification: FAILED")
         if "index_checksum_valid" in verification and not verification["index_checksum_valid"]:
             pout("  ❌ Index checksum invalid")
         if not verification.get("metadata"):

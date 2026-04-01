@@ -64,7 +64,7 @@ golangci-lint run
 
 **Rust:**
 ```bash
-cd src/flavor-rust
+cd src/flavor-rs
 cargo fmt
 cargo clippy
 ```

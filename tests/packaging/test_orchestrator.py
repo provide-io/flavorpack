@@ -246,4 +246,202 @@ def test_launcher_type_detection(mock_run: MagicMock, orchestrator: PackagingOrc
     assert orchestrator._detect_launcher_type(Path("unknown-launcher")) == "rust"
 
 
+# ---------------------------------------------------------------------------
+# Regression tests: Windows-aware UV slot target
+# The internal Python builder must use "Scripts/uv.exe" on Windows and
+# "bin/uv" on Unix.  The external builder manifest (create_builder_manifest)
+# must produce a matching UV slot target on each platform.
+# ---------------------------------------------------------------------------
+
+
+@patch("os.access", return_value=True)
+@patch("pathlib.Path.exists", return_value=True)
+@patch("flavor.packaging.orchestrator.is_windows", return_value=False)
+@patch("flavor.psp.format_2025.pspf_builder.PSPFBuilder")
+@patch("flavor.packaging.orchestrator.PythonPackager")
+@patch("flavor.packaging.orchestrator.find_launcher_executable")
+@patch("flavor.packaging.orchestrator.PackagingOrchestrator._detect_launcher_type")
+def test_python_builder_uv_slot_target_unix(
+    mock_detect_launcher: MagicMock,
+    mock_find_launcher: MagicMock,
+    mock_python_packager: MagicMock,
+    mock_pspf_builder: MagicMock,
+    mock_is_windows: MagicMock,
+    mock_path_exists: MagicMock,
+    mock_os_access: MagicMock,
+    orchestrator: PackagingOrchestrator,
+    setup_payload_dir: Path,
+    tmp_path: Path,
+) -> None:
+    """On Unix the internal builder UV slot target must be 'bin/uv'."""
+    mock_find_launcher.return_value = Path("/path/to/launcher")
+    mock_detect_launcher.return_value = "rust"
+
+    mock_packager_instance = mock_python_packager.return_value
+    mock_packager_instance.prepare_artifacts.return_value = {
+        "payload_dir": setup_payload_dir,
+        "python_tgz": tmp_path / "python.tgz",
+    }
+    (tmp_path / "python.tgz").touch()
+
+    mock_builder_instance = mock_pspf_builder.create.return_value
+    mock_build_result = MagicMock()
+    mock_build_result.success = True
+    mock_builder_instance.metadata.return_value = mock_builder_instance
+    mock_builder_instance.add_slot.return_value = mock_builder_instance
+    mock_builder_instance.with_options.return_value = mock_builder_instance
+    mock_builder_instance.with_keys.return_value = mock_builder_instance
+
+    def create_mock_file(output_path: Path) -> MagicMock:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_bytes(b"mock" * 1000)
+        return mock_build_result
+
+    mock_builder_instance.build.side_effect = create_mock_file
+
+    orchestrator.build_package()
+
+    # Find the add_slot call for the "uv" slot
+    uv_calls = [c for c in mock_builder_instance.add_slot.call_args_list if c.kwargs.get("id") == "uv"]
+    assert len(uv_calls) == 1, "Expected exactly one add_slot call for 'uv'"
+    assert uv_calls[0].kwargs["target"] == "bin/uv"
+
+
+@patch("os.access", return_value=True)
+@patch("pathlib.Path.exists", return_value=True)
+@patch("flavor.packaging.orchestrator.is_windows", return_value=True)
+@patch("flavor.psp.format_2025.pspf_builder.PSPFBuilder")
+@patch("flavor.packaging.orchestrator.PythonPackager")
+@patch("flavor.packaging.orchestrator.find_launcher_executable")
+@patch("flavor.packaging.orchestrator.PackagingOrchestrator._detect_launcher_type")
+def test_python_builder_uv_slot_target_windows(
+    mock_detect_launcher: MagicMock,
+    mock_find_launcher: MagicMock,
+    mock_python_packager: MagicMock,
+    mock_pspf_builder: MagicMock,
+    mock_is_windows: MagicMock,
+    mock_path_exists: MagicMock,
+    mock_os_access: MagicMock,
+    orchestrator: PackagingOrchestrator,
+    setup_payload_dir: Path,
+    tmp_path: Path,
+) -> None:
+    """When is_windows() returns True the UV slot target must be 'Scripts/uv.exe'."""
+    mock_find_launcher.return_value = Path("/path/to/launcher")
+    mock_detect_launcher.return_value = "rust"
+
+    mock_packager_instance = mock_python_packager.return_value
+    mock_packager_instance.prepare_artifacts.return_value = {
+        "payload_dir": setup_payload_dir,
+        "python_tgz": tmp_path / "python.tgz",
+    }
+    (tmp_path / "python.tgz").touch()
+
+    mock_builder_instance = mock_pspf_builder.create.return_value
+    mock_build_result = MagicMock()
+    mock_build_result.success = True
+    mock_builder_instance.metadata.return_value = mock_builder_instance
+    mock_builder_instance.add_slot.return_value = mock_builder_instance
+    mock_builder_instance.with_options.return_value = mock_builder_instance
+    mock_builder_instance.with_keys.return_value = mock_builder_instance
+
+    def create_mock_file(output_path: Path) -> MagicMock:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_bytes(b"mock" * 1000)
+        return mock_build_result
+
+    mock_builder_instance.build.side_effect = create_mock_file
+
+    orchestrator.build_package()
+
+    uv_calls = [c for c in mock_builder_instance.add_slot.call_args_list if c.kwargs.get("id") == "uv"]
+    assert len(uv_calls) == 1, "Expected exactly one add_slot call for 'uv'"
+    assert uv_calls[0].kwargs["target"] == "Scripts/uv.exe"
+
+
+@patch("flavor.packaging.orchestrator_helpers.is_windows", return_value=False)
+def test_external_builder_uv_slot_target_unix(mock_is_windows: MagicMock, tmp_path: Path) -> None:
+    """External builder manifest UV slot target must be 'bin/uv' on Unix."""
+    from flavor.packaging.orchestrator_helpers import create_builder_manifest
+
+    slots = {
+        "uv": tmp_path / "uv",
+        "python": tmp_path / "python.tgz",
+        "wheels": tmp_path / "wheels.tar",
+    }
+    key_paths: dict[str, str | None] = {"private": None, "public": None}
+
+    manifest = create_builder_manifest(
+        package_name="testpkg",
+        version="1.0.0",
+        build_config={},
+        slots=slots,
+        key_paths=key_paths,
+    )
+
+    uv_slots = [s for s in manifest["slots"] if s["id"] == "uv"]
+    assert len(uv_slots) == 1
+    assert uv_slots[0]["target"] == "bin/uv"
+
+
+@patch("flavor.packaging.orchestrator_helpers.is_windows", return_value=True)
+def test_external_builder_uv_slot_target_windows(mock_is_windows: MagicMock, tmp_path: Path) -> None:
+    """External builder manifest UV slot target must use Windows path when is_windows() is True."""
+    from flavor.packaging.orchestrator_helpers import create_builder_manifest
+
+    slots = {
+        "uv": tmp_path / "uv.exe",
+        "python": tmp_path / "python.tgz",
+        "wheels": tmp_path / "wheels.tar",
+    }
+    key_paths: dict[str, str | None] = {"private": None, "public": None}
+
+    manifest = create_builder_manifest(
+        package_name="testpkg",
+        version="1.0.0",
+        build_config={},
+        slots=slots,
+        key_paths=key_paths,
+    )
+
+    uv_slots = [s for s in manifest["slots"] if s["id"] == "uv"]
+    assert len(uv_slots) == 1
+    assert uv_slots[0]["target"] == "Scripts/uv.exe"
+
+
+@patch("flavor.packaging.orchestrator_helpers.is_windows")
+def test_internal_and_external_uv_slot_target_consistent_unix(
+    mock_helpers_is_windows: MagicMock,
+    tmp_path: Path,
+) -> None:
+    """On Unix, internal and external builders must agree on the UV slot target."""
+    from flavor.packaging.orchestrator_helpers import create_builder_manifest
+
+    mock_helpers_is_windows.return_value = False
+
+    slots = {
+        "uv": tmp_path / "uv",
+        "python": tmp_path / "python.tgz",
+        "wheels": tmp_path / "wheels.tar",
+    }
+    key_paths: dict[str, str | None] = {"private": None, "public": None}
+
+    manifest = create_builder_manifest(
+        package_name="testpkg",
+        version="1.0.0",
+        build_config={},
+        slots=slots,
+        key_paths=key_paths,
+    )
+
+    external_uv_target = next(s["target"] for s in manifest["slots"] if s["id"] == "uv")
+
+    # Internal builder logic (mirrors orchestrator.py line 190)
+    internal_uv_target = "bin/uv"
+
+    assert external_uv_target == internal_uv_target, (
+        f"Unix UV slot target mismatch: internal={internal_uv_target!r}, external={external_uv_target!r}"
+    )
+
+
 # 🌶️📦🔚

@@ -55,7 +55,7 @@ def orchestrator_factory(tmp_path: Path) -> Callable[..., PackagingOrchestrator]
     """Factory to create a PackagingOrchestrator instance for tests."""
 
     def _factory(**kwargs: Any) -> PackagingOrchestrator:
-        defaults = {
+        defaults: dict[str, Any] = {
             "package_integrity_key_path": None,
             "public_key_path": None,
             "output_flavor_path": str(tmp_path / "dist/test.psp"),
@@ -67,7 +67,7 @@ def orchestrator_factory(tmp_path: Path) -> Callable[..., PackagingOrchestrator]
             "show_progress": False,
         }
         defaults.update(kwargs)
-        return PackagingOrchestrator(**defaults)  # ty: ignore[invalid-argument-type]
+        return PackagingOrchestrator(**defaults)
 
     return _factory
 
@@ -283,21 +283,27 @@ class TestLauncherReproducibility:
         }
 
         mock_uv_gz = MagicMock(spec=Path)
-        mock_uv_gz.__str__.return_value = "/tmp/flavor_build_deterministic/uv.gz"
+        object.__setattr__(
+            mock_uv_gz, "__str__", MagicMock(return_value="/tmp/flavor_build_deterministic/uv.gz")
+        )
         mock_uv_gz.stat.return_value.st_size = 100
         mock_uv_gz.exists.return_value = True
         mock_uv_gz.open.return_value.__enter__.return_value = io.BytesIO(b"mock uv gz content")
         mock_uv_gz.open.return_value.__exit__.return_value = None
 
         mock_python_tar = MagicMock(spec=Path)
-        mock_python_tar.__str__.return_value = "/tmp/flavor_build_deterministic/python.tar.gz"
+        object.__setattr__(
+            mock_python_tar, "__str__", MagicMock(return_value="/tmp/flavor_build_deterministic/python.tar.gz")
+        )
         mock_python_tar.stat.return_value.st_size = 200
         mock_python_tar.exists.return_value = True
         mock_python_tar.open.return_value.__enter__.return_value = io.BytesIO(b"mock python tar content")
         mock_python_tar.open.return_value.__exit__.return_value = None
 
         mock_wheels_tar = MagicMock(spec=Path)
-        mock_wheels_tar.__str__.return_value = "/tmp/flavor_build_deterministic/wheels.tar.gz"
+        object.__setattr__(
+            mock_wheels_tar, "__str__", MagicMock(return_value="/tmp/flavor_build_deterministic/wheels.tar.gz")
+        )
         mock_wheels_tar.stat.return_value.st_size = 300
         mock_wheels_tar.exists.return_value = True
         mock_wheels_tar.open.return_value.__enter__.return_value = io.BytesIO(b"mock wheels tar content")

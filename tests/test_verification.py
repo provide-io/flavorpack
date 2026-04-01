@@ -61,7 +61,11 @@ class TestFlavorVerifier:
                     },
                 ],
             }
-            mock_reader.verify_integrity.return_value = {"signature_valid": True}
+            mock_reader.verify_integrity.return_value = {
+                "valid": True,
+                "checksums_valid": True,
+                "signature_valid": True,
+            }
 
             # Verify package
             result = FlavorVerifier.verify_package(package_path)
@@ -70,6 +74,8 @@ class TestFlavorVerifier:
             assert result["format"] == "PSPF/2025"
             assert result["version"] == "0x20250001"
             assert result["launcher_size"] == 1024 * 100
+            assert result["valid"] is True
+            assert result["checksums_valid"] is True
             assert result["signature_valid"] is True
             assert result["slot_count"] == 2
             assert result["package"]["name"] == "test-pkg"
@@ -135,10 +141,15 @@ class TestFlavorVerifier:
                 "package": {},
                 "build": {},
             }
-            mock_reader.verify_integrity.return_value = {"signature_valid": False}
+            mock_reader.verify_integrity.return_value = {
+                "valid": False,
+                "checksums_valid": True,
+                "signature_valid": False,
+            }
 
             result = FlavorVerifier.verify_package(package_path)
 
+            assert result["valid"] is False
             assert result["signature_valid"] is False
 
     def test_verify_package_no_signature(self, tmp_path: Path) -> None:
@@ -155,12 +166,14 @@ class TestFlavorVerifier:
                 format_version=0x20250001, launcher_size=1024, slot_count=0
             )
             mock_reader.read_metadata.return_value = {"package": {}, "build": {}}
-            # Return empty dict (no signature_valid key)
+            # Return empty dict (no integrity keys)
             mock_reader.verify_integrity.return_value = {}
 
             result = FlavorVerifier.verify_package(package_path)
 
-            # Should default to False when key is missing
+            # Should default to False when keys are missing
+            assert result["valid"] is False
+            assert result["checksums_valid"] is False
             assert result["signature_valid"] is False
 
     def test_verify_package_with_minimal_metadata(self, tmp_path: Path) -> None:
@@ -181,11 +194,16 @@ class TestFlavorVerifier:
                 "package": {"name": "minimal"},
                 "build": {},
             }
-            mock_reader.verify_integrity.return_value = {"signature_valid": True}
+            mock_reader.verify_integrity.return_value = {
+                "valid": True,
+                "checksums_valid": True,
+                "signature_valid": True,
+            }
 
             result = FlavorVerifier.verify_package(package_path)
 
             assert result["format"] == "PSPF/2025"
+            assert result["valid"] is True
             assert result["slot_count"] == 0
             assert result["slots"] == []
             assert result["package"]["name"] == "minimal"
@@ -221,7 +239,11 @@ class TestFlavorVerifier:
                     }
                 ],
             }
-            mock_reader.verify_integrity.return_value = {"signature_valid": True}
+            mock_reader.verify_integrity.return_value = {
+                "valid": True,
+                "checksums_valid": True,
+                "signature_valid": True,
+            }
 
             result = FlavorVerifier.verify_package(package_path)
 
@@ -264,7 +286,11 @@ class TestFlavorVerifier:
                     }
                 ],
             }
-            mock_reader.verify_integrity.return_value = {"signature_valid": True}
+            mock_reader.verify_integrity.return_value = {
+                "valid": True,
+                "checksums_valid": True,
+                "signature_valid": True,
+            }
 
             result = FlavorVerifier.verify_package(package_path)
 
@@ -296,7 +322,11 @@ class TestFlavorVerifier:
                     {"id": "slot_2", "size": 300},
                 ],
             }
-            mock_reader.verify_integrity.return_value = {"signature_valid": True}
+            mock_reader.verify_integrity.return_value = {
+                "valid": True,
+                "checksums_valid": True,
+                "signature_valid": True,
+            }
 
             result = FlavorVerifier.verify_package(package_path)
 
@@ -321,12 +351,47 @@ class TestFlavorVerifier:
                 slot_count=0,
             )
             mock_reader.read_metadata.return_value = {"package": {}, "build": {}}
-            mock_reader.verify_integrity.return_value = {"signature_valid": True}
+            mock_reader.verify_integrity.return_value = {
+                "valid": True,
+                "checksums_valid": True,
+                "signature_valid": True,
+            }
 
             result = FlavorVerifier.verify_package(package_path)
 
             # Verify hex formatting with leading 0x and 8 digits
             assert result["version"] == "0x20250001"
+
+    def test_verify_package_invalid_when_checksums_fail(self, tmp_path: Path) -> None:
+        """Overall validity must remain false even if the signature is still valid."""
+        package_path = tmp_path / "tampered-slot.psp"
+        package_path.touch()
+
+        with patch("flavor.verification.PSPFReader") as mock_reader_class:
+            mock_reader = Mock()
+            mock_reader_class.return_value = mock_reader
+
+            mock_reader.verify_magic_trailer.return_value = True
+            mock_reader.read_index.return_value = Mock(
+                format_version=0x20250001, launcher_size=2048, slot_count=1
+            )
+            mock_reader.read_metadata.return_value = {
+                "package": {"name": "tampered", "version": "1.0.0"},
+                "build": {},
+                "slots": [{"id": "payload", "size": 512, "operations": "raw"}],
+            }
+            mock_reader.verify_integrity.return_value = {
+                "valid": False,
+                "checksums_valid": False,
+                "signature_valid": True,
+                "tamper_detected": True,
+            }
+
+            result = FlavorVerifier.verify_package(package_path)
+
+            assert result["valid"] is False
+            assert result["checksums_valid"] is False
+            assert result["signature_valid"] is True
 
     def test_verify_package_reader_exception(self, tmp_path: Path) -> None:
         """Test that reader exceptions are propagated."""

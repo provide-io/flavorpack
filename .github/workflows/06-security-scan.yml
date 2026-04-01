@@ -61,13 +61,10 @@ jobs:
           echo "## 🔑 Secret Scanning" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          # Install TruffleHog
-          pip install truffleHog3
-          
           echo "### TruffleHog Scan" >> $GITHUB_STEP_SUMMARY
-          
+
           # Run TruffleHog scan
-          trufflehog3 --no-history --format json --output trufflehog.json . 2>&1 | tee trufflehog.log || true
+          uvx --from truffleHog3 trufflehog3 --no-history --format json --output trufflehog.json . 2>&1 | tee trufflehog.log || true
           
           if [ -s trufflehog.json ]; then
             SECRET_COUNT=$(jq length trufflehog.json)
@@ -90,10 +87,8 @@ jobs:
         run: |
           echo "### detect-secrets Scan" >> $GITHUB_STEP_SUMMARY
           
-          pip install detect-secrets
-          
           # Create baseline
-          detect-secrets scan --baseline .secrets.baseline . 2>&1 | tee detect-secrets.log || true
+          uvx detect-secrets scan --baseline .secrets.baseline . 2>&1 | tee detect-secrets.log || true
           
           # Audit baseline
           if [ -f .secrets.baseline ]; then
@@ -127,32 +122,27 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v6
       
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
+      - name: 📦 Setup uv + Python
+        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
         with:
           python-version: '3.11'
-      
+
       - name: 📦 Install Security Tools
         run: |
-          python -m venv security-env
-          source security-env/bin/activate
-          pip install --upgrade pip
-          pip install \
+          uv sync
+          uv pip install \
             bandit[toml] \
             safety \
             pip-audit \
             dlint \
             dodgy \
             vulture
-
-          # Install project for dependency scanning
-          pip install -e ".[dev,test]"
       
       - name: 🔒 Bandit Security Scan
         id: bandit
         continue-on-error: true
         run: |
-          source security-env/bin/activate
+          source .venv/bin/activate
           echo "## 🐍 Python Security Analysis" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
@@ -186,7 +176,7 @@ jobs:
         id: safety
         continue-on-error: true
         run: |
-          source security-env/bin/activate
+          source .venv/bin/activate
           echo "### Safety Dependency Scan" >> $GITHUB_STEP_SUMMARY
           
           # Generate requirements file
@@ -212,7 +202,7 @@ jobs:
         id: pip-audit
         continue-on-error: true
         run: |
-          source security-env/bin/activate
+          source .venv/bin/activate
           echo "### pip-audit Vulnerability Scan" >> $GITHUB_STEP_SUMMARY
           
           # Run pip-audit
@@ -242,7 +232,7 @@ jobs:
       - name: 🐛 Dodgy Suspicious Code Detection
         continue-on-error: true
         run: |
-          source security-env/bin/activate
+          source .venv/bin/activate
           echo "### Suspicious Code Patterns" >> $GITHUB_STEP_SUMMARY
           
           dodgy src/ helpers/ 2>&1 | tee dodgy.log || true
@@ -260,7 +250,7 @@ jobs:
         if: inputs.enable_sarif == true
         continue-on-error: true
         run: |
-          source security-env/bin/activate
+          source .venv/bin/activate
 
           # Convert Bandit to SARIF
           bandit -r src/ helpers/ -f sarif -o bandit.sarif || true
@@ -301,7 +291,7 @@ jobs:
         uses: actions/checkout@v6
       
       - name: 🐹 Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: "${{ vars.GO_VERSION }}"
       
@@ -619,10 +609,8 @@ jobs:
         run: |
           echo "### YAML Security Analysis" >> $GITHUB_STEP_SUMMARY
           
-          pip install yamllint
-          
           # Lint all YAML files
-          yamllint -f parsable . > yamllint.log 2>&1 || true
+          uvx yamllint -f parsable . > yamllint.log 2>&1 || true
           
           if [ -s yamllint.log ]; then
             LINE_COUNT=$(wc -l < yamllint.log)

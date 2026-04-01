@@ -54,26 +54,6 @@ func (r *Reader) VerifyAllChecksums() error {
 	return nil
 }
 
-// ReadEmojiMagic reads the emoji magic from the end of the file
-func (r *Reader) ReadEmojiMagic(buf []byte) error {
-	if len(buf) != 16 {
-		return fmt.Errorf("buffer must be 16 bytes")
-	}
-
-	info, err := r.file.Stat()
-	if err != nil {
-		return err
-	}
-
-	// Seek to emoji magic position (last 16 bytes)
-	if _, err := r.file.Seek(info.Size()-16, io.SeekStart); err != nil {
-		return err
-	}
-
-	_, err = r.file.Read(buf)
-	return err
-}
-
 // VerifyIntegritySeal verifies the metadata integrity using Ed25519 signature
 func (r *Reader) VerifyIntegritySeal() (bool, error) {
 	index, err := r.ReadIndex()

@@ -12,6 +12,7 @@ import hashlib
 import io
 from pathlib import Path
 import tarfile
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -31,7 +32,7 @@ def _make_launcher(bundle_path: Path) -> PSPFLauncher:
         patch("flavor.psp.format_2025.launcher.WorkEnvManager"),
     ):
         launcher = PSPFLauncher.__new__(PSPFLauncher)
-        launcher.bundle_path = str(bundle_path)
+        object.__setattr__(launcher, "bundle_path", bundle_path)
         launcher.cache_dir = bundle_path.parent
         launcher._workenv_manager = MagicMock()
     return launcher
@@ -44,7 +45,7 @@ def _make_raw_slot_entry(
     operations: int = 0,
     purpose: int = 0,
     lifecycle: int = 0,
-) -> dict:
+) -> dict[str, int]:
     return {
         "index": 0,
         "offset": offset,
@@ -79,7 +80,7 @@ class TestExtractSlotGzip:
             patch("flavor.psp.format_2025.launcher.atomic_write") as mock_write,
             patch("flavor.psp.format_2025.launcher.ensure_parent_dir"),
         ):
-            launcher._apply_slot_permissions = MagicMock()  # ty: ignore[invalid-assignment]
+            object.__setattr__(launcher, "_apply_slot_permissions", MagicMock())
             launcher.extract_slot(0, tmp_path)
 
         written_data = mock_write.call_args[0][1]
@@ -107,7 +108,7 @@ class TestExtractSlotTarGz:
         launcher = _make_launcher(bundle)
 
         slot_entry = _make_raw_slot_entry(offset=0, size=len(tgz_data), operations=0x1001)
-        metadata: dict = {"slots": []}
+        metadata: dict[str, Any] = {"slots": []}
         workenv = tmp_path / "workenv"
         workenv.mkdir()
 
@@ -131,7 +132,7 @@ class TestExtractSlotUnsupportedOps:
         launcher = _make_launcher(bundle)
 
         slot_entry = _make_raw_slot_entry(offset=0, size=12, operations=0xDEAD)
-        metadata: dict = {"slots": []}
+        metadata: dict[str, Any] = {"slots": []}
 
         with (
             patch.object(launcher, "read_slot_table", return_value=[slot_entry]),
@@ -185,7 +186,7 @@ class TestExtractSlotChecksum:
 
         launcher = _make_launcher(bundle)
         slot_entry = _make_raw_slot_entry(offset=0, size=len(data), checksum=checksum, operations=0)
-        metadata: dict = {"slots": []}
+        metadata: dict[str, Any] = {"slots": []}
 
         with (
             patch.object(launcher, "read_slot_table", return_value=[slot_entry]),
@@ -193,7 +194,7 @@ class TestExtractSlotChecksum:
             patch("flavor.psp.format_2025.launcher.atomic_write"),
             patch("flavor.psp.format_2025.launcher.ensure_parent_dir"),
         ):
-            launcher._apply_slot_permissions = MagicMock()  # ty: ignore[invalid-assignment]
+            object.__setattr__(launcher, "_apply_slot_permissions", MagicMock())
             # Should not raise
             launcher.extract_slot(0, tmp_path, verify_checksum=True)
 
@@ -204,7 +205,7 @@ class TestExtractSlotChecksum:
 
         launcher = _make_launcher(bundle)
         slot_entry = _make_raw_slot_entry(offset=0, size=len(data), checksum=0xDEADBEEFCAFEBABE, operations=0)
-        metadata: dict = {"slots": []}
+        metadata: dict[str, Any] = {"slots": []}
 
         with (
             patch.object(launcher, "read_slot_table", return_value=[slot_entry]),
@@ -245,13 +246,65 @@ class TestApplySlotPermissions:
 
 
 @pytest.mark.unit
+class TestNormalizeSlotTarget:
+    """Test slot target normalization and rejection of unsafe paths."""
+
+    def test_workenv_placeholder_is_preserved(self, tmp_path: Path) -> None:
+        launcher = _make_launcher(tmp_path / "bundle.psp")
+        assert launcher._normalize_slot_target("{workenv}") == "{workenv}"
+
+    def test_workenv_root_slash_maps_to_root_directory(self, tmp_path: Path) -> None:
+        launcher = _make_launcher(tmp_path / "bundle.psp")
+        assert launcher._normalize_slot_target("{workenv}/") == "."
+
+    def test_workenv_prefix_is_stripped(self, tmp_path: Path) -> None:
+        launcher = _make_launcher(tmp_path / "bundle.psp")
+        assert launcher._normalize_slot_target("{workenv}/bin/tool") == "bin/tool"
+
+    @pytest.mark.parametrize(
+        "slot_target",
+        [
+            "/tmp/evil",
+            "../../etc/passwd",
+            "{workenv}/../../etc/passwd",
+            "..\\..\\windows\\system32",
+            "",
+        ],
+    )
+    def test_unsafe_targets_raise_value_error(self, tmp_path: Path, slot_target: str) -> None:
+        launcher = _make_launcher(tmp_path / "bundle.psp")
+        with pytest.raises(ValueError, match="target"):
+            launcher._normalize_slot_target(slot_target)
+
+
+@pytest.mark.unit
+class TestExtractSlotPathValidation:
+    """Test extraction rejects metadata targets that escape the workenv."""
+
+    def test_extract_slot_rejects_unsafe_target(self, tmp_path: Path) -> None:
+        bundle = tmp_path / "test.psp"
+        bundle.write_bytes(b"payload")
+
+        launcher = _make_launcher(bundle)
+        slot_entry = _make_raw_slot_entry(offset=0, size=7, operations=0)
+        metadata = {"slots": [{"target": "../../etc/passwd"}]}
+
+        with (
+            patch.object(launcher, "read_slot_table", return_value=[slot_entry]),
+            patch.object(launcher, "read_metadata", return_value=metadata),
+            pytest.raises(ValueError, match="target"),
+        ):
+            launcher.extract_slot(0, tmp_path)
+
+
+@pytest.mark.unit
 class TestVerifyIntegrity:
     """Test verify_integrity()."""
 
     def test_empty_bundle_path_returns_invalid(self, tmp_path: Path) -> None:
 
         launcher = _make_launcher(tmp_path / "bundle.psp")
-        launcher.bundle_path = ""
+        object.__setattr__(launcher, "bundle_path", "")
 
         result = launcher.verify_integrity()
         assert result["valid"] is False

@@ -43,7 +43,7 @@ class TestBuildMetadata:
         assert "platform" in metadata
         assert metadata["platform"]["os"] in ["darwin", "linux", "windows", "macos"]
         assert metadata["platform"]["arch"] in ["arm64", "amd64", "x86_64"]
-        assert "host" in metadata["platform"]
+        # "host" is only included when FLAVOR_INCLUDE_BUILD_HOST=1
 
     def test_build_metadata_deterministic_flag(self) -> None:
         """Test deterministic build flag."""
@@ -182,7 +182,7 @@ class TestMetadataAssembly:
         self, basic_spec: BuildSpec, mock_launcher_info: dict[str, Any]
     ) -> None:
         """Test complete metadata assembly."""
-        slots = []  # Empty slots for now
+        slots: list[Any] = []  # Empty slots for now
 
         metadata = assemble_metadata(basic_spec, slots, mock_launcher_info)
 

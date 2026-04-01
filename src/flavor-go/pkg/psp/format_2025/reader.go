@@ -172,9 +172,8 @@ func (r *Reader) ReadMetadata() (*Metadata, error) {
 		return nil, err
 	}
 	defer func() {
-		if err := gr.Close(); err != nil {
-			// Log error but don't fail - already returning data
-			_ = err
+		if closeErr := gr.Close(); closeErr != nil {
+			r.logger.Warn("Failed to close gzip reader for metadata", "error", closeErr)
 		}
 	}()
 

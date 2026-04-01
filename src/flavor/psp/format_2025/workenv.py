@@ -25,6 +25,7 @@ from provide.foundation.process import run
 
 from flavor.config.defaults import DEFAULT_EXECUTABLE_PERMS
 from flavor.psp.format_2025.environment import apply_environment_layers
+from flavor.psp.format_2025.targets import normalize_workenv_target
 
 
 class WorkEnvManager:
@@ -80,8 +81,6 @@ class WorkEnvManager:
 
             # Handle lifecycle-based cleanup
             self._cleanup_lifecycle_slots(workenv_dir, metadata, extracted_slots)
-        else:
-            pass
 
         return workenv_dir
 
@@ -110,7 +109,7 @@ class WorkEnvManager:
             logger.debug(f"🔍 Checking cache validity: {check_path}")
 
             if check_path.exists():
-                actual_content = check_path.read_text().strip()
+                actual_content = check_path.read_text(encoding="utf-8").strip()
                 if actual_content == expected_content.replace("{version}", package_version):
                     cache_valid = True
                 else:
@@ -176,8 +175,9 @@ class WorkEnvManager:
         base_env = dict(os.environ)
 
         # Prepare workenv-specific environment variables
+        bin_dir = "Scripts" if sys.platform == "win32" else "bin"
         workenv_env = {
-            "PATH": f"{workenv_dir}/bin:{base_env.get('PATH', '')}",
+            "PATH": f"{workenv_dir / bin_dir}{os.pathsep}{base_env.get('PATH', '')}",
         }
 
         # Apply environment layers with isolation
@@ -207,9 +207,7 @@ class WorkEnvManager:
         runtime_env = metadata.get("runtime", {}).get("env", {})
         setup_env = self._prepare_setup_environment(workenv_dir, runtime_env)
 
-        for _i, cmd in enumerate(setup_commands):
-            pass
-
+        for cmd in setup_commands:
             if isinstance(cmd, dict):
                 cmd_type = cmd.get("type", "execute")
 
@@ -386,11 +384,7 @@ class WorkEnvManager:
 
     def _normalize_slot_target(self, slot_target: str) -> str:
         """Normalize slot target metadata to a path relative to the workenv."""
-        if slot_target == "{workenv}":
-            return "{workenv}"
-        if slot_target.startswith("{workenv}/"):
-            return slot_target.removeprefix("{workenv}/")
-        return slot_target
+        return normalize_workenv_target(slot_target)
 
     def substitute_slot_references(self, command: str, workenv_dir: Path) -> str:
         """Substitute {slot:N} references in command.

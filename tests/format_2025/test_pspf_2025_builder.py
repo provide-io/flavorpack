@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import os
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -32,7 +33,7 @@ class TestPSPFBuilder:
         wheel_path.parent.mkdir()
         wheel_path.write_bytes(b"WHEEL_CONTENT")
 
-        manifest_data = {
+        manifest_data: dict[str, Any] = {
             "name": "myapp",
             "version": "1.0.0",
             "slots": [{"path": str(wheel_path), "purpose": "payload", "lifecycle": "runtime"}],

@@ -21,6 +21,7 @@ from provide.foundation.file.directory import ensure_dir, ensure_parent_dir, saf
 from flavor.config.defaults import DEFAULT_DISK_SPACE_MULTIPLIER
 from flavor.psp.format_2025.constants import DEFAULT_SLOT_DESCRIPTOR_SIZE
 from flavor.psp.format_2025.reader import PSPFReader
+from flavor.psp.format_2025.targets import normalize_workenv_target
 from flavor.psp.format_2025.workenv import WorkEnvManager
 
 
@@ -29,12 +30,11 @@ class PSPFLauncher(PSPFReader):
 
     def __init__(self, bundle_path: Path | None = None) -> None:
         if bundle_path is None:
-            # Allow None for testing purposes, parent class will handle it
-            bundle_path_arg: Path | str = ""
-        else:
-            bundle_path_arg = bundle_path
-        super().__init__(bundle_path_arg)
-        self.cache_dir = Path.home() / ".cache" / "flavor"
+            raise ValueError("bundle_path is required")
+        super().__init__(bundle_path)
+        from flavor.cache import get_cache_dir
+
+        self.cache_dir = get_cache_dir().parent
         ensure_dir(self.cache_dir)
         self._workenv_manager = WorkEnvManager(self)
 
@@ -270,11 +270,7 @@ class PSPFLauncher(PSPFReader):
 
     def _normalize_slot_target(self, slot_target: str) -> str:
         """Normalize slot target metadata to a path relative to the workenv."""
-        if slot_target == "{workenv}":
-            return "{workenv}"
-        if slot_target.startswith("{workenv}/"):
-            return slot_target.removeprefix("{workenv}/")
-        return slot_target
+        return normalize_workenv_target(slot_target)
 
     def setup_workenv(self) -> Path:
         """Setup work environment for bundle execution."""

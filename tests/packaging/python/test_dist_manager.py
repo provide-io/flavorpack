@@ -13,7 +13,6 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 from flavor.packaging.python.dist_manager import PythonDistManager
-import flavor.packaging.python.pypapip_manager as _pip_mod
 
 
 class TestPythonDistManager:
@@ -153,7 +152,7 @@ class TestPythonDistManager:
             for wheel in wheel_files:
                 wheel.touch()
 
-            with patch.object(_pip_mod.sys, "platform", "linux"):
+            with patch.object(sys, "platform", "linux"):
                 self.dist_manager.install_wheels_to_environment(venv_python, wheel_files)
 
             # Verify run was called
@@ -412,9 +411,9 @@ class TestPythonDistManagerCriticalFeatures:
         assert hasattr(self.dist_manager, "wheel_builder")
 
         # Verify they're different instances
-        assert self.dist_manager.pypapip is not self.dist_manager.uv
-        assert self.dist_manager.pypapip is not self.dist_manager.wheel_builder
-        assert self.dist_manager.uv is not self.dist_manager.wheel_builder
+        assert id(self.dist_manager.pypapip) != id(self.dist_manager.uv)
+        assert id(self.dist_manager.pypapip) != id(self.dist_manager.wheel_builder)
+        assert id(self.dist_manager.uv) != id(self.dist_manager.wheel_builder)
 
     def test_uv_fallback_behavior(self) -> None:
         """CRITICAL: UV must have fallback to standard tools."""
@@ -436,7 +435,7 @@ class TestPythonDistManagerCriticalFeatures:
             with patch("flavor.packaging.python.dist_manager.run") as mock_run:
                 mock_run.return_value = Mock(returncode=0)
 
-                with patch.object(_pip_mod.sys, "platform", "linux"):
+                with patch.object(sys, "platform", "linux"):
                     self.dist_manager.install_wheels_to_environment(venv_python, wheel_files)
 
                 args = mock_run.call_args[0]
