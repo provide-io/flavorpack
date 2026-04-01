@@ -133,10 +133,6 @@ ignore_missing_imports = true
 module = ["flavor.psp.format_2025.generated.*", "flavor.*.generated.*"]
 ignore_errors = true
 
-[[tool.mypy.overrides]]
-module = ["tests.tools.test_validate_wheel"]
-ignore_missing_imports = true
-
 [tool.pylint.main]
 disable = ["C0330", "C0326"]
 

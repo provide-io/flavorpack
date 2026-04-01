@@ -7,7 +7,7 @@ import zipfile
 
 # Import from tools/ directory
 sys.path.insert(0, str(Path(__file__).parents[2] / "tools"))
-from validate_wheel import _parse_wheel_platform, validate_helpers
+from validate_wheel import _parse_wheel_platform, validate_helpers  # type: ignore[import-not-found]
 
 
 def make_wheel(stem: str, helpers: list[str]) -> Path:
