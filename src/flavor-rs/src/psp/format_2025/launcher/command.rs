@@ -382,7 +382,9 @@ mod tests {
                 .to_string()
         );
         assert_eq!(
-            env_map.get("FLAVOR_COMMAND_NAME").expect("command name"),
+            env_map
+                .get(crate::env_vars::COMMAND_NAME)
+                .expect("command name"),
             "demo.psp"
         );
         let expected_workenv = workenv_path.to_string_lossy().to_string();
