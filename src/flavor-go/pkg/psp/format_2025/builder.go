@@ -14,6 +14,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -231,10 +232,8 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 
 	// Check for SOURCE_DATE_EPOCH for reproducible timestamps
 	if epochStr := os.Getenv("SOURCE_DATE_EPOCH"); epochStr != "" {
-		if epoch, err := time.Parse("2006-01-02T15:04:05Z07:00", epochStr); err == nil {
-			buildTimestamp = epoch.UTC().Format(time.RFC3339)
-		} else if epochDuration, err := time.ParseDuration(epochStr + "s"); err == nil {
-			buildTimestamp = time.Unix(0, epochDuration.Nanoseconds()).UTC().Format(time.RFC3339)
+		if epochInt, err := strconv.ParseInt(epochStr, 10, 64); err == nil {
+			buildTimestamp = time.Unix(epochInt, 0).UTC().Format(time.RFC3339)
 		} else {
 			buildTimestamp = time.Now().UTC().Format(time.RFC3339)
 		}
@@ -281,7 +280,7 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		Verification: &VerificationInfo{
 			IntegritySeal: IntegritySealInfo{
 				Required:  true,
-				Algorithm: "ecdsa-p256",
+				Algorithm: "ed25519",
 			},
 		},
 		Build: &BuildInfo{
@@ -313,7 +312,11 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	metadata.Slots = slotMetadataList
 
 	// 📜 Create and write metadata (gzipped JSON) - RIGHT AFTER LAUNCHER
-	metadataPos, _ := out.Seek(0, 1)
+	metadataPos, err := out.Seek(0, io.SeekCurrent)
+	if err != nil {
+		logger.Error("❌ Failed to get file position", "error", err)
+		os.Exit(1)
+	}
 	logger.Debug("📜 Writing metadata (gzipped JSON)", "position", metadataPos)
 	metadataSize, signature, err := writeMetadata(out, metadata, privateKey, publicKey)
 	if err != nil {
@@ -326,7 +329,11 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	index.MetadataSize = uint64(metadataSize)
 
 	// Write slot table
-	currentPos, _ := out.Seek(0, 1)
+	currentPos, err := out.Seek(0, io.SeekCurrent)
+	if err != nil {
+		logger.Error("❌ Failed to get file position", "error", err)
+		os.Exit(1)
+	}
 	slotTableOffset := AlignOffset(currentPos, SlotAlignment)
 	if _, err := out.Seek(slotTableOffset, 0); err != nil {
 		logger.Error("Failed to seek to slot table", "error", err)
@@ -353,7 +360,11 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		}
 
 		// Align position
-		currentPos, _ := out.Seek(0, 1)
+		currentPos, err := out.Seek(0, io.SeekCurrent)
+		if err != nil {
+			logger.Error("❌ Failed to get file position", "error", err)
+			os.Exit(1)
+		}
 		alignedPos := AlignOffset(currentPos, SlotAlignment)
 		if alignedPos > currentPos {
 			padding := make([]byte, alignedPos-currentPos)
@@ -374,7 +385,11 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	}
 
 	// Go back and write the slot table with correct offsets
-	endOfSlots, _ := out.Seek(0, 1)
+	endOfSlots, err := out.Seek(0, io.SeekCurrent)
+	if err != nil {
+		logger.Error("❌ Failed to get file position", "error", err)
+		os.Exit(1)
+	}
 	if _, err := out.Seek(slotTableOffset, 0); err != nil {
 		logger.Error("Failed to seek to slot table for writing", "error", err)
 		os.Exit(1)
@@ -399,7 +414,11 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 
 	// Calculate metadata checksum (SHA-256 of compressed data)
 	// Need to seek back and read the compressed data
-	savedPos, _ := out.Seek(0, 1)
+	savedPos, err := out.Seek(0, io.SeekCurrent)
+	if err != nil {
+		logger.Error("❌ Failed to get file position", "error", err)
+		os.Exit(1)
+	}
 	if _, err := out.Seek(int64(metadataPos), 0); err != nil {
 		logger.Error("❌ Failed to seek to metadata position", "error", err)
 		os.Exit(1)
@@ -420,7 +439,11 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 
 	// Update package size before writing MagicTrailer
 	// (add 8200 for the trailer that will be written)
-	currentPos, _ = out.Seek(0, 1)
+	currentPos, err = out.Seek(0, io.SeekCurrent)
+	if err != nil {
+		logger.Error("❌ Failed to get file position", "error", err)
+		os.Exit(1)
+	}
 	index.PackageSize = uint64(currentPos) + MagicTrailerSize
 
 	// 🔐 Calculate index checksum (with checksum field as 0)

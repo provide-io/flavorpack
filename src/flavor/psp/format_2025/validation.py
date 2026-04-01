@@ -13,6 +13,7 @@ from typing import Any
 
 from flavor.psp.format_2025.slots import SlotMetadata
 from flavor.psp.format_2025.spec import BuildSpec
+from flavor.psp.format_2025.targets import normalize_workenv_target
 
 
 def extract_package_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
@@ -132,6 +133,11 @@ def validate_slots(slots: list[SlotMetadata]) -> list[str]:  # noqa: C901
                 errors.append(f"🔍 Slot {slot.id}: Source path does not exist: {slot.source}")
             elif not source_path.is_file() and not source_path.is_dir():
                 errors.append(f"🔍 Slot {slot.id}: Source path is not a file or directory: {slot.source}")
+
+        try:
+            normalize_workenv_target(slot.target)
+        except ValueError as exc:
+            errors.append(f"📁 Slot {slot.id}: invalid target path: {exc}")
 
         # Check purpose validity
         valid_purposes = [

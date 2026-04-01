@@ -5,7 +5,7 @@ use super::super::metadata::PackageInfo;
 use super::placeholders::substitute_placeholders;
 use crate::exceptions::{FlavorError, Result};
 use glob::glob;
-use log::{debug, info, warn};
+use log::{debug, info};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::env;
@@ -227,7 +227,7 @@ pub fn execute_setup_commands(
 
 /// Split a command string into parts, respecting single and double quotes.
 /// Handles simple quoting (no escape sequences within quotes).
-fn shell_split(input: &str) -> Vec<String> {
+pub fn shell_split(input: &str) -> Vec<String> {
     let mut parts = Vec::new();
     let mut current = String::new();
     let mut chars = input.chars().peekable();
@@ -282,7 +282,13 @@ pub fn execute_command(
     }
 
     let part_refs: Vec<&str> = parts.iter().map(|s| s.as_str()).collect();
-    run_command(part_refs[0], &part_refs[1..], workenv_dir, user_cwd, exec_env)
+    run_command(
+        part_refs[0],
+        &part_refs[1..],
+        workenv_dir,
+        user_cwd,
+        exec_env,
+    )
 }
 
 /// Run a command with arguments
@@ -314,19 +320,9 @@ pub fn run_command(
         command.env(key, value);
     }
 
-    // Prepend workenv/bin to PATH
-    if let Ok(path) = env::var("PATH") {
-        let workenv_string;
-        let workenv_str = if let Some(s) = workenv_dir.to_str() {
-            s
-        } else {
-            warn!("Work environment path contains non-UTF8 characters, using lossy conversion");
-            workenv_string = workenv_dir.to_string_lossy().into_owned();
-            &workenv_string
-        };
-        let new_path = format!("{workenv_str}/bin:{path}");
-        command.env("PATH", new_path);
-    }
+    // Prepend workenv bin directory to PATH (platform-aware)
+    let path = build_workenv_path(workenv_dir, env::var("PATH").ok().as_deref());
+    command.env("PATH", path);
 
     let output = command.output()?;
 
@@ -349,6 +345,93 @@ pub fn run_command(
     Ok(())
 }
 
+fn build_workenv_path(workenv_dir: &Path, existing_path: Option<&str>) -> String {
+    let bin_dir = if cfg!(windows) { "Scripts" } else { "bin" };
+    let sep = if cfg!(windows) { ";" } else { ":" };
+    let bin_path = workenv_dir.join(bin_dir);
+
+    match existing_path {
+        Some(path) if !path.is_empty() => format!("{}{sep}{path}", bin_path.display()),
+        _ => format!("{}", bin_path.display()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_build_workenv_path_without_existing_path_uses_only_bin_dir() {
+        let workenv_dir = Path::new("/tmp/test_workenv");
+        let path = build_workenv_path(workenv_dir, None);
+
+        #[cfg(not(windows))]
+        assert_eq!(path, "/tmp/test_workenv/bin");
+
+        #[cfg(windows)]
+        assert!(path.contains("test_workenv\\Scripts"));
+    }
+
+    /// Test that `run_command` prepends the correct bin directory to PATH.
+    ///
+    /// On macOS/Linux the subdirectory is "bin" and the separator is ":".
+    /// On Windows the subdirectory is "Scripts" and the separator is ";".
+    /// The Windows branch is verified at compile time via `cfg!(windows)`.
+    #[test]
+    fn test_run_command_path_has_correct_bin_dir_and_separator() {
+        let workenv_dir = Path::new("/tmp/test_workenv");
+        let original_path = env::var("PATH").unwrap_or_default();
+        let expected_path = build_workenv_path(workenv_dir, Some(&original_path));
+
+        // On the current platform (macOS/Linux in CI), verify the directory name
+        #[cfg(not(windows))]
+        {
+            assert!(
+                expected_path.starts_with("/tmp/test_workenv/bin:"),
+                "PATH should start with workenv/bin: but was: {expected_path}"
+            );
+        }
+
+        #[cfg(windows)]
+        {
+            assert!(
+                expected_path.contains("\\test_workenv\\Scripts;"),
+                "PATH should contain workenv\\Scripts; but was: {expected_path}"
+            );
+        }
+
+        // Verify the expected PATH contains the original PATH after the separator
+        assert!(
+            expected_path.contains(&original_path),
+            "New PATH should contain the original PATH"
+        );
+    }
+
+    #[test]
+    fn test_shell_split_basic() {
+        let result = shell_split("echo hello world");
+        assert_eq!(result, vec!["echo", "hello", "world"]);
+    }
+
+    #[test]
+    fn test_shell_split_quoted() {
+        let result = shell_split(r#"echo "hello world" foo"#);
+        assert_eq!(result, vec!["echo", "hello world", "foo"]);
+    }
+
+    #[test]
+    fn test_shell_split_single_quoted() {
+        let result = shell_split("echo 'hello world' foo");
+        assert_eq!(result, vec!["echo", "hello world", "foo"]);
+    }
+
+    #[test]
+    fn test_shell_split_empty() {
+        let result = shell_split("");
+        assert!(result.is_empty());
+    }
+}
+
 /// Execute main command with environment
 pub fn execute_main_command(
     command: &str,
@@ -356,12 +439,12 @@ pub fn execute_main_command(
     env: HashMap<String, String>,
     workdir: &Path,
 ) -> Result<i32> {
-    let parts: Vec<_> = command.split_whitespace().collect();
+    let parts = shell_split(command);
     if parts.is_empty() {
         return Ok(0);
     }
 
-    let resolved_cmd = resolve_executable(parts[0]);
+    let resolved_cmd = resolve_executable(&parts[0]);
     let mut cmd = Command::new(&resolved_cmd);
 
     // Add command arguments

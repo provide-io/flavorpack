@@ -89,7 +89,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
         );
         // Call verifier
         let verify_result = super::verifier::verify(package_path)?;
-        if verify_result.signature_valid {
+        if verify_result.valid {
             debug!("✅ Package integrity verified");
         } else if matches!(
             validation_level,

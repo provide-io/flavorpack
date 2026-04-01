@@ -1,6 +1,7 @@
 #!/bin/bash
 # Setup Python virtual environment with uv
 # Usage: setup-python-workenv.sh [extra-packages]
+# Requires: astral-sh/setup-uv action (provides uv + python)
 
 set -e
 
@@ -8,8 +9,8 @@ EXTRA_PACKAGES="${1:-}"
 
 echo "🐍 Setting up Python workenv..."
 
-# Create virtual environment
-python -m venv workenv
+# Create virtual environment using uv
+uv venv workenv
 
 # Activate based on OS
 if [[ "$RUNNER_OS" == "Windows" ]]; then
@@ -17,10 +18,6 @@ if [[ "$RUNNER_OS" == "Windows" ]]; then
 else
     source workenv/bin/activate
 fi
-
-# Install uv for faster dependency resolution
-echo "📦 Installing uv..."
-pip install --quiet uv
 
 # Install base testing packages
 echo "📦 Installing pytest and dependencies..."
@@ -40,5 +37,5 @@ fi
 
 echo "✅ Python workenv setup complete"
 echo "   Python: $(python --version)"
-echo "   Pip: $(pip --version)"
+echo "   uv: $(uv --version)"
 echo "   Pytest: $(pytest --version)"

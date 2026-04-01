@@ -29,4 +29,3 @@ func main() {
 	// All arguments are passed through - launcher only intercepts args when FLAVOR_LAUNCHER_CLI=1
 	format_2025.LaunchWithLogLevel(exePath, os.Args[1:], "", "")
 }
-

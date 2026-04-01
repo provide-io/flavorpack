@@ -148,16 +148,10 @@ class WheelBuilder:
                     wheel_cmd.extend([f"--{option}", str(value)])
 
         logger.debug("💻 Building wheel", command=" ".join(wheel_cmd))
-        result = run(wheel_cmd, check=True, capture_output=True)
+        run(wheel_cmd, check=True, capture_output=True)
 
         # Find the built wheel
         built_wheel = self._find_built_wheel(wheel_dir, source_path.name)
-
-        if result.stdout:
-            # Look for wheel filename in output
-            for line in result.stdout.strip().split("\n"):
-                if ".whl" in line:
-                    break
 
         return built_wheel
 
@@ -221,7 +215,7 @@ class WheelBuilder:
         # Create input requirements file if packages provided
         if packages and not requirements_file:
             requirements_file = output_dir / "requirements.in"
-            with requirements_file.open("w") as f:
+            with requirements_file.open("w", encoding="utf-8") as f:
                 for package in packages:
                     f.write(f"{package}\n")
 

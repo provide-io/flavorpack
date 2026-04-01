@@ -140,29 +140,24 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v6
       
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
+      - name: 📦 Setup uv + Python
+        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
         with:
           python-version: '3.11'
-      
+
       - name: 📦 Install License Tools
         run: |
-          python -m venv license-env
-          source license-env/bin/activate
-          pip install --upgrade pip
-          pip install \
+          uv sync
+          uv pip install \
             pip-licenses \
             licensecheck \
             license-expression \
             pip-audit \
             pipdeptree
-          
-          # Install project to analyze dependencies
-          pip install -e ".[dev,test]"
       
       - name: 📋 Generate License Report
         run: |
-          source license-env/bin/activate
+          source .venv/bin/activate
           echo "## 🐍 Python License Compliance" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
@@ -183,7 +178,7 @@ jobs:
       - name: 🔍 Check License Compliance
         id: check
         run: |
-          source license-env/bin/activate
+          source .venv/bin/activate
           echo "### Compliance Check" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
@@ -276,7 +271,7 @@ jobs:
       
       - name: 📊 License Statistics
         run: |
-          source license-env/bin/activate
+          source .venv/bin/activate
           echo "### License Distribution" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
@@ -320,7 +315,7 @@ jobs:
         uses: actions/checkout@v6
       
       - name: 🐹 Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: "${{ vars.GO_VERSION }}"
       
@@ -514,7 +509,7 @@ jobs:
           curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
           
           # Install cyclonedx tools
-          pip install cyclonedx-bom
+          uv tool install cyclonedx-bom
           npm install -g @cyclonedx/cli
       
       - name: 📋 Generate SBOM

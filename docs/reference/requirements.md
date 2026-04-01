@@ -67,25 +67,25 @@ Only required if you're building or modifying Go/Rust helper binaries:
 
 | Tool | Version | Source File | Verification |
 |------|---------|-------------|--------------|
-| **Go** | 1.23.0+ | `src/flavor-go/go.mod` | `go version` |
-| **Rust** | 1.85+ | `src/flavor-rs/Cargo.toml` | `rustc --version` |
+| **Go** | 1.26.0+ | `src/flavor-go/go.mod` | `go version` |
+| **Rust** | 1.86+ | `src/flavor-rs/Cargo.toml` | `rustc --version` |
 
 **Installation**:
 
 ```bash
-# Install Go 1.23+
+# Install Go 1.26+
 # Download from: https://go.dev/dl/
 # Or use your package manager:
-brew install go@1.23     # macOS
+brew install go@1.26     # macOS
 sudo apt install golang-go  # Ubuntu (check version!)
 
-# Install Rust 1.85+
+# Install Rust 1.86+
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 rustup update
 
 # Verify versions
-go version      # Should be 1.23.0 or higher
-rustc --version # Should be 1.85.0 or higher
+go version      # Should be 1.26.0 or higher
+rustc --version # Should be 1.86.0 or higher
 ```
 
 !!! tip "Pre-built Helpers"
@@ -168,6 +168,26 @@ Set these when running `.psp` packages for debugging:
 |----------|---------|--------|
 | `FOUNDATION_LOG_LEVEL` | Control package logging | `trace`, `debug`, `info`, `warning`, `error` |
 | `FLAVOR_WORKENV_DIR` | Custom cache location | Path to directory |
+| `FLAVOR_CACHE_DIR` | Override cache root | Path to directory (all platforms) |
+| `FLAVOR_INCLUDE_BUILD_HOST` | Include hostname in package build metadata | `1` to enable (off by default) |
+
+---
+
+## Cache Directory
+
+All three implementations (Python, Go, Rust) must use the same platform-aware cache
+root so that packages cached by one launcher are reused by another.
+
+| Platform | Default path | Override |
+|----------|-------------|---------|
+| **Linux / macOS** | `$XDG_CACHE_HOME/flavor` if set, otherwise `~/.cache/flavor` | `FLAVOR_CACHE_DIR` |
+| **Windows** | `%LOCALAPPDATA%\flavor` | `FLAVOR_CACHE_DIR` |
+
+Work environments are stored under `<cache-root>/workenvs/<name>_<version>/`.
+
+Hardcoding `~/.cache/flavor` anywhere in source is a bug — always call the
+platform-aware helper (`get_cache_dir()` in Python, `workenv.GetCacheRoot()` in Go,
+`get_cache_dir()` in Rust).
 
 ---
 

@@ -159,7 +159,9 @@ class TestEnhancedSlots:
 
     def test_slot_name_hashing(self) -> None:
         """Slot names should be hashed for fast lookup."""
-        from flavor.psp.format_2025.slots import SlotDescriptor, hash_name
+        from provide.foundation.crypto import hash_name
+
+        from flavor.psp.format_2025.slots import SlotDescriptor
 
         slot = SlotDescriptor(id=1, name="main.py")
         expected_hash = hash_name("main.py")

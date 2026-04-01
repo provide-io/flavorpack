@@ -187,9 +187,8 @@ class PSPFIndex:
 
         # Calculate checksum with checksum field set to 0
         checksum = zlib.adler32(data) & 0xFFFFFFFF
-        self.index_checksum = checksum
 
-        # Repack with the correct checksum
+        # Repack with the correct checksum (do not mutate self.index_checksum)
         data = struct.pack(
             self.FORMAT,
             self.format_version,

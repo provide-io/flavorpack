@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import sys
+from typing import Any, cast
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import dsa, ec, ed25519, rsa
@@ -20,6 +21,29 @@ from flavor.packaging.keys import (
     load_private_key_raw,
     load_public_key_raw,
 )
+
+
+def _serialize_private_key(key: Any) -> bytes:
+    """Serialize a private key to PEM bytes (works around incomplete type stubs)."""
+    return cast(
+        bytes,
+        key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption(),
+        ),
+    )
+
+
+def _serialize_public_key(key: Any) -> bytes:
+    """Serialize a public key to PEM bytes (works around incomplete type stubs)."""
+    return cast(
+        bytes,
+        key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+        ),
+    )
 
 
 @pytest.mark.unit
@@ -174,11 +198,7 @@ class TestLoadPrivateKeyRaw:
         """Test loading RSA key raises helpful error."""
         # Generate RSA key instead of Ed25519
         rsa_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-        rsa_pem = rsa_key.private_bytes(
-            encoding=serialization.Encoding.PEM,  # ty: ignore[invalid-argument-type]
-            format=serialization.PrivateFormat.PKCS8,  # ty: ignore[invalid-argument-type]
-            encryption_algorithm=serialization.NoEncryption(),
-        )
+        rsa_pem = _serialize_private_key(rsa_key)
 
         rsa_key_path = tmp_path / "rsa.key"
         rsa_key_path.write_bytes(rsa_pem)
@@ -190,11 +210,7 @@ class TestLoadPrivateKeyRaw:
         """Test loading EC key raises helpful error."""
         # Generate EC key
         ec_key = ec.generate_private_key(ec.SECP256R1())
-        ec_pem = ec_key.private_bytes(  # ty: ignore[unresolved-attribute]
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.PKCS8,
-            encryption_algorithm=serialization.NoEncryption(),
-        )
+        ec_pem = _serialize_private_key(ec_key)
 
         ec_key_path = tmp_path / "ec.key"
         ec_key_path.write_bytes(ec_pem)
@@ -206,11 +222,7 @@ class TestLoadPrivateKeyRaw:
         """Test loading DSA key raises helpful error."""
         # Generate DSA key
         dsa_key = dsa.generate_private_key(key_size=2048)
-        dsa_pem = dsa_key.private_bytes(  # ty: ignore[unresolved-attribute]
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.PKCS8,
-            encryption_algorithm=serialization.NoEncryption(),
-        )
+        dsa_pem = _serialize_private_key(dsa_key)
 
         dsa_key_path = tmp_path / "dsa.key"
         dsa_key_path.write_bytes(dsa_pem)
@@ -221,11 +233,7 @@ class TestLoadPrivateKeyRaw:
     def test_load_private_key_raw_helpful_error_message(self, tmp_path: Path) -> None:
         """Test error messages include helpful recovery instructions."""
         rsa_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-        rsa_pem = rsa_key.private_bytes(
-            encoding=serialization.Encoding.PEM,  # ty: ignore[invalid-argument-type]
-            format=serialization.PrivateFormat.PKCS8,  # ty: ignore[invalid-argument-type]
-            encryption_algorithm=serialization.NoEncryption(),
-        )
+        rsa_pem = _serialize_private_key(rsa_key)
 
         rsa_key_path = tmp_path / "rsa.key"
         rsa_key_path.write_bytes(rsa_pem)
@@ -273,10 +281,7 @@ class TestLoadPublicKeyRaw:
         # Generate RSA key and extract public key
         rsa_private = rsa.generate_private_key(public_exponent=65537, key_size=2048)
         rsa_public = rsa_private.public_key()
-        rsa_pub_pem = rsa_public.public_bytes(
-            encoding=serialization.Encoding.PEM,  # ty: ignore[invalid-argument-type]
-            format=serialization.PublicFormat.SubjectPublicKeyInfo,  # ty: ignore[invalid-argument-type]
-        )
+        rsa_pub_pem = _serialize_public_key(rsa_public)
 
         rsa_pub_path = tmp_path / "rsa_pub.key"
         rsa_pub_path.write_bytes(rsa_pub_pem)
@@ -289,10 +294,7 @@ class TestLoadPublicKeyRaw:
         # Generate EC key and extract public key
         ec_private = ec.generate_private_key(ec.SECP256R1())
         ec_public = ec_private.public_key()
-        ec_pub_pem = ec_public.public_bytes(
-            encoding=serialization.Encoding.PEM,  # ty: ignore[invalid-argument-type]
-            format=serialization.PublicFormat.SubjectPublicKeyInfo,  # ty: ignore[invalid-argument-type]
-        )
+        ec_pub_pem = _serialize_public_key(ec_public)
 
         ec_pub_path = tmp_path / "ec_pub.key"
         ec_pub_path.write_bytes(ec_pub_pem)
@@ -305,10 +307,7 @@ class TestLoadPublicKeyRaw:
         # Generate DSA key and extract public key
         dsa_private = dsa.generate_private_key(key_size=2048)
         dsa_public = dsa_private.public_key()
-        dsa_pub_pem = dsa_public.public_bytes(
-            encoding=serialization.Encoding.PEM,  # ty: ignore[invalid-argument-type]
-            format=serialization.PublicFormat.SubjectPublicKeyInfo,  # ty: ignore[invalid-argument-type]
-        )
+        dsa_pub_pem = _serialize_public_key(dsa_public)
 
         dsa_pub_path = tmp_path / "dsa_pub.key"
         dsa_pub_path.write_bytes(dsa_pub_pem)
@@ -320,10 +319,7 @@ class TestLoadPublicKeyRaw:
         """Test error messages include helpful recovery instructions."""
         rsa_private = rsa.generate_private_key(public_exponent=65537, key_size=2048)
         rsa_public = rsa_private.public_key()
-        rsa_pub_pem = rsa_public.public_bytes(
-            encoding=serialization.Encoding.PEM,  # ty: ignore[invalid-argument-type]
-            format=serialization.PublicFormat.SubjectPublicKeyInfo,  # ty: ignore[invalid-argument-type]
-        )
+        rsa_pub_pem = _serialize_public_key(rsa_public)
 
         rsa_pub_path = tmp_path / "rsa_pub.key"
         rsa_pub_path.write_bytes(rsa_pub_pem)

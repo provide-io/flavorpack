@@ -52,9 +52,8 @@
     clippy::explicit_into_iter_loop,
 )]
 #![allow(
-    // Temporarily allowed but should be fixed
-    clippy::too_many_arguments,  // Some functions need refactoring
-    missing_docs,  // TODO: Complete documentation
+    clippy::too_many_arguments, // Some functions need refactoring
+    missing_docs,               // Documentation is in progress
 )]
 
 pub mod api;

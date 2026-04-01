@@ -17,7 +17,7 @@ import pytest
 class TestParseJsonManifest:
     """Test _parse_json_manifest."""
 
-    def _write_json(self, tmp_path: Path, data: dict) -> Path:
+    def _write_json(self, tmp_path: Path, data: dict[str, object]) -> Path:
         p = tmp_path / "manifest.json"
         p.write_text(json.dumps(data))
         return p

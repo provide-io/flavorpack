@@ -71,7 +71,8 @@ jobs:
               {"name": "security", "runner": "ubuntu-latest", "marker": "security", "timeout": 15},
               {"name": "format-2025", "runner": "ubuntu-latest", "path": "tests/format_2025", "timeout": 30},
               {"name": "packaging", "runner": "ubuntu-latest", "path": "tests/packaging", "timeout": 25},
-              {"name": "cross-language", "runner": "ubuntu-latest", "marker": "cross_language", "timeout": 30}
+              {"name": "cross-language", "runner": "ubuntu-latest", "marker": "cross_language", "timeout": 30},
+              {"name": "parity", "runner": "ubuntu-latest", "marker": "parity", "timeout": 10, "parity_report": true}
             ]
           }
           EOF
@@ -106,14 +107,10 @@ jobs:
           # List available helpers
           ls -la helpers/bin/
       
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
+      - name: 📦 Setup uv + Python
+        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
         with:
           python-version: '3.11'
-
-      - name: 📦 Install uv
-        uses: astral-sh/setup-uv@v7
-        with:
           enable-cache: true
 
       - name: 📦 Install dependencies
@@ -134,9 +131,21 @@ jobs:
       - name: 🧪 Run tests
         run: |
           source workenv/bin/activate
-          .github/scripts/run-tests.sh "${{ matrix.marker }}" "${{ matrix.path }}" "${{ inputs.test_filter }}"
+          EXTRA_ARGS=""
+          if [ "${{ matrix.parity_report }}" = "true" ]; then
+            EXTRA_ARGS="--parity-report"
+          fi
+          .github/scripts/run-tests.sh "${{ matrix.marker }}" "${{ matrix.path }}" "${{ inputs.test_filter }}" "$EXTRA_ARGS"
         env:
           FLAVOR_REQUIRE_HELPERS: "1"
+
+      - name: 📊 Upload parity report
+        if: matrix.parity_report == true && always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: parity-report-${{ github.run_id }}
+          path: reports/parity-report.md
+        continue-on-error: true
 
       - name: 📊 Collect Test Metadata
         if: always()
@@ -210,12 +219,24 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
-      
+
+      # setup-python MUST come before setup-uv here.
+      # uv's python-build-standalone has no Python 3.11 ARM64 Windows build —
+      # it only added Windows ARM64 support starting with Python 3.13.
+      # Official CPython has had ARM64 Windows builds since 3.11.0, and
+      # actions/setup-python@v6 installs the native ARM64 binary on
+      # windows-11-arm runners. setup-uv then finds and uses that system
+      # Python instead of downloading an x86_64 fallback.
       - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
-      
+
+      - name: 📦 Setup uv
+        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
+        with:
+          enable-cache: true
+
       - name: 📥 Download platform-specific helpers
         uses: dawidd6/action-download-artifact@v19
         with:
@@ -292,13 +313,14 @@ jobs:
       - name: 📦 Install build tools
         shell: bash
         run: |
-          python -m pip install --upgrade pip
-          # CRITICAL: Use pip3 for wheel operations per CLAUDE.md
-          pip3 install build wheel setuptools
-      
+          uv venv .venv
+          uv pip install build wheel setuptools
+
       - name: 🎡 Build platform wheel
         shell: bash
-        run: .github/scripts/build-platform-wheel.sh "${{ matrix.python_platform }}"
+        run: |
+          source .venv/bin/activate 2>/dev/null || source .venv/Scripts/activate 2>/dev/null
+          .github/scripts/build-platform-wheel.sh "${{ matrix.python_platform }}"
       
       - name: 🔍 Validate wheel structure
         shell: bash
@@ -367,11 +389,24 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v6
       
-      - name: 🐍 Setup uv
-        uses: astral-sh/setup-uv@v7
+      # setup-python MUST come before setup-uv here.
+      # uv's python-build-standalone has no Python 3.11 ARM64 Windows build —
+      # it only added Windows ARM64 support starting with Python 3.13.
+      # Official CPython has had ARM64 Windows builds since 3.11.0, and
+      # actions/setup-python@v6 installs the native ARM64 binary on
+      # windows-11-arm runners. setup-uv then finds and uses that system
+      # Python instead of downloading an x86_64 fallback, which would cause
+      # uv to reject the win_arm64 wheel as incompatible.
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Setup uv
+        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
         with:
           enable-cache: true
-      
+
       - name: 📥 Download platform wheel
         uses: actions/download-artifact@v8
         with:

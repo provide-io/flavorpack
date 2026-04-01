@@ -84,16 +84,6 @@ log = get_command_logger("pack")
     type=click.Path(exists=True, file_okay=False, resolve_path=True),
     help="Base directory for {workenv} resolution (defaults to CWD).",
 )
-@click.option(
-    "--output-format",
-    type=click.Choice(["text", "json"], case_sensitive=False),
-    help="Output format (or set FLAVOR_OUTPUT_FORMAT env var).",
-)
-@click.option(
-    "--output-file",
-    type=str,
-    help="Output file path, STDOUT, or STDERR (or set FLAVOR_OUTPUT_FILE env var).",
-)
 def pack_command(
     pyproject_toml_path: str,
     output_path: str | None,
@@ -107,8 +97,6 @@ def pack_command(
     public_key: str | None,
     key_seed: str | None,
     workenv_base: str | None,
-    output_format: str | None,
-    output_file: str | None,
 ) -> None:
     """Pack the application for one or more target platforms."""
     log.debug(
@@ -124,9 +112,6 @@ def pack_command(
     _setup_workenv_base(workenv_base)
 
     try:
-        if not quiet:
-            pass
-
         built_artifacts = _build_package_artifacts(
             pyproject_toml_path,
             output_path,
@@ -192,8 +177,6 @@ def _process_built_artifacts(built_artifacts: list[Path], verify: bool, strip: b
     """Process each built artifact with verification and optimization reporting."""
     for artifact in built_artifacts:
         log.debug("Processing artifact", artifact=str(artifact), verify=verify, strip=strip)
-        if not quiet:
-            pass
 
         if strip and not quiet:
             pout("  📉 Binary optimized (debug symbols stripped)")
@@ -210,13 +193,24 @@ def _verify_artifact(artifact: Path, quiet: bool) -> None:
 
     try:
         result = verify_package(artifact)
-        if result["signature_valid"]:
+        if result.get("valid", False):
             log.info("Package verified successfully", artifact=str(artifact))
             if not quiet:
-                pass
+                pout("  ✅ Package integrity verified")
         else:
-            log.error("Package verification failed", artifact=str(artifact))
-            perr("  ❌ Package verification failed")
+            log.error(
+                "Package verification failed",
+                artifact=str(artifact),
+                checksums_valid=result.get("checksums_valid"),
+                signature_valid=result.get("signature_valid"),
+            )
+            failure_reasons: list[str] = []
+            if result.get("checksums_valid") is False:
+                failure_reasons.append("checksums invalid")
+            if result.get("signature_valid") is False:
+                failure_reasons.append("signature invalid")
+            detail = f" ({', '.join(failure_reasons)})" if failure_reasons else ""
+            perr(f"  ❌ Package verification failed{detail}")
             raise BuildError(f"Verification failed for {artifact}")
     except Exception as e:
         log.error("Verification error", artifact=str(artifact), error=str(e))
@@ -229,7 +223,7 @@ def _show_final_results(built_artifacts: list[Path], quiet: bool) -> None:
     if built_artifacts:
         log.info("All targets built successfully", artifact_count=len(built_artifacts))
         if not quiet:
-            pass
+            pout(f"✅ Successfully built {len(built_artifacts)} package(s)")
     else:
         log.warning("No targets were specified or built")
         pout("⚠️ No targets were specified or built.")

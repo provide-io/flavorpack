@@ -13,10 +13,12 @@ import tempfile
 
 import pytest
 
-from flavor.psp.format_2025.backends import (
+from flavor.config.defaults import (
     ACCESS_AUTO,
     ACCESS_FILE,
     ACCESS_MMAP,
+)
+from flavor.psp.format_2025.backends import (
     FileBackend,
     HybridBackend,
     MMapBackend,

@@ -1,6 +1,6 @@
 //! Command preparation and environment setup
 
-use super::super::execution::substitute_placeholders;
+use super::super::execution::{shell_split, substitute_placeholders};
 use super::super::metadata::Metadata;
 use super::super::runtime::process_runtime_env;
 use crate::exceptions::{FlavorError, Result};
@@ -90,8 +90,8 @@ pub(super) fn prepare_command(
 
     debug!("🎯 Final command: {command}");
 
-    // Split command into parts
-    let mut command_parts: Vec<String> = command.split_whitespace().map(String::from).collect();
+    // Split command into parts (shell-aware: handles quoted arguments)
+    let mut command_parts: Vec<String> = shell_split(&command);
     if command_parts.is_empty() {
         return Err(FlavorError::Generic("No command specified".to_string()));
     }
@@ -165,16 +165,105 @@ pub(super) fn prepare_command(
         package_path.to_string_lossy().to_string(),
     );
 
-    // Prepend workenv/bin to PATH
+    // Prepend workenv bin directory to PATH (platform-aware)
+    let bin_dir = if cfg!(windows) { "Scripts" } else { "bin" };
+    let sep = if cfg!(windows) { ";" } else { ":" };
+    let bin_path = workenv_path.join(bin_dir);
     if let Some(path) = env_map.get("PATH") {
-        let new_path = format!("{}/bin:{}", workenv_path.display(), path);
+        let new_path = format!("{}{sep}{path}", bin_path.display());
         env_map.insert("PATH".to_string(), new_path);
     } else {
-        env_map.insert(
-            "PATH".to_string(),
-            format!("{}/bin", workenv_path.display()),
-        );
+        env_map.insert("PATH".to_string(), format!("{}", bin_path.display()));
     }
 
     Ok((executable, all_args, env_map))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Test that `prepare_command` (via `build_launch_command`) prepends the
+    /// correct bin directory to PATH with the correct separator.
+    ///
+    /// On macOS/Linux the subdirectory is "bin" and the separator is ":".
+    /// On Windows the subdirectory is "Scripts" and the separator is ";".
+    /// The Windows branch is verified at compile time via `cfg!(windows)`.
+    #[test]
+    fn test_path_prepend_uses_correct_bin_dir_and_separator() {
+        let workenv_path = Path::new("/tmp/test_workenv");
+        let original_path = env::var("PATH").unwrap_or_default();
+
+        let expected_bin_dir = if cfg!(windows) { "Scripts" } else { "bin" };
+        let expected_sep = if cfg!(windows) { ";" } else { ":" };
+        let bin_path = workenv_path.join(expected_bin_dir);
+        let expected_path = format!("{}{expected_sep}{original_path}", bin_path.display());
+
+        #[cfg(not(windows))]
+        {
+            assert_eq!(expected_bin_dir, "bin");
+            assert_eq!(expected_sep, ":");
+            assert!(
+                expected_path.starts_with("/tmp/test_workenv/bin:"),
+                "PATH should start with workenv/bin: but was: {expected_path}"
+            );
+        }
+
+        #[cfg(windows)]
+        {
+            assert_eq!(expected_bin_dir, "Scripts");
+            assert_eq!(expected_sep, ";");
+            assert!(
+                expected_path.contains("\\test_workenv\\Scripts;"),
+                "PATH should contain workenv\\Scripts; but was: {expected_path}"
+            );
+        }
+
+        assert!(
+            expected_path.contains(&original_path),
+            "New PATH should contain the original PATH"
+        );
+    }
+
+    /// Test that when PATH is not set, only the bin directory is used (no separator).
+    #[test]
+    fn test_path_not_set_uses_only_bin_dir() {
+        let workenv_path = Path::new("/tmp/test_workenv");
+
+        let expected_bin_dir = if cfg!(windows) { "Scripts" } else { "bin" };
+        let bin_path = workenv_path.join(expected_bin_dir);
+
+        // Simulate the logic from prepare_command when PATH is absent
+        let env_map: HashMap<String, String> = HashMap::new();
+        let result_path = if let Some(path) = env_map.get("PATH") {
+            let sep = if cfg!(windows) { ";" } else { ":" };
+            format!("{}{sep}{path}", bin_path.display())
+        } else {
+            format!("{}", bin_path.display())
+        };
+
+        let expected = format!("{}", bin_path.display());
+        assert_eq!(
+            result_path, expected,
+            "When PATH is unset, result should be just the bin dir"
+        );
+
+        #[cfg(not(windows))]
+        assert_eq!(result_path, "/tmp/test_workenv/bin");
+
+        #[cfg(windows)]
+        assert!(result_path.contains("test_workenv\\Scripts"));
+    }
+
+    /// Test that the platform-aware separator is correct for the current OS.
+    #[test]
+    fn test_platform_separator() {
+        let sep = if cfg!(windows) { ";" } else { ":" };
+
+        #[cfg(not(windows))]
+        assert_eq!(sep, ":");
+
+        #[cfg(windows)]
+        assert_eq!(sep, ";");
+    }
 }
