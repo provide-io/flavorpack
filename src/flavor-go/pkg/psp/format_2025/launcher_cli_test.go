@@ -151,6 +151,26 @@ func TestCLIMetadataAndVerificationPaths(t *testing.T) {
 	}
 }
 
+func TestShowBundleInfoReportsCodecInfo(t *testing.T) {
+	logger := hclog.NewNullLogger()
+	bundle := buildSingleSlotBundleForTests(t, []byte("cli file content"), []byte("cli file content"), []uint8{OP_GZIP}, SlotMetadata{
+		ID:         "cli-slot",
+		Target:     "{workenv}/bin/app.txt",
+		Operations: "gzip",
+	}, 0, false)
+
+	output := captureStdout(t, func() {
+		showBundleInfo(bundle, logger)
+	})
+
+	if !strings.Contains(output, "demo v1.0.0") {
+		t.Fatalf("showBundleInfo() output = %q", output)
+	}
+	if !strings.Contains(output, "Slots: 1 (gzip) | Verified: ✓") {
+		t.Fatalf("showBundleInfo() output = %q", output)
+	}
+}
+
 func TestVerifyBundleDirectSuccess(t *testing.T) {
 	t.Parallel()
 
