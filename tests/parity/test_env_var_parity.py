@@ -20,6 +20,7 @@ REPO_ROOT = Path(__file__).parents[2]
 GO_SRC = REPO_ROOT / "src/flavor-go"
 RUST_SRC = REPO_ROOT / "src/flavor-rs"
 PYTHON_SRC = REPO_ROOT / "src/flavor"
+pytestmark = [pytest.mark.cross_language, pytest.mark.ci, pytest.mark.integration]
 
 # Env vars that must appear in Python source.
 # Note: Python uses FLAVOR_CACHE (not FLAVOR_CACHE_DIR) for its own cache directory;

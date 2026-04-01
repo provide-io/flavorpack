@@ -14,6 +14,13 @@ import pytest
 
 from flavor.psp.format_2025.targets import normalize_workenv_target
 
+pytestmark = [
+    pytest.mark.cross_language,
+    pytest.mark.ci,
+    pytest.mark.security,
+    pytest.mark.adversarial,
+]
+
 
 # ---------------------------------------------------------------------------
 # Rejects .. traversal in slot targets
