@@ -265,43 +265,6 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger *slo
 	// Policy enforcement
 	opPolicy, policyErr := LoadOperatorPolicy()
 	if policyErr != nil {
-		logger.Error("❌ Failed to load operator policy", "error", policyErr)
-		return nil, fmt.Errorf("failed to load operator policy: %w", policyErr)
-	}
-
-	var pkgPolicy PackagePolicy
-	if metadata.Policy != nil {
-		pkgPolicy = *metadata.Policy
-	}
-
-	effective := MergePolicy(pkgPolicy, opPolicy)
-
-	hasSBOM := false
-	for _, slot := range metadata.Slots {
-		if slot.Lifecycle == "attestation" {
-			hasSBOM = true
-			break
-		}
-	}
-
-	buildTimestamp, tsErr := uint64ToInt64Checked(index.BuildTimestamp, "build timestamp")
-	if tsErr != nil {
-		logger.Error("❌ Invalid build timestamp", "error", tsErr)
-		return nil, fmt.Errorf("invalid build timestamp: %w", tsErr)
-	}
-	policyWarnings, enforceErr := EnforcePolicy(effective, buildTimestamp, hasSBOM, keyTrusted)
-	for _, w := range policyWarnings {
-		logger.Warn("⚠️  Policy warning", "message", w)
-	}
-	if enforceErr != nil {
-		logger.Error("❌ Policy violation", "error", enforceErr)
-		return nil, fmt.Errorf("policy violation: %w", enforceErr)
-	}
-	logger.Debug("✅ Policy enforcement passed")
-
-	// Policy enforcement
-	opPolicy, policyErr := LoadOperatorPolicy()
-	if policyErr != nil {
 		fmt.Fprintf(os.Stderr, "WARN: failed to load operator policy: %v\n", policyErr)
 		opPolicy = OperatorPolicy{}
 	}

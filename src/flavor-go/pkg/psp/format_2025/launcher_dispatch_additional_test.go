@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -230,6 +231,62 @@ func TestExecBundleReplaceWithStubbedSyscallExec(t *testing.T) {
 	}
 	if !called {
 		t.Fatal("expected stub syscall.Exec hook to be called")
+	}
+}
+
+func TestExecBundleReplaceResolvesBinaryFromWorkenvPath(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("exec mode path re-resolution is only exercised on non-Windows hosts")
+	}
+
+	t.Setenv(EnvValidation, "none")
+	t.Setenv(EnvWorkenvCache, "false")
+	t.Setenv("FLAVOR_CACHE_DIR", t.TempDir())
+
+	toolTar := buildTarArchiveWithDirAndFile(t, "bin", "tool", 0o755, []byte("#!/bin/sh\nexit 0\n"))
+	bundle := buildMultiSlotBundleForTests(t, []multiSlotBundleSpec{
+		{
+			meta: SlotMetadata{
+				ID:     "tool-slot",
+				Target: "{workenv}",
+			},
+			storedData:   gzipDataForExecutionTests(t, toolTar),
+			originalData: toolTar,
+			operations:   []uint8{OP_TAR, OP_GZIP},
+			permissions:  0o755,
+		},
+	}, Metadata{
+		Format:        "PSPF/2025",
+		FormatVersion: "2025.0",
+		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
+		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "tool"},
+		Build:         &BuildInfo{Tool: "flavor-go"},
+	})
+
+	logger := hclog.NewNullLogger()
+	oldSyscallExecFn := syscallExecFn
+	t.Cleanup(func() {
+		syscallExecFn = oldSyscallExecFn
+	})
+
+	var gotBinary string
+	syscallExecFn = func(binary string, argv []string, envv []string) error {
+		gotBinary = binary
+		return errors.New("stub exec")
+	}
+
+	err := execBundleReplace(bundle, nil, t.TempDir(), logger)
+	if err == nil || !strings.Contains(err.Error(), "stub exec") {
+		t.Fatalf("execBundleReplace() error = %v, want stub exec", err)
+	}
+	if gotBinary == "" {
+		t.Fatal("expected syscallExecFn to receive a binary path")
+	}
+	if !filepath.IsAbs(gotBinary) {
+		t.Fatalf("expected resolved binary path, got %q", gotBinary)
+	}
+	if filepath.Base(gotBinary) != "tool" {
+		t.Fatalf("expected resolved tool binary, got %q", gotBinary)
 	}
 }
 
