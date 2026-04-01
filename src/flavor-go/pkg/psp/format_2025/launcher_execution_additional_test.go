@@ -1,22 +1,18 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
-	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
-func newExecutionSlotsExtractionContext(t *testing.T, bundle string) (*Reader, *PSPFIndex, *Metadata, *slog.Logger) {
+func newExecutionSlotsExtractionContext(t *testing.T, bundle string) (*Reader, *PSPFIndex, *Metadata, hclog.Logger) {
 	t.Helper()
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	reader, err := NewReaderWithLogger(bundle, logger)
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger() error = %v", err)
@@ -41,7 +37,7 @@ func newExecutionSlotsExtractionContext(t *testing.T, bundle string) (*Reader, *
 
 func TestExtractAndMergeSlotsToWorkenvMergesSlotZeroDirectoriesAndMarksExtractionComplete(t *testing.T) {
 	cacheRoot := t.TempDir()
-	t.Setenv(EnvCacheDir, cacheRoot)
+	t.Setenv("FLAVOR_CACHE_DIR", cacheRoot)
 
 	metadata := Metadata{
 		Format:        "PSPF/2025",
@@ -125,7 +121,7 @@ func TestExtractAndMergeSlotsToWorkenvMergesSlotZeroDirectoriesAndMarksExtractio
 
 func TestExtractAndMergeSlotsToWorkenvMergesHigherSlotDirectoriesIntoWorkenvRoot(t *testing.T) {
 	cacheRoot := t.TempDir()
-	t.Setenv(EnvCacheDir, cacheRoot)
+	t.Setenv("FLAVOR_CACHE_DIR", cacheRoot)
 
 	metadata := Metadata{
 		Format:        "PSPF/2025",
@@ -184,7 +180,7 @@ func TestExtractAndMergeSlotsToWorkenvMergesHigherSlotDirectoriesIntoWorkenvRoot
 
 func TestExtractAndMergeSlotsToWorkenvReportsCopyFailureWhenDestinationIsDirectory(t *testing.T) {
 	cacheRoot := t.TempDir()
-	t.Setenv(EnvCacheDir, cacheRoot)
+	t.Setenv("FLAVOR_CACHE_DIR", cacheRoot)
 
 	metadata := Metadata{
 		Format:        "PSPF/2025",
