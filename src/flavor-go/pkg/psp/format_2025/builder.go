@@ -98,7 +98,8 @@ func BuildWithLogLevel(manifestPath, outputPath, launcherBin, privateKeyPath, pu
 
 	// Support log file output
 	if logPath := os.Getenv(EnvLogPath); logPath != "" {
-		if file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644); err == nil {
+		if file, err := openFileValidated(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.FileMode(FilePerms)); err == nil {
+			defer func() { _ = file.Close() }()
 			output = file
 		}
 	}
