@@ -224,6 +224,38 @@ func TestExecBundleReplaceWithStubbedSyscallExec(t *testing.T) {
 	}
 }
 
+func TestSpawnBundleReturnsStartFailure(t *testing.T) {
+	t.Setenv(EnvValidation, "none")
+	t.Setenv(EnvWorkenvCache, "false")
+
+	bundle := buildMultiSlotBundleForTests(t, []multiSlotBundleSpec{
+		{
+			meta: SlotMetadata{
+				ID:     "spawn-slot",
+				Target: "{workenv}",
+			},
+			storedData:   []byte("ok"),
+			originalData: []byte("ok"),
+			permissions:  0o644,
+		},
+	}, Metadata{
+		Format:        "PSPF/2025",
+		FormatVersion: "2025.0",
+		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
+		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/definitely/missing/binary"},
+		Build:         &BuildInfo{Tool: "flavor-go"},
+	})
+
+	logger := hclog.NewNullLogger()
+	err := spawnBundle(bundle, []string{"arg1"}, t.TempDir(), logger)
+	if err == nil {
+		t.Fatal("expected spawnBundle() to fail when command cannot be started")
+	}
+	if !strings.Contains(err.Error(), "failed to start process") {
+		t.Fatalf("spawnBundle() error = %v", err)
+	}
+}
+
 func TestDetectLauncherAndBuilderTypes(t *testing.T) {
 	oldArgs0 := os.Args[0]
 	t.Cleanup(func() {
