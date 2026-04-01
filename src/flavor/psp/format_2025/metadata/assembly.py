@@ -31,59 +31,80 @@ def get_flavor_version() -> str:
     return get_version("flavorpack", caller_file=__file__)
 
 
-def load_launcher_binary(launcher_type: str) -> bytes:  # pragma: no cover
+def _launcher_candidate_names(launcher_base: str, platform_str: str, is_windows: bool) -> list[str]:
+    """Return candidate binary filenames to try, most-specific first."""
+    names = [f"{launcher_base}-{platform_str}", launcher_base]
+    if is_windows:
+        names = [f"{launcher_base}-{platform_str}.exe", f"{launcher_base}.exe", *names]
+    return names
+
+
+def _find_launcher_in_dir(
+    base_path: Path, launcher_base: str, platform_str: str, names: list[str], is_windows: bool
+) -> Path | None:
+    """Return the first matching launcher path under base_path, or None."""
+    for name in names:
+        p = base_path / name
+        if p.exists():
+            return p
+    if base_path.is_dir():
+        patterns = [f"{launcher_base}-*-{platform_str}"]
+        if is_windows:
+            patterns.insert(0, f"{launcher_base}-*-{platform_str}.exe")
+        for pattern in patterns:
+            matches = sorted(base_path.glob(pattern), reverse=True)
+            if matches:
+                return matches[0]
+    return None
+
+
+def load_launcher_binary(launcher_type: str, explicit_path: Path | None = None) -> bytes:  # pragma: no cover
     """Load launcher binary for the specified type."""
-    import os
+    import sys
 
     platform_str = get_platform_string()
+    is_windows = sys.platform == "win32"
 
-    # Map launcher types to binary names
     launcher_map = {
         "rust": "flavor-rs-launcher",
         "go": "flavor-go-launcher",
-        "python": "flavor-rs-launcher",  # Python uses Rust launcher
-        "node": "flavor-rs-launcher",  # Node uses Rust launcher
+        "python": "flavor-rs-launcher",
+        "node": "flavor-rs-launcher",
     }
-
     launcher_base = launcher_map.get(launcher_type, "flavor-rs-launcher")
 
-    # Try both platform-specific and generic names
-    launcher_names = [
-        f"{launcher_base}-{platform_str}",  # Platform-specific first
-        launcher_base,  # Generic fallback
-    ]
+    # Explicit path (--launcher-bin CLI flag) takes highest priority
+    if explicit_path is not None and explicit_path.exists():
+        return explicit_path.read_bytes()
 
-    # Get XDG_CACHE_HOME with fallback to ~/.cache
+    # ENV_LAUNCHER_BIN set by CI environment
+    env_launcher = os.environ.get(ENV_LAUNCHER_BIN)
+    if env_launcher:
+        env_path = Path(env_launcher)
+        if env_path.exists():
+            return env_path.read_bytes()
+
+    launcher_names = _launcher_candidate_names(launcher_base, platform_str, is_windows)
+
     xdg_cache = os.environ.get("XDG_CACHE_HOME", str(Path("~/.cache").expanduser()))
-
-    # Search paths - prioritize helpers/bin first, then XDG cache location
     base_search_paths = [
-        Path.cwd() / "dist" / "bin",  # Built binaries (make build-helpers)
+        Path.cwd() / "dist" / "bin",
         Path.cwd() / "helpers" / "bin",
         Path.cwd().parent / "helpers" / "bin",
-        Path.cwd().parent.parent / "helpers" / "bin",  # For tests
-        Path(xdg_cache) / "flavor" / "helpers" / "bin",  # XDG cache location
-        Path.home() / ".cache" / "flavor" / "helpers" / "bin",  # Fallback cache
+        Path.cwd().parent.parent / "helpers" / "bin",
+        Path(xdg_cache) / "flavor" / "helpers" / "bin",
+        Path.home() / ".cache" / "flavor" / "helpers" / "bin",
         Path.cwd() / "workenv" / "flavors" / platform_str,
-        Path.cwd() / "helpers" / "bin",  # Development helpers
-        Path.cwd() / "src" / "flavor" / "helpers" / "bin",  # Installed helpers
+        Path.cwd() / "src" / "flavor" / "helpers" / "bin",
         Path.cwd(),
     ]
 
-    # Try each launcher name in each search path
     for base_path in base_search_paths:
-        for launcher_name in launcher_names:
-            path = base_path / launcher_name
-            if path.exists():
-                data = path.read_bytes()
-                assert isinstance(data, bytes)
-                return data
+        found = _find_launcher_in_dir(base_path, launcher_base, platform_str, launcher_names, is_windows)
+        if found:
+            return found.read_bytes()
 
-    # Build helpful error message showing all searched paths
-    searched_paths = []
-    for base_path in base_search_paths:
-        for launcher_name in launcher_names:
-            searched_paths.append(str(base_path / launcher_name))
+    searched_paths = [str(base_path / name) for base_path in base_search_paths for name in launcher_names]
 
     raise FileNotFoundError(
         f"❌ Could not find {launcher_base} binary!\n"
