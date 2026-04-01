@@ -100,10 +100,7 @@ func buildBundle(cmd *cobra.Command, args []string) {
 	}
 	// Set workenv base if provided via flag
 	if workenvBase != "" {
-		if err := os.Setenv(envvars.EnvWorkenvBase, workenvBase); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to set workenv base: %v\n", err)
-			os.Exit(1)
-		}
+		os.Setenv(envvars.EnvWorkenvBase, workenvBase)
 	}
 	pkg.BuildPackageWithLogLevel(manifestPath, outputPath, launcherBin, privateKeyPath, publicKeyPath, keySeed, logLevel)
 }

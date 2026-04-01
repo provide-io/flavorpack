@@ -23,7 +23,7 @@ func setFlavorCacheBeforeWorkenv(env []string, logger *slog.Logger) []string {
 
 	// Use workenv.GetCacheRoot() for cross-platform cache directory consistency
 	flavorCache := filepath.Join(workenv.GetCacheRoot(), "workenv")
-	env = append(env, fmt.Sprintf("FLAVOR_CACHE=%s", flavorCache))
+	env = append(env, fmt.Sprintf("%s=%s", EnvCache, flavorCache))
 	logger.Debug("🗂️ Setting FLAVOR_CACHE to HOST cache", "path", flavorCache)
 	return env
 }

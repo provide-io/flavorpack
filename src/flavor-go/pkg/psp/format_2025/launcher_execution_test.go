@@ -266,7 +266,7 @@ func TestPrepareBundlePathReturnsExecutableWithoutResource(t *testing.T) {
 
 func TestRunBundleWithCwdPreparesWorkenvAndCommands(t *testing.T) {
 	cacheRoot := t.TempDir()
-	t.Setenv("FLAVOR_CACHE_DIR", cacheRoot)
+	t.Setenv(EnvCacheDir, cacheRoot)
 	t.Setenv(EnvValidation, "none")
 	t.Setenv(EnvWorkenvCache, "false")
 
@@ -393,7 +393,7 @@ func TestRunBundleWithCwdPreparesWorkenvAndCommands(t *testing.T) {
 	}
 
 	env := strings.Join(cmd.Env, "\n")
-	if !strings.Contains(env, "FLAVOR_WORKENV="+workenvDir) {
+	if !strings.Contains(env, EnvWorkenv+"="+workenvDir) {
 		t.Fatalf("expected FLAVOR_WORKENV to point at workenv, env=%q", env)
 	}
 	if !strings.Contains(env, "RUNTIME_FLAG=on") {
@@ -406,7 +406,7 @@ func TestRunBundleWithCwdPreparesWorkenvAndCommands(t *testing.T) {
 
 func TestRunBundleWithCwdMergesTarSlotDirectories(t *testing.T) {
 	cacheRoot := t.TempDir()
-	t.Setenv("FLAVOR_CACHE_DIR", cacheRoot)
+	t.Setenv(EnvCacheDir, cacheRoot)
 	t.Setenv(EnvValidation, "none")
 	t.Setenv(EnvWorkenvCache, "false")
 
@@ -472,7 +472,7 @@ func TestRunBundleWithCwdMergesTarSlotDirectories(t *testing.T) {
 
 func TestExtractAndMergeSlotsToWorkenvMergesContentAndWritesMetadata(t *testing.T) {
 	cacheRoot := t.TempDir()
-	t.Setenv("FLAVOR_CACHE_DIR", cacheRoot)
+	t.Setenv(EnvCacheDir, cacheRoot)
 
 	slotZeroTar := buildTarArchiveWithDirAndFile(t, "bin", "tool.sh", 0o755, []byte("#!/bin/sh\nexit 0\n"))
 	slotOneTar := buildTarArchiveWithDirAndFile(t, "shared", "payload.txt", 0o644, []byte("payload"))
@@ -579,7 +579,7 @@ func TestExtractAndMergeSlotsToWorkenvMergesContentAndWritesMetadata(t *testing.
 
 func TestExtractAndMergeSlotsToWorkenvMovesSlotTopLevelFilesToWorkenvRoot(t *testing.T) {
 	cacheRoot := t.TempDir()
-	t.Setenv("FLAVOR_CACHE_DIR", cacheRoot)
+	t.Setenv(EnvCacheDir, cacheRoot)
 
 	slotZeroTar := buildTarArchiveWithFile(t, "tool.sh", 0o755, []byte("#!/bin/sh\nexit 0\n"))
 	slotOneTar := buildTarArchiveWithFile(t, "config.json", 0o644, []byte(`{"ok":true}`))
@@ -644,7 +644,7 @@ func TestExtractAndMergeSlotsToWorkenvMovesSlotTopLevelFilesToWorkenvRoot(t *tes
 
 func TestExtractAndMergeSlotsToWorkenvMergesRegularTargetDirectories(t *testing.T) {
 	cacheRoot := t.TempDir()
-	t.Setenv("FLAVOR_CACHE_DIR", cacheRoot)
+	t.Setenv(EnvCacheDir, cacheRoot)
 
 	assetsTar := buildTarArchiveWithDirAndFile(t, "images", "logo.txt", 0o644, []byte("logo"))
 	metadata := Metadata{
@@ -793,7 +793,7 @@ func TestExtractAndMergeSlotsToWorkenvFailsWhenTempExtractionCannotBeCreated(t *
 		Build:     &BuildInfo{Tool: "flavor-go"},
 	})
 
-	t.Setenv("FLAVOR_CACHE_DIR", fileRoot)
+	t.Setenv(EnvCacheDir, fileRoot)
 
 	logger := hclog.NewNullLogger()
 	reader, err := NewReaderWithLogger(bundle, logger)
@@ -823,7 +823,7 @@ func TestExtractAndMergeSlotsToWorkenvFailsWhenTempExtractionCannotBeCreated(t *
 
 func TestExtractAndMergeSlotsToWorkenvMovesRegularFilesToWorkenv(t *testing.T) {
 	cacheRoot := t.TempDir()
-	t.Setenv("FLAVOR_CACHE_DIR", cacheRoot)
+	t.Setenv(EnvCacheDir, cacheRoot)
 
 	metadata := Metadata{
 		Format:        "PSPF/2025",
@@ -881,7 +881,7 @@ func TestExtractAndMergeSlotsToWorkenvMovesRegularFilesToWorkenv(t *testing.T) {
 
 func TestExtractAndMergeSlotsToWorkenvFailsWhenMetadataPathIsAFile(t *testing.T) {
 	cacheRoot := t.TempDir()
-	t.Setenv("FLAVOR_CACHE_DIR", cacheRoot)
+	t.Setenv(EnvCacheDir, cacheRoot)
 
 	metadata := Metadata{
 		Format:        "PSPF/2025",
@@ -970,7 +970,7 @@ func TestExecBundleSpawnMode(t *testing.T) {
 
 func TestRunBundleWithCwdUsesValidCache(t *testing.T) {
 	cacheRoot := t.TempDir()
-	t.Setenv("FLAVOR_CACHE_DIR", cacheRoot)
+	t.Setenv(EnvCacheDir, cacheRoot)
 	t.Setenv(EnvValidation, "none")
 	t.Setenv(EnvWorkenvCache, "true")
 
@@ -1055,13 +1055,13 @@ func TestRunBundleWithCwdUsesCustomWorkenvPath(t *testing.T) {
 	if _, err := os.Stat(expectedWorkenv); err != nil {
 		t.Fatalf("expected derived workenv to exist: %v", err)
 	}
-	if env := strings.Join(cmd.Env, "\n"); !strings.Contains(env, "FLAVOR_WORKENV="+expectedWorkenv) {
+	if env := strings.Join(cmd.Env, "\n"); !strings.Contains(env, EnvWorkenv+"="+expectedWorkenv) {
 		t.Fatalf("expected FLAVOR_WORKENV=%s in env, got env=%q", expectedWorkenv, env)
 	}
 }
 
 func TestRunBundleWithCwdRejectsInvalidSetupCommand(t *testing.T) {
-	t.Setenv("FLAVOR_CACHE_DIR", t.TempDir())
+	t.Setenv(EnvCacheDir, t.TempDir())
 	t.Setenv(EnvValidation, "none")
 	t.Setenv(EnvWorkenvCache, "false")
 
@@ -1091,7 +1091,7 @@ func TestRunBundleWithCwdRejectsInvalidSetupCommand(t *testing.T) {
 }
 
 func TestRunBundleWithCwdIgnoresUnknownSetupCommandType(t *testing.T) {
-	t.Setenv("FLAVOR_CACHE_DIR", t.TempDir())
+	t.Setenv(EnvCacheDir, t.TempDir())
 	t.Setenv(EnvValidation, "none")
 	t.Setenv(EnvWorkenvCache, "false")
 
@@ -1125,7 +1125,7 @@ func TestRunBundleWithCwdIgnoresUnknownSetupCommandType(t *testing.T) {
 }
 
 func TestRunBundleWithCwdRejectsPolicyViolation(t *testing.T) {
-	t.Setenv("FLAVOR_CACHE_DIR", t.TempDir())
+	t.Setenv(EnvCacheDir, t.TempDir())
 	t.Setenv(EnvValidation, "none")
 	t.Setenv(EnvWorkenvCache, "false")
 
@@ -1157,7 +1157,7 @@ func TestRunBundleWithCwdRejectsPolicyViolation(t *testing.T) {
 }
 
 func TestRunBundleWithCwdRejectsEscapingWorkenvDirectory(t *testing.T) {
-	t.Setenv("FLAVOR_CACHE_DIR", t.TempDir())
+	t.Setenv(EnvCacheDir, t.TempDir())
 	t.Setenv(EnvValidation, "none")
 	t.Setenv(EnvWorkenvCache, "false")
 
@@ -1191,7 +1191,7 @@ func TestRunBundleWithCwdRejectsEscapingWorkenvDirectory(t *testing.T) {
 }
 
 func TestRunBundleWithCwdRejectsEscapingWriteFileSetupPath(t *testing.T) {
-	t.Setenv("FLAVOR_CACHE_DIR", t.TempDir())
+	t.Setenv(EnvCacheDir, t.TempDir())
 	t.Setenv(EnvValidation, "none")
 	t.Setenv(EnvWorkenvCache, "false")
 
@@ -1227,7 +1227,7 @@ func TestRunBundleWithCwdRejectsEscapingWriteFileSetupPath(t *testing.T) {
 }
 
 func TestRunBundleWithCwdRejectsEscapingEnumeratePath(t *testing.T) {
-	t.Setenv("FLAVOR_CACHE_DIR", t.TempDir())
+	t.Setenv(EnvCacheDir, t.TempDir())
 	t.Setenv(EnvValidation, "none")
 	t.Setenv(EnvWorkenvCache, "false")
 
@@ -1267,7 +1267,7 @@ func TestRunBundleWithCwdRejectsEscapingEnumeratePath(t *testing.T) {
 
 func TestRunBundleWithCwdFailsWhenMetadataDirCannotBeCreated(t *testing.T) {
 	cacheRoot := t.TempDir()
-	t.Setenv("FLAVOR_CACHE_DIR", cacheRoot)
+	t.Setenv(EnvCacheDir, cacheRoot)
 	t.Setenv(EnvValidation, "none")
 	t.Setenv(EnvWorkenvCache, "false")
 
@@ -1305,7 +1305,7 @@ func TestRunBundleWithCwdFailsWhenMetadataDirCannotBeCreated(t *testing.T) {
 }
 
 func TestRunBundleWithCwdRejectsInvalidExecutionCommandSyntax(t *testing.T) {
-	t.Setenv("FLAVOR_CACHE_DIR", t.TempDir())
+	t.Setenv(EnvCacheDir, t.TempDir())
 	t.Setenv(EnvValidation, "none")
 	t.Setenv(EnvWorkenvCache, "false")
 
@@ -1334,7 +1334,7 @@ func TestRunBundleWithCwdRejectsInvalidExecutionCommandSyntax(t *testing.T) {
 }
 
 func TestRunBundleWithCwdRejectsEmptyExecutionCommand(t *testing.T) {
-	t.Setenv("FLAVOR_CACHE_DIR", t.TempDir())
+	t.Setenv(EnvCacheDir, t.TempDir())
 	t.Setenv(EnvValidation, "none")
 	t.Setenv(EnvWorkenvCache, "false")
 
@@ -1363,7 +1363,7 @@ func TestRunBundleWithCwdRejectsEmptyExecutionCommand(t *testing.T) {
 }
 
 func TestRunBundleWithCwdFailsWhenSetupCommandExecutionFails(t *testing.T) {
-	t.Setenv("FLAVOR_CACHE_DIR", t.TempDir())
+	t.Setenv(EnvCacheDir, t.TempDir())
 	t.Setenv(EnvValidation, "none")
 	t.Setenv(EnvWorkenvCache, "false")
 
@@ -1394,7 +1394,7 @@ func TestRunBundleWithCwdFailsWhenSetupCommandExecutionFails(t *testing.T) {
 
 func TestRunBundleWithCwdValidationModesHandleIntegrityFailureDifferently(t *testing.T) {
 	cacheRoot := t.TempDir()
-	t.Setenv("FLAVOR_CACHE_DIR", cacheRoot)
+	t.Setenv(EnvCacheDir, cacheRoot)
 	t.Setenv(EnvWorkenvCache, "false")
 
 	bundle := buildSingleSlotBundleForTests(t, []byte("payload"), []byte("payload"), nil, SlotMetadata{
@@ -1420,7 +1420,7 @@ func TestRunBundleWithCwdValidationModesHandleIntegrityFailureDifferently(t *tes
 }
 
 func TestRunBundleWithCwdRejectsMissingExecutionConfiguration(t *testing.T) {
-	t.Setenv("FLAVOR_CACHE_DIR", t.TempDir())
+	t.Setenv(EnvCacheDir, t.TempDir())
 	t.Setenv(EnvValidation, "none")
 	t.Setenv(EnvWorkenvCache, "false")
 
@@ -1466,7 +1466,7 @@ func TestRunBundleWithCwdRejectsMissingExecutionConfiguration(t *testing.T) {
 }
 
 func TestRunBundleWithCwdRejectsMissingSlotReference(t *testing.T) {
-	t.Setenv("FLAVOR_CACHE_DIR", t.TempDir())
+	t.Setenv(EnvCacheDir, t.TempDir())
 	t.Setenv(EnvValidation, "none")
 	t.Setenv(EnvWorkenvCache, "false")
 
@@ -1517,10 +1517,10 @@ func TestLaunchWithLogLevelCLIBranches(t *testing.T) {
 		env     []string
 		wantErr bool
 	}{
-		{name: "help", args: []string{"help"}, env: []string{"FLAVOR_LAUNCHER_CLI=1"}, wantErr: false},
-		{name: "unknown command", args: []string{"bogus"}, env: []string{"FLAVOR_LAUNCHER_CLI=1"}, wantErr: true},
-		{name: "missing extract args", args: []string{"extract"}, env: []string{"FLAVOR_LAUNCHER_CLI=1"}, wantErr: true},
-		{name: "run command", args: []string{"run"}, env: []string{"FLAVOR_LAUNCHER_CLI=1", "FLAVOR_VALIDATION=none", "FLAVOR_EXEC_MODE=spawn"}, wantErr: false},
+		{name: "help", args: []string{"help"}, env: []string{EnvLauncherCLI + "=1"}, wantErr: false},
+		{name: "unknown command", args: []string{"bogus"}, env: []string{EnvLauncherCLI + "=1"}, wantErr: true},
+		{name: "missing extract args", args: []string{"extract"}, env: []string{EnvLauncherCLI + "=1"}, wantErr: true},
+		{name: "run command", args: []string{"run"}, env: []string{EnvLauncherCLI + "=1", EnvValidation + "=none", EnvExecMode + "=spawn"}, wantErr: false},
 	}
 
 	for _, tc := range cases {
@@ -1529,9 +1529,9 @@ func TestLaunchWithLogLevelCLIBranches(t *testing.T) {
 			cmd := exec.Command(os.Args[0], "-test.run=TestLaunchWithLogLevelCLIHelper")
 			cmd.Env = filteredEnv(
 				append(tc.env,
-					"FLAVOR_LAUNCHER_SUBPROCESS=1",
-					"FLAVOR_LAUNCHER_BUNDLE="+bundle,
-					"FLAVOR_LAUNCHER_ARGS="+strings.Join(tc.args, "\x1f"),
+					EnvLauncherSubprocess+"=1",
+					EnvLauncherBundle+"="+bundle,
+					EnvLauncherArgs+"="+strings.Join(tc.args, "\x1f"),
 				)...,
 			)
 
@@ -1550,14 +1550,14 @@ func TestLaunchWithLogLevelCLIBranches(t *testing.T) {
 }
 
 func TestLaunchWithLogLevelCLIHelper(t *testing.T) {
-	if os.Getenv("FLAVOR_LAUNCHER_SUBPROCESS") != "1" {
+	if os.Getenv(EnvLauncherSubprocess) != "1" {
 		return
 	}
 
-	bundle := os.Getenv("FLAVOR_LAUNCHER_BUNDLE")
-	args := strings.Split(os.Getenv("FLAVOR_LAUNCHER_ARGS"), "\x1f")
-	_ = os.Setenv(EnvValidation, os.Getenv("FLAVOR_VALIDATION"))
-	_ = os.Setenv(EnvExecMode, os.Getenv("FLAVOR_EXEC_MODE"))
+	bundle := os.Getenv(EnvLauncherBundle)
+	args := strings.Split(os.Getenv(EnvLauncherArgs), "\x1f")
+	_ = os.Setenv(EnvValidation, os.Getenv(EnvValidation))
+	_ = os.Setenv(EnvExecMode, os.Getenv(EnvExecMode))
 	LaunchWithLogLevel(bundle, args, "", "")
 }
 
@@ -1606,9 +1606,9 @@ func TestLaunchWithLogLevelNonCLIExitClassification(t *testing.T) {
 				Build:         &BuildInfo{Tool: "flavor-go"},
 			}),
 			env: map[string]string{
-				EnvValidation:      "none",
-				EnvWorkenvCache:    "false",
-				"FLAVOR_CACHE_DIR": t.TempDir(),
+				EnvValidation:   "none",
+				EnvWorkenvCache: "false",
+				EnvCacheDir:     t.TempDir(),
 			},
 			wantCode: ExitExtractionError,
 		},
@@ -1666,7 +1666,7 @@ func TestLaunchWithLogLevelNonCLIExitClassification(t *testing.T) {
 			for key, value := range tc.env {
 				t.Setenv(key, value)
 			}
-			t.Setenv("FLAVOR_LAUNCHER_CLI", "")
+			t.Setenv(EnvLauncherCLI, "")
 
 			defer func() {
 				r := recover()

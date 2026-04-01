@@ -73,7 +73,7 @@ func GetCacheRoot() string {
 // Priority: FLAVOR_CONFIG_DIR env → XDG_CONFIG_HOME/flavor → ~/.config/flavor
 // (Windows: %APPDATA%\flavor if no XDG_CONFIG_HOME)
 func GetConfigRoot() string {
-	if configDir := os.Getenv("FLAVOR_CONFIG_DIR"); configDir != "" {
+	if configDir := os.Getenv(envvars.EnvConfigDir); configDir != "" {
 		return configDir
 	}
 	if xdgConfig := os.Getenv("XDG_CONFIG_HOME"); xdgConfig != "" {

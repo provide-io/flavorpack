@@ -11,27 +11,27 @@ import (
 
 func TestSetFlavorCacheBeforeWorkenvSetsHostCache(t *testing.T) {
 	cacheRoot := t.TempDir()
-	t.Setenv("FLAVOR_CACHE_DIR", cacheRoot)
+	t.Setenv(EnvCacheDir, cacheRoot)
 	logger := hclog.NewNullLogger()
 
 	got := setFlavorCacheBeforeWorkenv([]string{"PATH=/usr/bin"}, logger)
 
-	if !hasEnv(got, "FLAVOR_CACHE") {
+	if !hasEnv(got, EnvCache) {
 		t.Fatalf("expected FLAVOR_CACHE to be set")
 	}
 	want := filepath.Join(cacheRoot, "workenv")
-	if value := getenv(got, "FLAVOR_CACHE", ""); value != want {
+	if value := getenv(got, EnvCache, ""); value != want {
 		t.Fatalf("unexpected FLAVOR_CACHE value %q", value)
 	}
 }
 
 func TestSetFlavorCacheBeforeWorkenvPreservesExistingValue(t *testing.T) {
 	logger := hclog.NewNullLogger()
-	env := []string{"FLAVOR_CACHE=/already/set"}
+	env := []string{EnvCache + "=/already/set"}
 
 	got := setFlavorCacheBeforeWorkenv(env, logger)
 
-	if value := getenv(got, "FLAVOR_CACHE", ""); value != "/already/set" {
+	if value := getenv(got, EnvCache, ""); value != "/already/set" {
 		t.Fatalf("expected existing FLAVOR_CACHE to be preserved, got %q", value)
 	}
 }
