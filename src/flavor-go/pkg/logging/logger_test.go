@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"strings"
 	"testing"
+
+	"github.com/provide-io/flavor/go/flavor/pkg/envvars"
 )
 
 func TestNewLoggerUsesPrefixWriterByDefault(t *testing.T) {
-	t.Setenv("FLAVOR_JSON_LOG", "0")
+	t.Setenv(envvars.EnvJSONLog, "0")
 	var buf bytes.Buffer
 
 	logger := NewLogger("test", "debug", &buf)
@@ -23,7 +25,7 @@ func TestNewLoggerUsesPrefixWriterByDefault(t *testing.T) {
 }
 
 func TestNewLoggerSupportsJSONMode(t *testing.T) {
-	t.Setenv("FLAVOR_JSON_LOG", "1")
+	t.Setenv(envvars.EnvJSONLog, "1")
 	var buf bytes.Buffer
 
 	logger := NewLogger("json-test", "info", &buf)
@@ -39,12 +41,12 @@ func TestNewLoggerSupportsJSONMode(t *testing.T) {
 }
 
 func TestGetLogLevelDefaultsAndOverrides(t *testing.T) {
-	t.Setenv("FLAVOR_LOG_LEVEL", "")
+	t.Setenv(envvars.EnvLogLevel, "")
 	if got := GetLogLevel(); got != "warn" {
 		t.Fatalf("got %q, want warn", got)
 	}
 
-	t.Setenv("FLAVOR_LOG_LEVEL", "trace")
+	t.Setenv(envvars.EnvLogLevel, "trace")
 	if got := GetLogLevel(); got != "trace" {
 		t.Fatalf("got %q, want trace", got)
 	}

@@ -166,7 +166,7 @@ func TestParsePackagePolicyJSON_Full(t *testing.T) {
 
 func TestLoadOperatorPolicy_MissingFile(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("FLAVOR_CONFIG_DIR", dir)
+	t.Setenv(EnvConfigDir, dir)
 	policy, err := LoadOperatorPolicy()
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
@@ -182,7 +182,7 @@ func TestLoadOperatorPolicy_WithFile(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "policy.toml"), []byte(content), 0600); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("FLAVOR_CONFIG_DIR", dir)
+	t.Setenv(EnvConfigDir, dir)
 	policy, err := LoadOperatorPolicy()
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
@@ -223,7 +223,7 @@ func TestParseMinimalTOML_IgnoresComments(t *testing.T) {
 }
 
 func TestGetUserPolicyFile_XDG(t *testing.T) {
-	t.Setenv("FLAVOR_CONFIG_DIR", "")
+	t.Setenv(EnvConfigDir, "")
 	t.Setenv("XDG_CONFIG_HOME", "/tmp/xdg")
 	t.Setenv("HOME", "")
 	path := getUserPolicyFile()
@@ -234,7 +234,7 @@ func TestGetUserPolicyFile_XDG(t *testing.T) {
 }
 
 func TestGetUserPolicyFile_Home(t *testing.T) {
-	t.Setenv("FLAVOR_CONFIG_DIR", "")
+	t.Setenv(EnvConfigDir, "")
 	t.Setenv("XDG_CONFIG_HOME", "")
 	t.Setenv("HOME", "/home/user")
 	path := getUserPolicyFile()
@@ -245,7 +245,7 @@ func TestGetUserPolicyFile_Home(t *testing.T) {
 }
 
 func TestGetUserPolicyFile_NoEnv(t *testing.T) {
-	t.Setenv("FLAVOR_CONFIG_DIR", "")
+	t.Setenv(EnvConfigDir, "")
 	t.Setenv("XDG_CONFIG_HOME", "")
 	t.Setenv("HOME", "")
 	// Should return "" or some default — just confirm no panic

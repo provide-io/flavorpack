@@ -10,8 +10,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/hashicorp/go-hclog"
 	"github.com/provide-io/flavor/go/flavor/pkg/envvars"
-	provlog "github.com/provide-io/provide-telemetry/go/logger"
 )
 
 // Setup initialises the logger from flavorpack env vars.
@@ -22,12 +22,13 @@ func Setup(logLevel string, output io.Writer) {
 	if IsJSONFormat(logLevel) {
 		format = provlog.LogFormatJSON
 	}
-	// Strip the "json:" prefix from the level string if present.
-	actualLevel := logLevel
-	if strings.HasPrefix(logLevel, "json:") {
-		actualLevel = logLevel[len("json:"):]
-	} else if logLevel == "json" {
-		actualLevel = "info"
+
+	// Determine if JSON format should be used
+	jsonFormat := os.Getenv(envvars.EnvJSONLog) == "1"
+
+	// Add prefix for non-JSON output
+	if !jsonFormat {
+		output = NewPrefixWriter("🐹 ", output)
 	}
 	provlog.Configure(provlog.LogConfig{
 		ServiceName: "flavor-go",
