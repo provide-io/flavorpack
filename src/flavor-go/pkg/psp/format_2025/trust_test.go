@@ -64,7 +64,7 @@ func TestComputeKeyFingerprint_WrongSize(t *testing.T) {
 // TestLoadTrustedKeys_EmptyDir returns an empty map (not error) for an existing but empty dir.
 func TestLoadTrustedKeys_EmptyDir(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("FLAVOR_TRUSTED_KEYS_DIR", dir)
+	t.Setenv(EnvTrustedKeysDir, dir)
 
 	keys, err := LoadTrustedKeys(false)
 	if err != nil {
@@ -77,7 +77,7 @@ func TestLoadTrustedKeys_EmptyDir(t *testing.T) {
 
 // TestLoadTrustedKeys_MissingDir returns an empty map (not error) when dir does not exist.
 func TestLoadTrustedKeys_MissingDir(t *testing.T) {
-	t.Setenv("FLAVOR_TRUSTED_KEYS_DIR", "/nonexistent/path/that/does/not/exist/trusted-keys")
+	t.Setenv(EnvTrustedKeysDir, "/nonexistent/path/that/does/not/exist/trusted-keys")
 
 	keys, err := LoadTrustedKeys(false)
 	if err != nil {
@@ -91,7 +91,7 @@ func TestLoadTrustedKeys_MissingDir(t *testing.T) {
 // TestLoadTrustedKeys_ValidKey loads a single .pub file correctly.
 func TestLoadTrustedKeys_ValidKey(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("FLAVOR_TRUSTED_KEYS_DIR", dir)
+	t.Setenv(EnvTrustedKeysDir, dir)
 
 	rawPub, pemBlock := generateTestKeyPEM(t)
 
@@ -128,9 +128,9 @@ func TestLoadTrustedKeys_ValidKey(t *testing.T) {
 
 // TestIsKeyTrusted_NoStore returns nil when no trusted-keys directory exists.
 func TestIsKeyTrusted_NoStore(t *testing.T) {
-	t.Setenv("FLAVOR_TRUSTED_KEYS_DIR", "/nonexistent/path/flavor/trusted-keys")
+	t.Setenv(EnvTrustedKeysDir, "/nonexistent/path/flavor/trusted-keys")
 	// Disable system config lookup
-	t.Setenv("FLAVOR_CONFIG_DIR", "/nonexistent/path/flavor/config")
+	t.Setenv(EnvConfigDir, "/nonexistent/path/flavor/config")
 
 	result, err := IsKeyTrusted("abc123", false)
 	if err != nil {
@@ -144,7 +144,7 @@ func TestIsKeyTrusted_NoStore(t *testing.T) {
 // TestIsKeyTrusted_Match returns true when the fingerprint is found in the store.
 func TestIsKeyTrusted_Match(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("FLAVOR_TRUSTED_KEYS_DIR", dir)
+	t.Setenv(EnvTrustedKeysDir, dir)
 
 	rawPub, pemBlock := generateTestKeyPEM(t)
 	if err := os.WriteFile(filepath.Join(dir, "mykey.pub"), pemBlock, 0600); err != nil {
@@ -171,7 +171,7 @@ func TestIsKeyTrusted_Match(t *testing.T) {
 // TestIsKeyTrusted_NoMatch returns false when the store exists but the fingerprint is absent.
 func TestIsKeyTrusted_NoMatch(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("FLAVOR_TRUSTED_KEYS_DIR", dir)
+	t.Setenv(EnvTrustedKeysDir, dir)
 
 	// Write a key so the dir is non-empty (store "exists" in a meaningful way)
 	_, pemBlock := generateTestKeyPEM(t)
