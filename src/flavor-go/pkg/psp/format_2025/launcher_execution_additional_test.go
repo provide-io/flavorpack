@@ -37,7 +37,7 @@ func newExecutionSlotsExtractionContext(t *testing.T, bundle string) (*Reader, *
 
 func TestExtractAndMergeSlotsToWorkenvMergesSlotZeroDirectoriesAndMarksExtractionComplete(t *testing.T) {
 	cacheRoot := t.TempDir()
-	t.Setenv("FLAVOR_CACHE_DIR", cacheRoot)
+	t.Setenv(EnvCacheDir, cacheRoot)
 
 	metadata := Metadata{
 		Format:        "PSPF/2025",
@@ -121,7 +121,7 @@ func TestExtractAndMergeSlotsToWorkenvMergesSlotZeroDirectoriesAndMarksExtractio
 
 func TestExtractAndMergeSlotsToWorkenvMergesHigherSlotDirectoriesIntoWorkenvRoot(t *testing.T) {
 	cacheRoot := t.TempDir()
-	t.Setenv("FLAVOR_CACHE_DIR", cacheRoot)
+	t.Setenv(EnvCacheDir, cacheRoot)
 
 	metadata := Metadata{
 		Format:        "PSPF/2025",
@@ -180,7 +180,7 @@ func TestExtractAndMergeSlotsToWorkenvMergesHigherSlotDirectoriesIntoWorkenvRoot
 
 func TestExtractAndMergeSlotsToWorkenvReportsCopyFailureWhenDestinationIsDirectory(t *testing.T) {
 	cacheRoot := t.TempDir()
-	t.Setenv("FLAVOR_CACHE_DIR", cacheRoot)
+	t.Setenv(EnvCacheDir, cacheRoot)
 
 	metadata := Metadata{
 		Format:        "PSPF/2025",

@@ -51,12 +51,12 @@ func buildLauncherTestBundle(t *testing.T) string {
 
 func filteredEnv(extra ...string) []string {
 	exclude := map[string]struct{}{
-		"FLAVOR_LAUNCHER_CLI":       {},
-		"FLAVOR_EXEC_MODE":          {},
-		"FLAVOR_VALIDATION":         {},
-		"FLAVOR_LAUNCHER_LOG_LEVEL": {},
-		"FLAVOR_LOG_LEVEL":          {},
-		"FLAVOR_LOG_PATH":           {},
+		EnvLauncherCLI:      {},
+		EnvExecMode:         {},
+		EnvValidation:       {},
+		EnvLauncherLogLevel: {},
+		EnvLogLevel:         {},
+		EnvLogPath:          {},
 	}
 
 	var env []string
@@ -77,7 +77,7 @@ func TestLaunchAndCLIHelpers(t *testing.T) {
 	bundle := buildLauncherTestBundle(t)
 	logPath := filepath.Join(t.TempDir(), "launcher.log")
 
-	t.Setenv("FLAVOR_LAUNCHER_CLI", "1")
+	t.Setenv(EnvLauncherCLI, "1")
 	t.Setenv(EnvLogPath, logPath)
 
 	t.Run("default info path", func(t *testing.T) {
@@ -120,10 +120,10 @@ func TestLaunchCLIPathsInSubprocess(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			cmd := exec.Command(os.Args[0], "-test.run=TestLaunchCLIErrorHelper")
 			cmd.Env = filteredEnv(
-				"FLAVOR_LAUNCHER_SUBPROCESS=1",
-				"FLAVOR_LAUNCHER_BUNDLE="+bundle,
-				"FLAVOR_LAUNCHER_CLI=1",
-				"FLAVOR_LAUNCHER_ARGS="+strings.Join(tc.args, "\x1f"),
+				EnvLauncherSubprocess+"=1",
+				EnvLauncherBundle+"="+bundle,
+				EnvLauncherCLI+"=1",
+				EnvLauncherArgs+"="+strings.Join(tc.args, "\x1f"),
 			)
 
 			output, err := cmd.CombinedOutput()
@@ -141,12 +141,12 @@ func TestLaunchCLIPathsInSubprocess(t *testing.T) {
 }
 
 func TestLaunchCLIErrorHelper(t *testing.T) {
-	if os.Getenv("FLAVOR_LAUNCHER_SUBPROCESS") != "1" {
+	if os.Getenv(EnvLauncherSubprocess) != "1" {
 		return
 	}
 
-	bundle := os.Getenv("FLAVOR_LAUNCHER_BUNDLE")
-	args := strings.Split(os.Getenv("FLAVOR_LAUNCHER_ARGS"), "\x1f")
+	bundle := os.Getenv(EnvLauncherBundle)
+	args := strings.Split(os.Getenv(EnvLauncherArgs), "\x1f")
 	LaunchWithLogLevel(bundle, args, "", "")
 }
 
@@ -166,10 +166,10 @@ func TestLaunchExecModesInSubprocess(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			cmd := exec.Command(os.Args[0], "-test.run=TestLaunchExecModesHelper")
 			cmd.Env = filteredEnv(
-				"FLAVOR_LAUNCHER_SUBPROCESS=1",
-				"FLAVOR_LAUNCHER_BUNDLE="+bundle,
-				"FLAVOR_VALIDATION=none",
-				"FLAVOR_EXEC_MODE="+tc.mode,
+				EnvLauncherSubprocess+"=1",
+				EnvLauncherBundle+"="+bundle,
+				EnvValidation+"=none",
+				EnvExecMode+"="+tc.mode,
 			)
 
 			output, err := cmd.CombinedOutput()
@@ -181,20 +181,20 @@ func TestLaunchExecModesInSubprocess(t *testing.T) {
 }
 
 func TestLaunchExecModesHelper(t *testing.T) {
-	if os.Getenv("FLAVOR_LAUNCHER_SUBPROCESS") != "1" {
+	if os.Getenv(EnvLauncherSubprocess) != "1" {
 		return
 	}
 
-	bundle := os.Getenv("FLAVOR_LAUNCHER_BUNDLE")
-	_ = os.Unsetenv("FLAVOR_LAUNCHER_CLI")
-	_ = os.Setenv(EnvValidation, os.Getenv("FLAVOR_VALIDATION"))
-	_ = os.Setenv(EnvExecMode, os.Getenv("FLAVOR_EXEC_MODE"))
+	bundle := os.Getenv(EnvLauncherBundle)
+	_ = os.Unsetenv(EnvLauncherCLI)
+	_ = os.Setenv(EnvValidation, os.Getenv(EnvValidation))
+	_ = os.Setenv(EnvExecMode, os.Getenv(EnvExecMode))
 
 	Launch(bundle, nil)
 }
 
 func TestLaunchSpawnExitHelper(t *testing.T) {
-	if os.Getenv("FLAVOR_LAUNCHER_SPAWN_EXIT_HELPER") != "1" {
+	if os.Getenv(EnvLauncherSpawnExitHelper) != "1" {
 		return
 	}
 
@@ -241,7 +241,7 @@ func TestExecBundleReplaceResolvesBinaryFromWorkenvPath(t *testing.T) {
 
 	t.Setenv(EnvValidation, "none")
 	t.Setenv(EnvWorkenvCache, "false")
-	t.Setenv("FLAVOR_CACHE_DIR", t.TempDir())
+	t.Setenv(EnvCacheDir, t.TempDir())
 
 	toolTar := buildTarArchiveWithDirAndFile(t, "bin", "tool", 0o755, []byte("#!/bin/sh\nexit 0\n"))
 	bundle := buildMultiSlotBundleForTests(t, []multiSlotBundleSpec{
@@ -291,7 +291,7 @@ func TestExecBundleReplaceResolvesBinaryFromWorkenvPath(t *testing.T) {
 }
 
 func TestLaunchWithLogLevelRunPropagatesSpawnExitCode(t *testing.T) {
-	t.Setenv("FLAVOR_LAUNCHER_CLI", "1")
+	t.Setenv(EnvLauncherCLI, "1")
 	t.Setenv(EnvValidation, "none")
 	t.Setenv(EnvExecMode, "spawn")
 
@@ -313,7 +313,7 @@ func TestLaunchWithLogLevelRunPropagatesSpawnExitCode(t *testing.T) {
 			PrimarySlot: 0,
 			Command:     fmt.Sprintf("%q -test.run=TestLaunchSpawnExitHelper", os.Args[0]),
 			Environment: map[string]string{
-				"FLAVOR_LAUNCHER_SPAWN_EXIT_HELPER": "1",
+				EnvLauncherSpawnExitHelper: "1",
 			},
 		},
 		Build: &BuildInfo{Tool: "flavor-go"},

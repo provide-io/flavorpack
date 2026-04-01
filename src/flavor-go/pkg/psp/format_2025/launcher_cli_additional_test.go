@@ -16,11 +16,11 @@ func runLauncherCLIAdditionalScenario(t *testing.T, mode, bundle string, args []
 
 	cmd := exec.Command(os.Args[0], "-test.run=TestLauncherCLIAdditionalHelper")
 	cmd.Env = filteredEnv(
-		"FLAVOR_LAUNCHER_HELPER=1",
-		"FLAVOR_LAUNCHER_MODE="+mode,
-		"FLAVOR_LAUNCHER_BUNDLE="+bundle,
-		"FLAVOR_LAUNCHER_ARGS="+strings.Join(args, "\x1f"),
-		"FLAVOR_LAUNCHER_CLI=1",
+		EnvLauncherHelper+"=1",
+		EnvLauncherMode+"="+mode,
+		EnvLauncherBundle+"="+bundle,
+		EnvLauncherArgs+"="+strings.Join(args, "\x1f"),
+		EnvLauncherCLI+"=1",
 	)
 
 	output, err := cmd.CombinedOutput()
@@ -28,19 +28,19 @@ func runLauncherCLIAdditionalScenario(t *testing.T, mode, bundle string, args []
 }
 
 func TestLauncherCLIAdditionalHelper(t *testing.T) {
-	if os.Getenv("FLAVOR_LAUNCHER_HELPER") != "1" {
+	if os.Getenv(EnvLauncherHelper) != "1" {
 		return
 	}
 
-	bundle := os.Getenv("FLAVOR_LAUNCHER_BUNDLE")
-	rawArgs := os.Getenv("FLAVOR_LAUNCHER_ARGS")
+	bundle := os.Getenv(EnvLauncherBundle)
+	rawArgs := os.Getenv(EnvLauncherArgs)
 	var args []string
 	if rawArgs != "" {
 		args = strings.Split(rawArgs, "\x1f")
 	}
 
 	logger := hclog.NewNullLogger()
-	switch os.Getenv("FLAVOR_LAUNCHER_MODE") {
+	switch os.Getenv(EnvLauncherMode) {
 	case "launch":
 		LaunchWithLogLevel(bundle, args, "", "")
 	case "show-metadata":
@@ -55,7 +55,7 @@ func TestLauncherCLIAdditionalHelper(t *testing.T) {
 		}
 		extractSlot(bundle, args[0], args[1], logger)
 	default:
-		t.Fatalf("unsupported launcher CLI helper mode %q", os.Getenv("FLAVOR_LAUNCHER_MODE"))
+		t.Fatalf("unsupported launcher CLI helper mode %q", os.Getenv(EnvLauncherMode))
 	}
 }
 
