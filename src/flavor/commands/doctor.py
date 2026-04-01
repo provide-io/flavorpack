@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Diagnostic command for Flavorpack installation health checks."""
+"""Diagnostic command for FlavorPack installation health checks."""
 
 from __future__ import annotations
 
@@ -25,12 +25,12 @@ log = get_command_logger("doctor")
 
 @click.command("doctor")
 def doctor_command() -> None:  # noqa: C901
-    """Check Flavorpack installation health and report findings."""
+    """Check FlavorPack installation health and report findings."""
 
     errors: list[str] = []
     warnings: list[str] = []
 
-    pout("Flavorpack Doctor")
+    pout("FlavorPack Doctor")
     pout("=================")
     pout("")
 
@@ -45,8 +45,8 @@ def doctor_command() -> None:  # noqa: C901
     py_marker = "OK" if py_status == "OK" else "WARN"
     pout(f"Python:        {py_version} [{py_marker}]")
 
-    # --- Flavorpack version ---
-    pout(f"Flavorpack:    {flavor_version}")
+    # --- FlavorPack version ---
+    pout(f"FlavorPack:    {flavor_version}")
 
     # --- Platform ---
     arch = platform.machine()
