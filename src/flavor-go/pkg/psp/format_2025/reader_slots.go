@@ -63,10 +63,14 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 	if logger == nil {
 		logger = hclog.L()
 	}
+	firstBytesLen := len(slotData)
+	if firstBytesLen > 16 {
+		firstBytesLen = 16
+	}
 	logger.Debug("🐹 Go launcher verifying slot checksum",
 		"slot_id", entry.ID,
 		"data_length", len(slotData),
-		"first_16_bytes", fmt.Sprintf("%02x", slotData[:16]),
+		"first_16_bytes", fmt.Sprintf("%02x", slotData[:firstBytesLen]),
 		"computed_checksum", fmt.Sprintf("%016x", actualChecksum),
 		"expected_checksum", fmt.Sprintf("%016x", entry.Checksum))
 

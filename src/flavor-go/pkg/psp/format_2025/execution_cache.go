@@ -19,7 +19,7 @@ func checkDiskSpace(paths *WorkenvPaths, metadata *Metadata, logger hclog.Logger
 
 	// Get available disk space
 	workenvPath := paths.Workenv()
-	available, err := getAvailableDiskSpace(workenvPath)
+	available, err := getAvailableDiskSpaceFn(workenvPath)
 	if err != nil {
 		logger.Warn("⚠️ Could not check disk space", "error", err)
 		return nil // Don't fail if we can't check

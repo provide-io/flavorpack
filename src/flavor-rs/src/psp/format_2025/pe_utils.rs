@@ -693,6 +693,56 @@ pub fn process_launcher_for_pspf(launcher_data: Vec<u8>) -> Result<Vec<u8>> {
 mod tests {
     use super::*;
 
+    fn write_u16(data: &mut [u8], offset: usize, value: u16) {
+        data[offset..offset + 2].copy_from_slice(&value.to_le_bytes());
+    }
+
+    fn write_u32(data: &mut [u8], offset: usize, value: u32) {
+        data[offset..offset + 4].copy_from_slice(&value.to_le_bytes());
+    }
+
+    fn build_expandable_go_like_pe() -> Vec<u8> {
+        let mut data = vec![0u8; 0x300];
+        data[0] = b'M';
+        data[1] = b'Z';
+        write_u32(&mut data, 0x3C, 0x80);
+
+        // PE header and COFF table.
+        data[0x80..0x84].copy_from_slice(b"PE\x00\x00");
+        write_u16(&mut data, 0x86, 1);
+        write_u16(&mut data, 0x94, 0xE0);
+
+        // Optional header.
+        write_u16(&mut data, 0x98, 0x10B);
+        write_u32(&mut data, 0xD4, 0x200);
+
+        // Data directories.
+        let data_dir_offset = 0x98 + 96;
+        write_u32(&mut data, data_dir_offset + (4 * 8), 0x180);
+        write_u32(&mut data, data_dir_offset + (4 * 8) + 4, 0x20);
+        write_u32(&mut data, data_dir_offset + (6 * 8), 0x1010);
+        write_u32(&mut data, data_dir_offset + (6 * 8) + 4, 0x1C);
+
+        // Section table.
+        let section_table_offset = 0x84 + 20 + 0xE0;
+        write_u32(&mut data, section_table_offset + 8, 0x200);
+        write_u32(&mut data, section_table_offset + 12, 0x1000);
+        write_u32(&mut data, section_table_offset + 20, 0x200);
+
+        // Debug directory entry lives in the mapped section.
+        write_u32(&mut data, 0x210 + 24, 0x180);
+        data
+    }
+
+    fn build_minimal_pe(pe_offset: usize) -> Vec<u8> {
+        let mut data = vec![0u8; pe_offset + 0x20];
+        data[0] = b'M';
+        data[1] = b'Z';
+        write_u32(&mut data, 0x3C, pe_offset as u32);
+        data[pe_offset..pe_offset + 4].copy_from_slice(b"PE\x00\x00");
+        data
+    }
+
     #[test]
     fn test_is_pe_executable() {
         let pe_data = b"MZ\x90\x00";
@@ -728,5 +778,194 @@ mod tests {
         rust_binary[0xF0..0xF4].copy_from_slice(b"PE\x00\x00");
 
         assert!(!needs_dos_stub_expansion(&rust_binary));
+    }
+
+    #[test]
+    fn test_get_pe_header_offset_rejects_invalid_signature() {
+        let mut data = build_minimal_pe(0x80);
+        data[0x80..0x84].copy_from_slice(b"PX\x00\x00");
+
+        assert_eq!(get_pe_header_offset(&data), None);
+    }
+
+    #[test]
+    fn test_get_pe_header_offset_rejects_short_and_out_of_bounds_data() {
+        assert_eq!(get_pe_header_offset(&[0u8; 8]), None);
+
+        let mut data = vec![0u8; 0x50];
+        data[0] = b'M';
+        data[1] = b'Z';
+        write_u32(&mut data, 0x3C, 0x100);
+
+        assert_eq!(get_pe_header_offset(&data), None);
+    }
+
+    #[test]
+    fn test_get_launcher_type_covers_all_variants() {
+        let go_binary = build_minimal_pe(0x80);
+        let rust_binary = build_minimal_pe(0xF0);
+        let unknown_binary = build_minimal_pe(0x90);
+
+        assert_eq!(get_launcher_type(&go_binary), "go");
+        assert_eq!(get_launcher_type(&rust_binary), "rust");
+        assert_eq!(get_launcher_type(&unknown_binary), "unknown");
+        assert_eq!(get_launcher_type(b"not a pe"), "unknown");
+    }
+
+    #[test]
+    fn test_process_launcher_for_pspf_returns_non_pe_go_and_unknown_unchanged() {
+        let non_pe = b"#!/bin/sh\n".to_vec();
+        let go_binary = build_minimal_pe(0x80);
+        let rust_binary = build_minimal_pe(0xF0);
+        let unknown_binary = build_minimal_pe(0x90);
+
+        assert_eq!(process_launcher_for_pspf(non_pe.clone()).unwrap(), non_pe);
+        assert_eq!(
+            process_launcher_for_pspf(go_binary.clone()).unwrap(),
+            go_binary
+        );
+        assert_eq!(
+            process_launcher_for_pspf(rust_binary.clone()).unwrap(),
+            rust_binary
+        );
+        assert_eq!(
+            process_launcher_for_pspf(unknown_binary.clone()).unwrap(),
+            unknown_binary
+        );
+    }
+
+    #[test]
+    fn test_expand_dos_stub_updates_offsets_and_tables() {
+        let data = build_expandable_go_like_pe();
+        let expanded = expand_dos_stub(data).expect("expansion should succeed");
+
+        assert_eq!(get_pe_header_offset(&expanded), Some(TARGET_DOS_STUB_SIZE));
+        assert_eq!(
+            u32::from_le_bytes([
+                expanded[0x3C],
+                expanded[0x3D],
+                expanded[0x3E],
+                expanded[0x3F]
+            ]),
+            TARGET_DOS_STUB_SIZE as u32
+        );
+
+        let coff_offset = TARGET_DOS_STUB_SIZE + 4;
+        let section_table_offset = coff_offset + 20 + 0xE0;
+        let section_ptr = u32::from_le_bytes([
+            expanded[section_table_offset + 20],
+            expanded[section_table_offset + 21],
+            expanded[section_table_offset + 22],
+            expanded[section_table_offset + 23],
+        ]);
+        assert_eq!(section_ptr, 0x270);
+
+        let size_of_headers = u32::from_le_bytes([
+            expanded[coff_offset + 20 + 60],
+            expanded[coff_offset + 20 + 61],
+            expanded[coff_offset + 20 + 62],
+            expanded[coff_offset + 20 + 63],
+        ]);
+        assert_eq!(size_of_headers, 0x270);
+
+        let data_dir_offset = coff_offset + 20 + 96;
+        let cert_entry_offset = data_dir_offset + (4 * 8);
+        let cert_ptr = u32::from_le_bytes([
+            expanded[cert_entry_offset],
+            expanded[cert_entry_offset + 1],
+            expanded[cert_entry_offset + 2],
+            expanded[cert_entry_offset + 3],
+        ]);
+        assert_eq!(cert_ptr, 0x1F0);
+
+        let debug_entry_offset = 0x210 + 0x70;
+        let debug_ptr = u32::from_le_bytes([
+            expanded[debug_entry_offset + 24],
+            expanded[debug_entry_offset + 25],
+            expanded[debug_entry_offset + 26],
+            expanded[debug_entry_offset + 27],
+        ]);
+        assert_eq!(debug_ptr, 0x1F0);
+
+        let checksum = u32::from_le_bytes([
+            expanded[coff_offset + 20 + 64],
+            expanded[coff_offset + 20 + 65],
+            expanded[coff_offset + 20 + 66],
+            expanded[coff_offset + 20 + 67],
+        ]);
+        assert_eq!(checksum, 0);
+    }
+
+    #[test]
+    fn test_update_data_directories_handles_small_cert_offset_and_truncation() {
+        let mut data = build_expandable_go_like_pe();
+        let cert_entry_offset = (0x98 + 96) + (4 * 8);
+        let checksum_offset = 0x98 + 64;
+
+        write_u32(&mut data, cert_entry_offset, 0x40);
+        write_u32(&mut data, checksum_offset, 0xBEEF);
+
+        update_data_directories(&mut data, 0x70).expect("update should succeed");
+        assert_eq!(
+            u32::from_le_bytes([
+                data[cert_entry_offset],
+                data[cert_entry_offset + 1],
+                data[cert_entry_offset + 2],
+                data[cert_entry_offset + 3]
+            ]),
+            0x40
+        );
+        assert_eq!(
+            u32::from_le_bytes([
+                data[checksum_offset],
+                data[checksum_offset + 1],
+                data[checksum_offset + 2],
+                data[checksum_offset + 3]
+            ]),
+            0
+        );
+
+        let mut truncated = vec![0u8; cert_entry_offset + 4];
+        truncated[0] = b'M';
+        truncated[1] = b'Z';
+        write_u32(&mut truncated, 0x3C, 0x80);
+        truncated[0x80..0x84].copy_from_slice(b"PE\x00\x00");
+        write_u16(&mut truncated, 0x86, 1);
+        write_u16(&mut truncated, 0x94, 0xE0);
+        write_u16(&mut truncated, 0x98, 0x10B);
+
+        update_data_directories(&mut truncated, 0x70).expect("truncated update should skip");
+    }
+
+    #[test]
+    fn test_update_debug_directory_skips_missing_unmapped_and_out_of_bounds_entries() {
+        let mut data = build_expandable_go_like_pe();
+        let data_dir_offset = 0x98 + 96;
+        let debug_entry_offset = data_dir_offset + (6 * 8);
+
+        write_u32(&mut data, debug_entry_offset, 0);
+        write_u32(&mut data, debug_entry_offset + 4, 0x1C);
+        update_debug_directory(&mut data, 0x70).expect("missing debug directory should skip");
+
+        let mut unmapped = build_expandable_go_like_pe();
+        write_u32(&mut unmapped, debug_entry_offset, 0x9000);
+        update_debug_directory(&mut unmapped, 0x70).expect("unmapped debug directory should skip");
+
+        let mut out_of_bounds = build_expandable_go_like_pe();
+        write_u32(&mut out_of_bounds, debug_entry_offset, 0x1010);
+        write_u32(&mut out_of_bounds, debug_entry_offset + 4, 0x38);
+        let ptr_offset = 0x210 + 24;
+        out_of_bounds.truncate(ptr_offset + 2);
+        update_debug_directory(&mut out_of_bounds, 0x70)
+            .expect("out-of-bounds debug entry should skip");
+    }
+
+    #[test]
+    fn test_update_size_of_headers_rejects_short_buffer() {
+        let mut data = build_minimal_pe(0x80);
+        data.truncate(0x80 + 4 + 20 + 60);
+
+        let err = update_size_of_headers(&mut data, 0x10).expect_err("expected bounds error");
+        assert!(err.to_string().contains("SizeOfHeaders offset"));
     }
 }

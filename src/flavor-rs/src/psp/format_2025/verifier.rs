@@ -3,7 +3,7 @@
 use super::constants::{LifecycleAttestation, MAGIC_WAND_EMOJI_BYTES};
 use crate::api::VerifyResult;
 use crate::exceptions::{FlavorError, Result};
-use adler::Adler32;
+use adler2::Adler32;
 use ed25519_dalek::{Signature, Verifier as _, VerifyingKey};
 use flate2::read::GzDecoder;
 use hex;

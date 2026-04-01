@@ -1,0 +1,85 @@
+package format_2025
+
+import (
+	"bytes"
+	"strings"
+	"testing"
+
+	"github.com/hashicorp/go-hclog"
+)
+
+func TestSetFlavorCacheBeforeWorkenvSetsHostCache(t *testing.T) {
+	t.Setenv("FLAVOR_CACHE_DIR", "/tmp/flavor-cache-root")
+	logger := hclog.NewNullLogger()
+
+	got := setFlavorCacheBeforeWorkenv([]string{"PATH=/usr/bin"}, logger)
+
+	if !hasEnv(got, "FLAVOR_CACHE") {
+		t.Fatalf("expected FLAVOR_CACHE to be set")
+	}
+	if value := getenv(got, "FLAVOR_CACHE", ""); value != "/tmp/flavor-cache-root/workenv" {
+		t.Fatalf("unexpected FLAVOR_CACHE value %q", value)
+	}
+}
+
+func TestSetFlavorCacheBeforeWorkenvPreservesExistingValue(t *testing.T) {
+	logger := hclog.NewNullLogger()
+	env := []string{"FLAVOR_CACHE=/already/set"}
+
+	got := setFlavorCacheBeforeWorkenv(env, logger)
+
+	if value := getenv(got, "FLAVOR_CACHE", ""); value != "/already/set" {
+		t.Fatalf("expected existing FLAVOR_CACHE to be preserved, got %q", value)
+	}
+}
+
+func TestGetenvAndHasEnv(t *testing.T) {
+	env := []string{"PATH=/usr/bin", "HOME=/tmp/home"}
+
+	if !hasEnv(env, "PATH") {
+		t.Fatalf("expected PATH to exist")
+	}
+	if hasEnv(env, "MISSING") {
+		t.Fatalf("did not expect MISSING to exist")
+	}
+	if got := getenv(env, "HOME", "fallback"); got != "/tmp/home" {
+		t.Fatalf("unexpected HOME value %q", got)
+	}
+	if got := getenv(env, "MISSING", "fallback"); got != "fallback" {
+		t.Fatalf("unexpected fallback value %q", got)
+	}
+}
+
+func TestLogEnvironmentTraceRedactsSensitiveValues(t *testing.T) {
+	var output bytes.Buffer
+	logger := hclog.New(&hclog.LoggerOptions{
+		Name:   "test",
+		Level:  hclog.Trace,
+		Output: &output,
+	})
+
+	logEnvironmentTrace([]string{
+		"OPENAI_API_KEY=secret",
+		"PATH=/usr/bin",
+	}, logger)
+
+	logged := output.String()
+	if !strings.Contains(logged, "OPENAI_API_KEY") {
+		t.Fatalf("expected sensitive key name in trace output: %s", logged)
+	}
+	if strings.Contains(logged, "secret") {
+		t.Fatalf("expected sensitive value to be redacted: %s", logged)
+	}
+	if !strings.Contains(logged, "***") {
+		t.Fatalf("expected redaction marker in trace output: %s", logged)
+	}
+}
+
+func TestIsSensitiveKey(t *testing.T) {
+	if !isSensitiveKey("OPENAI_API_KEY") {
+		t.Fatalf("expected OPENAI_API_KEY to be treated as sensitive")
+	}
+	if isSensitiveKey("PATH") {
+		t.Fatalf("expected PATH to be treated as non-sensitive")
+	}
+}
