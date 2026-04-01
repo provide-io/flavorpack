@@ -482,9 +482,111 @@ Working towards:
 - ISO 27001
 - FedRAMP authorization
 
+## SBOM & Provenance
+
+Every signed FlavorPack package includes a CycloneDX 1.6 Software Bill of Materials (SBOM) embedded in the attestation slot (slot 0). The SBOM lists the package name, version, build tools, and Python/Go/Rust dependencies captured at build time.
+
+```bash
+# Print the CycloneDX 1.6 SBOM JSON from a package
+flavor inspect --sbom package.psp
+
+# Print provenance JSON (builder version, build timestamp, target platform)
+flavor inspect --provenance package.psp
+```
+
+The PSPF index field `attestation_sbom_digest` holds the raw SHA-256 of the attestation slot content. This digest is written at build time and re-verified at runtime, so the SBOM cannot be replaced without invalidating the package signature.
+
+---
+
+## Launch-Time Policy Enforcement
+
+Execution policies restrict when and where a package may run. Policy checks are performed by the Go or Rust launcher before any payload code is extracted or executed.
+
+**Enforcement sequence** (first failure aborts execution):
+
+1. **Platform** — `OS_arch` of the current host must be in the package's `platforms` list (if set)
+2. **Root/Admin** — if `refuse_root = true`, the launcher refuses to run as root on Unix or as Administrator on Windows
+3. **Age** — the build timestamp embedded in the package must be no older than `max_age_days`
+4. **Environment** — every name listed in `require_env` must resolve to a non-empty value in the current environment
+5. **SBOM** — if the operator policy sets `require_sbom = true`, the package must contain an attestation slot
+
+**Package policy vs. operator policy:**
+
+A package embeds its own policy at build time. At runtime the launcher also reads the operator policy from disk (`/etc/flavor/policy.toml` or `~/.config/flavor/policy.toml`) and merges the two using the "stricter wins" rule:
+
+| Field | Merge rule |
+|-------|-----------|
+| `refuse_root` | `package OR operator` |
+| `max_age_days` | `min(package, operator)` |
+| `platforms` | intersection of both lists |
+| `require_env` | package list only |
+| `require_sbom` | operator only |
+
+---
+
+## Operator Policy
+
+System administrators and users can enforce site-wide or per-user constraints through a TOML policy file.
+
+**File locations:**
+
+| Scope | Path |
+|-------|------|
+| System | `/etc/flavor/policy.toml` |
+| User | `~/.config/flavor/policy.toml` |
+
+**File format:**
+
+```toml
+[trust]
+require_trusted_key = true
+
+[execution]
+refuse_root = true
+max_age_days = 180
+allow_platforms = ["linux_amd64", "linux_arm64"]
+
+[attestation]
+require_sbom = true
+```
+
+Create a default policy file with:
+
+```bash
+# User-scoped policy
+flavor policy init
+
+# System-scoped policy (requires appropriate permissions)
+flavor policy init --global
+
+# Show the effective merged policy for the current environment
+flavor policy show
+```
+
+---
+
+## Attestation Index Fields
+
+Three fields are written into the PSPF index block at build time and re-verified at runtime. They bind security metadata to the package in a tamper-evident way.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `attestation_policy_hash` | 64-byte hex string | SHA-256 of the canonical policy JSON (`json.dumps(policy, sort_keys=True, separators=(",", ":"))`, hex-encoded). Lets launchers detect policy tampering. |
+| `attestation_key_fp` | 32-byte field | First 32 bytes of the hex-encoded SHA-256 fingerprint of the signer's Ed25519 public key. Cross-referenced by `flavor trust verify`. |
+| `attestation_sbom_digest` | 32 bytes (binary) | Raw SHA-256 of the attestation slot content. Verified by `flavor inspect --sbom`. |
+
+These fields are set once at `flavor pack` time and are covered by the Ed25519 signature. Any post-build modification will cause `flavor verify` to fail.
+
+!!! info "PKI / X.509 (Future)"
+    Integration with X.509 certificate chains and external PKI infrastructure is not yet implemented. The `trust_model = "pki"` configuration shown in older documentation refers to a planned future capability.
+
+---
+
 ## Related Documentation
 
 - [Cryptographic Specification](../../reference/spec/pspf-2025/) - Technical crypto details
 - [Package Format](../../reference/spec/fep-0001-core-format-and-operation-chains/) - Binary security features
-- [CLI Reference](../../guide/usage/cli/#verify) - Verification commands
+- [CLI Reference](../../guide/usage/cli/#security-commands) - Security commands reference
+- [Signing Guide](../packaging/signing/) - Key management and trusted key store
+- [Configuration](../packaging/configuration/#execution-policy) - Execution policy configuration
 - [Troubleshooting](../concepts/security/) - Security issues
