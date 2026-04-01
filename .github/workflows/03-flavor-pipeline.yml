@@ -29,6 +29,8 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: 🔧 Ensure gh CLI available
         run: type gh >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq gh)
@@ -93,6 +95,8 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       
       - name: 📥 Download helpers
         uses: actions/download-artifact@v8
@@ -219,6 +223,8 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       # setup-python MUST come before setup-uv here.
       # uv's python-build-standalone has no Python 3.11 ARM64 Windows build —
@@ -388,6 +394,8 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       
       # setup-python MUST come before setup-uv here.
       # uv's python-build-standalone has no Python 3.11 ARM64 Windows build —
@@ -520,6 +528,7 @@ jobs:
       - name: 📥 Checkout scripts
         uses: actions/checkout@v6
         with:
+          persist-credentials: false
           sparse-checkout: |
             .github/scripts
           sparse-checkout-cone-mode: false
@@ -554,6 +563,8 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       
       - name: 📥 Download test results
         uses: actions/download-artifact@v8
