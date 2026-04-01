@@ -19,6 +19,7 @@ from typing import Any
 from provide.foundation import logger
 from provide.foundation.process import run
 
+from flavor.config.defaults import ENV_PACKAGE, ENV_VERSION, ENV_WORKENV
 from flavor.psp.format_2025.environment import apply_environment_layers
 from flavor.psp.format_2025.targets import normalize_workenv_target
 
@@ -185,9 +186,9 @@ class BundleExecutor:
 
         # Prepare workenv-specific environment variables
         workenv_env = {
-            "FLAVOR_WORKENV": str(self.workenv_dir),
-            "FLAVOR_PACKAGE": self.package_name,
-            "FLAVOR_VERSION": self.package_version,
+            ENV_WORKENV: str(self.workenv_dir),
+            ENV_PACKAGE: self.package_name,
+            ENV_VERSION: self.package_version,
         }
 
         # Prepare execution-specific environment variables from metadata
