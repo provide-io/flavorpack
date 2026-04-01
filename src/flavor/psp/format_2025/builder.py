@@ -28,6 +28,7 @@ from flavor.config.defaults import (
     CAPABILITY_MMAP,
     CAPABILITY_PAGE_ALIGNED,
     CAPABILITY_SIGNED,
+    ENV_WORKENV_BASE,
 )
 from flavor.exceptions import BuildError
 from flavor.psp.format_2025 import handlers
@@ -351,7 +352,7 @@ def _prepare_attestation_slot(
 
     # ---- launcher info -------------------------------------------------------
     launcher_type = "rust"
-    launcher_data = load_launcher_binary(launcher_type)
+    launcher_data = load_launcher_binary(launcher_type, explicit_path=spec.options.launcher_bin)
     launcher_version = extract_launcher_version(launcher_data)
     launcher_hash = f"sha256:{calculate_checksum(launcher_data, 'sha256')}"
 
@@ -430,7 +431,7 @@ def _load_slot_data(slot: SlotMetadata) -> bytes:
     slot_path = Path(slot.source) if slot.source else Path()
     if "{workenv}" in str(slot_path):
         # Priority: 1. FLAVOR_WORKENV_BASE env var, 2. Current working directory
-        base_dir = os.environ.get("FLAVOR_WORKENV_BASE", str(Path.cwd()))
+        base_dir = os.environ.get(ENV_WORKENV_BASE, str(Path.cwd()))
         slot_path = Path(str(slot_path).replace("{workenv}", base_dir))
         logger.debug(f"📍 Resolved slot path: {slot.source} -> {slot_path} (base: {base_dir})")
 

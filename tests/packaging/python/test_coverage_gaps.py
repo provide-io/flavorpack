@@ -34,6 +34,7 @@ def _completed(returncode: int = 0, stdout: str = "", stderr: str = "") -> subpr
 class TestMakeExecutableAndCopyExecutable:
     """Lines 55-56, 60-61."""
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="chmod executable bits not enforced on Windows")
     def test_make_executable_non_windows(self, tmp_path: Path) -> None:
         from flavor.packaging.python.environment_builder import PythonEnvironmentBuilder
 
@@ -1410,13 +1411,13 @@ class TestWheelBuilderResolveDeps:
             )
         assert result == locked_req
 
-    def test_resolve_dependencies_no_requirements_raises(self) -> None:
+    def test_resolve_dependencies_no_requirements_raises(self, tmp_path: Path) -> None:
         """Line 222-223 - no requirements raises ValueError."""
         from flavor.packaging.python.wheel_builder import WheelBuilder
 
         builder = WheelBuilder()
         with pytest.raises(ValueError, match="Either requirements_file or packages"):
-            builder.resolve_dependencies(python_exe=Path(sys.executable))
+            builder.resolve_dependencies(python_exe=Path(sys.executable), output_dir=tmp_path)
 
     def test_resolve_dependencies_uv_fails_fallback_to_pip_tools(self, tmp_path: Path) -> None:
         """Lines 228-239 - UV fails, falls back to pip-tools."""
@@ -2036,7 +2037,7 @@ class TestPyPaPipManagerDownloadCmd:
             requirements_file=req_file,
         )
         assert "-r" in cmd
-        assert str(req_file) in " ".join(cmd)
+        assert str(req_file).replace("\\", "/") in " ".join(cmd).replace("\\", "/")
 
     def test_get_download_cmd_no_binary_only(self, tmp_path: Path) -> None:
         """Lines 155-159 - binary_only=False skips --only-binary."""

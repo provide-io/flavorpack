@@ -16,6 +16,8 @@ from provide.foundation.crypto import (
 )
 import pytest
 
+pytestmark = [pytest.mark.security, pytest.mark.ci]
+
 
 class TestPackageIntegrity:
     """Test cryptographic integrity and security features."""

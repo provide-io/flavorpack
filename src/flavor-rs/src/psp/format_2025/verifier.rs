@@ -3,11 +3,11 @@
 use super::constants::{LifecycleAttestation, MAGIC_WAND_EMOJI_BYTES};
 use crate::api::VerifyResult;
 use crate::exceptions::{FlavorError, Result};
-use adler::Adler32;
+use adler2::Adler32;
 use ed25519_dalek::{Signature, Verifier as _, VerifyingKey};
 use flate2::read::GzDecoder;
 use hex;
-use log::{debug, info};
+use log::{debug, info, trace};
 use sha2::{Digest, Sha256};
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
@@ -179,16 +179,10 @@ fn verify_integrity_seal(file: &mut File, index: &super::index::Index) -> Result
     let mut metadata_bytes = vec![0u8; index.metadata_size as usize];
     file.read_exact(&mut metadata_bytes)?;
 
-    // Decompress metadata if needed
-    let json_bytes = if true {
-        // Always gzip for now
-        let gz = GzDecoder::new(&metadata_bytes[..]);
-        let mut json_data = Vec::new();
-        gz.take(1024 * 1024).read_to_end(&mut json_data)?;
-        json_data
-    } else {
-        metadata_bytes.clone()
-    };
+    // Decompress gzip metadata
+    let gz = GzDecoder::new(&metadata_bytes[..]);
+    let mut json_bytes = Vec::new();
+    gz.take(1024 * 1024).read_to_end(&mut json_bytes)?;
 
     // Get signature from index
     let sig_bytes = &index.integrity_signature;
@@ -236,16 +230,62 @@ fn verify_integrity_seal(file: &mut File, index: &super::index::Index) -> Result
 fn verify_slot_checksums(reader: &mut super::reader::Reader) -> Result<bool> {
     let descriptors = reader.read_slot_descriptors()?;
 
-    for descriptor in &descriptors {
-        let slot_data = reader.read_slot(descriptor)?;
-        if !verify_slot_checksum(descriptor, &slot_data) {
+    // Hash slots incrementally via read_at() so that verification is correct
+    // regardless of file size. StreamBackend.read_slot() truncates to
+    // DEFAULT_CHUNK_SIZE (64 KB), which would produce a wrong checksum for
+    // multi-megabyte slots; reading in chunks avoids loading everything at once.
+    const CHUNK: u64 = 256 * 1024; // 256 KB per read
+
+    for (i, descriptor) in descriptors.iter().enumerate() {
+        let mut hasher = Sha256::new();
+        let mut remaining = descriptor.size;
+        let mut offset = descriptor.offset;
+        let mut first_chunk_preview: Option<Vec<u8>> = None;
+
+        while remaining > 0 {
+            let to_read = remaining.min(CHUNK) as usize;
+            let chunk = reader.backend_mut().read_at(offset, to_read)?;
+            if chunk.is_empty() {
+                return Err(FlavorError::Generic(format!(
+                    "Backend returned empty read for slot {} at offset {:#x} (remaining {})",
+                    i, offset, remaining
+                )));
+            }
+            if first_chunk_preview.is_none() {
+                first_chunk_preview = Some(chunk[..16.min(chunk.len())].to_vec());
+            }
+            let actually_read = chunk.len() as u64;
+            hasher.update(&chunk);
+            offset += actually_read;
+            remaining -= actually_read;
+        }
+
+        let checksum = hasher.finalize();
+        let mut checksum_bytes = [0u8; 8];
+        checksum_bytes.copy_from_slice(&checksum[..8]);
+        let actual = u64::from_le_bytes(checksum_bytes);
+        let expected = descriptor.checksum;
+
+        if actual != expected {
+            let desc_offset = descriptor.offset;
+            let desc_size = descriptor.size;
+            debug!(
+                "❌ Slot {} checksum mismatch: offset={:#x} size={} expected={:#018x} actual={:#018x}",
+                i, desc_offset, desc_size, expected, actual
+            );
+            if let Some(ref preview) = first_chunk_preview {
+                trace!("  First 16 bytes: {:02x?}", preview);
+            }
             return Ok(false);
         }
+
+        trace!("✅ Slot {} checksum ok: {:#018x}", i, actual);
     }
 
     Ok(true)
 }
 
+#[cfg(test)]
 fn verify_slot_checksum(
     descriptor: &crate::psp::format_2025::slots::SlotDescriptor,
     slot_data: &[u8],
@@ -372,6 +412,7 @@ fn verify_attestation_policy_hash(reader: &mut super::reader::Reader) -> Result<
 mod tests {
     use super::*;
     use crate::psp::format_2025::slots::SlotDescriptor;
+    use proptest::prelude::*;
 
     #[test]
     fn test_verify_slot_checksum_detects_tampering() {
@@ -382,6 +423,97 @@ mod tests {
 
         assert!(verify_slot_checksum(&descriptor, payload));
         assert!(!verify_slot_checksum(&descriptor, b"tampered payload"));
+    }
+
+    /// Verify that `verify_slot_checksums` reads the full slot across multiple chunks.
+    ///
+    /// Previously the code called `reader.read_slot()`, which delegates to
+    /// `StreamBackend.read_slot()` for large files.  `StreamBackend` truncates
+    /// reads to `DEFAULT_CHUNK_SIZE` (64 KB), so any slot larger than that would
+    /// produce a wrong checksum and verification would fail.  The fix hashes the
+    /// slot incrementally via `backend_mut().read_at()` in 256 KB chunks.
+    ///
+    /// This test constructs a minimal package whose slot payload is larger than
+    /// `DEFAULT_CHUNK_SIZE` (filled with a known byte pattern) and asserts that
+    /// `verify_slot_checksums` returns `Ok(true)`.
+    #[test]
+    fn test_verify_slot_checksums_multi_chunk_slot() {
+        use crate::psp::format_2025::constants::{HEADER_SIZE, MAGIC_TRAILER_SIZE, PSPF_VERSION};
+        use crate::psp::format_2025::defaults::DEFAULT_CHUNK_SIZE;
+        use crate::psp::format_2025::index::Index;
+        use flate2::Compression;
+        use flate2::write::GzEncoder;
+        use sha2::{Digest as _, Sha256};
+        use std::io::Write;
+        use tempfile::NamedTempFile;
+
+        // Build a slot payload that spans multiple 256 KB read chunks (e.g. 500 KB).
+        let slot_size = DEFAULT_CHUNK_SIZE * 8; // 512 KB — definitely multi-chunk
+        let slot_content: Vec<u8> = (0..slot_size).map(|i| (i % 251) as u8).collect();
+
+        let checksum_raw = Sha256::digest(&slot_content);
+        let checksum = u64::from_le_bytes(checksum_raw[..8].try_into().expect("slice"));
+
+        let mut file = NamedTempFile::new().expect("temp file");
+        let mut offset: u64 = 0;
+
+        // Write slot data
+        file.write_all(&slot_content).expect("write slot");
+        let slot_offset = offset;
+        offset += slot_size as u64;
+
+        // Write slot descriptor table
+        let slot_table_offset = offset;
+        let mut desc = SlotDescriptor::new(0);
+        desc.offset = slot_offset;
+        desc.size = slot_size as u64;
+        desc.original_size = slot_size as u64;
+        desc.checksum = checksum;
+        file.write_all(&desc.pack()).expect("write descriptor");
+        offset += 64;
+
+        // Write gzip metadata
+        let meta_json = br#"{"format":"PSPF/2025","package":{"name":"test","version":"0.0.1"},"slots":[],"execution":{"primary_slot":0,"command":"echo"}}"#;
+        let mut gz_buf = Vec::new();
+        {
+            let mut enc = GzEncoder::new(&mut gz_buf, Compression::default());
+            enc.write_all(meta_json).expect("gz write");
+            enc.finish().expect("gz finish");
+        }
+        let meta_offset = offset;
+        let meta_size = gz_buf.len() as u64;
+        file.write_all(&gz_buf).expect("write metadata");
+        offset += meta_size;
+
+        let trailer_offset = offset;
+
+        let mut index = Index::new();
+        index.format_version = PSPF_VERSION;
+        index.package_size = trailer_offset + MAGIC_TRAILER_SIZE as u64;
+        index.slot_table_offset = slot_table_offset;
+        index.slot_table_size = 64;
+        index.slot_count = 1;
+        index.metadata_offset = meta_offset;
+        index.metadata_size = meta_size;
+        let meta_hash: [u8; 32] = Sha256::digest(&gz_buf).into();
+        index.metadata_checksum = meta_hash;
+
+        let idx_bytes = index.pack();
+        let mut trailer = vec![0u8; MAGIC_TRAILER_SIZE];
+        trailer[..4].copy_from_slice(&[0xF0, 0x9F, 0x93, 0xA6]); // 📦
+        trailer[4..4 + HEADER_SIZE].copy_from_slice(&idx_bytes);
+        trailer[4 + HEADER_SIZE..].copy_from_slice(&[0xF0, 0x9F, 0xAA, 0x84]); // 🪄
+        file.write_all(&trailer).expect("write trailer");
+        file.flush().expect("flush");
+
+        let path = file.into_temp_path();
+        let mut reader = super::super::reader::Reader::new(path.as_ref()).expect("create reader");
+
+        let result = verify_slot_checksums(&mut reader);
+        assert!(
+            result.expect("verify_slot_checksums should not error"),
+            "multi-chunk slot checksum must verify correctly"
+        );
     }
 
     // ─── Attestation SBOM digest unit tests ───────────────────────────────────
@@ -707,5 +839,45 @@ mod tests {
             err.to_string().contains("policy"),
             "error should mention policy: {err}"
         );
+    }
+
+    proptest! {
+        /// Checksum of data always matches descriptor built from that data.
+        #[test]
+        fn prop_checksum_consistent(data in proptest::collection::vec(any::<u8>(), 0..1024)) {
+            let checksum = Sha256::digest(&data);
+            let mut checksum_bytes = [0u8; 8];
+            checksum_bytes.copy_from_slice(&checksum[..8]);
+            let expected = u64::from_le_bytes(checksum_bytes);
+
+            let mut descriptor = SlotDescriptor::new(1);
+            descriptor.checksum = expected;
+            descriptor.size = data.len() as u64;
+            descriptor.original_size = data.len() as u64;
+
+            prop_assert!(verify_slot_checksum(&descriptor, &data));
+        }
+
+        /// Changing any byte in data must cause checksum mismatch.
+        #[test]
+        fn prop_tamper_always_detected(
+            data in proptest::collection::vec(any::<u8>(), 1..256),
+            flip_idx in any::<proptest::sample::Index>()
+        ) {
+            let checksum = Sha256::digest(&data);
+            let mut checksum_bytes = [0u8; 8];
+            checksum_bytes.copy_from_slice(&checksum[..8]);
+            let expected = u64::from_le_bytes(checksum_bytes);
+
+            let mut descriptor = SlotDescriptor::new(1);
+            descriptor.checksum = expected;
+            descriptor.size = data.len() as u64;
+            descriptor.original_size = data.len() as u64;
+
+            let mut tampered = data.clone();
+            let idx = flip_idx.index(tampered.len());
+            tampered[idx] ^= 0xFF;
+            prop_assert!(!verify_slot_checksum(&descriptor, &tampered));
+        }
     }
 }

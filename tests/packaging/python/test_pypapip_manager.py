@@ -219,7 +219,10 @@ class TestPyPaPipManager:
         dest_dir = Path("/tmp/downloads")
         requirements_file = Path("/tmp/requirements.txt")
 
-        with patch.object(sys, "platform", "linux"):
+        with (
+            patch("flavor.packaging.python.pypapip_manager.get_os_name", return_value="linux"),
+            patch("flavor.packaging.python.pypapip_manager.get_arch_name", return_value="amd64"),
+        ):
             cmd = self.pip_manager._get_pypapip_download_cmd(
                 python_exe, dest_dir, requirements_file=requirements_file, binary_only=True
             )
@@ -235,6 +238,8 @@ class TestPyPaPipManager:
             ":all:",
             "--python-version",
             "3.11",
+            "--platform",
+            "manylinux2014_x86_64",
             "-r",
             "/tmp/requirements.txt",
         ]

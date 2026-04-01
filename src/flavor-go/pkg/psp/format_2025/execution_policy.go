@@ -78,7 +78,7 @@ func getSystemPolicyFile() string {
 }
 
 func getUserPolicyFile() string {
-	if configDir := os.Getenv("FLAVOR_CONFIG_DIR"); configDir != "" {
+	if configDir := os.Getenv(EnvConfigDir); configDir != "" {
 		return filepath.Join(configDir, "policy.toml")
 	}
 	if xdgConfig := os.Getenv("XDG_CONFIG_HOME"); xdgConfig != "" {
@@ -199,7 +199,8 @@ func MergePolicy(pkg PackagePolicy, op OperatorPolicy) EffectivePolicy {
 
 // EnforcePolicy checks the effective policy against the current environment.
 // Returns a descriptive error on the first violation.
-func EnforcePolicy(policy EffectivePolicy, buildTimestamp int64, hasSBOM bool) error {
+// keyTrusted is false only when the trusted store exists AND the key is explicitly absent from it.
+func EnforcePolicy(policy EffectivePolicy, buildTimestamp int64, hasSBOM bool, keyTrusted bool) error {
 	currentPlatform := getCurrentPlatform()
 
 	// 1. Platform check
@@ -239,6 +240,11 @@ func EnforcePolicy(policy EffectivePolicy, buildTimestamp int64, hasSBOM bool) e
 	// 5. SBOM check
 	if policy.RequireSBOM && !hasSBOM {
 		return fmt.Errorf("package built without attestation slot — operator policy requires SBOM")
+	}
+
+	// 6. Trusted key check
+	if policy.RequireTrustedKey && !keyTrusted {
+		return fmt.Errorf("operator policy requires a trusted signing key — package key is not in the trusted store")
 	}
 
 	return nil

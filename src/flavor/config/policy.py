@@ -7,6 +7,10 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+import os
+import platform
+import sys
 import tomllib
 from typing import Any
 
@@ -142,6 +146,54 @@ def merge_policy(pkg: PackagePolicy, op: OperatorPolicy) -> EffectivePolicy:
         use_os_keychain=op.use_os_keychain,
         require_sbom=op.require_sbom,
     )
+
+
+def get_current_platform() -> str:
+    """Return the normalized FlavorPack platform string for the current host."""
+    os_name = (
+        "linux" if sys.platform.startswith("linux") else ("darwin" if sys.platform == "darwin" else "windows")
+    )
+    machine = platform.machine().lower()
+    arch = "arm64" if machine in ("arm64", "aarch64") else "amd64"
+    return f"{os_name}_{arch}"
+
+
+def is_privileged_user() -> bool:
+    """Return True when the current process is privileged/root."""
+    try:
+        return os.geteuid() == 0  # type: ignore[attr-defined,unused-ignore]
+    except AttributeError:
+        return False
+
+
+def enforce_policy(policy: EffectivePolicy, build_timestamp: int, has_sbom: bool, key_trusted: bool) -> None:
+    """Enforce the effective launch policy for the current runtime environment."""
+    current_platform = get_current_platform()
+
+    if policy.platforms and current_platform not in policy.platforms:
+        raise ValueError(f"platform not permitted: {current_platform} not in {policy.platforms}")
+
+    if policy.refuse_root and is_privileged_user():
+        raise ValueError("refused to run as root or Administrator")
+
+    if policy.max_age_days is not None and build_timestamp > 0:
+        age_days = int((datetime.now(UTC).timestamp() - build_timestamp) / 86400)
+        if age_days > policy.max_age_days:
+            raise ValueError(
+                f"package is {age_days} days old — policy requires max {policy.max_age_days} days"
+            )
+
+    missing = [var for var in policy.require_env if not os.environ.get(var)]
+    if missing:
+        raise ValueError(f"required environment variable not set: {missing[0]}")
+
+    if policy.require_sbom and not has_sbom:
+        raise ValueError("package built without attestation slot — operator policy requires SBOM")
+
+    if policy.require_trusted_key and not key_trusted:
+        raise ValueError(
+            "operator policy requires a trusted signing key — package key is not in the trusted store"
+        )
 
 
 # 🌶️📦🔚

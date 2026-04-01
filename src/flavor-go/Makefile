@@ -1,11 +1,14 @@
 # Makefile for Go helpers
 
-.PHONY: all build clean test install fmt lint security fuzz check deps
+.PHONY: all build clean test coverage install fmt lint security fuzz mutation check deps
 
 # Configuration
 BIN_DIR ?= ../../dist/bin
 XDG_CACHE_HOME ?= $(HOME)/.cache
 FLAVOR_HELPERS_DIR ?= $(XDG_CACHE_HOME)/flavor/helpers/bin
+QUALITY_GO_COV_MIN ?= 75
+QUALITY_GO_MUTATION_ARGS ?=
+FUZZTIME ?= 30s
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 BUILD_TIME := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 LDFLAGS := -ldflags="-s -w -X main.Version=$(VERSION) -X main.BuildTime=$(BUILD_TIME)"
@@ -82,14 +85,36 @@ test:
 	go test -v -race -coverprofile=coverage.out ./...
 	@echo "✅ Tests passed"
 
+coverage:
+	@echo "📊 Running Go coverage checks..."
+	@set -e; \
+	go test -v -race -covermode=atomic -coverprofile=coverage.out ./...; \
+	go tool cover -func=coverage.out | tee coverage.txt; \
+	total="$$(awk '/^total:/{gsub(/%/,"",$$3); print $$3}' coverage.txt)"; \
+	min="$${QUALITY_GO_COV_MIN}"; \
+	if awk "BEGIN {exit !($$total < $$min)}"; then \
+		echo "❌ Coverage $$total% is below minimum $$min%"; \
+		exit 1; \
+	fi; \
+	echo "✅ Coverage $$total% meets minimum $$min%"
+
 fuzz:
 	@echo "🔀 Running fuzz tests..."
-	@if [ -z "$$(find . -name '*_test.go' -exec grep -l 'func Fuzz' {} \;)" ]; then \
-		echo "⚠️  No fuzz tests found"; \
-	else \
-		go test -fuzz=Fuzz -fuzztime=10s ./...; \
-		echo "✅ Fuzz testing completed"; \
-	fi
+	@set -e; \
+	go test -fuzz='^FuzzSplit$$' -fuzztime=$(FUZZTIME) ./pkg/utils/shellparse/; \
+	go test -fuzz='^FuzzSplitJoinIdempotent$$' -fuzztime=$(FUZZTIME) ./pkg/utils/shellparse/; \
+	go test -fuzz='^FuzzOperationsRoundTrip$$' -fuzztime=$(FUZZTIME) ./pkg/psp/format_2025/; \
+	go test -fuzz='^FuzzUnpackNoPanic$$' -fuzztime=$(FUZZTIME) ./pkg/psp/format_2025/; \
+	echo "✅ Fuzz testing completed"
+
+mutation:
+	@echo "🧬 Running Go mutation testing..."
+	@command -v gremlins >/dev/null 2>&1 || { \
+		echo "⚠️  gremlins not installed"; \
+		echo "   Install with: go install github.com/go-gremlins/gremlins/cmd/gremlins@latest"; \
+		exit 1; \
+	}
+	@gremlins unleash $(if $(strip $(QUALITY_GO_MUTATION_ARGS)),$(QUALITY_GO_MUTATION_ARGS),./...)
 
 check: fmt lint security test
 	@echo "✅ All checks passed!"

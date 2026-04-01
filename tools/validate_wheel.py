@@ -55,72 +55,118 @@ def get_wheel_metadata(wheel_path: Path) -> dict:
     return metadata
 
 
+HELPER_FAMILIES = [
+    "flavor-go-builder",
+    "flavor-go-launcher",
+    "flavor-rs-builder",
+    "flavor-rs-launcher",
+]
+
+
+def _parse_wheel_platform(wheel_path: Path) -> str:
+    """Parse and normalize the platform tag from a wheel filename."""
+    parts = wheel_path.stem.split("-")
+    # wheel stem: name-version-python-abi-platform
+    # but name may contain hyphens, so take the last 3 parts
+    if len(parts) < 3:
+        return "unknown"
+    platform_tag = parts[-1]  # last part is platform
+
+    # Normalize to PSPF platform names
+    if platform_tag == "any":
+        return "any"
+    if "x86_64" in platform_tag or "amd64" in platform_tag:
+        if "win" in platform_tag:
+            return "windows_amd64"
+        return "linux_amd64" if "linux" in platform_tag else "darwin_amd64"
+    if "aarch64" in platform_tag or "arm64" in platform_tag:
+        if "win" in platform_tag:
+            return "windows_arm64"
+        if "linux" in platform_tag:
+            return "linux_arm64"
+        return "darwin_arm64"  # macosx_*_arm64
+    return platform_tag  # fallback: return as-is
+
+
 def validate_helpers(wheel_path: Path) -> tuple[bool, list[str]]:
     """
-    Validate that helpers in the wheel are executable.
+    Validate that helpers in the wheel are correct for the wheel's platform.
 
     Returns:
         (success, messages) tuple
     """
     messages = []
     success = True
+    platform = _parse_wheel_platform(wheel_path)
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        # Extract wheel
         with zipfile.ZipFile(wheel_path, "r") as whl:
             whl.extractall(tmpdir)
 
-        # Find helpers - look in helpers/bin directory
         helpers_dir = Path(tmpdir) / "flavor" / "helpers" / "bin"
+
+        if platform == "any":
+            if helpers_dir.exists() and any(helpers_dir.iterdir()):
+                messages.append("  ❌ Universal wheel contains native helper binaries (packaging defect)")
+                return False, messages
+            messages.append("  ✓ Universal wheel: no platform helpers expected")
+            return True, messages
+
         if not helpers_dir.exists():
-            messages.append("  ⚠️  No helpers directory found")
-            return True, messages  # Not an error for universal wheels
+            messages.append(f"  ❌ No helpers directory found (expected helpers for {platform})")
+            return False, messages
 
-        # Expected helpers
-        expected = [
-            "flavor-go-builder",
-            "flavor-go-launcher",
-            "flavor-rs-builder",
-            "flavor-rs-launcher",
-        ]
+        all_files = [f for f in helpers_dir.iterdir() if f.is_file()]
 
-        for helper in expected:
-            helper_path = helpers_dir / helper
-            if not helper_path.exists():
-                # Check with .exe extension
-                helper_path = helpers_dir / f"{helper}.exe"
+        for family in HELPER_FAMILIES:
+            # Match helpers for this family and platform
+            # Filename pattern: {family}-{version}-{platform}[.exe]
+            matches = [
+                f
+                for f in all_files
+                if f.name.startswith(family)
+                and (f.name.endswith(f"-{platform}") or f.name.endswith(f"-{platform}.exe"))
+            ]
 
-            if helper_path.exists():
-                # Check if executable
-                if not helper_path.is_file():
-                    messages.append(f"  ❌ {helper} is not a file")
-                    success = False
-                else:
-                    size_kb = helper_path.stat().st_size / 1024
-                    messages.append(f"  ✓ {helper} ({size_kb:.0f} KB)")
-
-                    # Make executable first
-                    with contextlib.suppress(builtins.BaseException):
-                        helper_path.chmod(0o755)
-
-                    # Try to execute with --version
-                    try:
-                        result = subprocess.run(
-                            [str(helper_path), "--version"],
-                            capture_output=True,
-                            text=True,
-                            timeout=5,
-                        )
-                        if result.returncode == 0:
-                            version_line = result.stdout.strip().split("\n")[0]
-                            messages.append(f"    Version: {version_line}")
-                        else:
-                            messages.append("    ⚠️  Failed to run --version")
-                    except Exception as e:
-                        messages.append(f"    ⚠️  Cannot execute: {e}")
-            else:
-                messages.append(f"  ❌ {helper} not found")
+            if not matches:
+                messages.append(f"  ❌ {family}-*-{platform}[.exe] not found")
                 success = False
+                continue
+
+            if len(matches) > 1:
+                names = ", ".join(f.name for f in matches)
+                messages.append(f"  ❌ Multiple helpers matched for {family}: {names}")
+                success = False
+                continue
+
+            helper_path = matches[0]
+            size_kb = helper_path.stat().st_size / 1024
+            messages.append(f"  ✓ {helper_path.name} ({size_kb:.0f} KB)")
+
+            # Only run --version if we're on the matching platform
+
+            current = sys.platform
+            can_run = (
+                ("linux" in platform and current == "linux")
+                or ("darwin" in platform and current == "darwin")
+                or ("windows" in platform and current == "win32")
+            )
+            if can_run:
+                with contextlib.suppress(builtins.BaseException):
+                    helper_path.chmod(0o755)
+                try:
+                    result = subprocess.run(
+                        [str(helper_path), "--version"],
+                        capture_output=True,
+                        text=True,
+                        timeout=5,
+                    )
+                    if result.returncode == 0:
+                        messages.append(f"    Version: {result.stdout.strip().split(chr(10))[0]}")
+                    else:
+                        messages.append("    ⚠️  Failed to run --version")
+                except Exception as e:
+                    messages.append(f"    ⚠️  Cannot execute: {e}")
 
     return success, messages
 
@@ -195,6 +241,7 @@ try:
         helpers = manager.list_helpers()
         total_helpers = len(helpers.get('launchers', [])) + len(helpers.get('builders', []))
         if total_helpers > 0:
+            pout(f"INFO: {total_helpers} embedded helper(s) found")
         else:
             pout("INFO: No embedded helpers (universal wheel)")
     except Exception as e:

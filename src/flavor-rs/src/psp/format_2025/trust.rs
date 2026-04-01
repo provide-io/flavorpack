@@ -24,14 +24,14 @@ pub struct TrustedKey {
 /// Priority: FLAVOR_TRUSTED_KEYS_DIR → FLAVOR_CONFIG_DIR/trusted-keys
 ///           → XDG_CONFIG_HOME/flavor/trusted-keys → ~/.config/flavor/trusted-keys
 pub fn get_trusted_keys_dir() -> PathBuf {
-    if let Ok(dir) = env::var("FLAVOR_TRUSTED_KEYS_DIR") {
+    if let Ok(dir) = env::var(crate::env_vars::TRUSTED_KEYS_DIR) {
         return PathBuf::from(dir);
     }
     get_config_root().join("trusted-keys")
 }
 
 fn get_config_root() -> PathBuf {
-    if let Ok(d) = env::var("FLAVOR_CONFIG_DIR") {
+    if let Ok(d) = env::var(crate::env_vars::CONFIG_DIR) {
         return PathBuf::from(d);
     }
     if let Ok(d) = env::var("XDG_CONFIG_HOME") {
@@ -133,15 +133,30 @@ fn parse_ed25519_pem(pem_bytes: &[u8]) -> Result<Vec<u8>, String> {
 }
 
 fn extract_ed25519_raw_key(der: &[u8]) -> Result<&[u8], String> {
-    // Ed25519 OID: 1.3.101.112 → DER: 06 03 2b 65 70
-    const ED25519_OID: &[u8] = &[0x06, 0x03, 0x2b, 0x65, 0x70];
-    if !der.windows(ED25519_OID.len()).any(|w| w == ED25519_OID) {
-        return Err("key is not an Ed25519 public key (OID mismatch)".to_string());
+    // A well-formed Ed25519 SubjectPublicKeyInfo is exactly 44 bytes:
+    //   30 2a 30 05 06 03 2b 65 70 03 21 00 <32-byte key>
+    const SPKI_PREFIX: &[u8] = &[
+        0x30, 0x2a, // SEQUENCE, 42 bytes
+        0x30, 0x05, // SEQUENCE (AlgorithmIdentifier), 5 bytes
+        0x06, 0x03, 0x2b, 0x65, 0x70, // OID 1.3.101.112 (Ed25519)
+        0x03, 0x21, // BIT STRING, 33 bytes
+        0x00, // no unused bits
+    ];
+    const SPKI_LEN: usize = 44; // 12-byte prefix + 32-byte key
+
+    if der.len() != SPKI_LEN {
+        return Err(format!(
+            "Ed25519 public key must be {} bytes (SubjectPublicKeyInfo), got {}",
+            SPKI_LEN,
+            der.len()
+        ));
     }
-    if der.len() < 32 {
-        return Err("DER too short to contain Ed25519 key".to_string());
+    if !der.starts_with(SPKI_PREFIX) {
+        return Err(
+            "key is not a valid Ed25519 SubjectPublicKeyInfo (wrong DER structure)".to_string(),
+        );
     }
-    Ok(&der[der.len() - 32..])
+    Ok(&der[SPKI_PREFIX.len()..])
 }
 
 /// Loads all trusted keys from user and optionally system store.
@@ -171,11 +186,23 @@ pub fn is_key_trusted(fingerprint: &str, include_system: bool) -> Option<bool> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ed25519_dalek::SigningKey;
+    use pem::{Pem, encode};
     use std::fs;
     use tempfile::TempDir;
 
     fn mock_raw_key() -> Vec<u8> {
         vec![0u8; 32]
+    }
+
+    fn spki_public_pem_from_seed(seed: [u8; 32]) -> String {
+        let signing_key = SigningKey::from_bytes(&seed);
+        let raw_key = signing_key.verifying_key().to_bytes();
+        let mut der = vec![
+            0x30, 0x2a, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x03, 0x21, 0x00,
+        ];
+        der.extend_from_slice(&raw_key);
+        encode(&Pem::new("PUBLIC KEY", der))
     }
 
     #[test]
@@ -237,19 +264,74 @@ mod tests {
     }
 
     #[test]
-    fn test_extract_ed25519_raw_key_wrong_oid() {
-        // A DER blob without the Ed25519 OID should fail
-        let fake_der = vec![0x30u8, 0x01, 0x00];
-        let result = extract_ed25519_raw_key(&fake_der);
-        assert!(result.is_err(), "should reject non-Ed25519 key");
+    fn test_extract_ed25519_raw_key_valid_spki() {
+        // Construct a well-formed 44-byte Ed25519 SubjectPublicKeyInfo
+        let mut spki = vec![
+            0x30, 0x2a, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x03, 0x21, 0x00,
+        ];
+        spki.extend_from_slice(&[0u8; 32]); // 32-byte key material
+        let result = extract_ed25519_raw_key(&spki);
+        assert!(result.is_ok(), "valid SPKI should succeed");
+        assert_eq!(result.unwrap(), &[0u8; 32]);
     }
 
     #[test]
-    fn test_extract_ed25519_raw_key_too_short_with_oid() {
-        // DER has correct OID but is too short to contain 32-byte key
-        let mut fake_der = vec![0x06u8, 0x03, 0x2b, 0x65, 0x70];
-        fake_der.extend_from_slice(&[0u8; 10]); // only 10 more bytes, not 32
-        let result = extract_ed25519_raw_key(&fake_der);
-        assert!(result.is_err(), "should reject DER that is too short");
+    fn test_extract_ed25519_raw_key_wrong_length() {
+        // Any length other than 44 should fail with a message mentioning "44 bytes"
+        let short_der = vec![0x30u8; 20];
+        let err = extract_ed25519_raw_key(&short_der).unwrap_err();
+        assert!(
+            err.contains("44 bytes"),
+            "error should mention 44 bytes, got: {err}"
+        );
+    }
+
+    #[test]
+    fn test_extract_ed25519_raw_key_wrong_prefix() {
+        // Correct length (44) but wrong prefix bytes
+        let mut bad_spki = vec![0xFFu8; 44];
+        // Ensure last 32 bytes look like a key but prefix is wrong
+        bad_spki[12..].copy_from_slice(&[0u8; 32]);
+        let err = extract_ed25519_raw_key(&bad_spki).unwrap_err();
+        assert!(
+            err.contains("DER structure"),
+            "error should mention DER structure, got: {err}"
+        );
+    }
+
+    #[test]
+    fn test_load_pub_key_file_reads_name_comment_and_fingerprint() {
+        let dir = TempDir::new().expect("tempdir");
+        let path = dir.path().join("alice.pub");
+        let seed = [9u8; 32];
+        let signing_key = SigningKey::from_bytes(&seed);
+        let public_key = signing_key.verifying_key().to_bytes();
+        let pem = format!("# Name: Alice\n{}", spki_public_pem_from_seed(seed));
+        fs::write(&path, pem).expect("write public key");
+
+        let key = load_pub_key_file(&path).expect("load public key");
+        assert_eq!(key.name.as_deref(), Some("Alice"));
+        assert_eq!(
+            key.fingerprint,
+            compute_key_fingerprint(&public_key).expect("fingerprint")
+        );
+        assert_eq!(key.path, path);
+    }
+
+    #[test]
+    fn test_load_keys_from_dir_reads_valid_pub_file() {
+        let dir = TempDir::new().expect("tempdir");
+        let key_path = dir.path().join("user.pub");
+        let seed = [11u8; 32];
+        let signing_key = SigningKey::from_bytes(&seed);
+        let public_key = signing_key.verifying_key().to_bytes();
+        let pem = spki_public_pem_from_seed(seed);
+        fs::write(&key_path, pem).expect("write public key");
+
+        let keys = load_keys_from_dir(dir.path());
+        assert_eq!(keys.len(), 1);
+        let fingerprint = compute_key_fingerprint(&public_key).expect("fingerprint");
+        let loaded = keys.get(&fingerprint).expect("key present");
+        assert_eq!(loaded.path, key_path);
     }
 }
