@@ -458,41 +458,41 @@ jobs:
           cd src/flavor-rs
           
           # Create cargo-deny config for license checking (cargo-deny v0.14+ syntax)
-          cat > deny.toml << 'EOF'
-[licenses]
-version = 2
-unlicensed = "deny"
-allow = [
-    "MIT",
-    "Apache-2.0",
-    "Apache-2.0 WITH LLVM-exception",
-    "BSD-2-Clause",
-    "BSD-3-Clause",
-    "ISC",
-    "Unicode-3.0",
-    "Unicode-DFS-2016",
-    "CC0-1.0",
-    "OpenSSL",
-    "Zlib",
-]
-deny = [
-    "GPL-2.0",
-    "GPL-3.0",
-    "AGPL-3.0",
-]
+          cat > deny.toml << 'DENYEOF'
+          [licenses]
+          version = 2
+          unlicensed = "deny"
+          allow = [
+              "MIT",
+              "Apache-2.0",
+              "Apache-2.0 WITH LLVM-exception",
+              "BSD-2-Clause",
+              "BSD-3-Clause",
+              "ISC",
+              "Unicode-3.0",
+              "Unicode-DFS-2016",
+              "CC0-1.0",
+              "OpenSSL",
+              "Zlib",
+          ]
+          deny = [
+              "GPL-2.0",
+              "GPL-3.0",
+              "AGPL-3.0",
+          ]
 
-[[licenses.exceptions]]
-allow = ["Unicode-DFS-2016", "Unicode-3.0"]
-name = "unicode-ident"
+          [[licenses.exceptions]]
+          allow = ["Unicode-DFS-2016", "Unicode-3.0"]
+          name = "unicode-ident"
 
-[bans]
-multiple-versions = "warn"
-wildcards = "allow"
+          [bans]
+          multiple-versions = "warn"
+          wildcards = "allow"
 
-[sources]
-unknown-registry = "warn"
-unknown-git = "warn"
-EOF
+          [sources]
+          unknown-registry = "warn"
+          unknown-git = "warn"
+          DENYEOF
           
           # Run cargo-deny check
           if cargo deny check licenses 2>&1 | tee cargo-deny-licenses.log; then
