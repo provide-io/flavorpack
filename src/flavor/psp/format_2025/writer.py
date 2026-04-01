@@ -308,6 +308,7 @@ def _map_purpose(purpose: str) -> int:
 def _map_lifecycle(lifecycle: str) -> int:
     """Map lifecycle string to integer constant."""
     from flavor.psp.format_2025.constants import (
+        LIFECYCLE_ATTESTATION,
         LIFECYCLE_CACHE,
         LIFECYCLE_CONFIG,
         LIFECYCLE_DEV,
@@ -322,6 +323,7 @@ def _map_lifecycle(lifecycle: str) -> int:
     )
 
     mapping = {
+        "attestation": LIFECYCLE_ATTESTATION,
         "cache": LIFECYCLE_CACHE,
         "cached": LIFECYCLE_CACHE,
         "config": LIFECYCLE_CONFIG,

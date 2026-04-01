@@ -213,6 +213,9 @@ exclude_also = [
     "if TYPE_CHECKING:",
     "def __repr__",
     "def __str__",
+    "if sys.version_info",
+    "except ImportError",
+    "try:",
 ]
 
 

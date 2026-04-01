@@ -57,5 +57,7 @@ pub const LifecycleDev: u8 = 8; // Only extracted in development/debug mode
 pub const LifecycleConfig: u8 = 9; // User-modifiable configuration files
 #[allow(non_upper_case_globals)]
 pub const LifecyclePlatform: u8 = 10; // Platform/OS specific content
+#[allow(non_upper_case_globals)]
+pub const LifecycleAttestation: u8 = 11; // Security attestation slot (SBOM + provenance)
 
 // 📦💾🔍🪄

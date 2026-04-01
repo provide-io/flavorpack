@@ -14,6 +14,7 @@ type Metadata struct {
 	Launcher        *LauncherInfo        `json:"launcher,omitempty"`
 	Compatibility   *CompatibilityInfo   `json:"compatibility,omitempty"`
 	Workenv         *WorkenvInfo         `json:"workenv,omitempty"`
+	Policy          *PackagePolicy       `json:"policy,omitempty"`
 }
 
 type PackageInfo struct {

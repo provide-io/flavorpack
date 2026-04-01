@@ -80,8 +80,12 @@ class PSPFIndex:
             "I"  # protocol_version
             # Future cryptography space (512 bytes)
             "512s"  # future_crypto
-            # Reserved (6816 bytes for future expansion)
-            "6816s"  # reserved
+            # Attestation fields (192 bytes, carved from reserved — backwards compatible; zeros = absent)
+            "64s"  # attestation_key_fp
+            "64s"  # attestation_sbom_digest
+            "64s"  # attestation_policy_hash
+            # Reserved (6624 bytes for future expansion)
+            "6624s"  # reserved
         ),
         init=False,
         repr=False,
@@ -139,8 +143,13 @@ class PSPFIndex:
     # Future cryptography space
     future_crypto: bytes = field(default=Factory(lambda: b"\x00" * 512))
 
+    # Attestation fields (carved from reserved — backwards compatible; zeros = absent)
+    attestation_key_fp: bytes = field(default=Factory(lambda: b"\x00" * 64))
+    attestation_sbom_digest: bytes = field(default=Factory(lambda: b"\x00" * 64))
+    attestation_policy_hash: bytes = field(default=Factory(lambda: b"\x00" * 64))
+
     # Reserved space for future expansion
-    reserved: bytes = field(default=Factory(lambda: b"\x00" * 6816))
+    reserved: bytes = field(default=Factory(lambda: b"\x00" * 6624))
 
     def pack(self) -> bytes:
         """Pack index into binary format."""
@@ -182,6 +191,9 @@ class PSPFIndex:
             self.compatibility,
             self.protocol_version,
             self.future_crypto,
+            self.attestation_key_fp,
+            self.attestation_sbom_digest,
+            self.attestation_policy_hash,
             self.reserved,
         )
 
@@ -227,6 +239,9 @@ class PSPFIndex:
             self.compatibility,
             self.protocol_version,
             self.future_crypto,
+            self.attestation_key_fp,
+            self.attestation_sbom_digest,
+            self.attestation_policy_hash,
             self.reserved,
         )
 
@@ -279,7 +294,10 @@ class PSPFIndex:
             compatibility=unpacked[33],
             protocol_version=unpacked[34],
             future_crypto=unpacked[35],
-            reserved=unpacked[36],
+            attestation_key_fp=unpacked[36],
+            attestation_sbom_digest=unpacked[37],
+            attestation_policy_hash=unpacked[38],
+            reserved=unpacked[39],
         )
 
 

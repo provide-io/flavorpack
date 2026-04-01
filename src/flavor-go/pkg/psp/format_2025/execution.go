@@ -134,6 +134,19 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		return nil, fmt.Errorf("failed to read index: %w", err)
 	}
 
+	// Warn if signing key is not in the trusted store (backwards-compatible — no error if store missing)
+	if fp := strings.TrimRight(string(index.AttestationKeyFp[:]), "\x00"); fp != "" {
+		trusted, err := IsKeyTrusted(fp, true)
+		if err != nil {
+			logger.Warn("⚠️ Failed to check trusted key store", "error", err)
+		} else if trusted != nil && !*trusted {
+			fmt.Fprintf(os.Stderr, "⚠️ SECURITY WARNING: Package signing key is not in the trusted store\n")
+			fmt.Fprintf(os.Stderr, "⚠️ Key fingerprint: %s\n", fp)
+			fmt.Fprintf(os.Stderr, "⚠️ Use 'flavor trust add <key-file>' to trust this key\n")
+			logger.Warn("⚠️ Package signing key not in trusted store", "fingerprint", fp)
+		}
+	}
+
 	validationLevel := getValidationLevel()
 
 	switch validationLevel {
@@ -173,6 +186,22 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		} else {
 			logger.Debug("✅ Package integrity verified")
 		}
+
+		// Verify attestation SBOM digest (fail-closed: digest present but slot absent = error)
+		logger.Debug("🔍 Verifying attestation SBOM digest", "level", validationLevel)
+		if err := reader.VerifyAttestationSbomDigest(); err != nil {
+			switch validationLevel {
+			case ValidationMinimal, ValidationRelaxed:
+				fmt.Fprintf(os.Stderr, "⚠️ SECURITY WARNING: Failed to verify attestation SBOM digest: %v\n", err)
+				fmt.Fprintf(os.Stderr, "⚠️ Continuing due to validation level: %v\n", validationLevel)
+				logger.Warn("⚠️ Failed to verify attestation SBOM digest, continuing", "error", err, "level", validationLevel)
+			default: // ValidationStrict, ValidationStandard
+				logger.Error("❌ Failed to verify attestation SBOM digest", "error", err)
+				return nil, fmt.Errorf("failed to verify attestation SBOM digest: %w", err)
+			}
+		} else {
+			logger.Debug("✅ Attestation SBOM digest verified")
+		}
 	}
 
 	metadata, err := reader.ReadMetadata()
@@ -184,6 +213,34 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 	logger.Info("📦 Package", "name", metadata.Package.Name, "version", metadata.Package.Version)
 	logger.Debug("🎯 Primary slot", "slot", metadata.Execution.PrimarySlot)
 	logger.Debug("🔧 Command", "command", metadata.Execution.Command)
+
+	// Policy enforcement
+	opPolicy, policyErr := LoadOperatorPolicy()
+	if policyErr != nil {
+		fmt.Fprintf(os.Stderr, "WARN: failed to load operator policy: %v\n", policyErr)
+		opPolicy = OperatorPolicy{}
+	}
+
+	var pkgPolicy PackagePolicy
+	if metadata.Policy != nil {
+		pkgPolicy = *metadata.Policy
+	}
+
+	effective := MergePolicy(pkgPolicy, opPolicy)
+
+	hasSBOM := false
+	for _, slot := range metadata.Slots {
+		if slot.Lifecycle == "attestation" {
+			hasSBOM = true
+			break
+		}
+	}
+
+	if enforceErr := EnforcePolicy(effective, int64(index.BuildTimestamp), hasSBOM); enforceErr != nil {
+		logger.Error("❌ Policy violation", "error", enforceErr)
+		return nil, fmt.Errorf("policy violation: %w", enforceErr)
+	}
+	logger.Debug("✅ Policy enforcement passed")
 
 	// Create WorkenvPaths structure
 	var paths *WorkenvPaths

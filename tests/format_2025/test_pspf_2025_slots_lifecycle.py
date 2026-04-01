@@ -194,14 +194,14 @@ class TestPSPFSlots:
         result = builder.build(bundle_path)
         assert result.success, f"Build failed: {result.errors}"
 
-        # Verify all slots
+        # Verify all slots (+1 for the implicit attestation slot appended by the builder)
         reader = PSPFReader(bundle_path)
         index = reader.read_index()
-        assert index.slot_count == len(test_slots)
+        assert index.slot_count == len(test_slots) + 1
 
         # Read metadata
         metadata_read = reader.read_metadata()
-        assert len(metadata_read["slots"]) == len(test_slots)
+        assert len(metadata_read["slots"]) == len(test_slots) + 1
 
         # Verify slot properties preserved
         for i, slot in enumerate(test_slots):

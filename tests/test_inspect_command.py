@@ -52,7 +52,7 @@ class TestInspectCommand:
         assert "launcher_size" in data
         assert "slots" in data
         assert isinstance(data["slots"], list)
-        assert len(data["slots"]) == 3  # main, config, wheels
+        assert len(data["slots"]) == 4  # main, config, wheels, _attestation
 
     def test_inspect_nonexistent_file(self) -> None:
         """Test inspect with non-existent file."""
