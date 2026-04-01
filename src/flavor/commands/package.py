@@ -145,7 +145,7 @@ def _setup_workenv_base(workenv_base: str | None) -> None:
     if workenv_base:
         import os
 
-        os.environ["FLAVOR_WORKENV_BASE"] = workenv_base
+        os.environ[ENV_WORKENV_BASE] = workenv_base
 
 
 def _build_package_artifacts(
