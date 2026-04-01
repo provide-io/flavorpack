@@ -469,7 +469,7 @@ mod tests {
     fn test_load_operator_policy_missing_file() {
         unsafe {
             env::set_var(
-                "FLAVOR_CONFIG_DIR",
+                crate::env_vars::CONFIG_DIR,
                 "/tmp/__nonexistent_flavor_policy_dir__",
             );
         }
