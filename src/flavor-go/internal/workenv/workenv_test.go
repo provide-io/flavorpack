@@ -7,10 +7,12 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
+
+	"github.com/provide-io/flavor/go/flavor/pkg/envvars"
 )
 
 func TestGetWorkenvPath(t *testing.T) {
-	t.Setenv("FLAVOR_CACHE_DIR", "/tmp/flavor-cache")
+	t.Setenv(envvars.EnvCacheDir, "/tmp/flavor-cache")
 
 	if got, want := GetWorkenvPath("demo", "1.0.0", "abcdef123456"), filepath.Join("/tmp/flavor-cache", "abcdef12"); got != want {
 		t.Fatalf("GetWorkenvPath checksum prefix mismatch: got %q want %q", got, want)
@@ -28,7 +30,7 @@ func TestGetWorkenvPath(t *testing.T) {
 }
 
 func TestGetCacheRoot(t *testing.T) {
-	t.Setenv("FLAVOR_CACHE_DIR", "/tmp/flavor-cache")
+	t.Setenv(envvars.EnvCacheDir, "/tmp/flavor-cache")
 	t.Setenv("XDG_CACHE_HOME", "/tmp/xdg-cache")
 	t.Setenv("HOME", "/tmp/home")
 
@@ -36,7 +38,7 @@ func TestGetCacheRoot(t *testing.T) {
 		t.Fatalf("GetCacheRoot env override mismatch: got %q want %q", got, want)
 	}
 
-	t.Setenv("FLAVOR_CACHE_DIR", "")
+	t.Setenv(envvars.EnvCacheDir, "")
 	if runtime.GOOS == "linux" {
 		if got, want := GetCacheRoot(), filepath.Join("/tmp/xdg-cache", "flavor"); got != want {
 			t.Fatalf("GetCacheRoot xdg mismatch: got %q want %q", got, want)
@@ -76,7 +78,7 @@ func TestGetCacheRoot(t *testing.T) {
 }
 
 func TestGetConfigAndSystemRoots(t *testing.T) {
-	t.Setenv("FLAVOR_CONFIG_DIR", "/tmp/flavor-config")
+	t.Setenv(envvars.EnvConfigDir, "/tmp/flavor-config")
 	t.Setenv("XDG_CONFIG_HOME", "/tmp/xdg-config")
 	t.Setenv("HOME", "/tmp/home")
 
@@ -84,7 +86,7 @@ func TestGetConfigAndSystemRoots(t *testing.T) {
 		t.Fatalf("GetConfigRoot env override mismatch: got %q want %q", got, want)
 	}
 
-	t.Setenv("FLAVOR_CONFIG_DIR", "")
+	t.Setenv(envvars.EnvConfigDir, "")
 	if got, want := GetConfigRoot(), filepath.Join("/tmp/xdg-config", "flavor"); got != want {
 		t.Fatalf("GetConfigRoot xdg mismatch: got %q want %q", got, want)
 	}

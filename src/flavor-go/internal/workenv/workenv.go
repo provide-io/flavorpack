@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+
+	"github.com/provide-io/flavor/go/flavor/pkg/envvars"
 )
 
 // GetWorkenvPath returns the workenv path for a package
@@ -35,7 +37,7 @@ func GetWorkenvPath(packageName, version, checksum string) string {
 // GetCacheRoot returns the root cache directory
 func GetCacheRoot() string {
 	// Check environment variable first
-	if cacheDir := os.Getenv("FLAVOR_CACHE_DIR"); cacheDir != "" {
+	if cacheDir := os.Getenv(envvars.EnvCacheDir); cacheDir != "" {
 		return cacheDir
 	}
 
@@ -66,7 +68,7 @@ func GetCacheRoot() string {
 // Priority: FLAVOR_CONFIG_DIR env → XDG_CONFIG_HOME/flavor → ~/.config/flavor
 // (Windows: %APPDATA%\flavor if no XDG_CONFIG_HOME)
 func GetConfigRoot() string {
-	if configDir := os.Getenv("FLAVOR_CONFIG_DIR"); configDir != "" {
+	if configDir := os.Getenv(envvars.EnvConfigDir); configDir != "" {
 		return configDir
 	}
 	if xdgConfig := os.Getenv("XDG_CONFIG_HOME"); xdgConfig != "" {
