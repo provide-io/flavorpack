@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -27,6 +28,16 @@ func intToUint64Checked(value int, field string) (uint64, error) {
 		return 0, fmt.Errorf("%s must be non-negative: %d", field, value)
 	}
 	return uint64(value), nil
+}
+
+func float64ToFileModeChecked(value float64, field string) (os.FileMode, error) {
+	if math.IsNaN(value) || math.IsInf(value, 0) {
+		return 0, fmt.Errorf("%s must be a finite integer, got %v", field, value)
+	}
+	if value < 0 || value > math.MaxUint32 || math.Trunc(value) != value {
+		return 0, fmt.Errorf("%s out of uint32 range: %v", field, value)
+	}
+	return os.FileMode(uint32(value)), nil
 }
 
 func sanitizeHeaderMode(value int64, fallback os.FileMode) os.FileMode {
@@ -91,4 +102,14 @@ func readFileValidated(path string) ([]byte, error) {
 func writeFileValidated(path string, data []byte, perm os.FileMode) error {
 	// #nosec G304,G306,G703 -- callers validate or derive paths from workenv roots
 	return os.WriteFile(path, data, perm)
+}
+
+func chmodValidated(path string, perm os.FileMode) error {
+	// #nosec G304,G302,G703 -- callers validate or derive paths from workenv roots
+	return os.Chmod(path, perm)
+}
+
+func execCommandValidated(name string, arg ...string) *exec.Cmd {
+	// #nosec G204,G702 -- package-defined commands are intentionally executed directly without a shell
+	return exec.Command(name, arg...)
 }

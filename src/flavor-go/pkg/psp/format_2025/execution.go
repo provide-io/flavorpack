@@ -158,21 +158,42 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger *slo
 		return nil, fmt.Errorf("failed to read index: %w", err)
 	}
 
-	// Check signing key trust status.
-	// keyTrusted is false only when the trusted store exists AND the key is explicitly absent.
-	// It stays true when: no attestation fingerprint, store missing (nil), or key is trusted.
-	keyTrusted := true
-	if fp := strings.TrimRight(string(index.AttestationKeyFp[:]), "\x00"); fp != "" {
-		trusted, err := IsKeyTrusted(fp, true)
-		if err != nil {
-			logger.Warn("⚠️ Failed to check trusted key store", "error", err)
-		} else if trusted != nil && !*trusted {
-			keyTrusted = false
-			fmt.Fprintf(os.Stderr, "⚠️ SECURITY WARNING: Package signing key is not in the trusted store\n")
-			fmt.Fprintf(os.Stderr, "⚠️ Key fingerprint: %s\n", fp)
-			fmt.Fprintf(os.Stderr, "⚠️ Use 'flavor trust add <key-file>' to trust this key\n")
-			logger.Warn("⚠️ Package signing key not in trusted store", "fingerprint", fp)
+	// Check signing key trust status from the embedded public key.
+	// The attestation fingerprint, when present, must match the derived public-key fingerprint.
+	keyTrusted := false
+	hasPublicKey := false
+	for _, b := range index.PublicKey {
+		if b != 0 {
+			hasPublicKey = true
+			break
 		}
+	}
+	attestationFP := strings.TrimRight(string(index.AttestationKeyFp[:]), "\x00")
+	if hasPublicKey {
+		fp, err := ComputeKeyFingerprint(index.PublicKey[:])
+		if err != nil {
+			logger.Warn("⚠️ Failed to derive signing key fingerprint", "error", err)
+		} else {
+			if attestationFP != "" && attestationFP != fp {
+				return nil, fmt.Errorf("attestation key fingerprint does not match embedded public key")
+			}
+
+			trusted, err := IsKeyTrusted(fp, true)
+			if err != nil {
+				logger.Warn("⚠️ Failed to check trusted key store", "error", err)
+			} else if trusted == nil {
+				logger.Warn("⚠️ No trusted-keys store found; requiring a trusted key will fail closed", "fingerprint", fp)
+			} else if *trusted {
+				keyTrusted = true
+			} else {
+				fmt.Fprintf(os.Stderr, "⚠️ SECURITY WARNING: Package signing key is not in the trusted store\n")
+				fmt.Fprintf(os.Stderr, "⚠️ Key fingerprint: %s\n", fp)
+				fmt.Fprintf(os.Stderr, "⚠️ Use 'flavor trust add <key-file>' to trust this key\n")
+				logger.Warn("⚠️ Package signing key not in trusted store", "fingerprint", fp)
+			}
+		}
+	} else if attestationFP != "" {
+		return nil, fmt.Errorf("attestation key fingerprint is present but public key is missing")
 	}
 
 	validationLevel := getValidationLevel()
@@ -265,8 +286,8 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger *slo
 	// Policy enforcement
 	opPolicy, policyErr := LoadOperatorPolicy()
 	if policyErr != nil {
-		fmt.Fprintf(os.Stderr, "WARN: failed to load operator policy: %v\n", policyErr)
-		opPolicy = OperatorPolicy{}
+		logger.Error("❌ Failed to load operator policy", "error", policyErr)
+		return nil, fmt.Errorf("failed to load operator policy: %w", policyErr)
 	}
 
 	var pkgPolicy PackagePolicy
@@ -284,7 +305,12 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger *slo
 		}
 	}
 
-	if enforceErr := EnforcePolicy(effective, int64(index.BuildTimestamp), hasSBOM, keyTrusted); enforceErr != nil {
+	buildTimestamp, tsErr := uint64ToInt64Checked(index.BuildTimestamp, "build timestamp")
+	if tsErr != nil {
+		logger.Error("❌ Invalid build timestamp", "error", tsErr)
+		return nil, fmt.Errorf("invalid build timestamp: %w", tsErr)
+	}
+	if enforceErr := EnforcePolicy(effective, buildTimestamp, hasSBOM, keyTrusted); enforceErr != nil {
 		logger.Error("❌ Policy violation", "error", enforceErr)
 		return nil, fmt.Errorf("policy violation: %w", enforceErr)
 	}
@@ -335,7 +361,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger *slo
 				// Parse octal mode string (e.g., "0700")
 				mode, err := strconv.ParseUint(strings.TrimPrefix(dirSpec.Mode, "0"), 8, 32)
 				if err == nil {
-					if err := chmodValidatedFn(dirPath, os.FileMode(mode)); err != nil {
+					if err := chmodValidated(dirPath, os.FileMode(mode)); err != nil {
 						logger.Debug("Failed to set permissions", "path", dirPath, "mode", dirSpec.Mode, "error", err)
 					} else {
 						logger.Debug("🔒 Set permissions", "path", dirPath, "mode", dirSpec.Mode)
@@ -473,10 +499,6 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger *slo
 					content, _ := cmd["content"].(string)
 
 					path = strings.ReplaceAll(path, "{workenv}", workenvDir)
-					if err := ensurePathWithinWorkenv(path, workenvDir, path); err != nil {
-						logger.Error("❌ Write-file path escapes work environment directory", "path", path, "error", err)
-						return nil, err
-					}
 					path = strings.ReplaceAll(path, "{package_name}", metadata.Package.Name)
 					path = strings.ReplaceAll(path, "{version}", metadata.Package.Version)
 					if err := ensurePathWithinWorkenv(path, workenvDir, path); err != nil {
