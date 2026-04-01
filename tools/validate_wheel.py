@@ -107,9 +107,9 @@ def validate_helpers(wheel_path: Path) -> tuple[bool, list[str]]:
 
         if platform == "any":
             if helpers_dir.exists() and any(helpers_dir.iterdir()):
-                messages.append("  ⚠️  Universal wheel unexpectedly contains helper binaries")
-            else:
-                messages.append("  ✓ Universal wheel: no platform helpers expected")
+                messages.append("  ❌ Universal wheel contains native helper binaries (packaging defect)")
+                return False, messages
+            messages.append("  ✓ Universal wheel: no platform helpers expected")
             return True, messages
 
         if not helpers_dir.exists():

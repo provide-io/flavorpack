@@ -40,6 +40,20 @@ def _launcher_candidate_names(launcher_base: str, platform_str: str, is_windows:
     return names
 
 
+def _semver_key(path: Path) -> tuple[int, ...]:
+    """Extract numeric version tuple from a versioned helper filename for sorting.
+
+    Expects filenames like ``flavor-rs-launcher-0.3.21-darwin_arm64``.
+    Returns (0,) if no version segment is found (sorts lowest).
+    """
+    import re
+
+    m = re.search(r"-(\d+\.\d+(?:\.\d+)?(?:\.\d+)*)-", path.name)
+    if m:
+        return tuple(int(p) for p in m.group(1).split("."))
+    return (0,)
+
+
 def _find_launcher_in_dir(
     base_path: Path, launcher_base: str, platform_str: str, names: list[str], is_windows: bool
 ) -> Path | None:
@@ -53,7 +67,7 @@ def _find_launcher_in_dir(
         if is_windows:
             patterns.insert(0, f"{launcher_base}-*-{platform_str}.exe")
         for pattern in patterns:
-            matches = sorted(base_path.glob(pattern), reverse=True)
+            matches = sorted(base_path.glob(pattern), key=_semver_key, reverse=True)
             if matches:
                 return matches[0]
     return None
