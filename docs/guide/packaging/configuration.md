@@ -674,6 +674,68 @@ flavor pack --platform $(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
 
 ---
 
+## Execution Policy
+
+Packages can declare an execution policy that restricts when and where they run.
+Policies are enforced by the launcher at start-up — before any payload code executes.
+
+### Declaring a policy in `pyproject.toml`
+
+```toml
+[tool.flavor.policy]
+# Allowed target platforms (OS_arch format). Omit to allow all platforms.
+platforms = ["linux_amd64", "linux_arm64", "darwin_amd64", "darwin_arm64"]
+
+# Refuse to run as root or Windows Administrator
+refuse_root = false
+
+# Refuse to run if the package is older than this many days (0 = no limit)
+max_age_days = 365
+
+# Require these environment variables to be set at runtime
+require_env = []
+```
+
+### Declaring a policy in a manifest JSON
+
+```json
+{
+  "name": "my-package",
+  "version": "1.0.0",
+  "policy": {
+    "platforms": ["linux_amd64", "linux_arm64"],
+    "refuse_root": false,
+    "max_age_days": 365,
+    "require_env": ["MY_APP_TOKEN"]
+  }
+}
+```
+
+### Enforcement sequence
+
+The launcher enforces policies in this order; the first violation aborts execution:
+
+1. **Platform** — `GOOS_GOARCH` of the current host must be in `platforms` (if set)
+2. **Root/Admin** — if `refuse_root = true`, refuses root on Unix and Administrator on Windows
+3. **Age** — build timestamp vs. `max_age_days`
+4. **Environment** — each name in `require_env` must have a non-empty value
+5. **SBOM** — if the operator policy sets `require_sbom = true`, the package must have an attestation slot
+
+### "Stricter wins" merge
+
+The package policy is merged with the operator policy (`/etc/flavor/policy.toml` or
+`~/.config/flavor/policy.toml`). The stricter constraint always wins:
+
+| Field | Merge rule |
+|-------|-----------|
+| `refuse_root` | `package OR operator` |
+| `max_age_days` | `min(package, operator)` |
+| `platforms` | intersection of both lists |
+| `require_env` | package list (operator cannot add env requirements) |
+| `require_sbom` | operator only |
+
+---
+
 ## See Also
 
 - [Manifest Reference](manifest/) - Complete manifest format
