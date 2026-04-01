@@ -1799,6 +1799,10 @@ class TestPackagingOrchestrator:
                 orch._build_with_python_builder()
 
     def test_build_with_json_manifest_key_seed(self, tmp_path: Path) -> None:
+        manifest = tmp_path / "manifest.json"
+        manifest.write_text(
+            '{"package": {"name": "mypkg", "version": "1.0.0"}, "execution": {"command": "mypkg"}}'
+        )
         orch = self._make_orchestrator(
             key_seed="myseed",
             builder_bin=str(tmp_path / "builder"),
@@ -1809,6 +1813,7 @@ class TestPackagingOrchestrator:
             },
         )
         orch._launcher_path = tmp_path / "launcher"
+        orch.json_manifest_path = manifest
 
         mock_run_result = MagicMock()
         mock_run_result.stdout = "rust launcher"
@@ -1816,20 +1821,19 @@ class TestPackagingOrchestrator:
         with (
             patch("flavor.packaging.orchestrator.find_builder_executable", return_value=tmp_path / "builder"),
             patch("flavor.packaging.orchestrator.run", return_value=mock_run_result),
-            patch("provide.foundation.file.temp_dir") as mock_temp,
-            patch("flavor.packaging.orchestrator.write_json"),
         ):
-            mock_temp.return_value.__enter__ = lambda s: tmp_path
-            mock_temp.return_value.__exit__ = MagicMock(return_value=False)
             orch._build_with_json_manifest()
 
     def test_build_with_json_manifest_private_key(self, tmp_path: Path) -> None:
+        manifest = tmp_path / "manifest.json"
+        manifest.write_text('{"package": {}, "execution": {}}')
         orch = self._make_orchestrator(
             package_integrity_key_path="/tmp/private.key",
             public_key_path="/tmp/public.key",
             build_config={"package": {}, "execution": {}, "slots": []},
         )
         orch._launcher_path = tmp_path / "launcher"
+        orch.json_manifest_path = manifest
 
         mock_run_result = MagicMock()
         mock_run_result.stdout = "rust launcher"
@@ -1837,11 +1841,7 @@ class TestPackagingOrchestrator:
         with (
             patch("flavor.packaging.orchestrator.find_builder_executable", return_value=tmp_path / "builder"),
             patch("flavor.packaging.orchestrator.run", return_value=mock_run_result),
-            patch("provide.foundation.file.temp_dir") as mock_temp,
-            patch("flavor.packaging.orchestrator.write_json"),
         ):
-            mock_temp.return_value.__enter__ = lambda s: tmp_path
-            mock_temp.return_value.__exit__ = MagicMock(return_value=False)
             orch._build_with_json_manifest()
 
     def test_build_with_external_builder_key_seed_args(self, tmp_path: Path) -> None:
