@@ -62,3 +62,83 @@ func TestGetLauncherPathAndAlignOffset(t *testing.T) {
 		t.Fatalf("AlignOffset(16, 8) = %d, want 16", got)
 	}
 }
+
+func TestProcessRuntimeEnvHandlesExactUnsetAndMapWithoutRename(t *testing.T) {
+	t.Parallel()
+
+	env := []string{
+		"KEEP=1",
+		"DROP=2",
+		"UNCHANGED=3",
+	}
+	runtimeEnv := map[string]interface{}{
+		"unset": []interface{}{"DROP"},
+		"map": map[string]interface{}{
+			"KEEP": "KEEP",
+		},
+		"set": map[string]interface{}{
+			"ADDED": "4",
+		},
+	}
+
+	got := processRuntimeEnv(env, runtimeEnv, hclog.NewNullLogger())
+	sort.Strings(got)
+
+	want := []string{
+		"ADDED=4",
+		"KEEP=1",
+		"UNCHANGED=3",
+	}
+	sort.Strings(want)
+
+	if len(got) != len(want) {
+		t.Fatalf("unexpected env length: got=%v want=%v", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("unexpected env entry at %d: got=%v want=%v", i, got, want)
+		}
+	}
+}
+
+func TestProcessRuntimeEnvHandlesGlobUnsetAndMissingPassPatterns(t *testing.T) {
+	t.Parallel()
+
+	env := []string{
+		"KEEP_ALPHA=1",
+		"DROP_ONE=2",
+		"DROP_TWO=3",
+		"MAP_SOURCE=4",
+	}
+	runtimeEnv := map[string]interface{}{
+		"pass": []interface{}{"KEEP_*", "MISSING_REQUIRED", "MISS_*"},
+		"unset": []interface{}{
+			"DROP_*",
+		},
+		"map": map[string]interface{}{
+			"MAP_SOURCE": "RENAMED_TARGET",
+		},
+		"set": map[string]interface{}{
+			"STATIC_VALUE": "5",
+		},
+	}
+
+	got := processRuntimeEnv(env, runtimeEnv, hclog.NewNullLogger())
+	sort.Strings(got)
+
+	want := []string{
+		"KEEP_ALPHA=1",
+		"RENAMED_TARGET=4",
+		"STATIC_VALUE=5",
+	}
+	sort.Strings(want)
+
+	if len(got) != len(want) {
+		t.Fatalf("unexpected env length: got=%v want=%v", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("unexpected env entry at %d: got=%v want=%v", i, got, want)
+		}
+	}
+}
