@@ -270,7 +270,7 @@ func doBuild(logger *slog.Logger, manifestPath, outputPath, launcherBin, private
 	copy(index.PublicKey[:], publicKey[:32])
 	if fingerprint, err := ComputeKeyFingerprint(publicKey); err != nil {
 		logger.Error("❌ Failed to compute signing key fingerprint", "error", err)
-		buildExitFn(1)
+		os.Exit(1)
 	} else {
 		copy(index.AttestationKeyFp[:], fingerprint)
 	}

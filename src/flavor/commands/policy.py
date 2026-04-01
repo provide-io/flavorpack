@@ -13,10 +13,12 @@ from pathlib import Path
 import sys
 
 import click
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from provide.foundation.console import perr, pout
 
 from flavor.config.dirs import get_policy_file
-from flavor.config.policy import load_operator_policy, merge_policy, parse_package_policy
+from flavor.config.policy import enforce_policy, load_operator_policy, merge_policy, parse_package_policy
+from flavor.config.trust import compute_key_fingerprint, is_key_trusted
 from flavor.console import get_command_logger
 
 log = get_command_logger("policy")
@@ -109,7 +111,7 @@ def policy_show() -> None:
 
 @policy_group.command("check")
 @click.argument("package_file", type=click.Path(exists=True, dir_okay=False, resolve_path=True))
-def policy_check(package_file: str) -> None:
+def policy_check(package_file: str) -> None:  # noqa: C901
     """Dry-run: would this package be allowed to run on this host?"""
     from datetime import datetime
 
@@ -124,6 +126,7 @@ def policy_check(package_file: str) -> None:
     pkg_policy = parse_package_policy(pkg_raw)
     op_policy = load_operator_policy()
     effective = merge_policy(pkg_policy, op_policy)
+    has_sbom = any(slot.get("lifecycle") == "attestation" for slot in metadata.get("slots", []))
 
     current_platform = _get_current_platform()
     if effective.platforms and current_platform not in effective.platforms:
@@ -148,10 +151,84 @@ def policy_check(package_file: str) -> None:
             perr(f"❌ Required environment variable not set: {var}")
         sys.exit(1)
 
+    if effective.use_os_keychain:
+        perr("❌ use_os_keychain is enabled, but OS keychain trust is not implemented")
+        sys.exit(1)
+
+    if effective.require_sbom and not has_sbom:
+        perr("❌ Package built without attestation slot — operator policy requires SBOM")
+        sys.exit(1)
+
+    metadata_error = _validate_package_key_metadata(index)
+    if metadata_error:
+        perr(f"❌ {metadata_error}")
+        sys.exit(1)
+
+    if effective.require_trusted_key:
+        trusted, error = _check_package_key_trust(index)
+        if not trusted:
+            perr(f"❌ {error}")
+            sys.exit(1)
+
+    try:
+        enforce_policy(effective, int(index.build_timestamp), has_sbom, True)
+    except ValueError as exc:
+        perr(f"❌ {exc}")
+        sys.exit(1)
+
     pout("✓ Package would be allowed on this host.")
     pout(f"  Platform: {current_platform}")
     pout(f"  refuse_root: {effective.refuse_root}")
     pout(f"  max_age_days: {effective.max_age_days or '(no limit)'}")
+
+
+def _validate_package_key_metadata(index: object) -> str | None:
+    """Validate signer metadata consistency independently of trust-store policy."""
+    public_key = bytes(getattr(index, "public_key", b""))
+    stored_fingerprint = bytes(getattr(index, "attestation_key_fp", b"")).rstrip(b"\x00")
+
+    if stored_fingerprint and (not public_key or set(public_key) == {0}):
+        return "package attestation key fingerprint is present but embedded public key is missing"
+
+    if not public_key or set(public_key) == {0}:
+        return None
+
+    try:
+        public_key_obj = Ed25519PublicKey.from_public_bytes(public_key)
+    except ValueError:
+        return "embedded public key is not a valid Ed25519 key"
+
+    fingerprint = compute_key_fingerprint(public_key_obj)
+    if stored_fingerprint:
+        try:
+            stored_fingerprint_text = stored_fingerprint.decode("ascii")
+        except UnicodeDecodeError:
+            return "package attestation key fingerprint is not valid ASCII"
+        if stored_fingerprint_text != fingerprint:
+            return "package attestation key fingerprint does not match embedded public key"
+
+    return None
+
+
+def _check_package_key_trust(index: object) -> tuple[bool, str | None]:
+    metadata_error = _validate_package_key_metadata(index)
+    if metadata_error:
+        return False, metadata_error
+
+    public_key = bytes(getattr(index, "public_key", b""))
+    if not public_key or set(public_key) == {0}:
+        return False, "operator policy requires a trusted signing key — package is not signed"
+
+    fingerprint = compute_key_fingerprint(Ed25519PublicKey.from_public_bytes(public_key))
+    trusted = is_key_trusted(fingerprint)
+    if trusted is True:
+        return True, None
+    if trusted is None:
+        return (
+            False,
+            "operator policy requires a trusted signing key — no trusted-keys store is configured",
+        )
+    return False, "operator policy requires a trusted signing key — package key is not in the trusted store"
 
 
 def _get_current_platform() -> str:
