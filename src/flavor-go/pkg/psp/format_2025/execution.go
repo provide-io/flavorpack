@@ -37,6 +37,15 @@ func removeAllQuietly(path, context string, logger hclog.Logger) {
 	}
 }
 
+func ensurePathWithinWorkenv(path, workenvDir, original string) error {
+	cleanPath := filepath.Clean(path)
+	cleanBase := filepath.Clean(workenvDir)
+	if !strings.HasPrefix(cleanPath, cleanBase+string(os.PathSeparator)) && cleanPath != cleanBase {
+		return fmt.Errorf("path %q escapes work environment directory", original)
+	}
+	return nil
+}
+
 // Utility functions: see execution_utils.go
 // Cache functions: see execution_cache.go
 
@@ -501,6 +510,10 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger *slo
 					content, _ := cmd["content"].(string)
 
 					path = strings.ReplaceAll(path, "{workenv}", workenvDir)
+					if err := ensurePathWithinWorkenv(path, workenvDir, path); err != nil {
+						logger.Error("❌ Write-file path escapes work environment directory", "path", path, "error", err)
+						return nil, err
+					}
 					path = strings.ReplaceAll(path, "{package_name}", metadata.Package.Name)
 					path = strings.ReplaceAll(path, "{version}", metadata.Package.Version)
 					if err := ensurePathWithinWorkenv(path, workenvDir, path); err != nil {

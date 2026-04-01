@@ -3,6 +3,7 @@ package format_2025
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -191,6 +192,14 @@ func TestLaunchExecModesHelper(t *testing.T) {
 	Launch(bundle, nil)
 }
 
+func TestLaunchSpawnExitHelper(t *testing.T) {
+	if os.Getenv("FLAVOR_LAUNCHER_SPAWN_EXIT_HELPER") != "1" {
+		return
+	}
+
+	os.Exit(7)
+}
+
 func TestExecBundleReplaceWithStubbedSyscallExec(t *testing.T) {
 	bundle := buildLauncherTestBundle(t)
 	logger := hclog.NewNullLogger()
@@ -222,6 +231,60 @@ func TestExecBundleReplaceWithStubbedSyscallExec(t *testing.T) {
 	if !called {
 		t.Fatal("expected stub syscall.Exec hook to be called")
 	}
+}
+
+func TestLaunchWithLogLevelRunPropagatesSpawnExitCode(t *testing.T) {
+	t.Setenv("FLAVOR_LAUNCHER_CLI", "1")
+	t.Setenv(EnvValidation, "none")
+	t.Setenv(EnvExecMode, "spawn")
+
+	bundle := buildMultiSlotBundleForTests(t, []multiSlotBundleSpec{
+		{
+			meta: SlotMetadata{
+				ID:     "run-slot",
+				Target: "{workenv}",
+			},
+			storedData:   []byte("ok"),
+			originalData: []byte("ok"),
+			permissions:  0o644,
+		},
+	}, Metadata{
+		Format:        "PSPF/2025",
+		FormatVersion: "2025.0",
+		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
+		Execution: &ExecutionInfo{
+			PrimarySlot: 0,
+			Command:     fmt.Sprintf("%q -test.run=TestLaunchSpawnExitHelper", os.Args[0]),
+			Environment: map[string]string{
+				"FLAVOR_LAUNCHER_SPAWN_EXIT_HELPER": "1",
+			},
+		},
+		Build: &BuildInfo{Tool: "flavor-go"},
+	})
+
+	oldExitFn := osExitFn
+	osExitFn = func(code int) {
+		panic(struct{ code int }{code: code})
+	}
+	t.Cleanup(func() {
+		osExitFn = oldExitFn
+	})
+
+	defer func() {
+		r := recover()
+		if r == nil {
+			t.Fatal("expected LaunchWithLogLevel to terminate via osExitFn")
+		}
+		got, ok := r.(struct{ code int })
+		if !ok {
+			t.Fatalf("unexpected panic value: %#v", r)
+		}
+		if got.code != 7 {
+			t.Fatalf("exit code = %d, want 7", got.code)
+		}
+	}()
+
+	LaunchWithLogLevel(bundle, []string{"run"}, "", "")
 }
 
 func TestSpawnBundleReturnsStartFailure(t *testing.T) {
