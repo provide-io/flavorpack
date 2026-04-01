@@ -1,0 +1,24 @@
+--- src/psp/format_2025/backends.rs
++++ replace <impl Backend for HybridBackend>::close -> Result<()> with Ok(())
+@@ -419,20 +419,17 @@
+         self.file = Some(file);
+         self.header_mmap = None; // No memory mapping for safety
+         self.path = Some(path.to_path_buf());
+ 
+         Ok(())
+     }
+ 
+     fn close(&mut self) -> Result<()> {
+-        self.header_mmap = None;
+-        self.file = None;
+-        self.path = None;
+-        Ok(())
++        Ok(()) /* ~ changed by cargo-mutants ~ */
+     }
+ 
+     fn read_at(&mut self, offset: u64, size: usize) -> Result<Vec<u8>> {
+         if size as u64 > MAX_SLOT_SIZE {
+             return Err(FlavorError::Generic(format!(
+                 "Read size {} exceeds maximum allowed ({} bytes)",
+                 size, MAX_SLOT_SIZE
+             )));

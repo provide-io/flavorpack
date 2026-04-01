@@ -491,19 +491,22 @@ def test_is_root_returns_bool() -> None:
 
 def test_is_root_true_when_euid_zero() -> None:
     """_is_root returns True when os.geteuid() returns 0."""
-    with mock.patch("os.geteuid", return_value=0):
+    # create=True so the patch works on Windows where os.geteuid doesn't exist
+    with mock.patch("os.geteuid", return_value=0, create=True):
         assert _is_root() is True
 
 
 def test_is_root_false_when_euid_nonzero() -> None:
     """_is_root returns False when os.geteuid() returns nonzero."""
-    with mock.patch("os.geteuid", return_value=1000):
+    # create=True so the patch works on Windows where os.geteuid doesn't exist
+    with mock.patch("os.geteuid", return_value=1000, create=True):
         assert _is_root() is False
 
 
 def test_is_root_false_on_windows_attribute_error() -> None:
     """_is_root returns False when os.geteuid raises AttributeError (Windows)."""
-    with mock.patch("os.geteuid", side_effect=AttributeError("no geteuid")):
+    # create=True so the patch works on Windows where os.geteuid doesn't exist
+    with mock.patch("os.geteuid", side_effect=AttributeError("no geteuid"), create=True):
         assert _is_root() is False
 
 

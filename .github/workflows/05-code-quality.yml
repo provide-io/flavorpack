@@ -20,9 +20,14 @@ on:
       - '**.py'
       - '**.go'
       - '**.rs'
+      - 'Makefile'
+      - 'src/flavor-go/Makefile'
+      - 'src/flavor-rs/Makefile'
+      - 'src/flavor-rs/fuzz/**'
       - 'pyproject.toml'
-      - 'go.mod'
-      - 'Cargo.toml'
+      - 'src/flavor-go/go.mod'
+      - 'src/flavor-rs/Cargo.toml'
+      - 'src/flavor-rs/fuzz/Cargo.toml'
       - '.github/workflows/05-code-quality.yml'
   
   schedule:
@@ -46,6 +51,7 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v6
         with:
+          persist-credentials: false
           fetch-depth: 0  # Full history for better analysis
       
       - name: 📦 Setup uv + Python
@@ -418,6 +424,8 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       
       - name: 🐹 Setup Go
         uses: actions/setup-go@v6
@@ -510,6 +518,8 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       
       - name: 🔧 Setup Rust Toolchain with Cache
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -654,3 +664,191 @@ jobs:
           echo "3. Address formatting and style issues" >> $GITHUB_STEP_SUMMARY
           echo "4. Consider refactoring high-complexity code" >> $GITHUB_STEP_SUMMARY
           echo "5. Add missing documentation" >> $GITHUB_STEP_SUMMARY
+
+  python-quality-observability:
+    name: 🐍 Python Intent Observability
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    continue-on-error: true
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: 📦 Setup uv + Python
+        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install dependencies
+        run: |
+          uv sync --group dev
+
+      - name: 🧪 Run Python fast quality
+        run: |
+          source .venv/bin/activate
+          make quality-python-fast
+
+      - name: 🧬 Run Python mutation quality
+        run: |
+          source .venv/bin/activate
+          make quality-python-deep
+
+      - name: 📊 Summarize Python observability
+        if: always()
+        run: |
+          echo "## 🐍 Python Intent Observability" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Commands: \`make quality-python-fast\`, \`make quality-python-deep\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Intent categories: Unit / Integration / Cross-Language / Security / Adversarial / Property / Fuzz / Mutation / Smoke" >> $GITHUB_STEP_SUMMARY
+          if [ -f coverage.json ]; then
+            python3 -c "
+import json
+from pathlib import Path
+data = json.loads(Path('coverage.json').read_text())
+totals = data.get('totals', {})
+print(f'- Coverage: {totals.get(\"percent_covered_display\", \"unknown\")}%')
+" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 📤 Upload Python observability artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: python-quality-observability-${{ github.run_id }}
+          path: |
+            .coverage
+            coverage.xml
+            coverage.json
+            htmlcov/
+            .mutmut-cache/
+          if-no-files-found: warn
+
+  go-quality-observability:
+    name: 🐹 Go Intent Observability
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: true
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: 🐹 Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: src/flavor-go/go.mod
+
+      - name: 🧬 Install gremlins
+        run: go install github.com/go-gremlins/gremlins/cmd/gremlins@latest
+
+      - name: 📊 Run Go fast quality
+        run: make quality-go-fast
+
+      - name: 🧪 Run Go deep quality
+        run: make quality-go-deep QUALITY_GO_FUZZTIME=15s QUALITY_GO_MUTATION_ARGS="./pkg/psp/format_2025"
+
+      - name: 📊 Summarize Go observability
+        if: always()
+        run: |
+          echo "## 🐹 Go Intent Observability" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Commands: \`make quality-go-fast\`, \`make quality-go-deep\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Intent categories: Unit / Integration / Cross-Language / Security / Adversarial / Property / Fuzz / Mutation / Smoke" >> $GITHUB_STEP_SUMMARY
+          if [ -f src/flavor-go/coverage.txt ]; then
+            echo "- Coverage summary:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -5 src/flavor-go/coverage.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 📤 Upload Go observability artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: go-quality-observability-${{ github.run_id }}
+          path: |
+            src/flavor-go/coverage.out
+            src/flavor-go/coverage.txt
+          if-no-files-found: warn
+
+  rust-quality-observability:
+    name: 🦀 Rust Intent Observability
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    continue-on-error: true
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: 🦀 Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: 🧰 Install Rust quality tools
+        run: |
+          cargo install cargo-llvm-cov --locked || true
+          cargo install cargo-mutants --locked || true
+          cargo install cargo-fuzz --locked || true
+          rustup toolchain install nightly --profile minimal
+
+      - name: 📊 Run Rust fast quality
+        run: make quality-rust-fast
+
+      - name: 🧪 Run Rust deep quality
+        run: make quality-rust-deep QUALITY_RUST_FUZZ_SECONDS=15 QUALITY_RUST_MUTATION_ARGS="--timeout 120 --iterate 2"
+
+      - name: 📊 Summarize Rust observability
+        if: always()
+        run: |
+          echo "## 🦀 Rust Intent Observability" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Commands: \`make quality-rust-fast\`, \`make quality-rust-deep\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Intent categories: Unit / Integration / Cross-Language / Security / Adversarial / Property / Fuzz / Mutation / Smoke" >> $GITHUB_STEP_SUMMARY
+          if [ -f src/flavor-rs/coverage.txt ]; then
+            echo "- Coverage summary:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat src/flavor-rs/coverage.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 📤 Upload Rust observability artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: rust-quality-observability-${{ github.run_id }}
+          path: |
+            src/flavor-rs/coverage.lcov
+            src/flavor-rs/coverage.txt
+            src/flavor-rs/.cargo-mutants.out/
+            src/flavor-rs/fuzz/artifacts/
+          if-no-files-found: warn
+
+  quality-observability-report:
+    name: 📈 Intent Observability Report
+    needs: [python-quality-observability, go-quality-observability, rust-quality-observability]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📊 Summarize observability jobs
+        run: |
+          echo "# 📈 Intent Observability Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🐍 Python | ${{ needs.python-quality-observability.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🐹 Go | ${{ needs.go-quality-observability.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🦀 Rust | ${{ needs.rust-quality-observability.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Intent Categories" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Unit / Integration / Cross-Language" >> $GITHUB_STEP_SUMMARY
+          echo "- Security / Adversarial / Property" >> $GITHUB_STEP_SUMMARY
+          echo "- Fuzz / Mutation / Smoke" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "These jobs are observational in this rollout phase. They run the tools in strict mode, but they are not intended to be required merge checks yet." >> $GITHUB_STEP_SUMMARY

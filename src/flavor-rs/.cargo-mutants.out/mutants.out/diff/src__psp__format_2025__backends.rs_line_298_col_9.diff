@@ -1,0 +1,21 @@
+--- src/psp/format_2025/backends.rs
++++ replace StreamBackend::with_default_chunk_size -> Self with Default::default()
+@@ -290,17 +290,17 @@
+         StreamBackend {
+             file: None,
+             path: None,
+             chunk_size,
+         }
+     }
+ 
+     pub fn with_default_chunk_size() -> Self {
+-        Self::new(DEFAULT_CHUNK_SIZE)
++        Default::default() /* ~ changed by cargo-mutants ~ */
+     }
+ 
+     /// Stream slot data in chunks
+     pub fn stream_slot<'a>(
+         &'a mut self,
+         descriptor: &SlotDescriptor,
+     ) -> impl Iterator<Item = Result<Vec<u8>>> + 'a {
+         let mut offset = descriptor.offset;

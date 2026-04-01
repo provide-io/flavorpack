@@ -1,0 +1,23 @@
+--- src/psp/format_2025/backends.rs
++++ replace <impl Backend for StreamBackend>::close -> Result<()> with Ok(())
+@@ -331,19 +331,17 @@
+ 
+         self.file = Some(file);
+         self.path = Some(path.to_path_buf());
+ 
+         Ok(())
+     }
+ 
+     fn close(&mut self) -> Result<()> {
+-        self.file = None;
+-        self.path = None;
+-        Ok(())
++        Ok(()) /* ~ changed by cargo-mutants ~ */
+     }
+ 
+     fn read_at(&mut self, offset: u64, size: usize) -> Result<Vec<u8>> {
+         if let Some(file) = &mut self.file {
+             // Limit read size for streaming
+             let read_size = std::cmp::min(size, self.chunk_size);
+ 
+             file.seek(SeekFrom::Start(offset))

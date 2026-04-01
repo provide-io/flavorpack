@@ -1,0 +1,4946 @@
+{
+  "outcomes": [
+    {
+      "scenario": "Baseline",
+      "summary": "Success",
+      "log_path": "log/baseline.log",
+      "diff_path": null,
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 12.444263,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 2.242922625,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/utils/mod.rs:41:5: replace get_cache_dir -> std::path::PathBuf with Default::default()",
+          "package": "flavor",
+          "file": "src/utils/mod.rs",
+          "function": {
+            "function_name": "get_cache_dir",
+            "return_type": "-> std::path::PathBuf",
+            "span": {
+              "start": {
+                "line": 38,
+                "column": 1
+              },
+              "end": {
+                "line": 66,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 41,
+              "column": 5
+            },
+            "end": {
+              "line": 65,
+              "column": 35
+            }
+          },
+          "replacement": "Default::default()",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__utils__mod.rs_line_41_col_5.log",
+      "diff_path": "diff/src__utils__mod.rs_line_41_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.299429125,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 3.042668083,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/version.rs:14:5: replace full_version -> String with String::new()",
+          "package": "flavor",
+          "file": "src/version.rs",
+          "function": {
+            "function_name": "full_version",
+            "return_type": "-> String",
+            "span": {
+              "start": {
+                "line": 12,
+                "column": 1
+              },
+              "end": {
+                "line": 25,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 14,
+              "column": 5
+            },
+            "end": {
+              "line": 24,
+              "column": 12
+            }
+          },
+          "replacement": "String::new()",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__version.rs_line_14_col_5.log",
+      "diff_path": "diff/src__version.rs_line_14_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.394406375,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 2.358592208,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/version.rs:14:5: replace full_version -> String with \"xyzzy\".into()",
+          "package": "flavor",
+          "file": "src/version.rs",
+          "function": {
+            "function_name": "full_version",
+            "return_type": "-> String",
+            "span": {
+              "start": {
+                "line": 12,
+                "column": 1
+              },
+              "end": {
+                "line": 25,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 14,
+              "column": 5
+            },
+            "end": {
+              "line": 24,
+              "column": 12
+            }
+          },
+          "replacement": "\"xyzzy\".into()",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__version.rs_line_14_col_5_001.log",
+      "diff_path": "diff/src__version.rs_line_14_col_5_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.277862375,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 2.954326,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:17:44: replace * with +",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": null,
+          "span": {
+            "start": {
+              "line": 17,
+              "column": 44
+            },
+            "end": {
+              "line": 17,
+              "column": 45
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_17_col_44.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_17_col_44.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.4343427499999999,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 2.691693834,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:17:44: replace * with /",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": null,
+          "span": {
+            "start": {
+              "line": 17,
+              "column": 44
+            },
+            "end": {
+              "line": 17,
+              "column": 45
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_17_col_44_001.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_17_col_44_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.758085666,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 1.907973334,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:17:37: replace * with +",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": null,
+          "span": {
+            "start": {
+              "line": 17,
+              "column": 37
+            },
+            "end": {
+              "line": 17,
+              "column": 38
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_17_col_37.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_17_col_37.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.602551542,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 2.92879375,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:17:37: replace * with /",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": null,
+          "span": {
+            "start": {
+              "line": 17,
+              "column": 37
+            },
+            "end": {
+              "line": 17,
+              "column": 38
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_17_col_37_001.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_17_col_37_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.53691325,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 1.763206209,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:17:30: replace * with +",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": null,
+          "span": {
+            "start": {
+              "line": 17,
+              "column": 30
+            },
+            "end": {
+              "line": 17,
+              "column": 31
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_17_col_30.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_17_col_30.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.490839791,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 2.703948417,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:17:30: replace * with /",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": null,
+          "span": {
+            "start": {
+              "line": 17,
+              "column": 30
+            },
+            "end": {
+              "line": 17,
+              "column": 31
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_17_col_30_001.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_17_col_30_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.5201336250000002,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 1.8499403330000002,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:32:9: replace Backend::read_slot -> Result<Vec<u8>> with Ok(vec![])",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "Backend::read_slot",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 30,
+                "column": 5
+              },
+              "end": {
+                "line": 41,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 32,
+              "column": 9
+            },
+            "end": {
+              "line": 40,
+              "column": 54
+            }
+          },
+          "replacement": "Ok(vec![])",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_32_col_9.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_32_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.958788875,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:32:9: replace Backend::read_slot -> Result<Vec<u8>> with Ok(vec![0])",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "Backend::read_slot",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 30,
+                "column": 5
+              },
+              "end": {
+                "line": 41,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 32,
+              "column": 9
+            },
+            "end": {
+              "line": 40,
+              "column": 54
+            }
+          },
+          "replacement": "Ok(vec![0])",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_32_col_9_001.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_32_col_9_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.9071625,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:32:9: replace Backend::read_slot -> Result<Vec<u8>> with Ok(vec![1])",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "Backend::read_slot",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 30,
+                "column": 5
+              },
+              "end": {
+                "line": 41,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 32,
+              "column": 9
+            },
+            "end": {
+              "line": 40,
+              "column": 54
+            }
+          },
+          "replacement": "Ok(vec![1])",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_32_col_9_002.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_32_col_9_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.895460792,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:33:22: replace > with == in Backend::read_slot",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "Backend::read_slot",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 30,
+                "column": 5
+              },
+              "end": {
+                "line": 41,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 33,
+              "column": 22
+            },
+            "end": {
+              "line": 33,
+              "column": 23
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_33_col_22.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_33_col_22.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.745672375,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 2.960382,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:33:22: replace > with < in Backend::read_slot",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "Backend::read_slot",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 30,
+                "column": 5
+              },
+              "end": {
+                "line": 41,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 33,
+              "column": 22
+            },
+            "end": {
+              "line": 33,
+              "column": 23
+            }
+          },
+          "replacement": "<",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_33_col_22_001.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_33_col_22_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.951329584,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 2.00894775,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:33:22: replace > with >= in Backend::read_slot",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "Backend::read_slot",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 30,
+                "column": 5
+              },
+              "end": {
+                "line": 41,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 33,
+              "column": 22
+            },
+            "end": {
+              "line": 33,
+              "column": 23
+            }
+          },
+          "replacement": ">=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_33_col_22_002.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_33_col_22_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.6512890420000002,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 2.5091407500000003,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:45:9: replace Backend::view_at -> Result<&[u8]> with Ok(Vec::leak(Vec::new()))",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "Backend::view_at",
+            "return_type": "-> Result<&[u8]>",
+            "span": {
+              "start": {
+                "line": 43,
+                "column": 5
+              },
+              "end": {
+                "line": 48,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 45,
+              "column": 9
+            },
+            "end": {
+              "line": 47,
+              "column": 11
+            }
+          },
+          "replacement": "Ok(Vec::leak(Vec::new()))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_45_col_9.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_45_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.5397408750000001,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 2.6142262499999998,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:45:9: replace Backend::view_at -> Result<&[u8]> with Ok(Vec::leak(vec![0]))",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "Backend::view_at",
+            "return_type": "-> Result<&[u8]>",
+            "span": {
+              "start": {
+                "line": 43,
+                "column": 5
+              },
+              "end": {
+                "line": 48,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 45,
+              "column": 9
+            },
+            "end": {
+              "line": 47,
+              "column": 11
+            }
+          },
+          "replacement": "Ok(Vec::leak(vec![0]))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_45_col_9_001.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_45_col_9_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.501517875,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 2.559320958,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:45:9: replace Backend::view_at -> Result<&[u8]> with Ok(Vec::leak(vec![1]))",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "Backend::view_at",
+            "return_type": "-> Result<&[u8]>",
+            "span": {
+              "start": {
+                "line": 43,
+                "column": 5
+              },
+              "end": {
+                "line": 48,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 45,
+              "column": 9
+            },
+            "end": {
+              "line": 47,
+              "column": 11
+            }
+          },
+          "replacement": "Ok(Vec::leak(vec![1]))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_45_col_9_002.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_45_col_9_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.438298959,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 2.651252875,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:60:9: replace <impl std::fmt::Debug for MMapBackend>::fmt -> std::fmt::Result with Ok(Default::default())",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl std::fmt::Debug for MMapBackend>::fmt",
+            "return_type": "-> std::fmt::Result",
+            "span": {
+              "start": {
+                "line": 59,
+                "column": 5
+              },
+              "end": {
+                "line": 71,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 60,
+              "column": 9
+            },
+            "end": {
+              "line": 70,
+              "column": 22
+            }
+          },
+          "replacement": "Ok(Default::default())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_60_col_9.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_60_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.905848916,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:106:9: replace <impl Backend for MMapBackend>::open -> Result<()> with Ok(())",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for MMapBackend>::open",
+            "return_type": "-> Result<()>",
+            "span": {
+              "start": {
+                "line": 105,
+                "column": 5
+              },
+              "end": {
+                "line": 126,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 106,
+              "column": 9
+            },
+            "end": {
+              "line": 125,
+              "column": 15
+            }
+          },
+          "replacement": "Ok(())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_106_col_9.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_106_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.906415791,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:129:9: replace <impl Backend for MMapBackend>::close -> Result<()> with Ok(())",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for MMapBackend>::close",
+            "return_type": "-> Result<()>",
+            "span": {
+              "start": {
+                "line": 128,
+                "column": 5
+              },
+              "end": {
+                "line": 133,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 129,
+              "column": 9
+            },
+            "end": {
+              "line": 132,
+              "column": 15
+            }
+          },
+          "replacement": "Ok(())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_129_col_9.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_129_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.558126417,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 2.8136365,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:136:9: replace <impl Backend for MMapBackend>::read_at -> Result<Vec<u8>> with Ok(vec![])",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for MMapBackend>::read_at",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 135,
+                "column": 5
+              },
+              "end": {
+                "line": 155,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 136,
+              "column": 9
+            },
+            "end": {
+              "line": 154,
+              "column": 10
+            }
+          },
+          "replacement": "Ok(vec![])",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_136_col_9.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_136_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.905920959,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:136:9: replace <impl Backend for MMapBackend>::read_at -> Result<Vec<u8>> with Ok(vec![0])",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for MMapBackend>::read_at",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 135,
+                "column": 5
+              },
+              "end": {
+                "line": 155,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 136,
+              "column": 9
+            },
+            "end": {
+              "line": 154,
+              "column": 10
+            }
+          },
+          "replacement": "Ok(vec![0])",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_136_col_9_001.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_136_col_9_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.853979875,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:136:9: replace <impl Backend for MMapBackend>::read_at -> Result<Vec<u8>> with Ok(vec![1])",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for MMapBackend>::read_at",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 135,
+                "column": 5
+              },
+              "end": {
+                "line": 155,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 136,
+              "column": 9
+            },
+            "end": {
+              "line": 154,
+              "column": 10
+            }
+          },
+          "replacement": "Ok(vec![1])",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_136_col_9_002.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_136_col_9_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.893264084,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:137:24: replace > with == in <impl Backend for MMapBackend>::read_at",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for MMapBackend>::read_at",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 135,
+                "column": 5
+              },
+              "end": {
+                "line": 155,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 137,
+              "column": 24
+            },
+            "end": {
+              "line": 137,
+              "column": 25
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_137_col_24.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_137_col_24.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.49598525,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 2.707557334,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:137:24: replace > with < in <impl Backend for MMapBackend>::read_at",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for MMapBackend>::read_at",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 135,
+                "column": 5
+              },
+              "end": {
+                "line": 155,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 137,
+              "column": 24
+            },
+            "end": {
+              "line": 137,
+              "column": 25
+            }
+          },
+          "replacement": "<",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_137_col_24_001.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_137_col_24_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.959886417,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:137:24: replace > with >= in <impl Backend for MMapBackend>::read_at",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for MMapBackend>::read_at",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 135,
+                "column": 5
+              },
+              "end": {
+                "line": 155,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 137,
+              "column": 24
+            },
+            "end": {
+              "line": 137,
+              "column": 25
+            }
+          },
+          "replacement": ">=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_137_col_24_002.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_137_col_24_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.4970355,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 2.818718,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:159:9: replace <impl Backend for MMapBackend>::view_at -> Result<&[u8]> with Ok(Vec::leak(Vec::new()))",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for MMapBackend>::view_at",
+            "return_type": "-> Result<&[u8]>",
+            "span": {
+              "start": {
+                "line": 157,
+                "column": 5
+              },
+              "end": {
+                "line": 162,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 159,
+              "column": 9
+            },
+            "end": {
+              "line": 161,
+              "column": 11
+            }
+          },
+          "replacement": "Ok(Vec::leak(Vec::new()))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_159_col_9.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_159_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.708228292,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 2.796875,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:159:9: replace <impl Backend for MMapBackend>::view_at -> Result<&[u8]> with Ok(Vec::leak(vec![0]))",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for MMapBackend>::view_at",
+            "return_type": "-> Result<&[u8]>",
+            "span": {
+              "start": {
+                "line": 157,
+                "column": 5
+              },
+              "end": {
+                "line": 162,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 159,
+              "column": 9
+            },
+            "end": {
+              "line": 161,
+              "column": 11
+            }
+          },
+          "replacement": "Ok(Vec::leak(vec![0]))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_159_col_9_001.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_159_col_9_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.597434,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 2.9316765,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:159:9: replace <impl Backend for MMapBackend>::view_at -> Result<&[u8]> with Ok(Vec::leak(vec![1]))",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for MMapBackend>::view_at",
+            "return_type": "-> Result<&[u8]>",
+            "span": {
+              "start": {
+                "line": 157,
+                "column": 5
+              },
+              "end": {
+                "line": 162,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 159,
+              "column": 9
+            },
+            "end": {
+              "line": 161,
+              "column": 11
+            }
+          },
+          "replacement": "Ok(Vec::leak(vec![1]))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_159_col_9_002.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_159_col_9_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.437297875,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 2.782849417,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:174:9: replace <impl std::fmt::Debug for FileBackend>::fmt -> std::fmt::Result with Ok(Default::default())",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl std::fmt::Debug for FileBackend>::fmt",
+            "return_type": "-> std::fmt::Result",
+            "span": {
+              "start": {
+                "line": 173,
+                "column": 5
+              },
+              "end": {
+                "line": 179,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 174,
+              "column": 9
+            },
+            "end": {
+              "line": 178,
+              "column": 22
+            }
+          },
+          "replacement": "Ok(Default::default())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_174_col_9.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_174_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.863421584,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:200:9: replace <impl Backend for FileBackend>::open -> Result<()> with Ok(())",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for FileBackend>::open",
+            "return_type": "-> Result<()>",
+            "span": {
+              "start": {
+                "line": 199,
+                "column": 5
+              },
+              "end": {
+                "line": 216,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 200,
+              "column": 9
+            },
+            "end": {
+              "line": 215,
+              "column": 15
+            }
+          },
+          "replacement": "Ok(())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_200_col_9.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_200_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.802140708,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:219:9: replace <impl Backend for FileBackend>::close -> Result<()> with Ok(())",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for FileBackend>::close",
+            "return_type": "-> Result<()>",
+            "span": {
+              "start": {
+                "line": 218,
+                "column": 5
+              },
+              "end": {
+                "line": 223,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 219,
+              "column": 9
+            },
+            "end": {
+              "line": 222,
+              "column": 15
+            }
+          },
+          "replacement": "Ok(())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_219_col_9.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_219_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.3980763330000001,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 2.769902042,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:226:9: replace <impl Backend for FileBackend>::read_at -> Result<Vec<u8>> with Ok(vec![])",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for FileBackend>::read_at",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 225,
+                "column": 5
+              },
+              "end": {
+                "line": 268,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 226,
+              "column": 9
+            },
+            "end": {
+              "line": 267,
+              "column": 10
+            }
+          },
+          "replacement": "Ok(vec![])",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_226_col_9.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_226_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.952554292,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:226:9: replace <impl Backend for FileBackend>::read_at -> Result<Vec<u8>> with Ok(vec![0])",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for FileBackend>::read_at",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 225,
+                "column": 5
+              },
+              "end": {
+                "line": 268,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 226,
+              "column": 9
+            },
+            "end": {
+              "line": 267,
+              "column": 10
+            }
+          },
+          "replacement": "Ok(vec![0])",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_226_col_9_001.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_226_col_9_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.746370917,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:226:9: replace <impl Backend for FileBackend>::read_at -> Result<Vec<u8>> with Ok(vec![1])",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for FileBackend>::read_at",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 225,
+                "column": 5
+              },
+              "end": {
+                "line": 268,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 226,
+              "column": 9
+            },
+            "end": {
+              "line": 267,
+              "column": 10
+            }
+          },
+          "replacement": "Ok(vec![1])",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_226_col_9_002.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_226_col_9_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.849974875,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:227:24: replace > with == in <impl Backend for FileBackend>::read_at",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for FileBackend>::read_at",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 225,
+                "column": 5
+              },
+              "end": {
+                "line": 268,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 227,
+              "column": 24
+            },
+            "end": {
+              "line": 227,
+              "column": 25
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_227_col_24.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_227_col_24.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.495333375,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 2.8114890839999997,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:227:24: replace > with < in <impl Backend for FileBackend>::read_at",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for FileBackend>::read_at",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 225,
+                "column": 5
+              },
+              "end": {
+                "line": 268,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 227,
+              "column": 24
+            },
+            "end": {
+              "line": 227,
+              "column": 25
+            }
+          },
+          "replacement": "<",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_227_col_24_001.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_227_col_24_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.861395333,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:227:24: replace > with >= in <impl Backend for FileBackend>::read_at",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for FileBackend>::read_at",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 225,
+                "column": 5
+              },
+              "end": {
+                "line": 268,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 227,
+              "column": 24
+            },
+            "end": {
+              "line": 227,
+              "column": 25
+            }
+          },
+          "replacement": ">=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_227_col_24_002.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_227_col_24_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.398320166,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 2.872899416,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:251:21: replace <= with > in <impl Backend for FileBackend>::read_at",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for FileBackend>::read_at",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 225,
+                "column": 5
+              },
+              "end": {
+                "line": 268,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 251,
+              "column": 21
+            },
+            "end": {
+              "line": 251,
+              "column": 23
+            }
+          },
+          "replacement": ">",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_251_col_21.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_251_col_21.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.539023875,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 2.883113583,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:255:37: replace > with == in <impl Backend for FileBackend>::read_at",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for FileBackend>::read_at",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 225,
+                "column": 5
+              },
+              "end": {
+                "line": 268,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 255,
+              "column": 37
+            },
+            "end": {
+              "line": 255,
+              "column": 38
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_255_col_37.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_255_col_37.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.4912465830000001,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 2.984560791,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:255:37: replace > with < in <impl Backend for FileBackend>::read_at",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for FileBackend>::read_at",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 225,
+                "column": 5
+              },
+              "end": {
+                "line": 268,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 255,
+              "column": 37
+            },
+            "end": {
+              "line": 255,
+              "column": 38
+            }
+          },
+          "replacement": "<",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_255_col_37_001.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_255_col_37_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.438146417,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 2.975084708,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:255:37: replace > with >= in <impl Backend for FileBackend>::read_at",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for FileBackend>::read_at",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 225,
+                "column": 5
+              },
+              "end": {
+                "line": 268,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 255,
+              "column": 37
+            },
+            "end": {
+              "line": 255,
+              "column": 38
+            }
+          },
+          "replacement": ">=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_255_col_37_002.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_255_col_37_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.55210875,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 3.033857334,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:280:9: replace <impl std::fmt::Debug for StreamBackend>::fmt -> std::fmt::Result with Ok(Default::default())",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl std::fmt::Debug for StreamBackend>::fmt",
+            "return_type": "-> std::fmt::Result",
+            "span": {
+              "start": {
+                "line": 279,
+                "column": 5
+              },
+              "end": {
+                "line": 285,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 280,
+              "column": 9
+            },
+            "end": {
+              "line": 284,
+              "column": 22
+            }
+          },
+          "replacement": "Ok(Default::default())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_280_col_9.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_280_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.960737375,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:298:9: replace StreamBackend::with_default_chunk_size -> Self with Default::default()",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "StreamBackend::with_default_chunk_size",
+            "return_type": "-> Self",
+            "span": {
+              "start": {
+                "line": 297,
+                "column": 5
+              },
+              "end": {
+                "line": 299,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 298,
+              "column": 9
+            },
+            "end": {
+              "line": 298,
+              "column": 38
+            }
+          },
+          "replacement": "Default::default()",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_298_col_9.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_298_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.852635292,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:306:9: replace StreamBackend::stream_slot -> impl Iterator<Item = Result<Vec<u8>>>+'a with ::std::iter::empty()",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "StreamBackend::stream_slot",
+            "return_type": "-> impl Iterator<Item = Result<Vec<u8>>>+'a",
+            "span": {
+              "start": {
+                "line": 301,
+                "column": 5
+              },
+              "end": {
+                "line": 325,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 306,
+              "column": 9
+            },
+            "end": {
+              "line": 324,
+              "column": 11
+            }
+          },
+          "replacement": "::std::iter::empty()",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_306_col_9.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_306_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.89649875,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:306:9: replace StreamBackend::stream_slot -> impl Iterator<Item = Result<Vec<u8>>>+'a with ::std::iter::once(Ok(vec![]))",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "StreamBackend::stream_slot",
+            "return_type": "-> impl Iterator<Item = Result<Vec<u8>>>+'a",
+            "span": {
+              "start": {
+                "line": 301,
+                "column": 5
+              },
+              "end": {
+                "line": 325,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 306,
+              "column": 9
+            },
+            "end": {
+              "line": 324,
+              "column": 11
+            }
+          },
+          "replacement": "::std::iter::once(Ok(vec![]))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_306_col_9_001.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_306_col_9_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.859416166,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:306:9: replace StreamBackend::stream_slot -> impl Iterator<Item = Result<Vec<u8>>>+'a with ::std::iter::once(Ok(vec![0]))",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "StreamBackend::stream_slot",
+            "return_type": "-> impl Iterator<Item = Result<Vec<u8>>>+'a",
+            "span": {
+              "start": {
+                "line": 301,
+                "column": 5
+              },
+              "end": {
+                "line": 325,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 306,
+              "column": 9
+            },
+            "end": {
+              "line": 324,
+              "column": 11
+            }
+          },
+          "replacement": "::std::iter::once(Ok(vec![0]))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_306_col_9_002.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_306_col_9_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.857498208,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:306:9: replace StreamBackend::stream_slot -> impl Iterator<Item = Result<Vec<u8>>>+'a with ::std::iter::once(Ok(vec![1]))",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "StreamBackend::stream_slot",
+            "return_type": "-> impl Iterator<Item = Result<Vec<u8>>>+'a",
+            "span": {
+              "start": {
+                "line": 301,
+                "column": 5
+              },
+              "end": {
+                "line": 325,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 306,
+              "column": 9
+            },
+            "end": {
+              "line": 324,
+              "column": 11
+            }
+          },
+          "replacement": "::std::iter::once(Ok(vec![1]))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_306_col_9_003.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_306_col_9_003.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.851086709,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:311:26: replace == with != in StreamBackend::stream_slot",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "StreamBackend::stream_slot",
+            "return_type": "-> impl Iterator<Item = Result<Vec<u8>>>+'a",
+            "span": {
+              "start": {
+                "line": 301,
+                "column": 5
+              },
+              "end": {
+                "line": 325,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 311,
+              "column": 26
+            },
+            "end": {
+              "line": 311,
+              "column": 28
+            }
+          },
+          "replacement": "!=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_311_col_26.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_311_col_26.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.4989350830000001,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 3.036105042,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:319:24: replace += with -= in StreamBackend::stream_slot",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "StreamBackend::stream_slot",
+            "return_type": "-> impl Iterator<Item = Result<Vec<u8>>>+'a",
+            "span": {
+              "start": {
+                "line": 301,
+                "column": 5
+              },
+              "end": {
+                "line": 325,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 319,
+              "column": 24
+            },
+            "end": {
+              "line": 319,
+              "column": 26
+            }
+          },
+          "replacement": "-=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_319_col_24.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_319_col_24.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.544375084,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 3.0251265,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:319:24: replace += with *= in StreamBackend::stream_slot",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "StreamBackend::stream_slot",
+            "return_type": "-> impl Iterator<Item = Result<Vec<u8>>>+'a",
+            "span": {
+              "start": {
+                "line": 301,
+                "column": 5
+              },
+              "end": {
+                "line": 325,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 319,
+              "column": 24
+            },
+            "end": {
+              "line": 319,
+              "column": 26
+            }
+          },
+          "replacement": "*=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_319_col_24_001.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_319_col_24_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.604102792,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 3.07914675,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:320:27: replace -= with += in StreamBackend::stream_slot",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "StreamBackend::stream_slot",
+            "return_type": "-> impl Iterator<Item = Result<Vec<u8>>>+'a",
+            "span": {
+              "start": {
+                "line": 301,
+                "column": 5
+              },
+              "end": {
+                "line": 325,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 320,
+              "column": 27
+            },
+            "end": {
+              "line": 320,
+              "column": 29
+            }
+          },
+          "replacement": "+=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_320_col_27.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_320_col_27.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.437767375,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 3.032941917,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:320:27: replace -= with /= in StreamBackend::stream_slot",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "StreamBackend::stream_slot",
+            "return_type": "-> impl Iterator<Item = Result<Vec<u8>>>+'a",
+            "span": {
+              "start": {
+                "line": 301,
+                "column": 5
+              },
+              "end": {
+                "line": 325,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 320,
+              "column": 27
+            },
+            "end": {
+              "line": 320,
+              "column": 29
+            }
+          },
+          "replacement": "/=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_320_col_27_001.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_320_col_27_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.4366685000000001,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 3.132817,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:330:9: replace <impl Backend for StreamBackend>::open -> Result<()> with Ok(())",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for StreamBackend>::open",
+            "return_type": "-> Result<()>",
+            "span": {
+              "start": {
+                "line": 329,
+                "column": 5
+              },
+              "end": {
+                "line": 336,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 330,
+              "column": 9
+            },
+            "end": {
+              "line": 335,
+              "column": 15
+            }
+          },
+          "replacement": "Ok(())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_330_col_9.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_330_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.855472875,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:339:9: replace <impl Backend for StreamBackend>::close -> Result<()> with Ok(())",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for StreamBackend>::close",
+            "return_type": "-> Result<()>",
+            "span": {
+              "start": {
+                "line": 338,
+                "column": 5
+              },
+              "end": {
+                "line": 342,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 339,
+              "column": 9
+            },
+            "end": {
+              "line": 341,
+              "column": 15
+            }
+          },
+          "replacement": "Ok(())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_339_col_9.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_339_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.391064708,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 3.182756917,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:345:9: replace <impl Backend for StreamBackend>::read_at -> Result<Vec<u8>> with Ok(vec![])",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for StreamBackend>::read_at",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 344,
+                "column": 5
+              },
+              "end": {
+                "line": 359,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 345,
+              "column": 9
+            },
+            "end": {
+              "line": 358,
+              "column": 10
+            }
+          },
+          "replacement": "Ok(vec![])",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_345_col_9.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_345_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.850633375,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:345:9: replace <impl Backend for StreamBackend>::read_at -> Result<Vec<u8>> with Ok(vec![0])",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for StreamBackend>::read_at",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 344,
+                "column": 5
+              },
+              "end": {
+                "line": 359,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 345,
+              "column": 9
+            },
+            "end": {
+              "line": 358,
+              "column": 10
+            }
+          },
+          "replacement": "Ok(vec![0])",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_345_col_9_001.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_345_col_9_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.797893291,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:345:9: replace <impl Backend for StreamBackend>::read_at -> Result<Vec<u8>> with Ok(vec![1])",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for StreamBackend>::read_at",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 344,
+                "column": 5
+              },
+              "end": {
+                "line": 359,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 345,
+              "column": 9
+            },
+            "end": {
+              "line": 358,
+              "column": 10
+            }
+          },
+          "replacement": "Ok(vec![1])",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_345_col_9_002.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_345_col_9_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.850267833,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:363:9: replace <impl Backend for StreamBackend>::read_slot -> Result<Vec<u8>> with Ok(vec![])",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for StreamBackend>::read_slot",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 361,
+                "column": 5
+              },
+              "end": {
+                "line": 365,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 363,
+              "column": 9
+            },
+            "end": {
+              "line": 364,
+              "column": 46
+            }
+          },
+          "replacement": "Ok(vec![])",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_363_col_9.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_363_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.006510042,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:363:9: replace <impl Backend for StreamBackend>::read_slot -> Result<Vec<u8>> with Ok(vec![0])",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for StreamBackend>::read_slot",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 361,
+                "column": 5
+              },
+              "end": {
+                "line": 365,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 363,
+              "column": 9
+            },
+            "end": {
+              "line": 364,
+              "column": 46
+            }
+          },
+          "replacement": "Ok(vec![0])",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_363_col_9_001.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_363_col_9_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.856941375,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:363:9: replace <impl Backend for StreamBackend>::read_slot -> Result<Vec<u8>> with Ok(vec![1])",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for StreamBackend>::read_slot",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 361,
+                "column": 5
+              },
+              "end": {
+                "line": 365,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 363,
+              "column": 9
+            },
+            "end": {
+              "line": 364,
+              "column": 46
+            }
+          },
+          "replacement": "Ok(vec![1])",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_363_col_9_002.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_363_col_9_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.845764667,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:378:9: replace <impl std::fmt::Debug for HybridBackend>::fmt -> std::fmt::Result with Ok(Default::default())",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl std::fmt::Debug for HybridBackend>::fmt",
+            "return_type": "-> std::fmt::Result",
+            "span": {
+              "start": {
+                "line": 377,
+                "column": 5
+              },
+              "end": {
+                "line": 390,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 378,
+              "column": 9
+            },
+            "end": {
+              "line": 389,
+              "column": 22
+            }
+          },
+          "replacement": "Ok(Default::default())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_378_col_9.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_378_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.907378333,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:404:9: replace HybridBackend::with_default_header_size -> Self with Default::default()",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "HybridBackend::with_default_header_size",
+            "return_type": "-> Self",
+            "span": {
+              "start": {
+                "line": 403,
+                "column": 5
+              },
+              "end": {
+                "line": 405,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 404,
+              "column": 9
+            },
+            "end": {
+              "line": 404,
+              "column": 31
+            }
+          },
+          "replacement": "Default::default()",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_404_col_9.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_404_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.848255667,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:404:24: replace * with + in HybridBackend::with_default_header_size",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "HybridBackend::with_default_header_size",
+            "return_type": "-> Self",
+            "span": {
+              "start": {
+                "line": 403,
+                "column": 5
+              },
+              "end": {
+                "line": 405,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 404,
+              "column": 24
+            },
+            "end": {
+              "line": 404,
+              "column": 25
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_404_col_24.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_404_col_24.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.5005983330000001,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 3.27630825,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:404:24: replace * with / in HybridBackend::with_default_header_size",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "HybridBackend::with_default_header_size",
+            "return_type": "-> Self",
+            "span": {
+              "start": {
+                "line": 403,
+                "column": 5
+              },
+              "end": {
+                "line": 405,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 404,
+              "column": 24
+            },
+            "end": {
+              "line": 404,
+              "column": 25
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_404_col_24_001.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_404_col_24_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.654406542,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 3.170333625,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:410:9: replace <impl Backend for HybridBackend>::open -> Result<()> with Ok(())",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for HybridBackend>::open",
+            "return_type": "-> Result<()>",
+            "span": {
+              "start": {
+                "line": 409,
+                "column": 5
+              },
+              "end": {
+                "line": 424,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 410,
+              "column": 9
+            },
+            "end": {
+              "line": 423,
+              "column": 15
+            }
+          },
+          "replacement": "Ok(())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_410_col_9.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_410_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.974497209,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:427:9: replace <impl Backend for HybridBackend>::close -> Result<()> with Ok(())",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for HybridBackend>::close",
+            "return_type": "-> Result<()>",
+            "span": {
+              "start": {
+                "line": 426,
+                "column": 5
+              },
+              "end": {
+                "line": 431,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 427,
+              "column": 9
+            },
+            "end": {
+              "line": 430,
+              "column": 15
+            }
+          },
+          "replacement": "Ok(())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_427_col_9.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_427_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.5064419999999998,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 3.261590166,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:434:9: replace <impl Backend for HybridBackend>::read_at -> Result<Vec<u8>> with Ok(vec![])",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for HybridBackend>::read_at",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 433,
+                "column": 5
+              },
+              "end": {
+                "line": 452,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 434,
+              "column": 9
+            },
+            "end": {
+              "line": 451,
+              "column": 10
+            }
+          },
+          "replacement": "Ok(vec![])",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_434_col_9.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_434_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.895044583,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:434:9: replace <impl Backend for HybridBackend>::read_at -> Result<Vec<u8>> with Ok(vec![0])",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for HybridBackend>::read_at",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 433,
+                "column": 5
+              },
+              "end": {
+                "line": 452,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 434,
+              "column": 9
+            },
+            "end": {
+              "line": 451,
+              "column": 10
+            }
+          },
+          "replacement": "Ok(vec![0])",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_434_col_9_001.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_434_col_9_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.850895417,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:434:9: replace <impl Backend for HybridBackend>::read_at -> Result<Vec<u8>> with Ok(vec![1])",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for HybridBackend>::read_at",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 433,
+                "column": 5
+              },
+              "end": {
+                "line": 452,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 434,
+              "column": 9
+            },
+            "end": {
+              "line": 451,
+              "column": 10
+            }
+          },
+          "replacement": "Ok(vec![1])",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_434_col_9_002.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_434_col_9_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.86049925,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:434:24: replace > with == in <impl Backend for HybridBackend>::read_at",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for HybridBackend>::read_at",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 433,
+                "column": 5
+              },
+              "end": {
+                "line": 452,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 434,
+              "column": 24
+            },
+            "end": {
+              "line": 434,
+              "column": 25
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_434_col_24.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_434_col_24.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.492562334,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 3.215569125,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:434:24: replace > with < in <impl Backend for HybridBackend>::read_at",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for HybridBackend>::read_at",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 433,
+                "column": 5
+              },
+              "end": {
+                "line": 452,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 434,
+              "column": 24
+            },
+            "end": {
+              "line": 434,
+              "column": 25
+            }
+          },
+          "replacement": "<",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_434_col_24_001.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_434_col_24_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.862890875,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:434:24: replace > with >= in <impl Backend for HybridBackend>::read_at",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for HybridBackend>::read_at",
+            "return_type": "-> Result<Vec<u8>>",
+            "span": {
+              "start": {
+                "line": 433,
+                "column": 5
+              },
+              "end": {
+                "line": 452,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 434,
+              "column": 24
+            },
+            "end": {
+              "line": 434,
+              "column": 25
+            }
+          },
+          "replacement": ">=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_434_col_24_002.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_434_col_24_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.494498,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 3.31307025,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:456:9: replace <impl Backend for HybridBackend>::view_at -> Result<&[u8]> with Ok(Vec::leak(Vec::new()))",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for HybridBackend>::view_at",
+            "return_type": "-> Result<&[u8]>",
+            "span": {
+              "start": {
+                "line": 454,
+                "column": 5
+              },
+              "end": {
+                "line": 459,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 456,
+              "column": 9
+            },
+            "end": {
+              "line": 458,
+              "column": 11
+            }
+          },
+          "replacement": "Ok(Vec::leak(Vec::new()))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_456_col_9.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_456_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.606446042,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 3.268712959,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:456:9: replace <impl Backend for HybridBackend>::view_at -> Result<&[u8]> with Ok(Vec::leak(vec![0]))",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for HybridBackend>::view_at",
+            "return_type": "-> Result<&[u8]>",
+            "span": {
+              "start": {
+                "line": 454,
+                "column": 5
+              },
+              "end": {
+                "line": 459,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 456,
+              "column": 9
+            },
+            "end": {
+              "line": 458,
+              "column": 11
+            }
+          },
+          "replacement": "Ok(Vec::leak(vec![0]))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_456_col_9_001.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_456_col_9_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.711292833,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 3.359313791,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:456:9: replace <impl Backend for HybridBackend>::view_at -> Result<&[u8]> with Ok(Vec::leak(vec![1]))",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "<impl Backend for HybridBackend>::view_at",
+            "return_type": "-> Result<&[u8]>",
+            "span": {
+              "start": {
+                "line": 454,
+                "column": 5
+              },
+              "end": {
+                "line": 459,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 456,
+              "column": 9
+            },
+            "end": {
+              "line": 458,
+              "column": 11
+            }
+          },
+          "replacement": "Ok(Vec::leak(vec![1]))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_456_col_9_002.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_456_col_9_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.498757084,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 3.3106278749999998,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:464:5: replace create_backend -> Box<dyn Backend> with Box::new(Default::default())",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "create_backend",
+            "return_type": "-> Box<dyn Backend>",
+            "span": {
+              "start": {
+                "line": 462,
+                "column": 1
+              },
+              "end": {
+                "line": 496,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 464,
+              "column": 5
+            },
+            "end": {
+              "line": 495,
+              "column": 6
+            }
+          },
+          "replacement": "Box::new(Default::default())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_464_col_5.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_464_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.908741583,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:466:13: replace == with != in create_backend",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "create_backend",
+            "return_type": "-> Box<dyn Backend>",
+            "span": {
+              "start": {
+                "line": 462,
+                "column": 1
+              },
+              "end": {
+                "line": 496,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 466,
+              "column": 13
+            },
+            "end": {
+              "line": 466,
+              "column": 15
+            }
+          },
+          "replacement": "!=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_466_col_13.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_466_col_13.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.490456333,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 3.453747708,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:473:30: replace > with == in create_backend",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "create_backend",
+            "return_type": "-> Box<dyn Backend>",
+            "span": {
+              "start": {
+                "line": 462,
+                "column": 1
+              },
+              "end": {
+                "line": 496,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 473,
+              "column": 30
+            },
+            "end": {
+              "line": 473,
+              "column": 31
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_473_col_30.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_473_col_30.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.505650333,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 3.4043119170000002,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:473:30: replace > with < in create_backend",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "create_backend",
+            "return_type": "-> Box<dyn Backend>",
+            "span": {
+              "start": {
+                "line": 462,
+                "column": 1
+              },
+              "end": {
+                "line": 496,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 473,
+              "column": 30
+            },
+            "end": {
+              "line": 473,
+              "column": 31
+            }
+          },
+          "replacement": "<",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_473_col_30_001.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_473_col_30_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.747972125,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 3.49848225,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/psp/format_2025/backends.rs:473:30: replace > with >= in create_backend",
+          "package": "flavor",
+          "file": "src/psp/format_2025/backends.rs",
+          "function": {
+            "function_name": "create_backend",
+            "return_type": "-> Box<dyn Backend>",
+            "span": {
+              "start": {
+                "line": 462,
+                "column": 1
+              },
+              "end": {
+                "line": 496,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 473,
+              "column": 30
+            },
+            "end": {
+              "line": 473,
+              "column": 31
+            }
+          },
+          "replacement": ">=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__psp__format_2025__backends.rs_line_473_col_30_002.log",
+      "diff_path": "diff/src__psp__format_2025__backends.rs_line_473_col_30_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.5271844589999999,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 3.458132291,
+          "process_status": "Success",
+          "argv": [
+            "/Users/tim/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=flavor@0.3.21",
+            "--all-features"
+          ]
+        }
+      ]
+    }
+  ],
+  "total_mutants": 82,
+  "missed": 42,
+  "caught": 4,
+  "timeout": 0,
+  "unviable": 36,
+  "success": 0,
+  "start_time": "2026-03-31T20:25:36.18019Z",
+  "end_time": null,
+  "cargo_mutants_version": "27.0.0"
+}

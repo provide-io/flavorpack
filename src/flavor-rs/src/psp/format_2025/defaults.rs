@@ -174,14 +174,14 @@ pub const DEFAULT_LAUNCHER_TIMEOUT: f64 = 30.0; // seconds
 // =================================
 // Validation defaults
 // =================================
-pub const DEFAULT_VALIDATION_LEVEL: &str = "standard"; // Default validation level
+pub const DEFAULT_VALIDATION_LEVEL: &str = "strict"; // Default validation level
 
 /// ValidationLevel represents different levels of security validation
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ValidationLevel {
     /// Full security checks, fail on any issue (most secure)
     Strict,
-    /// Normal validation, warnings for minor issues (default)
+    /// Normal validation, warnings for minor issues
     Standard,
     /// Skip signature checks, warn on checksum mismatches
     Relaxed,
@@ -222,12 +222,62 @@ pub fn get_validation_level() -> ValidationLevel {
     use std::env;
 
     // Check FLAVOR_VALIDATION variable
-    if let Ok(val) = env::var("FLAVOR_VALIDATION") {
-        if let Some(level) = ValidationLevel::parse(&val) {
+    validation_level_from_env_value(env::var(crate::env_vars::VALIDATION).ok().as_deref())
+}
+
+fn validation_level_from_env_value(value: Option<&str>) -> ValidationLevel {
+    if let Some(val) = value {
+        if let Some(level) = ValidationLevel::parse(val) {
             return level;
         }
     }
 
     // Use default from constants
-    ValidationLevel::parse(DEFAULT_VALIDATION_LEVEL).unwrap_or(ValidationLevel::Standard)
+    ValidationLevel::parse(DEFAULT_VALIDATION_LEVEL).unwrap_or(ValidationLevel::Strict)
+}
+
+#[cfg(test)]
+#[allow(unsafe_code)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn validation_level_roundtrips_all_known_values() {
+        let levels = [
+            ValidationLevel::Strict,
+            ValidationLevel::Standard,
+            ValidationLevel::Relaxed,
+            ValidationLevel::Minimal,
+            ValidationLevel::None,
+        ];
+
+        for level in levels {
+            assert_eq!(ValidationLevel::parse(level.as_str()), Some(level));
+        }
+    }
+
+    #[test]
+    fn validation_level_rejects_unknown_values() {
+        assert_eq!(ValidationLevel::parse("definitely-not-valid"), None);
+    }
+
+    #[test]
+    fn get_validation_level_uses_env_override() {
+        assert_eq!(
+            validation_level_from_env_value(Some("relaxed")),
+            ValidationLevel::Relaxed
+        );
+    }
+
+    #[test]
+    fn get_validation_level_falls_back_to_strict_for_invalid_value() {
+        assert_eq!(
+            validation_level_from_env_value(Some("not-a-real-level")),
+            ValidationLevel::Strict
+        );
+        assert_eq!(
+            validation_level_from_env_value(None),
+            ValidationLevel::Strict
+        );
+    }
 }

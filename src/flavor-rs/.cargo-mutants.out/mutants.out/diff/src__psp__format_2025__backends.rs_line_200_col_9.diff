@@ -1,0 +1,36 @@
+--- src/psp/format_2025/backends.rs
++++ replace <impl Backend for FileBackend>::open -> Result<()> with Ok(())
+@@ -192,32 +192,17 @@
+             path: None,
+             cache: HashMap::new(),
+         }
+     }
+ }
+ 
+ impl Backend for FileBackend {
+     fn open(&mut self, path: &Path) -> Result<()> {
+-        let timer = Instant::now();
+-        let file = File::open(path).map_err(FlavorError::IoError)?;
+-
+-        let file_size = file.metadata().map_err(FlavorError::IoError)?.len();
+-        debug!(
+-            "📁 File backend opened {} ({} bytes) in {:?}",
+-            path.display(),
+-            file_size,
+-            timer.elapsed()
+-        );
+-
+-        self.file = Some(file);
+-        self.path = Some(path.to_path_buf());
+-        self.cache.clear();
+-
+-        Ok(())
++        Ok(()) /* ~ changed by cargo-mutants ~ */
+     }
+ 
+     fn close(&mut self) -> Result<()> {
+         self.file = None;
+         self.path = None;
+         self.cache.clear();
+         Ok(())
+     }

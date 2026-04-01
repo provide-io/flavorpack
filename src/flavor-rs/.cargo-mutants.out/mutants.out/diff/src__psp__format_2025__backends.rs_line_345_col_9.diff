@@ -1,0 +1,34 @@
+--- src/psp/format_2025/backends.rs
++++ replace <impl Backend for StreamBackend>::read_at -> Result<Vec<u8>> with Ok(vec![])
+@@ -337,30 +337,17 @@
+ 
+     fn close(&mut self) -> Result<()> {
+         self.file = None;
+         self.path = None;
+         Ok(())
+     }
+ 
+     fn read_at(&mut self, offset: u64, size: usize) -> Result<Vec<u8>> {
+-        if let Some(file) = &mut self.file {
+-            // Limit read size for streaming
+-            let read_size = std::cmp::min(size, self.chunk_size);
+-
+-            file.seek(SeekFrom::Start(offset))
+-                .map_err(FlavorError::IoError)?;
+-
+-            let mut buffer = vec![0u8; read_size];
+-            file.read_exact(&mut buffer).map_err(FlavorError::IoError)?;
+-
+-            Ok(buffer)
+-        } else {
+-            Err(FlavorError::Generic("Backend not opened".into()))
+-        }
++        Ok(vec![]) /* ~ changed by cargo-mutants ~ */
+     }
+ 
+     fn read_slot(&mut self, descriptor: &SlotDescriptor) -> Result<Vec<u8>> {
+         // For streaming, only read first chunk
+         let size = std::cmp::min(descriptor.size as usize, self.chunk_size);
+         self.read_at(descriptor.offset, size)
+     }
+ }

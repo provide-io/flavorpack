@@ -1,0 +1,4 @@
+src/psp/format_2025/backends.rs:17:44: replace * with /
+src/psp/format_2025/backends.rs:17:37: replace * with /
+src/psp/format_2025/backends.rs:17:30: replace * with /
+src/psp/format_2025/backends.rs:33:22: replace > with < in Backend::read_slot

@@ -120,10 +120,8 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
         )
         skipped_count = 0
         for item in items:
-            # Skip tests marked with requires_helpers
-            if "requires_helpers" in item.keywords or (
-                "integration" in item.keywords and "requires_helpers" not in item.keywords
-            ):
+            # Skip tests explicitly marked with requires_helpers
+            if "requires_helpers" in item.keywords:
                 item.add_marker(skip_helpers)
                 skipped_count += 1
 
@@ -198,7 +196,9 @@ def mock_launcher_loading(request: pytest.FixtureRequest, monkeypatch: pytest.Mo
     if request.node.get_closest_marker("integration") and binaries_available:
         return  # Real binaries exist — let integration tests use them
 
-    def mock_load_launcher(launcher_type: str) -> bytes:
+    def mock_load_launcher(launcher_type: str, explicit_path: Path | None = None) -> bytes:
+        if explicit_path is not None and explicit_path.exists():
+            return explicit_path.read_bytes()
         return MOCK_LAUNCHER_DATA
 
     # Patch where the function is used, not just where it's defined

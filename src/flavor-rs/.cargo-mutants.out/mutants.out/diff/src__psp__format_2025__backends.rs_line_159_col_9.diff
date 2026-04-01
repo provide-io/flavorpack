@@ -1,0 +1,23 @@
+--- src/psp/format_2025/backends.rs
++++ replace <impl Backend for MMapBackend>::view_at -> Result<&[u8]> with Ok(Vec::leak(Vec::new()))
+@@ -151,19 +151,17 @@
+             Ok(buffer)
+         } else {
+             Err(FlavorError::Generic("Backend not opened".into()))
+         }
+     }
+ 
+     fn view_at(&self, _offset: u64, _size: usize) -> Result<&[u8]> {
+         // Zero-copy view not available without memory mapping
+-        Err(FlavorError::Generic(
+-            "View not supported by safe file backend".into(),
+-        ))
++        Ok(Vec::leak(Vec::new())) /* ~ changed by cargo-mutants ~ */
+     }
+ }
+ 
+ /// Traditional file I/O backend
+ pub struct FileBackend {
+     file: Option<File>,
+     path: Option<std::path::PathBuf>,
+     cache: HashMap<(u64, usize), Vec<u8>>,

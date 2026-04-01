@@ -4,6 +4,8 @@ package format_2025
 
 import "syscall"
 
+var getAvailableDiskSpaceFn = getAvailableDiskSpace
+
 // getAvailableDiskSpace returns available disk space in bytes for Unix systems
 func getAvailableDiskSpace(path string) (int64, error) {
 	var stat syscall.Statfs_t

@@ -1,0 +1,21 @@
+--- src/psp/format_2025/backends.rs
++++ replace == with != in create_backend
+@@ -458,17 +458,17 @@
+         ))
+     }
+ }
+ 
+ /// Factory function to create the appropriate backend
+ pub fn create_backend(mode: u8, path: Option<&Path>) -> Box<dyn Backend> {
+     let mut mode = mode;
+ 
+-    if mode == ACCESS_AUTO {
++    if mode != /* ~ changed by cargo-mutants ~ */ ACCESS_AUTO {
+         // Auto-select based on file size and platform
+         if let Some(p) = path {
+             if let Ok(metadata) = std::fs::metadata(p) {
+                 let file_size = metadata.len();
+ 
+                 // Use streaming for very large files (>100MB)
+                 if file_size > 100 * 1024 * 1024 {
+                     mode = ACCESS_STREAM;

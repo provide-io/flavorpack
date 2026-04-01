@@ -1,0 +1,25 @@
+--- src/psp/format_2025/backends.rs
++++ replace <impl std::fmt::Debug for StreamBackend>::fmt -> std::fmt::Result with Ok(Default::default())
+@@ -272,21 +272,17 @@
+ pub struct StreamBackend {
+     file: Option<File>,
+     path: Option<std::path::PathBuf>,
+     chunk_size: usize,
+ }
+ 
+ impl std::fmt::Debug for StreamBackend {
+     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+-        f.debug_struct("StreamBackend")
+-            .field("file", &self.file.as_ref().map(|_| "<File>"))
+-            .field("path", &self.path)
+-            .field("chunk_size", &self.chunk_size)
+-            .finish()
++        Ok(Default::default()) /* ~ changed by cargo-mutants ~ */
+     }
+ }
+ 
+ impl StreamBackend {
+     pub fn new(chunk_size: usize) -> Self {
+         StreamBackend {
+             file: None,
+             path: None,

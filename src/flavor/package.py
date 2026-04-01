@@ -100,6 +100,7 @@ def build_package_from_manifest(
         show_progress,
         key_seed,
         manifest_type,
+        json_manifest_path=manifest_path.absolute() if manifest_type == "json" else None,
     )
     orchestrator.build_package()
     return [output_flavor_path]
@@ -360,6 +361,7 @@ def _create_orchestrator(
     show_progress: bool,
     key_seed: str | None,
     manifest_type: str,
+    json_manifest_path: Path | None = None,
 ) -> PackagingOrchestrator:
     """Create and configure the PackagingOrchestrator."""
     return PackagingOrchestrator(
@@ -377,6 +379,7 @@ def _create_orchestrator(
         show_progress=show_progress,
         key_seed=key_seed,
         manifest_type=manifest_type,
+        json_manifest_path=json_manifest_path,
     )
 
 

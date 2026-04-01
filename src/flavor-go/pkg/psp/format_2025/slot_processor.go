@@ -342,7 +342,7 @@ func (sp *SlotProcessor) loadSlotData(slot *Slot) ([]byte, []byte, uint8, error)
 	// Resolve {workenv} placeholder
 	slotPath := slot.Source
 	if strings.Contains(slotPath, "{workenv}") {
-		baseDir := os.Getenv("FLAVOR_WORKENV_BASE")
+		baseDir := os.Getenv(EnvWorkenvBase)
 		if baseDir == "" {
 			baseDir, _ = os.Getwd()
 		}

@@ -15,6 +15,8 @@ import pytest
 
 from flavor.cache import get_cache_dir
 
+pytestmark = [pytest.mark.cross_language, pytest.mark.ci, pytest.mark.integration]
+
 
 # ---------------------------------------------------------------------------
 # Cache dir respects XDG_CACHE_HOME
@@ -107,14 +109,15 @@ def test_file_encoding_is_always_utf8(tmp_path: Path) -> None:
     test_content = "Hello\nWorld\n\u00e9\u00e8\u00ea\n\u2603\n"
     test_file = tmp_path / "test.txt"
 
-    # Write with explicit UTF-8
-    test_file.write_text(test_content, encoding="utf-8")
+    # Write with explicit UTF-8 and LF-only line endings (PSPF always uses LF).
+    # newline="\n" suppresses Windows text-mode CRLF translation (Python 3.10+).
+    test_file.write_text(test_content, encoding="utf-8", newline="\n")
 
-    # Read back with explicit UTF-8
+    # Read back with explicit UTF-8; text mode normalises \r\n→\n, so result matches original.
     result = test_file.read_text(encoding="utf-8")
     assert result == test_content
 
-    # Verify raw bytes are valid UTF-8
+    # Verify raw bytes are valid UTF-8 with LF-only endings
     raw = test_file.read_bytes()
     decoded = raw.decode("utf-8")
     assert decoded == test_content

@@ -15,13 +15,13 @@ func copyFile(src, dst string) error {
 	if err != nil {
 		return err
 	}
-	defer sourceFile.Close()
+	defer func() { _ = sourceFile.Close() }()
 
 	destFile, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
-	defer destFile.Close()
+	defer func() { _ = destFile.Close() }()
 
 	if _, err := io.Copy(destFile, sourceFile); err != nil {
 		return err
@@ -94,10 +94,10 @@ func fixShebangs(binDir, oldPrefix, newPrefix string, logger hclog.Logger) error
 
 		header := make([]byte, 2)
 		if _, err := file.Read(header); err != nil {
-			file.Close()
+			_ = file.Close()
 			continue
 		}
-		file.Close()
+		_ = file.Close()
 
 		if string(header) != "#!" {
 			continue
