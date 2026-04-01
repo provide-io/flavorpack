@@ -71,6 +71,35 @@ pub fn compute_key_fingerprint(raw_key: &[u8]) -> Result<String, String> {
     Ok(format!("{:x}", hasher.finalize()))
 }
 
+/// Derive the canonical trust fingerprint from an index's embedded public key.
+///
+/// Returns:
+/// - `Ok(None)` for unsigned packages with an all-zero public key and no attestation fingerprint.
+/// - `Ok(Some(fp))` for signed packages when the stored attestation fingerprint is absent or matches.
+/// - `Err(...)` when the attestation fingerprint is present but mismatches the embedded public key.
+pub fn derive_index_key_fingerprint(index: &super::index::Index) -> Result<Option<String>, String> {
+    if index.public_key.iter().all(|&b| b == 0) {
+        if index.attestation_key_fp.iter().any(|&b| b != 0) {
+            return Err("attestation_key_fp is present but public_key is missing".to_string());
+        }
+        return Ok(None);
+    }
+
+    let derived = compute_key_fingerprint(&index.public_key)?;
+    let stored = String::from_utf8_lossy(&index.attestation_key_fp)
+        .trim_end_matches('\0')
+        .to_string();
+
+    if !stored.is_empty() && stored != derived {
+        return Err(format!(
+            "attestation_key_fp mismatch: stored={} derived={}",
+            stored, derived
+        ));
+    }
+
+    Ok(Some(derived))
+}
+
 /// Loads all .pub PEM files from a directory.
 /// Returns empty map if directory doesn't exist.
 fn load_keys_from_dir(dir: &Path) -> HashMap<String, TrustedKey> {
@@ -222,6 +251,42 @@ mod tests {
             err.contains("invalid Ed25519 key length"),
             "unexpected: {err}"
         );
+    }
+
+    #[test]
+    fn test_derive_index_key_fingerprint_unsigned_package_returns_none() {
+        let index = crate::psp::format_2025::index::Index::new();
+        let fingerprint = derive_index_key_fingerprint(&index).expect("derive fingerprint");
+        assert_eq!(fingerprint, None);
+    }
+
+    #[test]
+    fn test_derive_index_key_fingerprint_matches_public_key() {
+        let seed = [7u8; 32];
+        let signing_key = SigningKey::from_bytes(&seed);
+        let public_key = signing_key.verifying_key().to_bytes();
+        let mut index = crate::psp::format_2025::index::Index::new();
+        index.public_key = public_key;
+
+        let fingerprint = derive_index_key_fingerprint(&index).expect("derive fingerprint");
+        assert_eq!(
+            fingerprint,
+            Some(compute_key_fingerprint(&public_key).expect("fingerprint"))
+        );
+    }
+
+    #[test]
+    fn test_derive_index_key_fingerprint_rejects_mismatch() {
+        let seed = [8u8; 32];
+        let signing_key = SigningKey::from_bytes(&seed);
+        let public_key = signing_key.verifying_key().to_bytes();
+        let mut index = crate::psp::format_2025::index::Index::new();
+        index.public_key = public_key;
+        index.attestation_key_fp[..64]
+            .copy_from_slice(b"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+
+        let err = derive_index_key_fingerprint(&index).expect_err("mismatch must fail");
+        assert!(err.contains("mismatch") || err.contains("attestation"));
     }
 
     #[test]
