@@ -265,7 +265,7 @@ class TestStreamBackendEdgeCases:
             backend.read_at(0, 10)
 
     def test_read_slot(self, tmp_path: Path) -> None:
-        """Line 346-349: read_slot reads only first chunk."""
+        """read_slot assembles full slot even when size > chunk_size."""
         test_file = tmp_path / "test.bin"
         test_file.write_bytes(b"ABCD" * 100)
         backend = StreamBackend(chunk_size=50)
@@ -273,8 +273,9 @@ class TestStreamBackendEdgeCases:
         try:
             descriptor = SlotDescriptor(id=0, offset=0, size=200)
             data = backend.read_slot(descriptor)
-            # Should be limited to chunk_size
-            assert len(data) == 50
+            # Must return full slot, not just first chunk
+            assert len(data) == 200
+            assert data == b"ABCD" * 50
         finally:
             backend.close()
 
