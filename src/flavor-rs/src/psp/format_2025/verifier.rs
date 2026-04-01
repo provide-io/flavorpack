@@ -254,9 +254,10 @@ fn verify_slot_checksums(reader: &mut super::reader::Reader) -> Result<bool> {
             if first_chunk_preview.is_none() {
                 first_chunk_preview = Some(chunk[..16.min(chunk.len())].to_vec());
             }
+            let actually_read = chunk.len() as u64;
             hasher.update(&chunk);
-            offset += to_read as u64;
-            remaining -= to_read as u64;
+            offset += actually_read;
+            remaining -= actually_read;
         }
 
         let checksum = hasher.finalize();
