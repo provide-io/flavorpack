@@ -10,10 +10,13 @@ from __future__ import annotations
 from pathlib import Path
 from unittest import mock
 
+import pytest
+
 from flavor.config.policy import (
     EffectivePolicy,
     OperatorPolicy,
     PackagePolicy,
+    enforce_policy,
     load_operator_policy,
     merge_policy,
     parse_package_policy,
@@ -268,7 +271,7 @@ def test_load_operator_policy_system_false_skips_system(tmp_path: Path) -> None:
 
 
 def test_load_operator_policy_malformed_system_toml(tmp_path: Path) -> None:
-    """Malformed system TOML logs a warning and falls back to defaults."""
+    """Malformed system TOML is a hard failure when the file exists."""
     system_dir = tmp_path / "system"
     system_dir.mkdir()
     bad_system = system_dir / "policy.toml"
@@ -277,38 +280,69 @@ def test_load_operator_policy_malformed_system_toml(tmp_path: Path) -> None:
     with (
         mock.patch("flavor.config.policy.get_system_config_dir", return_value=system_dir),
         mock.patch("flavor.config.policy.get_policy_file", return_value=tmp_path / "no-policy.toml"),
+        pytest.raises(ValueError, match=r"policy\.toml"),
     ):
-        op = load_operator_policy(system=True, user=False)
-    # Should not raise; returns defaults
-    assert op.require_trusted_key is False
+        load_operator_policy(system=True, user=False)
 
 
 def test_load_operator_policy_malformed_user_toml(tmp_path: Path) -> None:
-    """Malformed user TOML logs a warning and uses whatever was loaded before."""
+    """Malformed user TOML is a hard failure when the file exists."""
     bad_user = tmp_path / "policy.toml"
     bad_user.write_bytes(b"[broken\nnot = valid ===\n")
 
     with (
         mock.patch("flavor.config.policy.get_system_config_dir", return_value=tmp_path / "no-system"),
         mock.patch("flavor.config.policy.get_policy_file", return_value=bad_user),
+        pytest.raises(ValueError, match=r"policy\.toml"),
     ):
-        op = load_operator_policy(system=False, user=True)
-    # Should not raise; returns defaults
-    assert op.require_trusted_key is False
+        load_operator_policy(system=False, user=True)
 
 
 def test_load_operator_policy_user_non_dict_section(tmp_path: Path) -> None:
-    """A top-level non-dict value in user policy is merged directly (not as sub-section)."""
+    """Unexpected top-level scalars are rejected instead of being silently merged."""
     user_policy = tmp_path / "policy.toml"
-    # TOML: top-level scalar (not a table section)
     user_policy.write_text("version = 1\n[trust]\nrequire_trusted_key = true\n")
 
     with (
         mock.patch("flavor.config.policy.get_system_config_dir", return_value=tmp_path / "no-system"),
         mock.patch("flavor.config.policy.get_policy_file", return_value=user_policy),
+        pytest.raises(ValueError, match=r"unknown policy section|unknown top-level key"),
     ):
-        op = load_operator_policy(system=False, user=True)
-    assert op.require_trusted_key is True
+        load_operator_policy(system=False, user=True)
+
+
+def test_load_operator_policy_unknown_section_raises(tmp_path: Path) -> None:
+    """Unknown sections are rejected to prevent silent policy drift."""
+    user_policy = tmp_path / "policy.toml"
+    user_policy.write_text("[mystery]\nflag = true\n")
+
+    with (
+        mock.patch("flavor.config.policy.get_system_config_dir", return_value=tmp_path / "no-system"),
+        mock.patch("flavor.config.policy.get_policy_file", return_value=user_policy),
+        pytest.raises(ValueError, match=r"unknown policy section"),
+    ):
+        load_operator_policy(system=False, user=True)
+
+
+def test_load_operator_policy_unknown_key_raises(tmp_path: Path) -> None:
+    """Unknown keys in known sections are rejected to keep runtimes aligned."""
+    user_policy = tmp_path / "policy.toml"
+    user_policy.write_text("[trust]\nrequire_trusted_key = true\nsurprise = true\n")
+
+    with (
+        mock.patch("flavor.config.policy.get_system_config_dir", return_value=tmp_path / "no-system"),
+        mock.patch("flavor.config.policy.get_policy_file", return_value=user_policy),
+        pytest.raises(ValueError, match=r"unknown policy key"),
+    ):
+        load_operator_policy(system=False, user=True)
+
+
+def test_enforce_policy_rejects_unsupported_os_keychain() -> None:
+    """use_os_keychain must fail closed until a real backend exists."""
+    policy = EffectivePolicy(use_os_keychain=True)
+
+    with pytest.raises(ValueError, match="use_os_keychain"):
+        enforce_policy(policy, 0, False, True)
 
 
 # ---------------------------------------------------------------------------

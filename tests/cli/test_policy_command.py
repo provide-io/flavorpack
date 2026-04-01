@@ -13,6 +13,8 @@ import time
 from unittest import mock
 
 from click.testing import CliRunner
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 
 from flavor.cli import cli
 from flavor.commands.policy import _get_current_platform, _is_root
@@ -34,6 +36,11 @@ def _make_mock_reader(metadata: dict[str, object] | None = None, build_timestamp
     reader.read_metadata.return_value = metadata if metadata is not None else {}
     reader.read_index.return_value = mock_index
     return reader
+
+
+def _raw_public_key_bytes() -> bytes:
+    key = Ed25519PrivateKey.generate().public_key()
+    return key.public_bytes(Encoding.Raw, PublicFormat.Raw)
 
 
 # ---------------------------------------------------------------------------
@@ -426,6 +433,117 @@ def test_policy_check_env_var_present(tmp_path: Path) -> None:
 
     assert result.exit_code == 0, result.output
     assert "✓ Package would be allowed on this host." in result.output
+
+
+def test_policy_check_rejects_missing_sbom_when_required(tmp_path: Path) -> None:
+    """policy check must reflect require_sbom, not just platform/root/env."""
+    pkg = tmp_path / "test.psp"
+    pkg.write_bytes(b"fake")
+
+    mock_reader = _make_mock_reader(metadata={"slots": []})
+    runner = CliRunner()
+
+    with (
+        mock.patch("flavor.psp.format_2025.reader.PSPFReader", return_value=mock_reader),
+        mock.patch(
+            "flavor.commands.policy.load_operator_policy", return_value=OperatorPolicy(require_sbom=True)
+        ),
+    ):
+        result = runner.invoke(cli, ["policy", "check", str(pkg)])
+
+    assert result.exit_code == 1
+    assert "SBOM" in result.output
+
+
+def test_policy_check_rejects_unsigned_package_when_trusted_key_required(tmp_path: Path) -> None:
+    """Unsigned bundles must fail policy check when require_trusted_key is enabled."""
+    pkg = tmp_path / "test.psp"
+    pkg.write_bytes(b"fake")
+
+    mock_reader = _make_mock_reader(metadata={})
+    mock_reader.read_index.return_value.public_key = b"\x00" * 32
+    mock_reader.read_index.return_value.attestation_key_fp = b"\x00" * 64
+
+    runner = CliRunner()
+    with (
+        mock.patch("flavor.psp.format_2025.reader.PSPFReader", return_value=mock_reader),
+        mock.patch(
+            "flavor.commands.policy.load_operator_policy",
+            return_value=OperatorPolicy(require_trusted_key=True),
+        ),
+    ):
+        result = runner.invoke(cli, ["policy", "check", str(pkg)])
+
+    assert result.exit_code == 1
+    assert "trusted" in result.output or "signed" in result.output
+
+
+def test_policy_check_rejects_missing_trust_store_when_trusted_key_required(tmp_path: Path) -> None:
+    """A missing trust store must not be treated as implicitly trusted."""
+    pkg = tmp_path / "test.psp"
+    pkg.write_bytes(b"fake")
+
+    mock_reader = _make_mock_reader(metadata={})
+    mock_reader.read_index.return_value.public_key = _raw_public_key_bytes()
+    mock_reader.read_index.return_value.attestation_key_fp = b"\x00" * 64
+
+    runner = CliRunner()
+    with (
+        mock.patch("flavor.psp.format_2025.reader.PSPFReader", return_value=mock_reader),
+        mock.patch(
+            "flavor.commands.policy.load_operator_policy",
+            return_value=OperatorPolicy(require_trusted_key=True),
+        ),
+        mock.patch("flavor.commands.policy.is_key_trusted", return_value=None),
+    ):
+        result = runner.invoke(cli, ["policy", "check", str(pkg)])
+
+    assert result.exit_code == 1
+    assert "trusted" in result.output or "store" in result.output
+
+
+def test_policy_check_rejects_attestation_fingerprint_mismatch_without_trusted_key_requirement(
+    tmp_path: Path,
+) -> None:
+    """policy check must reject malformed signer metadata even when trust-store policy is permissive."""
+    pkg = tmp_path / "test.psp"
+    pkg.write_bytes(b"fake")
+
+    mock_reader = _make_mock_reader(metadata={})
+    mock_reader.read_index.return_value.public_key = _raw_public_key_bytes()
+    mock_reader.read_index.return_value.attestation_key_fp = b"sha256:wrong-fingerprint"
+
+    runner = CliRunner()
+    with (
+        mock.patch("flavor.psp.format_2025.reader.PSPFReader", return_value=mock_reader),
+        mock.patch("flavor.commands.policy.load_operator_policy", return_value=OperatorPolicy()),
+    ):
+        result = runner.invoke(cli, ["policy", "check", str(pkg)])
+
+    assert result.exit_code == 1
+    assert "fingerprint" in result.output
+    assert "embedded public key" in result.output
+
+
+def test_policy_check_rejects_unsupported_os_keychain(tmp_path: Path) -> None:
+    """use_os_keychain must fail closed in policy check until implemented."""
+    pkg = tmp_path / "test.psp"
+    pkg.write_bytes(b"fake")
+
+    mock_reader = _make_mock_reader(metadata={})
+    runner = CliRunner()
+
+    with (
+        mock.patch("flavor.psp.format_2025.reader.PSPFReader", return_value=mock_reader),
+        mock.patch(
+            "flavor.commands.policy.load_operator_policy",
+            return_value=OperatorPolicy(use_os_keychain=True),
+        ),
+    ):
+        result = runner.invoke(cli, ["policy", "check", str(pkg)])
+
+    assert result.exit_code == 1
+    assert "use_os_keychain" in result.output or "unsupported" in result.output
 
 
 # ---------------------------------------------------------------------------
