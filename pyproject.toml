@@ -205,7 +205,7 @@ omit = [
 show_missing = true
 skip_covered = false
 precision = 2
-fail_under = 60
+fail_under = 85
 exclude_also = [
     "pragma: no cover",
     "raise NotImplementedError",

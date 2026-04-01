@@ -21,6 +21,10 @@ path = "src/bin/flavor-rs-launcher.rs"
 name = "flavor-rs-builder"
 path = "src/bin/flavor-rs-builder.rs"
 
+[workspace]
+members = ["."]
+exclude = ["fuzz"]
+
 [dependencies]
 anyhow = "1.0"
 tar = "0.4"
