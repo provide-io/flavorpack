@@ -15,8 +15,8 @@ from provide.foundation.file.directory import ensure_dir, safe_rmtree
 from provide.foundation.file.formats import read_json
 from provide.foundation.utils.environment import get_str
 
+from flavor.config.defaults import ENV_CACHE_DIR
 from flavor.console import get_command_logger
-from flavor.env_vars import CACHE_DIR
 
 log = get_command_logger("cache")
 
@@ -30,7 +30,7 @@ def get_cache_dir() -> Path:
     - ~/.cache/flavor/workenv by default
     """
     # Check FLAVOR_CACHE override first
-    cache_dir = get_str(CACHE_DIR)
+    cache_dir = get_str(ENV_CACHE_DIR)
     if cache_dir:
         if log.is_trace_enabled():
             log.trace(f"🗂️ Using FLAVOR_CACHE: {cache_dir}")
