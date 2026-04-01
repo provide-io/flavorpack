@@ -269,7 +269,7 @@ def assemble_metadata(spec: BuildSpec, slots: list[Any], launcher_info: dict[str
     }
 
     # Add optional sections if present
-    for section in ["cache_validation", "setup_commands", "runtime", "workenv"]:
+    for section in ["cache_validation", "setup_commands", "runtime", "workenv", "policy"]:
         if section in spec.metadata:
             metadata[section] = spec.metadata[section]
 
