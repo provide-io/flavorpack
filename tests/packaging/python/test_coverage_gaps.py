@@ -1410,13 +1410,13 @@ class TestWheelBuilderResolveDeps:
             )
         assert result == locked_req
 
-    def test_resolve_dependencies_no_requirements_raises(self) -> None:
+    def test_resolve_dependencies_no_requirements_raises(self, tmp_path: Path) -> None:
         """Line 222-223 - no requirements raises ValueError."""
         from flavor.packaging.python.wheel_builder import WheelBuilder
 
         builder = WheelBuilder()
         with pytest.raises(ValueError, match="Either requirements_file or packages"):
-            builder.resolve_dependencies(python_exe=Path(sys.executable))
+            builder.resolve_dependencies(python_exe=Path(sys.executable), output_dir=tmp_path)
 
     def test_resolve_dependencies_uv_fails_fallback_to_pip_tools(self, tmp_path: Path) -> None:
         """Lines 228-239 - UV fails, falls back to pip-tools."""
