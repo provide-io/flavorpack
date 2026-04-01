@@ -22,32 +22,38 @@ RUST_SRC = REPO_ROOT / "src/flavor-rs"
 PYTHON_SRC = REPO_ROOT / "src/flavor"
 pytestmark = [pytest.mark.cross_language, pytest.mark.ci, pytest.mark.integration]
 
-# Env vars that must appear in Python source.
-# Note: Python uses FLAVOR_CACHE (not FLAVOR_CACHE_DIR) for its own cache directory;
-# FLAVOR_CACHE_DIR is a Go/Rust concept.  The list below covers vars that Python
-# reads or exposes as configuration knobs.
-PYTHON_SHARED_ENV_VARS = [
-    "FLAVOR_CONFIG_DIR",
-    "FLAVOR_TRUSTED_KEYS_DIR",
-    "FLAVOR_LAUNCHER_BIN",
-    "FLAVOR_WORKENV_BASE",
-    "FLAVOR_VALIDATION",
-]
-
-# Env vars that must appear in BOTH Go and Rust source
+# Env vars that must appear in ALL THREE: Go, Rust, and Python source
 SHARED_ENV_VARS = [
     "FLAVOR_LOG_LEVEL",
-    "FLAVOR_LAUNCHER_LOG_LEVEL",
-    "FLAVOR_LOG_PATH",
     "FLAVOR_CACHE_DIR",
     "FLAVOR_CONFIG_DIR",
     "FLAVOR_TRUSTED_KEYS_DIR",
+    "FLAVOR_VALIDATION",
+    "FLAVOR_LAUNCHER_BIN",
+    "FLAVOR_WORKENV_BASE",
+]
+
+# Env vars that must appear in BOTH Go and Rust source (but not necessarily Python)
+GO_RUST_ONLY_ENV_VARS = [
+    "FLAVOR_LAUNCHER_LOG_LEVEL",
+    "FLAVOR_LOG_PATH",
     "FLAVOR_WORKENV",
     "FLAVOR_WORKENV_CACHE",
-    "FLAVOR_WORKENV_BASE",
     "FLAVOR_EXEC_MODE",
-    "FLAVOR_LAUNCHER_BIN",
-    "FLAVOR_VALIDATION",
+]
+
+# Env vars that must appear in Python source only
+PYTHON_ONLY_ENV_VARS = [
+    "FLAVOR_BUILDER_BIN",
+    "FLAVOR_SETUP_LOG_LEVEL",
+    "FLAVOR_INCLUDE_BUILD_HOST",
+    "FLAVOR_WHEEL_CACHE",
+    "FLAVOR_METADATA_PACKAGE_NAME",
+    "FLAVOR_PACKAGE_NAME",
+    "FLAVOR_VERSION",
+    "FLAVOR_ENTRY_POINT",
+    "FLAVOR_OUTPUT_FORMAT",
+    "FLAVOR_OUTPUT_FILE",
 ]
 
 
@@ -76,9 +82,17 @@ def _grep_py(string: str) -> bool:
 
 @pytest.mark.parity
 @pytest.mark.parity_category("Env Vars")
-@pytest.mark.parametrize("var", PYTHON_SHARED_ENV_VARS)
+@pytest.mark.parametrize("var", SHARED_ENV_VARS)
 def test_shared_env_var_in_python(var: str) -> None:
     """Each shared env var must appear in Python source."""
+    assert _grep_py(var), f'"{var}" not found in Python source (src/flavor/)'
+
+
+@pytest.mark.parity
+@pytest.mark.parity_category("Env Vars")
+@pytest.mark.parametrize("var", PYTHON_ONLY_ENV_VARS)
+def test_python_only_env_var_in_python(var: str) -> None:
+    """Each Python-only env var must appear in Python source."""
     assert _grep_py(var), f'"{var}" not found in Python source (src/flavor/)'
 
 
@@ -95,6 +109,22 @@ def test_shared_env_var_in_go(var: str) -> None:
 @pytest.mark.parametrize("var", SHARED_ENV_VARS)
 def test_shared_env_var_in_rust(var: str) -> None:
     """Each shared env var must appear (as a string constant) in Rust source."""
+    assert _grep_src(RUST_SRC, f'"{var}"'), f'"{var}" not found in Rust source'
+
+
+@pytest.mark.parity
+@pytest.mark.parity_category("Env Vars")
+@pytest.mark.parametrize("var", GO_RUST_ONLY_ENV_VARS)
+def test_go_rust_env_var_in_go(var: str) -> None:
+    """Each Go/Rust-only env var must appear (as a string constant) in Go source."""
+    assert _grep_src(GO_SRC, f'"{var}"'), f'"{var}" not found in Go source'
+
+
+@pytest.mark.parity
+@pytest.mark.parity_category("Env Vars")
+@pytest.mark.parametrize("var", GO_RUST_ONLY_ENV_VARS)
+def test_go_rust_env_var_in_rust(var: str) -> None:
+    """Each Go/Rust-only env var must appear (as a string constant) in Rust source."""
     assert _grep_src(RUST_SRC, f'"{var}"'), f'"{var}" not found in Rust source'
 
 
