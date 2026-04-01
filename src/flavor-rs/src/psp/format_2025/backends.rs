@@ -359,9 +359,33 @@ impl Backend for StreamBackend {
     }
 
     fn read_slot(&mut self, descriptor: &SlotDescriptor) -> Result<Vec<u8>> {
-        // For streaming, only read first chunk
-        let size = std::cmp::min(descriptor.size as usize, self.chunk_size);
-        self.read_at(descriptor.offset, size)
+        // Read the full slot by assembling chunks so callers (extraction,
+        // verification) always receive complete data regardless of chunk_size.
+        let total = descriptor.size;
+        if total > MAX_SLOT_SIZE {
+            return Err(FlavorError::Generic(format!(
+                "Slot size {} exceeds maximum allowed size ({} bytes)",
+                total, MAX_SLOT_SIZE
+            )));
+        }
+        let mut buf = Vec::with_capacity(total as usize);
+        let mut remaining = total;
+        let mut offset = descriptor.offset;
+        while remaining > 0 {
+            let to_read = remaining.min(self.chunk_size as u64) as usize;
+            let chunk = self.read_at(offset, to_read)?;
+            if chunk.is_empty() {
+                return Err(FlavorError::Generic(format!(
+                    "Backend returned empty read at offset {:#x} (remaining {})",
+                    offset, remaining
+                )));
+            }
+            let n = chunk.len() as u64;
+            buf.extend_from_slice(&chunk);
+            offset += n;
+            remaining -= n;
+        }
+        Ok(buf)
     }
 }
 
@@ -586,8 +610,9 @@ mod tests {
             vec![b"abcd".to_vec(), b"efgh".to_vec(), b"ij".to_vec()]
         );
 
+        // read_slot assembles all chunks into a complete buffer
         let slot = backend.read_slot(&descriptor).expect("slot read");
-        assert_eq!(slot, b"abcd");
+        assert_eq!(slot, b"abcdefghij");
     }
 
     #[test]
@@ -650,10 +675,11 @@ mod tests {
             offset: 0,
             ..SlotDescriptor::new(2)
         };
+        // read_slot returns the full slot (all chunks assembled), not just the first chunk
         let large_slot = large_backend
             .read_slot(&large_descriptor)
             .expect("stream slot");
-        assert_eq!(large_slot.len(), DEFAULT_CHUNK_SIZE);
+        assert_eq!(large_slot.len(), (DEFAULT_CHUNK_SIZE) + 10);
     }
 
     #[test]
