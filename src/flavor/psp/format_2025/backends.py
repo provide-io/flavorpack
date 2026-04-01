@@ -197,7 +197,10 @@ class MMapBackend(Backend):
 
         if hasattr(os, "posix_fadvise") and hasattr(os, "POSIX_FADV_WILLNEED") and self.file:
             # Linux: hint that we'll need this data soon
-            os.posix_fadvise(self.file.fileno(), offset, size, os.POSIX_FADV_WILLNEED)  # type: ignore[attr-defined]
+            try:
+                os.posix_fadvise(self.file.fileno(), offset, size, os.POSIX_FADV_WILLNEED)  # type: ignore[attr-defined]
+            except AttributeError:
+                logger.debug("⚠️ Prefetch not available on this platform")
         elif sys.platform == "win32" and self.mmap:
             # Windows: touch pages to load them
             # This is less efficient but works
