@@ -93,7 +93,7 @@ pub(super) fn create_metadata(
             platform: PlatformInfo {
                 os: std::env::consts::OS.to_string(),
                 arch: std::env::consts::ARCH.to_string(),
-                host: build_host,
+                host: Some(build_host),
             },
         }),
         launcher: Some(LauncherInfo {
