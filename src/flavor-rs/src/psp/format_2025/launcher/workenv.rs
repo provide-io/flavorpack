@@ -164,7 +164,7 @@ mod tests {
                 platform: PlatformInfo {
                     os: "linux".to_string(),
                     arch: "amd64".to_string(),
-                    host: "host".to_string(),
+                    host: None,
                 },
             }),
             launcher: None,
