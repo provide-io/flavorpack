@@ -17,6 +17,7 @@ from provide.foundation.crypto import format_checksum as calculate_checksum
 from provide.foundation.platform import get_arch_name, get_os_name, get_platform_string
 from provide.foundation.utils import get_version
 
+from flavor.cache import get_xdg_cache_base
 from flavor.config.defaults import ENV_INCLUDE_BUILD_HOST, ENV_LAUNCHER_BIN
 from flavor.psp.format_2025.spec import BuildSpec
 from flavor.psp.format_2025.validation import extract_package_metadata
@@ -86,13 +87,12 @@ def load_launcher_binary(launcher_type: str, explicit_path: Path | None = None) 
 
     launcher_names = _launcher_candidate_names(launcher_base, platform_str, is_windows)
 
-    xdg_cache = os.environ.get("XDG_CACHE_HOME", str(Path("~/.cache").expanduser()))
     base_search_paths = [
         Path.cwd() / "dist" / "bin",
         Path.cwd() / "helpers" / "bin",
         Path.cwd().parent / "helpers" / "bin",
         Path.cwd().parent.parent / "helpers" / "bin",
-        Path(xdg_cache) / "flavor" / "helpers" / "bin",
+        get_xdg_cache_base() / "flavor" / "helpers" / "bin",
         Path.home() / ".cache" / "flavor" / "helpers" / "bin",
         Path.cwd() / "workenv" / "flavors" / platform_str,
         Path.cwd() / "src" / "flavor" / "helpers" / "bin",
