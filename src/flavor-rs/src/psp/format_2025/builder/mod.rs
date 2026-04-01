@@ -193,7 +193,7 @@ fn get_launcher(options: &BuildOptions) -> Result<Vec<u8>> {
 /// to overlay mode (appended data) for all launchers.
 ///
 /// See: Phase 31 analysis - UpdateResourceW corrupts Go launcher entry point
-/// TODO: Implement PE reconstruction using a library similar to Go's winres
+/// NOTE: PE reconstruction via a Rust winres equivalent is a known future enhancement.
 fn should_use_resource_embedding(_launcher_data: &[u8]) -> Result<bool> {
     // Disabled until we have proper PE reconstruction
     Ok(false)
