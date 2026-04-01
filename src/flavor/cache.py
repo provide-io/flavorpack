@@ -25,16 +25,24 @@ def get_cache_dir() -> Path:
     """Get the cache directory for Flavor packages.
 
     Uses XDG Base Directory specification:
-    - FLAVOR_CACHE_DIR environment variable if set
+    - FLAVOR_CACHE_DIR environment variable if set (Python-native name)
+    - FLAVOR_CACHE environment variable if set (cross-language; set by Go/Rust launchers)
     - XDG_CACHE_HOME if set
     - ~/.cache/flavor/workenv by default
     """
-    # Check FLAVOR_CACHE_DIR override first
+    # Check FLAVOR_CACHE_DIR override first (Python-native)
     cache_dir = get_str(ENV_CACHE_DIR)
     if cache_dir:
         if log.is_trace_enabled():
             log.trace(f"🗂️ Using FLAVOR_CACHE_DIR: {cache_dir}")
         return Path(cache_dir)
+
+    # Check FLAVOR_CACHE (cross-language env var set by Go/Rust launchers in child env)
+    flavor_cache = get_str("FLAVOR_CACHE")
+    if flavor_cache:
+        if log.is_trace_enabled():
+            log.trace(f"🗂️ Using FLAVOR_CACHE: {flavor_cache}")
+        return Path(flavor_cache)
 
     # Use XDG_CACHE_HOME if set (respects XDG Base Directory standard)
     xdg_cache = get_str("XDG_CACHE_HOME")

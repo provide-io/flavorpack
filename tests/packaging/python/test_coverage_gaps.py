@@ -34,6 +34,7 @@ def _completed(returncode: int = 0, stdout: str = "", stderr: str = "") -> subpr
 class TestMakeExecutableAndCopyExecutable:
     """Lines 55-56, 60-61."""
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="chmod executable bits not enforced on Windows")
     def test_make_executable_non_windows(self, tmp_path: Path) -> None:
         from flavor.packaging.python.environment_builder import PythonEnvironmentBuilder
 
@@ -2036,7 +2037,7 @@ class TestPyPaPipManagerDownloadCmd:
             requirements_file=req_file,
         )
         assert "-r" in cmd
-        assert str(req_file) in " ".join(cmd)
+        assert str(req_file).replace("\\", "/") in " ".join(cmd).replace("\\", "/")
 
     def test_get_download_cmd_no_binary_only(self, tmp_path: Path) -> None:
         """Lines 155-159 - binary_only=False skips --only-binary."""
