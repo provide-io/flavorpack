@@ -119,6 +119,12 @@ pub fn wait_for_extraction(paths: &WorkenvPaths, timeout_secs: u64) -> Result<()
     use std::time::Duration;
 
     let lock_path = paths.lock_file();
+    if !lock_path.exists() {
+        debug!("✅ Extraction lock released, cache should be ready");
+        thread::sleep(Duration::from_millis(100));
+        return Ok(());
+    }
+
     let max_attempts = timeout_secs * 10; // Check every 100ms
 
     for attempt in 0..max_attempts {
@@ -209,4 +215,66 @@ pub fn cleanup_stale_extractions(paths: &WorkenvPaths) -> Result<()> {
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use std::path::PathBuf;
+    use tempfile::tempdir;
+
+    #[test]
+    fn wait_for_extraction_returns_ok_when_no_lock_exists_even_with_zero_timeout() {
+        let temp = tempdir().expect("tempdir");
+        let package = PathBuf::from("bundle.psp");
+        let paths = WorkenvPaths::new(temp.path().to_path_buf(), package.as_path());
+
+        assert!(wait_for_extraction(&paths, 0).is_ok());
+    }
+
+    #[test]
+    fn try_acquire_lock_handles_invalid_lock_content() {
+        let temp = tempdir().expect("tempdir");
+        let package = PathBuf::from("bundle.psp");
+        let paths = WorkenvPaths::new(temp.path().to_path_buf(), package.as_path());
+        let lock_path = paths.lock_file();
+        fs::create_dir_all(lock_path.parent().expect("lock parent")).expect("create lock parent");
+        fs::write(&lock_path, "not-a-pid\n").expect("write invalid lock");
+
+        assert!(try_acquire_lock(&paths).expect("lock acquisition"));
+        assert!(is_lock_acquired());
+        release_lock(&paths);
+        assert!(!is_lock_acquired());
+    }
+
+    #[test]
+    fn mark_extraction_complete_round_trips_marker_state() {
+        let temp = tempdir().expect("tempdir");
+        let package = PathBuf::from("bundle.psp");
+        let paths = WorkenvPaths::new(temp.path().to_path_buf(), package.as_path());
+
+        assert!(!is_extraction_complete(&paths));
+        mark_extraction_complete(&paths).expect("mark complete");
+        assert!(is_extraction_complete(&paths));
+        mark_extraction_incomplete(&paths);
+        assert!(!is_extraction_complete(&paths));
+    }
+
+    #[test]
+    fn cleanup_stale_extractions_removes_dead_pid_directories() {
+        let temp = tempdir().expect("tempdir");
+        let package = PathBuf::from("bundle.psp");
+        let paths = WorkenvPaths::new(temp.path().to_path_buf(), package.as_path());
+        let stale_dir = paths.tmp().join("4294967295");
+        let active_dir = paths.tmp().join("not-a-pid");
+
+        fs::create_dir_all(&stale_dir).expect("create stale dir");
+        fs::create_dir_all(&active_dir).expect("create active dir");
+
+        cleanup_stale_extractions(&paths).expect("cleanup stale extractions");
+
+        assert!(!stale_dir.exists());
+        assert!(active_dir.exists());
+    }
 }

@@ -272,3 +272,128 @@ fn convert_to_resource_embedding(file_path: &Path, launcher_size: u64) -> Result
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::psp::PackageFormat;
+    use crate::psp::format_2025::constants::{
+        HEADER_SIZE, MAGIC_TRAILER_SIZE, MAGIC_WAND_EMOJI_BYTES, PACKAGE_EMOJI_BYTES,
+    };
+    use std::fs;
+    use tempfile::tempdir;
+
+    fn write_launcher_script(path: &Path) {
+        #[cfg(unix)]
+        {
+            let script = b"#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then\n  echo launcher 1.0\nfi\nexit 0\n";
+            fs::write(path, script).expect("write launcher script");
+            let mut perms = fs::metadata(path).expect("launcher metadata").permissions();
+            std::os::unix::fs::PermissionsExt::set_mode(&mut perms, 0o755);
+            fs::set_permissions(path, perms).expect("set launcher executable");
+        }
+
+        #[cfg(windows)]
+        {
+            let script =
+                b"@echo off\r\nif \"%1\"==\"--version\" echo launcher 1.0\r\nexit /b 0\r\n";
+            fs::write(path, script).expect("write launcher script");
+        }
+    }
+
+    fn write_manifest(path: &Path) {
+        let manifest = serde_json::json!({
+            "package": {
+                "name": "demo",
+                "version": "1.2.3"
+            },
+            "execution": {
+                "command": "run",
+                "env": {}
+            },
+            "slots": [
+                {
+                    "slot": 0,
+                    "id": "launcher",
+                    "source": "$SELF",
+                    "target": "/app/bin/launcher",
+                    "purpose": "code",
+                    "lifecycle": "startup"
+                }
+            ]
+        });
+        fs::write(
+            path,
+            serde_json::to_vec_pretty(&manifest).expect("serialize manifest"),
+        )
+        .expect("write manifest");
+    }
+
+    #[test]
+    fn build_smoke_test_creates_pspf_package() {
+        let dir = tempdir().expect("tempdir");
+        let manifest_path = dir.path().join("manifest.json");
+        let output_path = dir.path().join("package.pspf");
+        let launcher_path = dir.path().join(if cfg!(windows) {
+            "launcher.cmd"
+        } else {
+            "launcher.sh"
+        });
+
+        write_launcher_script(&launcher_path);
+        write_manifest(&manifest_path);
+
+        let options = BuildOptions {
+            launcher_bin: Some(launcher_path.clone()),
+            skip_verification: false,
+            private_key_path: None,
+            public_key_path: None,
+            key_seed: Some("builder-test-seed".to_string()),
+            workenv_base: None,
+        };
+
+        build(&manifest_path, &output_path, options).expect("build package");
+        assert!(output_path.exists());
+
+        let format = crate::psp::detect_format(&output_path).expect("detect package format");
+        assert_eq!(format, PackageFormat::PSPF2025);
+
+        let bytes = fs::read(&output_path).expect("read package");
+        assert!(bytes.len() >= MAGIC_TRAILER_SIZE);
+        assert!(bytes.ends_with(MAGIC_WAND_EMOJI_BYTES));
+        assert_eq!(
+            &bytes[bytes.len() - MAGIC_TRAILER_SIZE..bytes.len() - MAGIC_TRAILER_SIZE + 4],
+            PACKAGE_EMOJI_BYTES
+        );
+
+        let trailer_start = bytes.len() - MAGIC_TRAILER_SIZE;
+        let trailer_index = &bytes[trailer_start + 4..trailer_start + 4 + HEADER_SIZE];
+        let index =
+            crate::psp::format_2025::Index::unpack(trailer_index).expect("unpack package index");
+        let package_size = index.package_size;
+        let slot_count = index.slot_count;
+        assert_eq!(package_size, bytes.len() as u64);
+        assert_eq!(slot_count, 1);
+    }
+
+    #[test]
+    fn convert_to_resource_embedding_truncates_before_windows_error() {
+        let dir = tempdir().expect("tempdir");
+        let file_path = dir.path().join("bundle.pspf");
+        let original = b"launcher-data-pspf-payload";
+        fs::write(&file_path, original).expect("write package bytes");
+
+        let result = convert_to_resource_embedding(&file_path, 13);
+        assert!(result.is_err());
+        assert!(
+            result
+                .err()
+                .expect("error")
+                .to_string()
+                .contains("only supported on Windows")
+        );
+
+        let truncated_size = fs::metadata(&file_path).expect("metadata").len();
+        assert_eq!(truncated_size, 13);
+    }
+}
