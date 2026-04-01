@@ -9,6 +9,8 @@ import zipfile
 sys.path.insert(0, str(Path(__file__).parents[2] / "tools"))
 from validate_wheel import _parse_wheel_platform, validate_helpers  # type: ignore[import-not-found]
 
+from flavor.psp.format_2025.metadata.assembly import _semver_key
+
 
 def make_wheel(stem: str, helpers: list[str]) -> Path:
     """Create a minimal in-memory wheel zip at a temp path."""
@@ -119,3 +121,25 @@ def test_platform_wheel_missing_helper_fails() -> None:
         assert not success
     finally:
         whl.unlink(missing_ok=True)
+
+
+def test_universal_wheel_with_helpers_fails() -> None:
+    """Universal wheel containing native helpers is a packaging defect — must fail."""
+    whl = make_wheel(
+        "flavorpack-0.3.21-py3-none-any",
+        ["flavor-rs-launcher-0.3.21-linux_amd64"],
+    )
+    try:
+        success, msgs = validate_helpers(whl)
+        assert not success
+        assert any("❌" in m for m in msgs)
+    finally:
+        whl.unlink(missing_ok=True)
+
+
+def test_semver_key_orders_correctly() -> None:
+    """_semver_key must select 0.3.21 over 0.3.9 (lexicographic sort gets this wrong)."""
+    p9 = Path("flavor-rs-launcher-0.3.9-darwin_arm64")
+    p21 = Path("flavor-rs-launcher-0.3.21-darwin_arm64")
+    assert _semver_key(p21) > _semver_key(p9)
+    assert sorted([p9, p21], key=_semver_key, reverse=True)[0] == p21
