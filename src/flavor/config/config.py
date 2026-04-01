@@ -59,7 +59,7 @@ class BuildConfig(RuntimeConfig):
     include_build_host: bool = config_field(
         default=False,
         description="Include build host info in package metadata",
-        env_var="FLAVOR_INCLUDE_BUILD_HOST",
+        env_var=ENV_INCLUDE_BUILD_HOST,
     )
 
 
@@ -105,11 +105,6 @@ class PathsConfig(RuntimeConfig):
         default=None,
         description="Pre-built wheels directory for offline builds",
         env_var=ENV_WHEEL_CACHE,
-    )
-    wheel_cache: str | None = config_field(
-        default=None,
-        description="Pre-built wheels directory for offline builds",
-        env_var="FLAVOR_WHEEL_CACHE",
     )
     xdg_cache_home: str | None = config_field(
         default=None,
