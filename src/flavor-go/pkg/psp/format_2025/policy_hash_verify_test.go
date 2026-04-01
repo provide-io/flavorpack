@@ -18,7 +18,7 @@ func buildPolicyHashBundle(t *testing.T, policy *PackagePolicy, hashHex string) 
 	if err != nil {
 		t.Fatalf("create temp file: %v", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	// Build metadata JSON with optional policy field.
 	type minimalMeta struct {
@@ -94,7 +94,7 @@ func TestVerifyAttestationPolicyHash_ZeroField_Skip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader: %v", err)
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	if err := reader.VerifyAttestationPolicyHash(); err != nil {
 		t.Errorf("expected nil for zero policy hash, got: %v", err)
@@ -131,7 +131,7 @@ func TestVerifyAttestationPolicyHash_Match(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader: %v", err)
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	if err := reader.VerifyAttestationPolicyHash(); err != nil {
 		t.Errorf("expected no error for matching policy hash, got: %v", err)
@@ -151,7 +151,7 @@ func TestVerifyAttestationPolicyHash_Mismatch(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader: %v", err)
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	if err := reader.VerifyAttestationPolicyHash(); err == nil {
 		t.Error("expected error for mismatched policy hash, got nil")
@@ -169,7 +169,7 @@ func TestVerifyAttestationPolicyHash_HashPresentNoPolicyFails(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader: %v", err)
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	if err := reader.VerifyAttestationPolicyHash(); err == nil {
 		t.Error("expected error when hash is set but metadata has no policy, got nil")

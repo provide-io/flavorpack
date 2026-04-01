@@ -156,7 +156,7 @@ func TestReadSlotDecompressesGzip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader() error = %v", err)
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	got, err := reader.ReadSlot(0)
 	if err != nil {
@@ -179,7 +179,7 @@ func TestReadSlotRejectsChecksumMismatchAndUnsupportedOperation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader() error = %v", err)
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	if _, err := reader.ReadSlot(0); err != ErrChecksumMismatch {
 		t.Fatalf("ReadSlot() checksum mismatch error = %v, want %v", err, ErrChecksumMismatch)
@@ -194,7 +194,7 @@ func TestReadSlotRejectsChecksumMismatchAndUnsupportedOperation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader() error = %v", err)
 	}
-	defer reader2.Close()
+	defer func() { _ = reader2.Close() }()
 
 	if _, err := reader2.ReadSlot(0); err == nil || !strings.Contains(err.Error(), "operation BZIP2 not yet implemented") {
 		t.Fatalf("ReadSlot() unsupported-op error = %v, want BZIP2 unsupported", err)
@@ -214,7 +214,7 @@ func TestExtractSlotWritesSingleFileAndTarball(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader() error = %v", err)
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	destDir := filepath.Join(t.TempDir(), "single")
 	extractedPath, err := reader.ExtractSlot(0, destDir)
@@ -255,7 +255,7 @@ func TestExtractSlotWritesSingleFileAndTarball(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader() error = %v", err)
 	}
-	defer reader2.Close()
+	defer func() { _ = reader2.Close() }()
 
 	tarDest := filepath.Join(t.TempDir(), "tar")
 	extractedDir, err := reader2.ExtractSlot(0, tarDest)
@@ -299,7 +299,7 @@ func TestExtractSlotRejectsSymlink(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader() error = %v", err)
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	if _, err := reader.ExtractSlot(0, t.TempDir()); err == nil || !strings.Contains(err.Error(), "symlink") {
 		t.Fatalf("ExtractSlot(symlink) error = %v, want symlink rejection", err)
@@ -320,7 +320,7 @@ func TestExtractSlotTarRespectsTargetSubdirectory(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader() error = %v", err)
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	destDir := filepath.Join(t.TempDir(), "targeted")
 	extractedDir, err := reader.ExtractSlot(0, destDir)
