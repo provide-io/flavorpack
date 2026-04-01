@@ -748,7 +748,7 @@ jobs:
         run: make quality-go-fast
 
       - name: 🧪 Run Go deep quality
-        run: make quality-go-deep QUALITY_GO_FUZZTIME=15s QUALITY_GO_MUTATION_ARGS="./pkg/psp/format_2025/..."
+        run: make quality-go-deep QUALITY_GO_FUZZTIME=15s QUALITY_GO_MUTATION_ARGS="./pkg/psp/format_2025"
 
       - name: 📊 Summarize Go observability
         if: always()
