@@ -222,7 +222,9 @@ jobs:
             python_platform: win_arm64
           - platform: freebsd_amd64
             runner: ubuntu-24.04
-            python_platform: freebsd_14_0_x86_64
+            # FreeBSD amd64: uname -m returns "amd64" (not "x86_64"), so pip/uv
+            # generate freebsd_14_0_amd64 compatible tags — use amd64 here.
+            python_platform: freebsd_14_0_amd64
             continue_on_error: true
           - platform: freebsd_arm64
             runner: ubuntu-24.04
@@ -419,7 +421,7 @@ jobs:
             python_platform: win_arm64
           - platform: freebsd_amd64
             runner: ubuntu-24.04
-            python_platform: freebsd_14_0_x86_64
+            python_platform: freebsd_14_0_amd64
             continue_on_error: true
             vm_arch: x86-64
           - platform: freebsd_arm64

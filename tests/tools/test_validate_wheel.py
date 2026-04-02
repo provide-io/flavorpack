@@ -44,6 +44,17 @@ def test_parse_windows_amd64() -> None:
     assert _parse_wheel_platform(p) == "windows_amd64"
 
 
+def test_parse_freebsd_amd64() -> None:
+    # FreeBSD uname -m returns "amd64", so wheels use freebsd_14_0_amd64
+    p = Path("flavorpack-0.3.21-py3-none-freebsd_14_0_amd64.whl")
+    assert _parse_wheel_platform(p) == "freebsd_amd64"
+
+
+def test_parse_freebsd_arm64() -> None:
+    p = Path("flavorpack-0.3.21-py3-none-freebsd_14_0_aarch64.whl")
+    assert _parse_wheel_platform(p) == "freebsd_arm64"
+
+
 def test_universal_wheel_no_helpers_passes() -> None:
     whl = make_wheel("flavorpack-0.3.21-py3-none-any", [])
     try:

@@ -11,7 +11,7 @@ set -euo pipefail
 PLATFORM="${1}"
 VERSION="${2}"
 
-sudo env IGNORE_OSVERSION=yes pkg install -y python311 py311-pip
+sudo env IGNORE_OSVERSION=yes pkg install -y python311 uv
 
 WHEEL=$(find _stage -name "flavorpack-*.whl" | head -1)
 if [ -z "$WHEEL" ]; then
@@ -20,7 +20,7 @@ if [ -z "$WHEEL" ]; then
     exit 1
 fi
 
-python3.11 -m pip install --user "$WHEEL"
+uv tool install --python python3.11 "$WHEEL"
 export PATH="$HOME/.local/bin:$PATH"
 
 LAUNCHER="helpers/bin/flavor-rs-launcher-${VERSION}-${PLATFORM}"
