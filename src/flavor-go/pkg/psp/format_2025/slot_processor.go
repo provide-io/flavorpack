@@ -34,17 +34,21 @@ func isSelfReferential(source string) bool {
 //
 // The processor handles:
 // - Loading slot data from disk
-// - Applying encoding/compression
-// - Calculating checksums
+// - Calculating checksums of the stored data
 // - Creating slot descriptors for the binary format
 // - Creating slot metadata for the JSON metadata section
 //
+// Slot storage invariant: slot sources are stored verbatim (as read from disk).
+// If a slot declares Operations "gzip" or "tar.gz", the source file must already
+// be in that format — the builder does not apply compression.  The descriptor's
+// Checksum field always covers the data exactly as written to the package file.
+//
 // Slot processing workflow:
 // 1. Load manifest slots configuration
-// 2. Process each slot (read, compress, checksum)
+// 2. Process each slot (read, checksum, create descriptor)
 // 3. Create descriptors for binary slot table
 // 4. Create metadata for JSON metadata section
-// 5. Store compressed data for writing to package
+// 5. Store raw data for writing to package
 type SlotProcessor struct {
 	// Slots from manifest configuration
 	manifestSlots []Slot
@@ -255,13 +259,16 @@ func (sp *SlotProcessor) processSlot(index int, slot *Slot) error {
 	}
 
 	// Normal slot processing - read and process slot data
-	slotData, compressed, _, err := sp.loadSlotData(slot)
+	rawData, err := sp.loadSlotData(slot)
 	if err != nil {
 		return fmt.Errorf("failed to load slot data: %w", err)
 	}
 
-	// Calculate checksum of compressed data
-	checksumData := sha256.Sum256(compressed)
+	// Checksum is always of the data as stored (rawData).
+	// Sources are stored verbatim; if Operations declares "gzip" the source must
+	// already be gzip-compressed.  This checksum must stay consistent with what
+	// the reader's computeSlotChecksum call verifies on read.
+	checksumData := sha256.Sum256(rawData)
 	checksumStr := fmt.Sprintf("sha256:%x", checksumData)
 
 	// Create slot metadata
@@ -270,7 +277,7 @@ func (sp *SlotProcessor) processSlot(index int, slot *Slot) error {
 		ID:          slot.ID,
 		Source:      slot.Source,
 		Target:      slot.Target,
-		Size:        int64(len(slotData)),
+		Size:        int64(len(rawData)),
 		Checksum:    checksumStr,
 		Operations:  slot.Operations,
 		Purpose:     slot.Purpose,
@@ -298,10 +305,10 @@ func (sp *SlotProcessor) processSlot(index int, slot *Slot) error {
 		ID:              uint64(index),
 		NameHash:        HashName(slot.Target),
 		Offset:          0, // Will be set during write phase
-		Size:            uint64(len(compressed)),
-		OriginalSize:    uint64(len(slotData)),
+		Size:            uint64(len(rawData)),
+		OriginalSize:    uint64(len(rawData)), // same: sources stored verbatim
 		Operations:      operations,
-		Checksum:        computeSlotChecksum(compressed), // SHA-256 first 8 bytes
+		Checksum:        computeSlotChecksum(rawData), // SHA-256 first 8 bytes of stored data
 		Purpose:         mapPurposeToUint8(slot.Purpose),
 		Lifecycle:       mapLifecycleToUint8(slot.Lifecycle),
 		Priority:        128, // normal priority
@@ -312,33 +319,31 @@ func (sp *SlotProcessor) processSlot(index int, slot *Slot) error {
 		PermissionsHigh: uint8(parsePermissions(slot.Permissions) >> 8),
 	}
 
-	// Store processed data
+	// Store raw data to be written verbatim to the package file
 	sp.metadataSlots = append(sp.metadataSlots, slotMeta)
 	sp.slotDescriptors = append(sp.slotDescriptors, descriptor)
-	sp.slotData = append(sp.slotData, compressed)
+	sp.slotData = append(sp.slotData, rawData)
 
 	sp.logger.Debug("✅ Slot processed", "index", index, "id", slot.ID,
-		"compressed_size", len(compressed), "original_size", len(slotData))
+		"size", len(rawData))
 
 	return nil
 }
 
-// loadSlotData loads and processes slot data based on encoding.
+// loadSlotData reads a slot's source file from disk verbatim.
 //
-// This method reads the slot data from disk and applies any specified
-// encoding. It supports path resolution with {workenv} placeholder and
-// various codec formats (gzip, tar, tar.gz, none).
+// Slot sources are stored as-is.  If a slot declares Operations "gzip" or
+// "tar.gz", the caller is responsible for providing a source file that is
+// already in that format — this function does not apply any compression.
 //
 // Args:
 //
-//	slot: The slot configuration containing source path and encoding
+//	slot: The slot configuration containing source path and operations
 //
 // Returns:
-//   - Original uncompressed data
-//   - Compressed/encoded data
-//   - Encoding method constant for the binary format
+//   - Raw data read from disk (= the bytes that will be written to the package)
 //   - Error if the data cannot be loaded
-func (sp *SlotProcessor) loadSlotData(slot *Slot) ([]byte, []byte, uint8, error) {
+func (sp *SlotProcessor) loadSlotData(slot *Slot) ([]byte, error) {
 	// Resolve {workenv} placeholder
 	slotPath := slot.Source
 	if strings.Contains(slotPath, "{workenv}") {
@@ -351,19 +356,15 @@ func (sp *SlotProcessor) loadSlotData(slot *Slot) ([]byte, []byte, uint8, error)
 			"resolved", slotPath, "base", baseDir)
 	}
 
-	// Read slot data
-	slotData, err := os.ReadFile(slotPath)
+	// Read slot data verbatim
+	rawData, err := os.ReadFile(slotPath)
 	if err != nil {
-		return nil, nil, 0, fmt.Errorf("failed to read slot from %s: %w", slotPath, err)
+		return nil, fmt.Errorf("failed to read slot from %s: %w", slotPath, err)
 	}
 
-	sp.logger.Debug("📊 Slot size", "original", len(slotData), "operations", slot.Operations)
+	sp.logger.Debug("📊 Slot size", "bytes", len(rawData), "operations", slot.Operations)
 
-	// For now, we don't actually compress here - that's handled elsewhere
-	// This function just validates and prepares the data
-	compressed := slotData
-
-	return slotData, compressed, 0, nil
+	return rawData, nil
 }
 
 // GetDescriptors returns the processed slot descriptors
@@ -376,7 +377,9 @@ func (sp *SlotProcessor) GetMetadata() []SlotMetadata {
 	return sp.metadataSlots
 }
 
-// GetSlotData returns the compressed slot data
+// GetSlotData returns the raw slot data as it will be written to the package file.
+// Each entry is the verbatim bytes of the slot source; no compression is applied
+// by the builder.
 func (sp *SlotProcessor) GetSlotData() [][]byte {
 	return sp.slotData
 }
