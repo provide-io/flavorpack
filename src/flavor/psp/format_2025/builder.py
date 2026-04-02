@@ -352,7 +352,7 @@ def _prepare_attestation_slot(
 
     # ---- launcher info -------------------------------------------------------
     launcher_type = "rust"
-    launcher_data = load_launcher_binary(launcher_type)
+    launcher_data = load_launcher_binary(launcher_type, explicit_path=spec.options.launcher_bin)
     launcher_version = extract_launcher_version(launcher_data)
     launcher_hash = f"sha256:{calculate_checksum(launcher_data, 'sha256')}"
 
