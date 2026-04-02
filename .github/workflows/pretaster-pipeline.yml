@@ -139,11 +139,49 @@ jobs:
       # Build pretaster test packages via Makefile (native runners)
       - name: 🔨 Build Pretaster packages
         if: ${{ matrix.vm_arch == '' }}
+        working-directory: tests/pretaster
         shell: bash
         working-directory: tests/pretaster
         run: make HELPERS_DIR=../../helpers dist/echo-test.psp dist/shell-test.psp dist/env-test.psp
 
-      # Build pretaster test packages via Makefile (FreeBSD QEMU VM)
+          # Create output directory
+          mkdir -p dist
+
+          # Build test packages using JSON manifests directly
+          echo "📦 Building Pretaster test packages..."
+
+          # Determine binary extension for Windows
+          EXT=""
+          if [[ "${{ matrix.platform }}" == "windows_"* ]]; then
+            EXT=".exe"
+          fi
+
+          # Select launcher for cross-language combo: Windows uses Go launcher only
+          # (Rust launcher not supported on Windows — see tests/pretaster/KNOWN_ISSUES.md)
+          if [[ "${{ matrix.platform }}" == "windows_"* ]]; then
+            COMBO_LAUNCHER="../../helpers/bin/flavor-go-launcher-${{ matrix.platform }}${EXT}"
+          else
+            COMBO_LAUNCHER="../../helpers/bin/flavor-rs-launcher-${{ matrix.platform }}${EXT}"
+          fi
+
+          # Build with different builder/launcher combinations
+          ../../helpers/bin/flavor-go-builder-${{ matrix.platform }}${EXT} \
+            --manifest configs/test-echo.json \
+            --launcher-bin "$COMBO_LAUNCHER" \
+            --output dist/pretaster-echo.psp \
+            --key-seed pretaster-test
+
+          # Windows: Rust not supported — skip Rust builder entirely
+          if [[ "${{ matrix.platform }}" != "windows_"* ]]; then
+            ../../helpers/bin/flavor-rs-builder-${{ matrix.platform }}${EXT} \
+              --manifest configs/test-shell.json \
+              --launcher-bin ../../helpers/bin/flavor-go-launcher-${{ matrix.platform }}${EXT} \
+              --output dist/pretaster-shell.psp \
+              --key-seed pretaster-test
+          fi
+
+          ls -la dist/
+
       - name: 🔨 Build Pretaster packages (FreeBSD VM)
         if: ${{ matrix.vm_arch != '' }}
         uses: cross-platform-actions/action@v0.32.0
@@ -156,8 +194,26 @@ jobs:
           shell: bash
           sync_files: true
           run: |
-            sudo env IGNORE_OSVERSION=yes pkg install -y gmake bash
-            cd tests/pretaster && gmake SHELL=/usr/local/bin/bash HELPERS_DIR=../../helpers dist/echo-test.psp dist/shell-test.psp dist/env-test.psp
+            chmod +x helpers/bin/* 2>/dev/null || true
+
+            cd tests/pretaster
+            mkdir -p dist
+
+            COMBO_LAUNCHER="../../helpers/bin/flavor-rs-launcher-${{ matrix.platform }}"
+
+            ../../helpers/bin/flavor-go-builder-${{ matrix.platform }} \
+              --manifest configs/test-echo.json \
+              --launcher-bin "$COMBO_LAUNCHER" \
+              --output dist/pretaster-echo.psp \
+              --key-seed pretaster-test
+
+            ../../helpers/bin/flavor-rs-builder-${{ matrix.platform }} \
+              --manifest configs/test-shell.json \
+              --launcher-bin ../../helpers/bin/flavor-go-launcher-${{ matrix.platform }} \
+              --output dist/pretaster-shell.psp \
+              --key-seed pretaster-test
+
+            ls -la dist/
       
       - name: 📤 Upload Pretaster packages
         uses: actions/upload-artifact@v7
@@ -269,20 +325,6 @@ jobs:
             "$TEST_SUITE" \
             "$PRETASTER_PSP"
 
-      - name: 🔧 Stage PSP for FreeBSD VM
-        if: ${{ matrix.vm_arch != '' }}
-        shell: bash
-        run: |
-          mkdir -p _psp_stage
-          PSP="build/pretaster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.psp"
-          if [ -f "$PSP" ]; then
-            cp "$PSP" _psp_stage/
-            echo "✅ Staged: $(ls -lh _psp_stage/)"
-          else
-            echo "⚠️ PSP not found at: $PSP (will fall back to make-only tests)"
-            ls -la build/ 2>/dev/null || true
-          fi
-
       - name: 🧪 Run cross-language tests (FreeBSD VM)
         if: ${{ matrix.vm_arch != '' }}
         uses: cross-platform-actions/action@v0.32.0
@@ -295,20 +337,15 @@ jobs:
           shell: bash
           sync_files: true
           run: |
-            sudo env IGNORE_OSVERSION=yes pkg install -y gmake bash python311 uv
-            # The PSP launcher resolves "/usr/bin/python3" by extracting the basename
-            # and calling which("python3"). A uv venv puts python3 in PATH so the
-            # launcher finds it without any symlink hacks.
-            uv venv /tmp/pyenv --python python3.11
-            export PATH="/tmp/pyenv/bin:$PATH"
+            PRETASTER_PSP="build/pretaster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.psp"
 
-            PRETASTER_PSP="_psp_stage/pretaster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.psp"
             if [ ! -f "$PRETASTER_PSP" ]; then
-              echo "⚠️ Staged PSP not found, running without PSP verification"
-              PRETASTER_PSP=""
-            else
-              chmod +x "$PRETASTER_PSP"
+              echo "❌ Pretaster PSP not found at: $PRETASTER_PSP"
+              ls -la build/ || echo "Build directory not found"
+              exit 1
             fi
+
+            chmod +x "$PRETASTER_PSP"
 
             TEST_SUITE="${{ inputs.test_suite }}"
             TEST_SUITE="${TEST_SUITE:-all}"
@@ -385,7 +422,7 @@ jobs:
           name: flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
 
-      - name: 🔧 Build pretaster PSP
+      - name: 🔧 Extract helpers
         shell: bash
         run: |
           # The dawidd6 action downloads the artifact contents (zip files) to helpers-dist/
