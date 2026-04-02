@@ -21,7 +21,8 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
       matrix: ${{ steps.matrix.outputs.matrix }}
-      cache_key_base: ${{ steps.cache.outputs.key_base }}
+      go_cache_key_base: ${{ steps.cache.outputs.go_key_base }}
+      rust_cache_key_base: ${{ steps.cache.outputs.rust_key_base }}
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
@@ -36,12 +37,15 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "📦 Version: $VERSION"
 
-      - name: 🔑 Calculate cache key base
+      - name: 🔑 Calculate cache key bases
         id: cache
         run: |
-          HELPERS_HASH=$(find src -type f -name "*.go" -o -name "*.rs" -o -name "Cargo.toml" -o -name "go.mod" | xargs sha256sum | sha256sum | cut -d' ' -f1 | head -c 16)
-          echo "key_base=helpers-$HELPERS_HASH" >> $GITHUB_OUTPUT
-          echo "🔑 Cache key base: helpers-$HELPERS_HASH"
+          GO_HASH=$(find src/flavor-go -type f \( -name "*.go" -o -name "go.mod" \) | sort | xargs sha256sum | sha256sum | cut -d' ' -f1 | head -c 16)
+          RUST_HASH=$(find src/flavor-rs -type f \( -name "*.rs" -o -name "Cargo.toml" \) | sort | xargs sha256sum | sha256sum | cut -d' ' -f1 | head -c 16)
+          echo "go_key_base=go-helpers-$GO_HASH" >> $GITHUB_OUTPUT
+          echo "rust_key_base=rust-helpers-$RUST_HASH" >> $GITHUB_OUTPUT
+          echo "🔑 Go cache key:   go-helpers-$GO_HASH"
+          echo "🔑 Rust cache key: rust-helpers-$RUST_HASH"
 
       - name: 📋 Setup build matrix
         id: matrix
@@ -73,21 +77,35 @@ jobs:
           echo "📋 Build matrix: $MATRIX"
 
   # ── Native platform builds (Linux, macOS, Windows) ─────────────────────────
-  # Uses the reusable build-platform.yml workflow to avoid duplication.
-  build:
-    name: ${{ matrix.emoji }} ${{ matrix.platform }}
+  # Go and Rust fan out in parallel over the same matrix (12 jobs total).
+  build-go:
+    name: ${{ matrix.emoji }} ${{ matrix.platform }} (Go)
     needs: setup
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
-    uses: ./.github/workflows/build-platform.yml
+    uses: ./.github/workflows/build-go.yml
+    with:
+      platform: ${{ matrix.platform }}
+      os: ${{ matrix.os }}
+      use_musl: ${{ matrix.use_musl }}
+      version: ${{ needs.setup.outputs.version }}
+      go_cache_key_base: ${{ needs.setup.outputs.go_cache_key_base }}
+
+  build-rust:
+    name: ${{ matrix.emoji }} ${{ matrix.platform }} (Rust)
+    needs: setup
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
+    uses: ./.github/workflows/build-rust.yml
     with:
       platform: ${{ matrix.platform }}
       os: ${{ matrix.os }}
       rust_target: ${{ matrix.rust_target }}
       use_musl: ${{ matrix.use_musl }}
       version: ${{ needs.setup.outputs.version }}
-      cache_key_base: ${{ needs.setup.outputs.cache_key_base }}
+      rust_cache_key_base: ${{ needs.setup.outputs.rust_cache_key_base }}
 
   # ── FreeBSD builds (QEMU VM via cross-platform-actions) ────────────────────
   # Separate dedicated jobs because these use a VM action rather than a native runner.
@@ -402,7 +420,7 @@ jobs:
   # ── Combine all artifacts ──────────────────────────────────────────────────
   combine:
     name: 📦 Combine & Validate
-    needs: [setup, build, build-freebsd-amd64, build-freebsd-arm64, build-freebsd-arm64-arm-runner]
+    needs: [setup, build-go, build-rust, build-freebsd-amd64, build-freebsd-arm64, build-freebsd-arm64-arm-runner]
     if: always()
     runs-on: ubuntu-24.04
     steps:
@@ -419,7 +437,7 @@ jobs:
       - name: 🔀 Combine artifacts
         run: |
           mkdir -p final
-          for platform_dir in all-artifacts/flavor-helpers-*; do
+          for platform_dir in all-artifacts/flavor-*helpers-*; do
             [ -d "$platform_dir" ] && cp "$platform_dir"/*.zip final/ || true
           done
           cd final
