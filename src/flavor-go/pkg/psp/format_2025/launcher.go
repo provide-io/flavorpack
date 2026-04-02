@@ -35,7 +35,7 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 		logLevel = envLevel
 		logSource = EnvLogLevel
 	} else {
-		logLevel = "trace" // Default to trace for comprehensive diagnostics
+		logLevel = "warn" // Default to warn for production; set FLAVOR_LOG_LEVEL for more detail
 		logSource = "default"
 	}
 
@@ -57,7 +57,7 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 
 	// Support log file output
 	if logPath := os.Getenv(EnvLogPath); logPath != "" {
-		if file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644); err == nil {
+		if file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, FilePerms); err == nil {
 			defer func() { _ = file.Close() }()
 			output = file
 		}
