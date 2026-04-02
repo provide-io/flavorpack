@@ -22,19 +22,19 @@ from provide.foundation.file.directory import ensure_dir, ensure_parent_dir, saf
 from flavor.config.defaults import DEFAULT_DISK_SPACE_MULTIPLIER
 from flavor.config.policy import enforce_policy, load_operator_policy, merge_policy, parse_package_policy
 from flavor.config.trust import compute_key_fingerprint, is_key_trusted
-from flavor.psp.format_2025.constants import DEFAULT_SLOT_DESCRIPTOR_SIZE, OP_GZIP, OP_NONE, OP_TAR
+from flavor.psp.format_2025.constants import DEFAULT_SLOT_DESCRIPTOR_SIZE, OP_NONE, OPERATION_CHAINS
 from flavor.psp.format_2025.operations import pack_operations
 from flavor.psp.format_2025.reader import PSPFReader
 from flavor.psp.format_2025.targets import normalize_workenv_target
 from flavor.psp.format_2025.workenv import WorkEnvManager
 from flavor.psp.security import verify_package_integrity
 
-# Pre-computed operation chain values — must match Go/Rust implementations.
+# Pre-computed operation chain values — derived from OPERATION_CHAINS (the canonical source).
 # Operations field is a packed 64-bit integer: each byte is one operation code.
 _OP_NONE = OP_NONE  # 0x00 — raw data, no processing
-_OP_TAR = pack_operations([OP_TAR])  # 0x01 — tar archive
-_OP_GZIP = pack_operations([OP_GZIP])  # 0x10 — gzip compressed
-_OP_TAR_GZ = pack_operations([OP_TAR, OP_GZIP])  # 0x1001 — gzip-compressed tar
+_OP_TAR = pack_operations(OPERATION_CHAINS["tar"])
+_OP_GZIP = pack_operations(OPERATION_CHAINS["gzip"])
+_OP_TAR_GZ = pack_operations(OPERATION_CHAINS["tar.gz"])
 
 
 class PSPFLauncher(PSPFReader):
