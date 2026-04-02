@@ -7,6 +7,7 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ROOT_MAKEFILE = REPO_ROOT / "Makefile"
 QUALITY_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "05-code-quality.yml"
+RELEASE_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "release.yml"
 RUST_MAKEFILE = REPO_ROOT / "src" / "flavor-rs" / "Makefile"
 RUST_FUZZ_CARGO = REPO_ROOT / "src" / "flavor-rs" / "fuzz" / "Cargo.toml"
 
@@ -76,3 +77,21 @@ def test_rust_quality_surface_defines_real_fuzz_targets() -> None:
 
     assert 'name = "pspf_operations_roundtrip"' in fuzz_manifest
     assert 'name = "pspf_reader_no_panic"' in fuzz_manifest
+
+
+def test_release_workflow_uses_trusted_publishing_for_pypi() -> None:
+    workflow = yaml.load(RELEASE_WORKFLOW.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+    publish_testpypi = workflow["jobs"]["publish-testpypi"]
+    publish_pypi = workflow["jobs"]["publish-pypi"]
+
+    assert publish_testpypi["permissions"]["id-token"] == "write"
+    assert publish_pypi["permissions"]["id-token"] == "write"
+
+    testpypi_publish = publish_testpypi["steps"][-1]
+    pypi_publish = publish_pypi["steps"][-1]
+
+    assert testpypi_publish["uses"] == "pypa/gh-action-pypi-publish@release/v1"
+    assert pypi_publish["uses"] == "pypa/gh-action-pypi-publish@release/v1"
+
+    assert testpypi_publish["with"]["password"] == "${{ secrets.TEST_PYPI_API_TOKEN }}"
+    assert "password" not in pypi_publish["with"]
