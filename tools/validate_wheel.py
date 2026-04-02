@@ -193,6 +193,7 @@ try:
         helpers = manager.list_helpers()
         total_helpers = len(helpers.get('launchers', [])) + len(helpers.get('builders', []))
         if total_helpers > 0:
+            pout(f"INFO: {total_helpers} embedded helper(s) found")
         else:
             pout("INFO: No embedded helpers (universal wheel)")
     except Exception as e:
