@@ -79,7 +79,7 @@ jobs:
   # ── Native platform builds (Linux, macOS, Windows) ─────────────────────────
   # Go and Rust fan out in parallel over the same matrix (12 jobs total).
   build-go:
-    name: ${{ matrix.emoji }} ${{ matrix.platform }} (Go)
+    name: ${{ matrix.emoji }}🐹 ${{ matrix.platform }}
     needs: setup
     strategy:
       fail-fast: false
@@ -93,7 +93,7 @@ jobs:
       go_cache_key_base: ${{ needs.setup.outputs.go_cache_key_base }}
 
   build-rust:
-    name: ${{ matrix.emoji }} ${{ matrix.platform }} (Rust)
+    name: ${{ matrix.emoji }}🦀 ${{ matrix.platform }}
     needs: setup
     strategy:
       fail-fast: false
