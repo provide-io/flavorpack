@@ -185,13 +185,33 @@ jobs:
           name: pretaster-psp-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./build
       
-      - name: 📥 Download helpers for platform
+      - name: 📥 Download Go helpers
+        continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
           workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
+          name: flavor-go-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
+          path: ./helpers-dist
+
+      - name: 📥 Download Rust helpers
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v19
+        with:
+          workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
+          name: flavor-rust-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
+          path: ./helpers-dist
+
+      - name: 📥 Download combined helpers (FreeBSD)
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v19
+        with:
+          workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
-      
+
       - name: 🔍 Verify Cross-Language Package
         shell: bash
         run: |
