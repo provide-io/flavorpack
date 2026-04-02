@@ -58,7 +58,7 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 	// Support log file output
 	if logPath := os.Getenv(EnvLogPath); logPath != "" {
 		if file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644); err == nil {
-			defer file.Close()
+			defer func() { _ = file.Close() }()
 			output = file
 		}
 	}

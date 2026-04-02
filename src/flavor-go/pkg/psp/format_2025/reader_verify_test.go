@@ -21,7 +21,7 @@ func TestReaderVerifyMagicTrailer(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader: %v", err)
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	ok, err := reader.VerifyMagicTrailer()
 	if err != nil || !ok {
@@ -39,7 +39,7 @@ func TestReaderVerifyAllChecksumsAndMetadataArchive(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader: %v", err)
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	if err := reader.VerifyAllChecksums(); err != nil {
 		t.Fatalf("VerifyAllChecksums() error = %v", err)
@@ -53,7 +53,7 @@ func TestReaderVerifyAllChecksumsAndMetadataArchive(t *testing.T) {
 	if err != nil {
 		t.Fatalf("gzip.NewReader() error = %v", err)
 	}
-	defer gr.Close()
+	defer func() { _ = gr.Close() }()
 	data, err := io.ReadAll(gr)
 	if err != nil {
 		t.Fatalf("ReadAll() error = %v", err)
@@ -70,7 +70,7 @@ func TestReaderVerifyIntegritySeal(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CreateTemp(): %v", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	metaJSON := []byte(`{"package":{"name":"signed","version":"1.0.0"},"slots":[]}`)
 	gzMeta := gzipData(t, metaJSON)
@@ -111,7 +111,7 @@ func TestReaderVerifyIntegritySeal(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader(): %v", err)
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	ok, err := reader.VerifyIntegritySeal()
 	if err != nil || !ok {
