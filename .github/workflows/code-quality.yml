@@ -670,7 +670,7 @@ jobs:
 
   python-quality-observability:
     name: 🐍 Python Intent Observability
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     continue-on-error: true
     steps:
@@ -730,7 +730,7 @@ print(f'- Coverage: {totals.get(\"percent_covered_display\", \"unknown\")}%')
 
   go-quality-observability:
     name: 🐹 Go Intent Observability
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     continue-on-error: true
     steps:
@@ -779,7 +779,7 @@ print(f'- Coverage: {totals.get(\"percent_covered_display\", \"unknown\")}%')
 
   rust-quality-observability:
     name: 🦀 Rust Intent Observability
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     continue-on-error: true
     steps:
@@ -836,7 +836,7 @@ print(f'- Coverage: {totals.get(\"percent_covered_display\", \"unknown\")}%')
     name: 📈 Intent Observability Report
     needs: [python-quality-observability, go-quality-observability, rust-quality-observability]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📊 Summarize observability jobs
         run: |
