@@ -141,7 +141,7 @@ jobs:
           version: '14.2'
           architecture: x86-64
           shell: bash
-          sync-files: runner-to-vm
+          sync_files: runner-to-vm
           run: ci/freebsd-build-go.sh ${{ needs.setup.outputs.version }} amd64
 
       - name: 🦀 Prep Rust
@@ -151,7 +151,7 @@ jobs:
           version: '14.2'
           architecture: x86-64
           shell: bash
-          sync-files: runner-to-vm
+          sync_files: runner-to-vm
           run: ci/freebsd-prep-rust.sh
 
       - name: 🔨 Build Rust helpers
@@ -161,7 +161,7 @@ jobs:
           version: '14.2'
           architecture: x86-64
           shell: bash
-          sync-files: runner-to-vm
+          sync_files: runner-to-vm
           run: ci/freebsd-build-rust.sh ${{ needs.setup.outputs.version }} amd64
 
       - name: 🧪 Test Go
@@ -171,7 +171,7 @@ jobs:
           version: '14.2'
           architecture: x86-64
           shell: bash
-          sync-files: runner-to-vm
+          sync_files: runner-to-vm
           run: ci/freebsd-test-go.sh
 
       - name: 📦 Package artifacts
@@ -242,7 +242,7 @@ jobs:
           version: '14.2'
           architecture: arm64
           shell: bash
-          sync-files: runner-to-vm
+          sync_files: runner-to-vm
           run: ci/freebsd-build-go.sh ${{ needs.setup.outputs.version }} arm64
 
       - name: 🦀 Prep Rust
@@ -252,7 +252,7 @@ jobs:
           version: '14.2'
           architecture: arm64
           shell: bash
-          sync-files: runner-to-vm
+          sync_files: runner-to-vm
           run: ci/freebsd-prep-rust.sh
 
       - name: 🔨 Build Rust helpers
@@ -262,7 +262,7 @@ jobs:
           version: '14.2'
           architecture: arm64
           shell: bash
-          sync-files: runner-to-vm
+          sync_files: runner-to-vm
           run: ci/freebsd-build-rust.sh ${{ needs.setup.outputs.version }} arm64
 
       - name: 🧪 Test Go
@@ -272,7 +272,7 @@ jobs:
           version: '14.2'
           architecture: arm64
           shell: bash
-          sync-files: runner-to-vm
+          sync_files: runner-to-vm
           run: ci/freebsd-test-go.sh
 
       - name: 📦 Package artifacts
