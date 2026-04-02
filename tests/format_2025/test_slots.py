@@ -284,13 +284,13 @@ class TestSlotView:
         assert view.content == b"raw content"
 
     def test_content_gzip_decompresses(self) -> None:
-        """content decompresses gzip data."""
-        import zlib
+        """content decompresses gzip (RFC 1952) data."""
+        import gzip as gzip_mod
 
         from flavor.psp.format_2025.operations import OP_GZIP, pack_operations
 
         original = b"hello world"
-        compressed = zlib.compress(original)
+        compressed = gzip_mod.compress(original)
         desc = self._make_descriptor(operations=pack_operations([OP_GZIP]))
         view = SlotView(desc)
         view._data = compressed
