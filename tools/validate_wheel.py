@@ -88,7 +88,28 @@ def _parse_wheel_platform(wheel_path: Path) -> str:
     return platform_tag  # fallback: return as-is
 
 
-def validate_helpers(wheel_path: Path) -> tuple[bool, list[str]]:
+def _parse_wheel_version(wheel_path: Path) -> str:
+    """Parse the wheel version from the wheel filename."""
+    parts = wheel_path.stem.split("-")
+    if len(parts) < 4:
+        return "unknown"
+    return parts[-4]
+
+
+def _expected_helper_names(family: str, version: str, platform: str) -> set[str]:
+    """Return the exact helper filename(s) allowed for a wheel helper family."""
+    name = f"{family}-{version}-{platform}"
+    if platform.startswith("windows_"):
+        return {f"{name}.exe"}
+    return {name}
+
+
+def _is_helper_family_file(name: str) -> bool:
+    """Return whether a filename belongs to a known helper family naming space."""
+    return any(name == family or name.startswith(f"{family}-") for family in HELPER_FAMILIES)
+
+
+def validate_helpers(wheel_path: Path) -> tuple[bool, list[str]]:  # noqa: C901
     """
     Validate that helpers in the wheel are correct for the wheel's platform.
 
@@ -98,6 +119,7 @@ def validate_helpers(wheel_path: Path) -> tuple[bool, list[str]]:
     messages = []
     success = True
     platform = _parse_wheel_platform(wheel_path)
+    wheel_version = _parse_wheel_version(wheel_path)
 
     with tempfile.TemporaryDirectory() as tmpdir:
         with zipfile.ZipFile(wheel_path, "r") as whl:
@@ -117,19 +139,15 @@ def validate_helpers(wheel_path: Path) -> tuple[bool, list[str]]:
             return False, messages
 
         all_files = [f for f in helpers_dir.iterdir() if f.is_file()]
+        expected_matches: set[str] = set()
 
         for family in HELPER_FAMILIES:
-            # Match helpers for this family and platform
-            # Filename pattern: {family}-{version}-{platform}[.exe]
-            matches = [
-                f
-                for f in all_files
-                if f.name.startswith(family)
-                and (f.name.endswith(f"-{platform}") or f.name.endswith(f"-{platform}.exe"))
-            ]
+            expected_names = _expected_helper_names(family, wheel_version, platform)
+            matches = [f for f in all_files if f.name in expected_names]
 
             if not matches:
-                messages.append(f"  ❌ {family}-*-{platform}[.exe] not found")
+                names = ", ".join(sorted(expected_names))
+                messages.append(f"  ❌ Expected helper not found: {names}")
                 success = False
                 continue
 
@@ -140,6 +158,7 @@ def validate_helpers(wheel_path: Path) -> tuple[bool, list[str]]:
                 continue
 
             helper_path = matches[0]
+            expected_matches.add(helper_path.name)
             size_kb = helper_path.stat().st_size / 1024
             messages.append(f"  ✓ {helper_path.name} ({size_kb:.0f} KB)")
 
@@ -167,6 +186,14 @@ def validate_helpers(wheel_path: Path) -> tuple[bool, list[str]]:
                         messages.append("    ⚠️  Failed to run --version")
                 except Exception as e:
                     messages.append(f"    ⚠️  Cannot execute: {e}")
+
+        unexpected = [
+            f.name for f in all_files if f.name not in expected_matches and _is_helper_family_file(f.name)
+        ]
+        if unexpected:
+            names = ", ".join(sorted(unexpected))
+            messages.append(f"  ❌ Unexpected helper(s) for {platform}: {names}")
+            success = False
 
     return success, messages
 

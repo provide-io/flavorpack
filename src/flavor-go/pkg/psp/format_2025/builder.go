@@ -234,6 +234,12 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		logger.Debug("🎲 Using random key generation")
 	}
 	copy(index.PublicKey[:], publicKey[:32])
+	if fingerprint, err := ComputeKeyFingerprint(publicKey); err != nil {
+		logger.Error("❌ Failed to compute signing key fingerprint", "error", err)
+		os.Exit(1)
+	} else {
+		copy(index.AttestationKeyFp[:], fingerprint)
+	}
 
 	// Build metadata
 	var buildTimestamp string
@@ -791,7 +797,7 @@ func convertToResourceEmbedding(filePath string, launcherSize int64, logger hclo
 
 // getFileSize returns the size of a file
 func getFileSize(path string) (int64, error) {
-	info, err := os.Stat(path)
+	info, err := statValidated(path)
 	if err != nil {
 		return 0, err
 	}

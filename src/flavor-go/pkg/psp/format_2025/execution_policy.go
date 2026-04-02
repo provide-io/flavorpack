@@ -9,8 +9,14 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"time"
+
+	toml "github.com/BurntSushi/toml"
+)
+
+var (
+	getSystemPolicyFileImpl = getSystemPolicyFile
+	getUserPolicyFileImpl   = getUserPolicyFile
 )
 
 // PackagePolicy mirrors the Python PackagePolicy struct.
@@ -38,31 +44,34 @@ type EffectivePolicy struct {
 	MaxAgeDays        *int
 	RequireEnv        []string
 	RequireTrustedKey bool
+	UseOsKeychain     bool
 	RequireSBOM       bool
 }
 
 // LoadOperatorPolicy reads system and user policy.toml files.
-// Returns permissive defaults if the files do not exist.
+// Missing files are allowed; unreadable or invalid files are errors.
 func LoadOperatorPolicy() (OperatorPolicy, error) {
 	policy := OperatorPolicy{}
 
 	paths := []string{
-		getSystemPolicyFile(),
-		getUserPolicyFile(),
+		getSystemPolicyFileImpl(),
+		getUserPolicyFileImpl(),
 	}
 
 	for _, path := range paths {
 		if path == "" {
 			continue
 		}
-		data, err := os.ReadFile(path)
+		data, err := os.ReadFile(path) // #nosec G304 -- policy files come from fixed config locations
 		if os.IsNotExist(err) {
 			continue
 		}
 		if err != nil {
 			return policy, fmt.Errorf("reading policy %s: %w", path, err)
 		}
-		parseMinimalTOML(data, &policy)
+		if err := applyOperatorPolicyTOML(data, &policy); err != nil {
+			return policy, fmt.Errorf("parsing policy %s: %w", path, err)
+		}
 	}
 	return policy, nil
 }
@@ -90,67 +99,207 @@ func getUserPolicyFile() string {
 	return ""
 }
 
-// parseMinimalTOML is a line-by-line parser for the small subset of TOML used
-// in policy.toml: [section] headers and key = value bool/int/string-list lines.
-func parseMinimalTOML(data []byte, policy *OperatorPolicy) {
-	section := ""
-	for _, rawLine := range strings.Split(string(data), "\n") {
-		line := strings.TrimSpace(rawLine)
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
-			section = strings.ToLower(line[1 : len(line)-1])
-			continue
-		}
-		parts := strings.SplitN(line, "=", 2)
-		if len(parts) != 2 {
-			continue
-		}
-		key := strings.TrimSpace(parts[0])
-		val := strings.TrimSpace(parts[1])
-		// Strip inline comments
-		if idx := strings.Index(val, "#"); idx != -1 {
-			val = strings.TrimSpace(val[:idx])
-		}
+func applyOperatorPolicyTOML(data []byte, policy *OperatorPolicy) error {
+	var raw map[string]any
+	if _, err := toml.Decode(string(data), &raw); err != nil {
+		return err
+	}
 
-		switch section + "." + key {
-		case "trust.require_trusted_key":
-			policy.RequireTrustedKey = val == "true"
-		case "trust.use_os_keychain":
-			policy.UseOsKeychain = val == "true"
-		case "execution.refuse_root":
-			policy.RefuseRoot = val == "true"
-		case "execution.max_age_days":
-			var n int
-			if _, err := fmt.Sscanf(val, "%d", &n); err == nil {
-				policy.MaxAgeDays = &n
-			}
-		case "execution.allow_platforms":
-			// Parse a TOML string list: ["linux_amd64", "linux_arm64"]
-			policy.AllowPlatforms = parseTOMLStringList(val)
-		case "attestation.require_sbom":
-			policy.RequireSBOM = val == "true"
+	for key := range raw {
+		switch key {
+		case "trust", "execution", "attestation":
+		default:
+			return fmt.Errorf("unknown policy section %q", key)
 		}
+	}
+
+	if section, ok := raw["trust"]; ok {
+		if err := applyTrustPolicySection(section, policy); err != nil {
+			return err
+		}
+	}
+	if section, ok := raw["execution"]; ok {
+		if err := applyExecutionPolicySection(section, policy); err != nil {
+			return err
+		}
+	}
+	if section, ok := raw["attestation"]; ok {
+		if err := applyAttestationPolicySection(section, policy); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func applyTrustPolicySection(raw any, policy *OperatorPolicy) error {
+	section, err := mustPolicySection("trust", raw)
+	if err != nil {
+		return err
+	}
+	for key := range section {
+		switch key {
+		case "require_trusted_key", "use_os_keychain":
+		default:
+			return fmt.Errorf("unknown key %q in [trust]", key)
+		}
+	}
+
+	if value, ok := section["require_trusted_key"]; ok {
+		b, err := mustBool("trust.require_trusted_key", value)
+		if err != nil {
+			return err
+		}
+		policy.RequireTrustedKey = b
+	}
+	if value, ok := section["use_os_keychain"]; ok {
+		b, err := mustBool("trust.use_os_keychain", value)
+		if err != nil {
+			return err
+		}
+		policy.UseOsKeychain = b
+	}
+
+	return nil
+}
+
+func applyExecutionPolicySection(raw any, policy *OperatorPolicy) error {
+	section, err := mustPolicySection("execution", raw)
+	if err != nil {
+		return err
+	}
+	for key := range section {
+		switch key {
+		case "refuse_root", "max_age_days", "allow_platforms":
+		default:
+			return fmt.Errorf("unknown key %q in [execution]", key)
+		}
+	}
+
+	if value, ok := section["refuse_root"]; ok {
+		b, err := mustBool("execution.refuse_root", value)
+		if err != nil {
+			return err
+		}
+		policy.RefuseRoot = b
+	}
+	if value, ok := section["max_age_days"]; ok {
+		n, err := mustInt("execution.max_age_days", value)
+		if err != nil {
+			return err
+		}
+		policy.MaxAgeDays = &n
+	}
+	if value, ok := section["allow_platforms"]; ok {
+		platforms, err := mustStringList("execution.allow_platforms", value)
+		if err != nil {
+			return err
+		}
+		policy.AllowPlatforms = platforms
+	}
+
+	return nil
+}
+
+func applyAttestationPolicySection(raw any, policy *OperatorPolicy) error {
+	section, err := mustPolicySection("attestation", raw)
+	if err != nil {
+		return err
+	}
+	for key := range section {
+		switch key {
+		case "require_sbom":
+		default:
+			return fmt.Errorf("unknown key %q in [attestation]", key)
+		}
+	}
+
+	if value, ok := section["require_sbom"]; ok {
+		b, err := mustBool("attestation.require_sbom", value)
+		if err != nil {
+			return err
+		}
+		policy.RequireSBOM = b
+	}
+
+	return nil
+}
+
+func mustPolicySection(sectionName string, raw any) (map[string]any, error) {
+	if raw == nil {
+		return nil, nil
+	}
+	section, ok := raw.(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("policy section %q must be a table, got %T", sectionName, raw)
+	}
+	return section, nil
+}
+
+func mustBool(fieldName string, raw any) (bool, error) {
+	value, ok := raw.(bool)
+	if !ok {
+		return false, fmt.Errorf("policy field %s must be a boolean, got %T", fieldName, raw)
+	}
+	return value, nil
+}
+
+func mustInt(fieldName string, raw any) (int, error) {
+	maxInt := int(^uint(0) >> 1)
+	switch value := raw.(type) {
+	case int:
+		return value, nil
+	case int8:
+		return int(value), nil // #nosec G115 -- bounded integer conversion
+	case int16:
+		return int(value), nil // #nosec G115 -- bounded integer conversion
+	case int32:
+		return int(value), nil // #nosec G115 -- bounded integer conversion
+	case int64:
+		if value > int64(maxInt) || value < -int64(maxInt)-1 {
+			return 0, fmt.Errorf("policy field %s is out of range for int", fieldName)
+		}
+		return int(value), nil // #nosec G115 -- range checked above
+	case uint:
+		if value > uint(maxInt) {
+			return 0, fmt.Errorf("policy field %s is out of range for int", fieldName)
+		}
+		return int(value), nil // #nosec G115 -- range checked above
+	case uint8:
+		return int(value), nil // #nosec G115 -- bounded integer conversion
+	case uint16:
+		return int(value), nil // #nosec G115 -- bounded integer conversion
+	case uint32:
+		return int(value), nil // #nosec G115 -- bounded integer conversion
+	case uint64:
+		if value > uint64(maxInt) {
+			return 0, fmt.Errorf("policy field %s is out of range for int", fieldName)
+		}
+		return int(value), nil // #nosec G115 -- range checked above
+	default:
+		return 0, fmt.Errorf("policy field %s must be an integer, got %T", fieldName, raw)
 	}
 }
 
-// parseTOMLStringList parses a TOML array like ["a", "b"] or ['a', 'b'].
-func parseTOMLStringList(val string) []string {
-	val = strings.TrimSpace(val)
-	if !strings.HasPrefix(val, "[") || !strings.HasSuffix(val, "]") {
-		return nil
-	}
-	inner := val[1 : len(val)-1]
-	var result []string
-	for _, item := range strings.Split(inner, ",") {
-		item = strings.TrimSpace(item)
-		item = strings.Trim(item, `"'`)
-		if item != "" {
-			result = append(result, item)
+func mustStringList(fieldName string, raw any) ([]string, error) {
+	switch value := raw.(type) {
+	case []string:
+		result := make([]string, len(value))
+		copy(result, value)
+		return result, nil
+	case []any:
+		result := make([]string, 0, len(value))
+		for _, item := range value {
+			s, ok := item.(string)
+			if !ok {
+				return nil, fmt.Errorf("policy field %s must contain only strings, got %T", fieldName, item)
+			}
+			result = append(result, s)
 		}
+		return result, nil
+	default:
+		return nil, fmt.Errorf("policy field %s must be a string list, got %T", fieldName, raw)
 	}
-	return result
 }
 
 // MergePolicy produces an EffectivePolicy where stricter always wins.
@@ -192,6 +341,7 @@ func MergePolicy(pkg PackagePolicy, op OperatorPolicy) EffectivePolicy {
 
 	effective.RequireEnv = pkg.RequireEnv
 	effective.RequireTrustedKey = op.RequireTrustedKey
+	effective.UseOsKeychain = op.UseOsKeychain
 	effective.RequireSBOM = op.RequireSBOM
 
 	return effective
@@ -215,6 +365,10 @@ func EnforcePolicy(policy EffectivePolicy, buildTimestamp int64, hasSBOM bool, k
 		if !found {
 			return fmt.Errorf("platform not permitted: %s not in %v", currentPlatform, policy.Platforms)
 		}
+	}
+
+	if policy.UseOsKeychain {
+		return fmt.Errorf("use_os_keychain is not supported by this launcher")
 	}
 
 	// 2. Root / Administrator check

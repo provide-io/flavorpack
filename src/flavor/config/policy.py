@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 import os
+from pathlib import Path
 import platform
 import sys
 import tomllib
@@ -20,6 +21,21 @@ from flavor.config.dirs import get_policy_file, get_system_config_dir
 from flavor.console import get_command_logger
 
 log = get_command_logger("config.policy")
+
+_POLICY_SCHEMA: dict[str, dict[str, object]] = {
+    "trust": {
+        "require_trusted_key": bool,
+        "use_os_keychain": bool,
+    },
+    "execution": {
+        "refuse_root": bool,
+        "max_age_days": int,
+        "allow_platforms": list,
+    },
+    "attestation": {
+        "require_sbom": bool,
+    },
+}
 
 
 @define
@@ -82,6 +98,60 @@ def _parse_operator_policy(raw: dict[str, Any]) -> OperatorPolicy:
     )
 
 
+def _raise_invalid_policy(path: Path, message: str) -> None:
+    raise ValueError(f"{path}: {message}")
+
+
+def _validate_operator_policy_value(path: Path, section: str, key: str, value: Any) -> None:
+    expected = _POLICY_SCHEMA[section][key]
+    label = f"[{section}].{key}"
+
+    if expected is bool:
+        if type(value) is not bool:
+            _raise_invalid_policy(path, f"{label} must be a boolean")
+        return
+
+    if expected is int:
+        if type(value) is not int:
+            _raise_invalid_policy(path, f"{label} must be an integer")
+        return
+
+    if expected is list:
+        if not isinstance(value, list) or any(type(item) is not str for item in value):
+            _raise_invalid_policy(path, f"{label} must be a list of strings")
+        return
+
+    _raise_invalid_policy(path, f"{label} has unsupported schema type")
+
+
+def _validate_operator_policy_file(path: Path, raw: dict[str, Any]) -> None:
+    for section, values in raw.items():
+        if section not in _POLICY_SCHEMA:
+            _raise_invalid_policy(path, f"unknown policy section [{section}]")
+        if not isinstance(values, dict):
+            _raise_invalid_policy(path, f"unknown top-level key {section!r}")
+
+        allowed_keys = _POLICY_SCHEMA[section]
+        for key, value in values.items():
+            if key not in allowed_keys:
+                _raise_invalid_policy(path, f"unknown policy key [{section}].{key}")
+            _validate_operator_policy_value(path, section, key, value)
+
+
+def _load_policy_file(path: Path) -> dict[str, Any]:
+    try:
+        with path.open("rb") as f:
+            raw = tomllib.load(f)
+    except Exception as exc:
+        raise ValueError(f"{path}: invalid policy.toml ({exc})") from exc
+
+    if not isinstance(raw, dict):
+        _raise_invalid_policy(path, "policy.toml root must be a table")
+
+    _validate_operator_policy_file(path, raw)
+    return raw
+
+
 def load_operator_policy(*, system: bool = True, user: bool = True) -> OperatorPolicy:
     """Load the operator policy file(s).
 
@@ -93,25 +163,14 @@ def load_operator_policy(*, system: bool = True, user: bool = True) -> OperatorP
     if system:
         system_file = get_system_config_dir() / "policy.toml"
         if system_file.exists():
-            try:
-                with system_file.open("rb") as f:
-                    merged.update(tomllib.load(f))
-            except Exception as exc:
-                log.warning("Failed to read system policy", path=str(system_file), error=str(exc))
+            merged.update(_load_policy_file(system_file))
 
     if user:
         user_file = get_policy_file(system=False)
         if user_file.exists():
-            try:
-                with user_file.open("rb") as f:
-                    user_raw = tomllib.load(f)
-                for section, values in user_raw.items():
-                    if isinstance(values, dict):
-                        merged.setdefault(section, {}).update(values)
-                    else:
-                        merged[section] = values
-            except Exception as exc:
-                log.warning("Failed to read user policy", path=str(user_file), error=str(exc))
+            user_raw = _load_policy_file(user_file)
+            for section, values in user_raw.items():
+                merged.setdefault(section, {}).update(values)
 
     return _parse_operator_policy(merged)
 
@@ -186,6 +245,9 @@ def enforce_policy(policy: EffectivePolicy, build_timestamp: int, has_sbom: bool
     missing = [var for var in policy.require_env if not os.environ.get(var)]
     if missing:
         raise ValueError(f"required environment variable not set: {missing[0]}")
+
+    if policy.use_os_keychain:
+        raise ValueError("use_os_keychain is enabled, but OS keychain trust is not implemented")
 
     if policy.require_sbom and not has_sbom:
         raise ValueError("package built without attestation slot — operator policy requires SBOM")
