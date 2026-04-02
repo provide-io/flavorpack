@@ -16,14 +16,14 @@ import (
 // This ensures packaged tools can access cached packages from the HOST.
 func setFlavorCacheBeforeWorkenv(env []string, logger hclog.Logger) []string {
 	// Check if FLAVOR_CACHE is already set
-	if hasEnv(env, "FLAVOR_CACHE") {
+	if hasEnv(env, EnvCache) {
 		logger.Debug("🗂️ FLAVOR_CACHE already set, skipping")
 		return env
 	}
 
 	// Use workenv.GetCacheRoot() for cross-platform cache directory consistency
 	flavorCache := filepath.Join(workenv.GetCacheRoot(), "workenv")
-	env = append(env, fmt.Sprintf("FLAVOR_CACHE=%s", flavorCache))
+	env = append(env, fmt.Sprintf("%s=%s", EnvCache, flavorCache))
 	logger.Debug("🗂️ Setting FLAVOR_CACHE to HOST cache", "path", flavorCache)
 	return env
 }
