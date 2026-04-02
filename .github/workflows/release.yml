@@ -369,7 +369,7 @@ jobs:
   publish-testpypi:
     name: 🧪 Publish to TestPyPI
     needs: [prepare, generate-assets]
-    if: github.ref == 'refs/heads/main' && github.event.inputs.dry_run != 'true' && github.event.inputs.publish_testpypi == 'true'
+    if: github.event.inputs.dry_run != 'true' && github.event.inputs.publish_testpypi == 'true'
     runs-on: ubuntu-24.04
     environment:
       name: testpypi
@@ -411,7 +411,7 @@ jobs:
   publish-pypi:
     name: 🐍 Publish to PyPI
     needs: [prepare, create-release]
-    if: github.ref == 'refs/heads/main' && github.event.inputs.dry_run != 'true' && github.event.inputs.publish_pypi == 'true'
+    if: github.event.inputs.dry_run != 'true' && github.event.inputs.publish_pypi == 'true'
     runs-on: ubuntu-24.04
     environment:
       name: pypi

@@ -25,7 +25,7 @@ jobs:
   # Setup and download Flavor PSP
   setup:
     name: 🔧 Setup & Get Flavor PSP
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # Only run taster when the triggering Flavor pipeline succeeded.
     # workflow_run fires on all conclusions (success, failure, cancelled);
     # this if-guard skips everything when Flavor failed or was cancelled.
@@ -272,14 +272,14 @@ jobs:
       matrix:
         include:
           # Linux: both launchers are reliable
-          - runner: ubuntu-latest
+          - runner: ubuntu-24.04
             platform: linux_amd64
             activate: workenv/bin/activate
             launcher_ext: ""
             bundled_launcher: flavor-rs-launcher
             launcher_name: rust
             allow_failure: false
-          - runner: ubuntu-latest
+          - runner: ubuntu-24.04
             platform: linux_amd64
             activate: workenv/bin/activate
             launcher_ext: ""

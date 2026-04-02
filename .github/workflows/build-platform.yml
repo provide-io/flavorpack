@@ -1,7 +1,7 @@
 name: Build Platform (reusable)
 # ─────────────────────────────────────────────────────────────────────────────
 # Script policy: keep inline run: blocks to ≤ 3 lines.
-# Anything longer belongs in .github/scripts/ and should be called from here.
+# Anything longer belongs in ci/ and should be called from here.
 # ─────────────────────────────────────────────────────────────────────────────
 
 on:
@@ -87,19 +87,19 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         shell: bash
         working-directory: src/flavor-go
-        run: ../../.github/scripts/build-go-helpers.sh ${{ inputs.platform }} ${{ inputs.version }}
+        run: ../../ci/build-go-helpers.sh ${{ inputs.platform }} ${{ inputs.version }}
 
       - name: 🔍 Debug Rust environment
         if: steps.cache.outputs.cache-hit != 'true'
         shell: bash
         working-directory: src/flavor-rs
-        run: ../../.github/scripts/debug-rust-env.sh
+        run: ../../ci/debug-rust-env.sh
 
       - name: 🦀 Build Rust helpers
         if: steps.cache.outputs.cache-hit != 'true'
         shell: bash
         working-directory: src/flavor-rs
-        run: ../../.github/scripts/build-rust-helpers.sh ${{ inputs.platform }} ${{ inputs.rust_target }} ${{ inputs.version }}
+        run: ../../ci/build-rust-helpers.sh ${{ inputs.platform }} ${{ inputs.rust_target }} ${{ inputs.version }}
 
       - name: ✅ Finalize build
         if: steps.cache.outputs.cache-hit != 'true'
@@ -112,26 +112,26 @@ jobs:
       - name: 📦 Package artifacts (Unix)
         if: runner.os != 'Windows'
         shell: bash
-        run: .github/scripts/package-helpers.sh ${{ inputs.platform }} ${{ inputs.version }}
+        run: ci/package-helpers.sh ${{ inputs.platform }} ${{ inputs.version }}
 
       - name: 📦 Package artifacts (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        run: .github/scripts/package-helpers.ps1 -Platform ${{ inputs.platform }} -Version ${{ inputs.version }}
+        run: ci/package-helpers.ps1 -Platform ${{ inputs.platform }} -Version ${{ inputs.version }}
 
       - name: 🧪 Test binaries
         continue-on-error: true
         shell: bash
         run: |
           mkdir -p test-results
-          .github/scripts/test-binaries.sh ${{ inputs.platform }} dist/bin test-results
+          ci/test-binaries.sh ${{ inputs.platform }} dist/bin test-results
 
       - name: 📊 Generate metadata
         if: always()
         shell: bash
         run: |
           export PYTHONUTF8=1 PYTHONIOENCODING=utf-8
-          python3 .github/scripts/test-metadata.py platform \
+          python3 ci/test-metadata.py platform \
             ${{ inputs.platform }} ${{ inputs.version }} ${{ steps.cache.outputs.cache-hit }}
 
       - name: 📤 Upload artifacts
