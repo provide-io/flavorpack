@@ -106,7 +106,7 @@ jobs:
       
       - name: 🔧 Extract helpers
         run: |
-          ci/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_arm64"
+          ci/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_arm64 freebsd_amd64 freebsd_arm64"
 
           # List available helpers
           ls -la helpers/bin/
