@@ -421,10 +421,12 @@ jobs:
             runner: ubuntu-24.04
             python_platform: freebsd_14_0_x86_64
             continue_on_error: true
+            vm_arch: x86-64
           - platform: freebsd_arm64
             runner: ubuntu-24.04
             python_platform: freebsd_14_0_aarch64
             continue_on_error: true
+            vm_arch: arm64
 
     continue-on-error: ${{ matrix.continue_on_error == true }}
     steps:
@@ -490,14 +492,87 @@ jobs:
           ci/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "${{ matrix.platform }}"
           ls -la helpers/bin/
       
+      - name: 🔧 Stage wheel for FreeBSD VM
+        if: ${{ matrix.vm_arch != '' }}
+        shell: bash
+        run: |
+          mkdir -p _stage
+          WHEEL=$(find wheel-dist -name "flavorpack-*.whl" | head -1)
+          if [ -n "$WHEEL" ]; then
+            cp "$WHEEL" _stage/
+            echo "Staged: $(basename "$WHEEL")"
+          else
+            echo "❌ No wheel found in wheel-dist/"
+            ls wheel-dist/ || true
+            exit 1
+          fi
+
+      - name: 📦 Build Flavor PSP (FreeBSD VM)
+        if: ${{ matrix.vm_arch != '' }}
+        uses: cross-platform-actions/action@v0.32.0
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: ${{ matrix.vm_arch }}
+          shell: bash
+          sync_files: true
+          run: |
+            sudo env IGNORE_OSVERSION=yes pkg install -y python311 py311-pip
+
+            WHEEL=$(find _stage -name "flavorpack-*.whl" | head -1)
+            if [ -z "$WHEEL" ]; then
+              echo "❌ Staged wheel not found"
+              ls _stage/ || true
+              exit 1
+            fi
+
+            python3.11 -m pip install --user "$WHEEL"
+            export PATH="$HOME/.local/bin:$PATH"
+
+            VERSION="${{ needs.setup.outputs.helper_version }}"
+            PLATFORM="${{ matrix.platform }}"
+
+            LAUNCHER="helpers/bin/flavor-rs-launcher-${VERSION}-${PLATFORM}"
+            if [ ! -f "$LAUNCHER" ]; then
+              LAUNCHER="helpers/bin/flavor-go-launcher-${VERSION}-${PLATFORM}"
+            fi
+            if [ ! -f "$LAUNCHER" ]; then
+              echo "❌ No launcher found"
+              ls helpers/bin/ || true
+              exit 1
+            fi
+            chmod +x "$LAUNCHER"
+
+            mkdir -p _stage/artifacts
+            flavor pack \
+              --manifest pyproject.toml \
+              --output "_stage/artifacts/flavor-${VERSION}-${PLATFORM}.psp" \
+              --launcher-bin "$LAUNCHER" \
+              --key-seed "flavor-${VERSION}"
+
+            chmod +x "_stage/artifacts/flavor-${VERSION}-${PLATFORM}.psp"
+            "./_stage/artifacts/flavor-${VERSION}-${PLATFORM}.psp" --version
+            echo "✅ FreeBSD Flavor PSP built and verified"
+
+      - name: 📤 Upload Flavor package (FreeBSD)
+        if: ${{ matrix.vm_arch != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: flavor-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
+          path: _stage/artifacts/flavor-*.psp
+
       - name: 📦 Install Flavor from wheel
+        if: ${{ matrix.vm_arch == '' }}
         shell: bash
         run: |
           export PATH="$HOME/.local/bin:$PATH"
           bash ci/install-flavor-wheel.sh wheel-dist "${{ matrix.platform }}"
-      
+
       - name: 🔧 Prepare Flavor build
         id: prepare
+        if: ${{ matrix.vm_arch == '' }}
         shell: bash
         run: |
           # Determine binary extension for Windows
@@ -531,6 +606,7 @@ jobs:
           echo "wheel=$WHEEL" >> $GITHUB_OUTPUT
 
       - name: 📦 Pre-warm wheel cache for offline PSPF build
+        if: ${{ matrix.vm_arch == '' }}
         shell: bash
         run: |
           export PATH="$HOME/.local/bin:$PATH"
@@ -538,6 +614,7 @@ jobs:
         continue-on-error: true
 
       - name: 🔨 Build Flavor PSP using itself
+        if: ${{ matrix.vm_arch == '' }}
         shell: bash
         run: |
           export PATH="$HOME/.local/bin:$PATH"
@@ -547,8 +624,9 @@ jobs:
           export PYTHONUTF8=1
           export FLAVOR_LOG_LEVEL=trace
           ci/build-flavor-self.sh "${{ matrix.platform }}" "${{ needs.setup.outputs.helper_version }}" "${{ steps.prepare.outputs.wheel }}" "${{ steps.prepare.outputs.launcher }}"
-      
+
       - name: 📤 Upload Flavor package
+        if: ${{ matrix.vm_arch == '' }}
         uses: actions/upload-artifact@v7
         with:
           name: flavor-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
@@ -582,9 +660,11 @@ jobs:
           - platform: freebsd_amd64
             runner: ubuntu-24.04
             continue_on_error: true
+            vm_arch: x86-64
           - platform: freebsd_arm64
             runner: ubuntu-24.04
             continue_on_error: true
+            vm_arch: arm64
     continue-on-error: ${{ matrix.continue_on_error == true }}
     steps:
       - name: 📥 Checkout scripts
@@ -594,14 +674,55 @@ jobs:
           sparse-checkout: |
             ci/
           sparse-checkout-cone-mode: false
-      
+
       - name: 📥 Download Flavor package
         uses: actions/download-artifact@v8
         with:
           name: flavor-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
           path: ./
-      
+
+      - name: 🔧 Stage PSP for FreeBSD VM
+        if: ${{ matrix.vm_arch != '' }}
+        shell: bash
+        run: |
+          mkdir -p _stage
+          PSP=$(find . -maxdepth 3 -name "flavor-*.psp" | head -1)
+          if [ -n "$PSP" ]; then
+            cp "$PSP" _stage/
+            echo "Staged: $(basename "$PSP")"
+          else
+            echo "❌ No PSP found to stage"
+            find . -type f | head -20
+            exit 1
+          fi
+
+      - name: 🧪 Test Flavor PSP self-contained (FreeBSD VM)
+        if: ${{ matrix.vm_arch != '' }}
+        uses: cross-platform-actions/action@v0.32.0
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+          FLAVOR_LOG_LEVEL: trace
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: ${{ matrix.vm_arch }}
+          shell: bash
+          sync_files: runner-to-vm
+          run: |
+            PSP=$(find _stage -name "flavor-*.psp" | head -1)
+            if [ -z "$PSP" ]; then
+              echo "❌ Staged PSP not found"
+              exit 1
+            fi
+            chmod +x "$PSP"
+            FULL_PATH=$(realpath "$PSP")
+            echo "Testing: $PSP"
+            "$PSP" verify "$FULL_PATH"
+            "$PSP" verify "$FULL_PATH"
+            echo "✅ Flavor PSP verified on FreeBSD"
+
       - name: 🧪 Test Flavor PSP self-contained
+        if: ${{ matrix.vm_arch == '' }}
         shell: bash
         env:
           FLAVOR_LOG_LEVEL: trace
