@@ -88,8 +88,8 @@ jobs:
             echo "  Builder --version:"
             dist/bin/flavor-go-builder-$VERSION-$PLATFORM --version
 
-            echo "  Launcher --version:"
-            dist/bin/flavor-go-launcher-$VERSION-$PLATFORM --version
+            echo "  Launcher --version (CLI mode):"
+            FLAVOR_LAUNCHER_CLI=1 dist/bin/flavor-go-launcher-$VERSION-$PLATFORM --version
 
             echo "  Launcher CLI help:"
             FLAVOR_LAUNCHER_CLI=1 dist/bin/flavor-go-launcher-$VERSION-$PLATFORM help
