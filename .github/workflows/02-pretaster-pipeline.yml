@@ -170,6 +170,7 @@ jobs:
     needs: [setup, build-pretaster, test-pretaster]
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
+    continue-on-error: ${{ matrix.continue_on_error == true }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.setup.outputs.test_matrix) }}
