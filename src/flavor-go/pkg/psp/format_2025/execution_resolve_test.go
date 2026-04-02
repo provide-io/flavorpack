@@ -3,6 +3,7 @@ package format_2025
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/hashicorp/go-hclog"
@@ -48,8 +49,11 @@ func TestResolveExecutableUsesPathAndLookPathInEnvSupportsEmptyPathEntry(t *test
 	}
 
 	t.Setenv("PATH", dir)
-	if got := resolveExecutable("/missing/tool", logger); got != tool {
-		t.Fatalf("resolveExecutable() PATH resolution = %q, want %q", got, tool)
+	// Windows exec.LookPath requires a PATHEXT extension; extensionless "tool" is Unix-only.
+	if runtime.GOOS != "windows" {
+		if got := resolveExecutable("/missing/tool", logger); got != tool {
+			t.Fatalf("resolveExecutable() PATH resolution = %q, want %q", got, tool)
+		}
 	}
 
 	wd := t.TempDir()
