@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Get the current version from VERSION file
 # Usage: get-version.sh
 

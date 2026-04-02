@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Test JSON manifest handling across all builder/launcher combinations.
 #
 # Validates that the fix for _build_with_json_manifest() is correct:
