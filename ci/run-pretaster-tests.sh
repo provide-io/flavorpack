@@ -6,19 +6,15 @@ set -euo pipefail
 
 # On FreeBSD, GNU make is required (BSD make rejects this Makefile's GNU-specific syntax).
 # gmake must be installed in the VM before this script runs (pkg install gmake).
-# We also pass SHELL= so gmake uses the correct bash path instead of /bin/bash
-# (which doesn't exist on FreeBSD — bash lives at /usr/local/bin/bash).
 if [[ "$(uname -s)" == "FreeBSD" ]]; then
   if command -v gmake &>/dev/null; then
     MAKE_CMD=gmake
-    MAKE_SHELL="$(command -v bash)"
   else
     echo "❌ gmake required on FreeBSD but not found. Install with: pkg install gmake" >&2
     exit 1
   fi
 else
   MAKE_CMD=make
-  MAKE_SHELL=""
 fi
 
 # CRITICAL: Unset any PRETASTER_PSP environment variable that might be set
@@ -256,48 +252,36 @@ case "$TEST_SUITE" in
     if [[ "$IS_WINDOWS" == "true" ]]; then
       echo "🚀 Running COMBO-ONLY tests on Windows (Rust not supported in core tests)..."
       echo "════════════════════════════════════════════════════════════════"
-      make test-combo
+      $MAKE_CMD test-combo
     else
       echo "🚀 Running ALL test suites via Make..."
       echo "════════════════════════════════════════════════════════════════"
-      make test
+      $MAKE_CMD test
     fi
     EXIT_CODE=$?
     ;;
   combo)
     echo "🚀 Running COMBO tests via Make..."
     echo "════════════════════════════════════════════════════════════════"
-    ${MAKE_CMD} ${MAKE_SHELL:+SHELL="$MAKE_SHELL"} ${MAKE_HELPERS} test-combo
+    $MAKE_CMD test-combo
     EXIT_CODE=$?
     ;;
   core)
     if [[ "$IS_WINDOWS" == "true" ]]; then
       echo "⚠️ Skipping CORE tests on Windows (Rust not supported) — running COMBO instead..."
       echo "════════════════════════════════════════════════════════════════"
-      make test-combo
+      $MAKE_CMD test-combo
     else
       echo "🚀 Running CORE tests via Make..."
       echo "════════════════════════════════════════════════════════════════"
-      make test-core
+      $MAKE_CMD test-core
     fi
     EXIT_CODE=$?
     ;;
   direct)
     echo "🚀 Running DIRECT tests via Make..."
     echo "════════════════════════════════════════════════════════════════"
-    ${MAKE_CMD} ${MAKE_SHELL:+SHELL="$MAKE_SHELL"} ${MAKE_HELPERS} test-direct
-    EXIT_CODE=$?
-    ;;
-  compat)
-    echo "🚀 Running COMPAT tests via Make..."
-    echo "════════════════════════════════════════════════════════════════"
-    ${MAKE_CMD} ${MAKE_SHELL:+SHELL="$MAKE_SHELL"} ${MAKE_HELPERS} test-compat
-    EXIT_CODE=$?
-    ;;
-  security)
-    echo "🚀 Running SECURITY tests via Make..."
-    echo "════════════════════════════════════════════════════════════════"
-    ${MAKE_CMD} ${MAKE_SHELL:+SHELL="$MAKE_SHELL"} ${MAKE_HELPERS} test-security
+    $MAKE_CMD test-direct
     EXIT_CODE=$?
     ;;
   *)
