@@ -229,7 +229,9 @@ jobs:
             continue_on_error: true
           - platform: freebsd_arm64
             runner: ubuntu-24.04
-            python_platform: freebsd_14_2_release_aarch64
+            # FreeBSD arm64 sysconfig.get_platform() returns freebsd_14_2_release_arm64
+            # (not aarch64 — FreeBSD uses 'arm64' in its platform string, unlike Linux).
+            python_platform: freebsd_14_2_release_arm64
             continue_on_error: true
     continue-on-error: ${{ matrix.continue_on_error == true }}
     steps:
@@ -427,7 +429,7 @@ jobs:
             vm_arch: x86-64
           - platform: freebsd_arm64
             runner: ubuntu-24.04
-            python_platform: freebsd_14_2_release_aarch64
+            python_platform: freebsd_14_2_release_arm64
             continue_on_error: true
             vm_arch: arm64
 

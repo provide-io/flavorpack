@@ -329,7 +329,11 @@ jobs:
           shell: bash
           sync_files: true
           run: |
-            sudo env IGNORE_OSVERSION=yes pkg install -y gmake
+            sudo env IGNORE_OSVERSION=yes pkg install -y gmake python311
+            # PSPs are built on Linux with /usr/bin/python3 as the interpreter.
+            # FreeBSD installs Python at /usr/local/bin/python3.11 — create the
+            # expected symlink so the launcher can exec the embedded interpreter path.
+            sudo ln -sf /usr/local/bin/python3.11 /usr/bin/python3
 
             PRETASTER_PSP="_psp_stage/pretaster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.psp"
             if [ ! -f "$PRETASTER_PSP" ]; then
