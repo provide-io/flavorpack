@@ -15,9 +15,12 @@ case "$ARCH" in
   *) echo "❌ Unknown arch: $ARCH"; exit 1 ;;
 esac
 
-export RUSTUP_HOME="$(pwd)/vm-rust-home/rustup"
-export CARGO_HOME="$(pwd)/vm-rust-home/cargo"
-export PATH="$CARGO_HOME/bin:$PATH"
+HOST_ARCH=$(uname -m)
+if [ "$HOST_ARCH" = "amd64" ]; then
+  export RUSTUP_HOME="$(pwd)/vm-rust-home/rustup"
+  export CARGO_HOME="$(pwd)/vm-rust-home/cargo"
+  export PATH="$CARGO_HOME/bin:$PATH"
+fi
 
 echo "🦀 Building Rust helpers for $PLATFORM ($RUST_TARGET)..."
 echo "   $(rustc --version)"
