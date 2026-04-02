@@ -34,7 +34,7 @@ on:
 
 jobs:
   build:
-    name: 🔨 Build Rust ${{ inputs.platform }}
+    name: 🔨 Build
     runs-on: ${{ inputs.os }}
     steps:
       - name: 📥 Checkout

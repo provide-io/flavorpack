@@ -30,7 +30,7 @@ on:
 
 jobs:
   build:
-    name: 🔨 Build Go ${{ inputs.platform }}
+    name: 🔨 Build
     runs-on: ${{ inputs.os }}
     steps:
       - name: 📥 Checkout
