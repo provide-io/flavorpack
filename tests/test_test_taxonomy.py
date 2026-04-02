@@ -34,7 +34,7 @@ def test_pyproject_registers_shared_test_taxonomy_markers() -> None:
 
 
 def test_root_makefile_defines_intent_targets() -> None:
-    content = ROOT_MAKEFILE.read_text()
+    content = ROOT_MAKEFILE.read_text(encoding="utf-8")
 
     for target in (
         "test-unit:",
@@ -55,7 +55,7 @@ def test_root_makefile_defines_intent_targets() -> None:
 
 
 def test_quality_workflow_mentions_intent_categories_in_observability_report() -> None:
-    workflow = yaml.load(QUALITY_WORKFLOW.read_text(), Loader=yaml.BaseLoader)
+    workflow = yaml.load(QUALITY_WORKFLOW.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
     report_job = workflow["jobs"]["quality-observability-report"]
     run_script = report_job["steps"][0]["run"]
 

@@ -12,7 +12,7 @@ RUST_FUZZ_CARGO = REPO_ROOT / "src" / "flavor-rs" / "fuzz" / "Cargo.toml"
 
 
 def test_root_makefile_defines_quality_targets() -> None:
-    content = ROOT_MAKEFILE.read_text()
+    content = ROOT_MAKEFILE.read_text(encoding="utf-8")
 
     for target in (
         "quality-python-fast:",
@@ -40,7 +40,7 @@ def test_root_makefile_defines_quality_targets() -> None:
 
 
 def test_quality_workflow_includes_observability_jobs_and_paths() -> None:
-    workflow = yaml.load(QUALITY_WORKFLOW.read_text(), Loader=yaml.BaseLoader)
+    workflow = yaml.load(QUALITY_WORKFLOW.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
     jobs = workflow["jobs"]
     pull_request_paths = workflow["on"]["pull_request"]["paths"]
 
@@ -65,8 +65,8 @@ def test_quality_workflow_includes_observability_jobs_and_paths() -> None:
 
 
 def test_rust_quality_surface_defines_real_fuzz_targets() -> None:
-    rust_makefile = RUST_MAKEFILE.read_text()
-    fuzz_manifest = RUST_FUZZ_CARGO.read_text()
+    rust_makefile = RUST_MAKEFILE.read_text(encoding="utf-8")
+    fuzz_manifest = RUST_FUZZ_CARGO.read_text(encoding="utf-8")
 
     assert "coverage:" in rust_makefile
     assert "proptest:" in rust_makefile
