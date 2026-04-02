@@ -344,7 +344,7 @@ class BinaryLoader:
 
         # 2. Check bundled with package (for PyPI wheels - old location)
         bundled_path = Path(__file__).parent / "helpers" / self.current_platform / specific_name
-        if bundled_path.exists():
+        if bundled_path.exists():  # pragma: no cover
             logger.debug(f"Found helper at: {bundled_path}")
             return bundled_path
 

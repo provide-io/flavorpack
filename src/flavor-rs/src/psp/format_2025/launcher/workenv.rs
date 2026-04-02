@@ -115,8 +115,11 @@ fn get_available_disk_space(path: &Path) -> Result<u64> {
 mod tests {
     use super::*;
     use crate::psp::format_2025::metadata::{
-        ExecutionInfo, Metadata, PackageInfo, PlatformInfo, SlotMetadata,
+        DirectorySpec, ExecutionInfo, Metadata, PackageInfo, PlatformInfo, SlotMetadata,
+        WorkenvInfo,
     };
+    use std::collections::HashMap;
+    use tempfile::tempdir;
 
     fn sample_metadata(slot_sizes: &[i64]) -> Metadata {
         Metadata {
@@ -167,6 +170,7 @@ mod tests {
             runtime: None,
             workenv: None,
             setup_commands: Vec::new(),
+            policy: None,
         }
     }
 
@@ -189,5 +193,66 @@ mod tests {
     fn test_ensure_sufficient_disk_space_accepts_available_capacity() {
         let result = ensure_sufficient_disk_space(1024, 4096);
         assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_check_disk_space_accepts_empty_package_metadata() {
+        let temp = tempdir().expect("tempdir");
+        let paths = WorkenvPaths::new(temp.path().join("cache"), Path::new("/tmp/demo.psp"));
+        let metadata = Metadata {
+            slots: Vec::new(),
+            ..sample_metadata(&[])
+        };
+
+        check_disk_space(&paths, &metadata).expect("disk space should be sufficient");
+    }
+
+    #[test]
+    fn test_setup_workenv_directories_creates_placeholder_and_nested_paths() {
+        let temp = tempdir().expect("tempdir");
+        let workenv = temp.path().join("workenv");
+        let info = WorkenvInfo {
+            directories: Some(vec![
+                DirectorySpec {
+                    path: "{workenv}/bin".to_string(),
+                    mode: Some("0750".to_string()),
+                },
+                DirectorySpec {
+                    path: "config/cache".to_string(),
+                    mode: Some("not-octal".to_string()),
+                },
+            ]),
+            env: Some(HashMap::from([(
+                String::from("MODE"),
+                String::from("test"),
+            )])),
+        };
+
+        setup_workenv_directories(&workenv, &info).expect("setup workenv directories");
+
+        assert!(workenv.join("bin").is_dir());
+        assert!(workenv.join("config/cache").is_dir());
+
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+
+            let bin_mode = std::fs::metadata(workenv.join("bin"))
+                .expect("bin metadata")
+                .permissions()
+                .mode()
+                & 0o777;
+            assert_eq!(bin_mode, 0o750);
+
+            let cache_mode = std::fs::metadata(workenv.join("config/cache"))
+                .expect("cache metadata")
+                .permissions()
+                .mode()
+                & 0o777;
+            assert_eq!(
+                cache_mode,
+                u32::from(crate::psp::format_2025::defaults::DEFAULT_DIR_PERMS)
+            );
+        }
     }
 }

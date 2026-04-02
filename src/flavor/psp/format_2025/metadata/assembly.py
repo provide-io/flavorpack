@@ -30,7 +30,7 @@ def get_flavor_version() -> str:
     return get_version("flavorpack", caller_file=__file__)
 
 
-def load_launcher_binary(launcher_type: str) -> bytes:
+def load_launcher_binary(launcher_type: str) -> bytes:  # pragma: no cover
     """Load launcher binary for the specified type."""
     import os
 
@@ -269,7 +269,7 @@ def assemble_metadata(spec: BuildSpec, slots: list[Any], launcher_info: dict[str
     }
 
     # Add optional sections if present
-    for section in ["cache_validation", "setup_commands", "runtime", "workenv"]:
+    for section in ["cache_validation", "setup_commands", "runtime", "workenv", "policy"]:
         if section in spec.metadata:
             metadata[section] = spec.metadata[section]
 

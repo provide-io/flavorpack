@@ -10,6 +10,8 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+import pytest
+
 from flavor.config.defaults import (
     VALIDATION_MINIMAL,
     VALIDATION_NONE,
@@ -23,6 +25,8 @@ from flavor.psp.security import (
     get_validation_level,
     verify_package_integrity,
 )
+
+pytestmark = [pytest.mark.security, pytest.mark.ci]
 
 
 class TestValidationLevel:

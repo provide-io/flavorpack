@@ -119,6 +119,60 @@ pytest -m security    # Security tests
 make validate-pspf
 ```
 
+### Test Taxonomy
+
+FlavorPack uses a shared test-intent taxonomy across Python, Go, and Rust. Use the root `make` targets instead of guessing which language-native runner to invoke first.
+
+```bash
+make test-unit
+make test-integration
+make test-cross-language
+make test-security
+make test-adversarial
+make test-property
+make test-fuzz
+make test-mutation
+make test-smoke
+make test-fast
+make test-slow
+```
+
+Intent categories:
+
+- `unit`: small isolated behaviors
+- `integration`: multi-component behavior in one implementation
+- `cross_language`: parity/interoperability across Python, Go, and Rust
+- `security`: trust, verification, integrity, permissions, policy
+- `adversarial`: hostile inputs and boundary-violation attempts
+- `property`: parameterized and invariant-driven tests
+- `fuzz`: native malformed-input discovery
+- `mutation`: test-suite strength checks
+- `smoke`: minimal high-signal sanity checks
+
+Cost selectors are separate from intent:
+
+- `fast`
+- `slow`
+- `ci`
+
+Use both `security` and `adversarial` when a test intentionally tries to violate a security boundary.
+
+## Quality Engineering
+
+Use the root quality targets to run the same cross-language workflows locally that CI now runs as observational jobs:
+
+```bash
+make quality-python-fast
+make quality-python-deep
+make quality-go-fast
+make quality-go-deep
+make quality-rust-fast
+make quality-rust-deep
+make quality-ci
+```
+
+The tools run in strict mode. In this rollout phase, the dedicated quality-observability jobs are wired into CI but are not intended to be required merge checks yet. A failing observability job means that the quality workflow itself surfaced an issue; merge policy remains a separate repository setting.
+
 ## 🙏 Acknowledgments
 
 FlavorPack is built on the shoulders of giants:

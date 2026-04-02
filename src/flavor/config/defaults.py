@@ -144,7 +144,7 @@ DEFAULT_LAUNCHER_TIMEOUT = 30.0
 # =================================
 # Validation defaults
 # =================================
-DEFAULT_VALIDATION_LEVEL = "standard"  # Default validation level
+DEFAULT_VALIDATION_LEVEL = "strict"  # Default validation level
 
 # Validation levels (matching Go/Rust implementations)
 VALIDATION_STRICT = "strict"  # Full security, fail on any issue
@@ -160,5 +160,13 @@ VALIDATION_LEVELS = {
     VALIDATION_MINIMAL: 3,
     VALIDATION_NONE: 4,
 }
+
+# =================================
+# Environment variable names
+# (constants used before config loads)
+# =================================
+ENV_CACHE_DIR = "FLAVOR_CACHE"
+ENV_CONFIG_DIR = "FLAVOR_CONFIG_DIR"
+ENV_TRUSTED_KEYS_DIR = "FLAVOR_TRUSTED_KEYS_DIR"
 
 # 🌶️📦🔚

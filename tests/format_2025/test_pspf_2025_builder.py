@@ -484,13 +484,13 @@ lifecycle = "{manifest_data["slots"][0]["lifecycle"]}"
         result = builder.build(bundle_path)
         assert result.success, f"Build failed: {result.errors}"
 
-        # Verify all slots included
+        # Verify all slots included (+ 1 for the implicit attestation slot)
         reader = PSPFReader(bundle_path)
         index = reader.read_index()
-        assert index.slot_count == 20
+        assert index.slot_count == 21
 
         metadata = reader.read_metadata()
-        assert len(metadata["slots"]) == 20
+        assert len(metadata["slots"]) == 21
 
         # Verify sequential indices (now uses "slot" key in metadata)
         for i, slot_meta in enumerate(metadata["slots"]):

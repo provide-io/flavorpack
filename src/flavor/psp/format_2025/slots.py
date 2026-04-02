@@ -20,6 +20,7 @@ from flavor.config.defaults import (
 )
 from flavor.psp.format_2025.constants import (
     DEFAULT_SLOT_DESCRIPTOR_SIZE,
+    LIFECYCLE_ATTESTATION,
     LIFECYCLE_CACHE,
     LIFECYCLE_CONFIG,
     LIFECYCLE_DEV,
@@ -219,6 +220,7 @@ class SlotMetadata:
                 "dev",
                 "config",
                 "platform",
+                "attestation",
             ]
         ),
     )
@@ -251,6 +253,8 @@ class SlotMetadata:
             "dev": LIFECYCLE_DEV,
             "config": LIFECYCLE_CONFIG,
             "platform": LIFECYCLE_PLATFORM,
+            # Security-based
+            "attestation": LIFECYCLE_ATTESTATION,
         }
 
         # Convert hex checksum to integer

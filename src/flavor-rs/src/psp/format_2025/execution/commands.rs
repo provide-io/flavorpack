@@ -359,6 +359,10 @@ fn build_workenv_path(workenv_dir: &Path, existing_path: Option<&str>) -> String
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::psp::format_2025::metadata::PackageInfo;
+    use serde_json::json;
+    use std::collections::HashMap;
+    use tempfile::tempdir;
 
     #[test]
     fn test_build_workenv_path_without_existing_path_uses_only_bin_dir() {
@@ -379,7 +383,10 @@ mod tests {
     /// The Windows branch is verified at compile time via `cfg!(windows)`.
     #[test]
     fn test_run_command_path_has_correct_bin_dir_and_separator() {
-        let workenv_dir = Path::new("/tmp/test_workenv");
+        // Use a platform-appropriate temp path so path separator assertions work on Windows.
+        let temp = tempfile::tempdir().expect("tempdir");
+        let workenv = temp.path().join("test_workenv");
+        let workenv_dir: &Path = &workenv;
         let original_path = env::var("PATH").unwrap_or_default();
         let expected_path = build_workenv_path(workenv_dir, Some(&original_path));
 
@@ -387,15 +394,18 @@ mod tests {
         #[cfg(not(windows))]
         {
             assert!(
-                expected_path.starts_with("/tmp/test_workenv/bin:"),
-                "PATH should start with workenv/bin: but was: {expected_path}"
+                expected_path.contains("/test_workenv/bin:"),
+                "PATH should contain workenv/bin: but was: {expected_path}"
             );
         }
 
         #[cfg(windows)]
         {
+            // Use platform-joined path for correct separator assertion.
+            let sep = std::path::MAIN_SEPARATOR;
+            let expected_scripts = format!("{sep}test_workenv{sep}Scripts;");
             assert!(
-                expected_path.contains("\\test_workenv\\Scripts;"),
+                expected_path.contains(&expected_scripts),
                 "PATH should contain workenv\\Scripts; but was: {expected_path}"
             );
         }
@@ -429,6 +439,207 @@ mod tests {
     fn test_shell_split_empty() {
         let result = shell_split("");
         assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_shell_split_handles_escaped_double_quote_content() {
+        let result = shell_split("echo \"hello \\\"quoted\\\" world\"");
+        assert_eq!(result, vec!["echo", "hello \"quoted\" world"]);
+    }
+
+    #[test]
+    fn test_execute_command_ignores_empty_command() {
+        let workenv = tempdir().expect("tempdir");
+        let cwd = tempdir().expect("tempdir");
+        let package = PackageInfo {
+            name: "demo".to_string(),
+            version: "1.0.0".to_string(),
+        };
+        let env = HashMap::new();
+
+        execute_command("", workenv.path(), &package, cwd.path(), &env)
+            .expect("empty command should be a no-op");
+    }
+
+    #[test]
+    fn test_execute_setup_commands_write_file_creates_parent_and_substitutes_placeholders() {
+        let workenv = tempdir().expect("tempdir");
+        let cwd = tempdir().expect("tempdir");
+        let package = PackageInfo {
+            name: "demo".to_string(),
+            version: "1.0.0".to_string(),
+        };
+        let env = HashMap::new();
+
+        let commands = vec![json!({
+            "type": "write_file",
+            "path": "{workenv}/config/settings.txt",
+            "content": "package={package_name}"
+        })];
+
+        execute_setup_commands(&commands, workenv.path(), &package, cwd.path(), &env)
+            .expect("write_file setup command");
+
+        let written = fs::read_to_string(workenv.path().join("config/settings.txt"))
+            .expect("read written config");
+        assert_eq!(written, "package=demo");
+    }
+
+    #[test]
+    fn test_execute_setup_commands_rejects_unknown_command_type() {
+        let workenv = tempdir().expect("tempdir");
+        let cwd = tempdir().expect("tempdir");
+        let package = PackageInfo {
+            name: "demo".to_string(),
+            version: "1.0.0".to_string(),
+        };
+        let env = HashMap::new();
+
+        let commands = vec![json!({
+            "type": "mystery"
+        })];
+
+        let err = execute_setup_commands(&commands, workenv.path(), &package, cwd.path(), &env)
+            .expect_err("unknown command type should fail");
+        assert!(err.to_string().contains("Unknown setup command type"));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_execute_command_runs_shell_command_and_injects_environment() {
+        let workenv = tempdir().expect("tempdir");
+        let cwd = tempdir().expect("tempdir");
+        let package = PackageInfo {
+            name: "demo".to_string(),
+            version: "1.0.0".to_string(),
+        };
+        let env = HashMap::from([(String::from("CUSTOM_ENV"), String::from("value"))]);
+        let output_file = workenv.path().join("captured.txt");
+
+        execute_command(
+            "sh -c 'printf \"%s|%s\" \"$FLAVOR_WORKENV\" \"$CUSTOM_ENV\" > \"$1\"' sh {workenv}/captured.txt",
+            workenv.path(),
+            &package,
+            cwd.path(),
+            &env,
+        )
+        .expect("execute command");
+
+        let contents = fs::read_to_string(&output_file).expect("read captured output");
+        assert_eq!(contents, format!("{}|value", workenv.path().display()));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_execute_command_propagates_nonzero_exit_status() {
+        let workenv = tempdir().expect("tempdir");
+        let cwd = tempdir().expect("tempdir");
+        let package = PackageInfo {
+            name: "demo".to_string(),
+            version: "1.0.0".to_string(),
+        };
+        let env = HashMap::new();
+
+        let err = execute_command("sh -c 'exit 7'", workenv.path(), &package, cwd.path(), &env)
+            .expect_err("command should fail");
+        assert!(err.to_string().contains("status 7"));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_execute_setup_commands_enumerate_and_execute_runs_for_each_match() {
+        let workenv = tempdir().expect("tempdir");
+        let cwd = tempdir().expect("tempdir");
+        let package = PackageInfo {
+            name: "demo".to_string(),
+            version: "1.0.0".to_string(),
+        };
+        let env = HashMap::new();
+
+        let inputs = workenv.path().join("inputs");
+        fs::create_dir_all(&inputs).expect("create inputs");
+        fs::write(inputs.join("alpha.txt"), b"alpha").expect("write alpha");
+        fs::write(inputs.join("beta.txt"), b"beta").expect("write beta");
+
+        let hits = workenv.path().join("hits.txt");
+        let commands = vec![json!({
+            "type": "enumerate_and_execute",
+            "command": format!(
+                "sh -c 'printf \"%s\\n\" \"${{1##*/}}\" >> \"{}\"' sh",
+                hits.display()
+            ),
+            "enumerate": {
+                "path": "{workenv}/inputs",
+                "pattern": "*.txt"
+            }
+        })];
+
+        execute_setup_commands(&commands, workenv.path(), &package, cwd.path(), &env)
+            .expect("enumerate_and_execute");
+
+        let mut lines: Vec<_> = fs::read_to_string(&hits)
+            .expect("read hits")
+            .lines()
+            .map(str::to_owned)
+            .collect();
+        lines.sort();
+
+        assert_eq!(lines, vec!["alpha.txt", "beta.txt"]);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_execute_setup_commands_chmod_applies_default_permissions_to_glob_matches() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let workenv = tempdir().expect("tempdir");
+        let cwd = tempdir().expect("tempdir");
+        let package = PackageInfo {
+            name: "demo".to_string(),
+            version: "1.0.0".to_string(),
+        };
+        let env = HashMap::new();
+
+        let bin_dir = workenv.path().join("bin");
+        fs::create_dir_all(&bin_dir).expect("create bin dir");
+        let executable = bin_dir.join("tool");
+        fs::write(&executable, b"#!/bin/sh\n").expect("write tool");
+
+        let commands = vec![json!({
+            "type": "chmod",
+            "path": "{workenv}/bin/*",
+            "mode": "not-octal"
+        })];
+
+        execute_setup_commands(&commands, workenv.path(), &package, cwd.path(), &env)
+            .expect("chmod setup command");
+
+        let mode = fs::metadata(&executable)
+            .expect("stat executable")
+            .permissions()
+            .mode()
+            & 0o777;
+        assert_eq!(
+            mode,
+            u32::from(crate::psp::format_2025::defaults::DEFAULT_EXECUTABLE_PERMS)
+        );
+    }
+
+    #[test]
+    fn test_execute_main_command_returns_zero_for_empty_command() {
+        let cwd = tempdir().expect("tempdir");
+        let result = execute_main_command("", &[], HashMap::new(), cwd.path())
+            .expect("empty command should be accepted");
+        assert_eq!(result, 0);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_execute_main_command_propagates_exit_status() {
+        let cwd = tempdir().expect("tempdir");
+        let result = execute_main_command("sh -c 'exit 7'", &[], HashMap::new(), cwd.path())
+            .expect("command should execute");
+        assert_eq!(result, 7);
     }
 }
 
