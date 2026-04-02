@@ -220,6 +220,15 @@ jobs:
           - platform: windows_arm64
             runner: windows-11-arm
             python_platform: win_arm64
+          - platform: freebsd_amd64
+            runner: ubuntu-24.04
+            python_platform: freebsd_14_0_x86_64
+            continue_on_error: true
+          - platform: freebsd_arm64
+            runner: ubuntu-24.04
+            python_platform: freebsd_14_0_aarch64
+            continue_on_error: true
+    continue-on-error: ${{ matrix.continue_on_error == true }}
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
@@ -243,14 +252,33 @@ jobs:
         with:
           enable-cache: true
 
-      - name: 📥 Download platform-specific helpers
+      - name: 📥 Download Go helpers
         uses: dawidd6/action-download-artifact@v19
+        continue-on-error: true
+        with:
+          workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
+          name: flavor-go-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
+          path: ./helpers-dist
+
+      - name: 📥 Download Rust helpers
+        uses: dawidd6/action-download-artifact@v19
+        continue-on-error: true
+        with:
+          workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
+          name: flavor-rust-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
+          path: ./helpers-dist
+
+      - name: 📥 Download combined helpers (FreeBSD)
+        uses: dawidd6/action-download-artifact@v19
+        continue-on-error: true
         with:
           workflow: 01-helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
           path: ./helpers-dist
-      
+
       - name: 🔧 Extract and organize helpers
         shell: bash
         run: |
@@ -389,6 +417,14 @@ jobs:
           - platform: windows_arm64
             runner: windows-11-arm
             python_platform: win_arm64
+          - platform: freebsd_amd64
+            runner: ubuntu-24.04
+            python_platform: freebsd_14_0_x86_64
+            continue_on_error: true
+          - platform: freebsd_arm64
+            runner: ubuntu-24.04
+            python_platform: freebsd_14_0_aarch64
+            continue_on_error: true
 
     continue-on-error: ${{ matrix.continue_on_error == true }}
     steps:
@@ -396,7 +432,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           persist-credentials: false
-      
+
       # setup-python MUST come before setup-uv here.
       # uv's python-build-standalone has no Python 3.11 ARM64 Windows build —
       # it only added Windows ARM64 support starting with Python 3.13.
@@ -421,13 +457,33 @@ jobs:
           name: flavor-wheel-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
           path: ./wheel-dist
       
-      - name: 📥 Download helper artifacts
+      - name: 📥 Download Go helpers
         uses: dawidd6/action-download-artifact@v19
+        continue-on-error: true
         with:
           workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
+          name: flavor-go-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
+          path: ./helpers-dist
+
+      - name: 📥 Download Rust helpers
+        uses: dawidd6/action-download-artifact@v19
+        continue-on-error: true
+        with:
+          workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
+          name: flavor-rust-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
+          path: ./helpers-dist
+
+      - name: 📥 Download combined helpers (FreeBSD)
+        uses: dawidd6/action-download-artifact@v19
+        continue-on-error: true
+        with:
+          workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
           path: ./helpers-dist
-      
+
       - name: 🔧 Extract helpers
         shell: bash
         run: |
@@ -523,14 +579,20 @@ jobs:
             runner: windows-2025
           - platform: windows_arm64
             runner: windows-11-arm
-
+          - platform: freebsd_amd64
+            runner: ubuntu-24.04
+            continue_on_error: true
+          - platform: freebsd_arm64
+            runner: ubuntu-24.04
+            continue_on_error: true
+    continue-on-error: ${{ matrix.continue_on_error == true }}
     steps:
       - name: 📥 Checkout scripts
         uses: actions/checkout@v6
         with:
           persist-credentials: false
           sparse-checkout: |
-            .github/scripts
+            ci/
           sparse-checkout-cone-mode: false
       
       - name: 📥 Download Flavor package
