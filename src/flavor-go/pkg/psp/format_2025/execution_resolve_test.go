@@ -83,3 +83,12 @@ func TestResolveExecutableUsesPathAndLookPathInEnvSupportsEmptyPathEntry(t *test
 		t.Fatalf("lookPathInEnv() with empty PATH entry = %q, want local tool path", resolved)
 	}
 }
+
+func TestLookPathInEnvNotFoundInPath(t *testing.T) {
+	// PATH is present but the binary doesn't exist in any listed directory —
+	// covers the "executable not found in PATH" return at the end of the function.
+	_, err := lookPathInEnv("no-such-exe-xyz-12345", []string{"PATH=/nonexistent/abc:/also/nonexistent"})
+	if err == nil {
+		t.Fatal("expected not-found error from lookPathInEnv")
+	}
+}
