@@ -20,13 +20,24 @@ fi
 mkdir -p helpers/bin
 
 for platform in $PLATFORMS; do
+    found=0
+    # Try split naming (native platforms: separate go/rust artifacts)
+    for prefix in flavor-go-helpers flavor-rust-helpers; do
+        ZIP_FILE="$ARTIFACT_DIR/${prefix}-${VERSION}-${platform}.zip"
+        if [ -f "$ZIP_FILE" ]; then
+            echo "   Extracting $platform ${prefix} helpers..."
+            unzip -o "$ZIP_FILE" -d helpers/bin/ || true
+            found=1
+        fi
+    done
+    # Fall back to combined naming (FreeBSD and legacy)
     ZIP_FILE="$ARTIFACT_DIR/flavor-helpers-${VERSION}-${platform}.zip"
     if [ -f "$ZIP_FILE" ]; then
-        echo "   Extracting $platform helpers..."
+        echo "   Extracting $platform combined helpers..."
         unzip -o "$ZIP_FILE" -d helpers/bin/ || true
-    else
-        echo "   ⚠️  No artifact found for $platform"
+        found=1
     fi
+    [ "$found" -eq 0 ] && echo "   ⚠️  No artifact found for $platform"
 done
 
 # Make Unix binaries executable
