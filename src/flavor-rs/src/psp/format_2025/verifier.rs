@@ -7,7 +7,7 @@ use adler2::Adler32;
 use ed25519_dalek::{Signature, Verifier as _, VerifyingKey};
 use flate2::read::GzDecoder;
 use hex;
-use log::{debug, info};
+use log::{debug, info, trace};
 use sha2::{Digest, Sha256};
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
@@ -236,11 +236,27 @@ fn verify_integrity_seal(file: &mut File, index: &super::index::Index) -> Result
 fn verify_slot_checksums(reader: &mut super::reader::Reader) -> Result<bool> {
     let descriptors = reader.read_slot_descriptors()?;
 
-    for descriptor in &descriptors {
+    for (i, descriptor) in descriptors.iter().enumerate() {
         let slot_data = reader.read_slot(descriptor)?;
-        if !verify_slot_checksum(descriptor, &slot_data) {
+        let checksum = Sha256::digest(&slot_data);
+        let mut checksum_bytes = [0u8; 8];
+        checksum_bytes.copy_from_slice(&checksum[..8]);
+        let actual = u64::from_le_bytes(checksum_bytes);
+        let expected = descriptor.checksum;
+
+        if actual != expected {
+            debug!(
+                "❌ Slot {} checksum mismatch: offset={:#x} size={} expected={:#018x} actual={:#018x}",
+                i, descriptor.offset, descriptor.size, expected, actual
+            );
+            trace!(
+                "  First 16 bytes: {:02x?}",
+                &slot_data[..16.min(slot_data.len())]
+            );
             return Ok(false);
         }
+
+        trace!("✅ Slot {} checksum ok: {:#018x}", i, actual);
     }
 
     Ok(true)
