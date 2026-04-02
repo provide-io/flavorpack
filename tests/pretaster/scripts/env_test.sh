@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Environment test script (Windows-compatible bash version of env_test.py)
 # Prints environment variables that were passed through
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
