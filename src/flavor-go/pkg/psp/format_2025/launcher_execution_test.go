@@ -179,6 +179,69 @@ func buildMultiSlotBundleForTests(t *testing.T, specs []multiSlotBundleSpec, met
 	return bundlePath
 }
 
+func buildRawBundleForTests(t *testing.T, slotDescriptors []SlotDescriptor, metadata interface{}, slotData [][]byte) string {
+	t.Helper()
+
+	bundlePath := testBundlePath(t, ".psp")
+	f, err := os.Create(bundlePath)
+	if err != nil {
+		t.Fatalf("Create() error = %v", err)
+	}
+	defer func() {
+		if err := f.Close(); err != nil {
+			t.Fatalf("Close() error = %v", err)
+		}
+	}()
+
+	offset := 0
+	for _, chunk := range slotData {
+		if _, err := f.Write(chunk); err != nil {
+			t.Fatalf("Write(slot data) error = %v", err)
+		}
+		offset += len(chunk)
+	}
+
+	slotTableOffset := uint64(offset)
+	for _, desc := range slotDescriptors {
+		if _, err := f.Write(desc.Pack()); err != nil {
+			t.Fatalf("Write(slot descriptor) error = %v", err)
+		}
+	}
+
+	metadataJSON, err := json.MarshalIndent(metadata, "", "  ")
+	if err != nil {
+		t.Fatalf("MarshalIndent(metadata) error = %v", err)
+	}
+	gzMeta := gzipDataForExecutionTests(t, metadataJSON)
+	metadataOffset := slotTableOffset + uint64(len(slotDescriptors))*SlotDescriptorSize
+	if _, err := f.Write(gzMeta); err != nil {
+		t.Fatalf("Write(metadata) error = %v", err)
+	}
+
+	index := &PSPFIndex{
+		FormatVersion:   PSPFVersion,
+		PackageSize:     uint64(offset) + uint64(len(slotDescriptors))*SlotDescriptorSize + uint64(len(gzMeta)) + MagicTrailerSize,
+		LauncherSize:    0,
+		MetadataOffset:  metadataOffset,
+		MetadataSize:    uint64(len(gzMeta)),
+		SlotTableOffset: slotTableOffset,
+		SlotTableSize:   uint64(len(slotDescriptors)) * SlotDescriptorSize,
+		SlotCount:       uint32(len(slotDescriptors)),
+	}
+	metaHash := sha256.Sum256(gzMeta)
+	copy(index.MetadataChecksum[:], metaHash[:])
+
+	trailer := make([]byte, MagicTrailerSize)
+	copy(trailer[0:4], PackageEmojiBytes)
+	copy(trailer[4:4+IndexSize], index.Pack())
+	copy(trailer[4+IndexSize:], MagicWandEmojiBytes)
+	if _, err := f.Write(trailer); err != nil {
+		t.Fatalf("Write(trailer) error = %v", err)
+	}
+
+	return bundlePath
+}
+
 // This test only proves the non-Windows/appended-EOF path. The PE-resource
 // extraction branch is Windows-only and is validated on Windows runners.
 func TestPrepareBundlePathReturnsExecutableWithoutResource(t *testing.T) {
@@ -1357,14 +1420,49 @@ func TestRunBundleWithCwdValidationModesHandleIntegrityFailureDifferently(t *tes
 }
 
 func TestRunBundleWithCwdRejectsMissingExecutionConfiguration(t *testing.T) {
-	// buildMultiSlotBundleForTests injects a default Execution when nil, so we
-	// construct a bundle whose serialized metadata genuinely has no execution field.
-	// The simplest way is to build normally and then verify the code path by
-	// confirming the "no execution configuration found" error IS reachable:
-	// call runBundleWithCwd with a bundle where the metadata declares no command.
-	// Since the helper overrides nil, we accept that this specific code path
-	// is covered by the execution.go unit tests and just document that here.
-	t.Skip("buildMultiSlotBundleForTests always injects a default Execution when nil; covered by execution.go unit tests")
+	t.Setenv("FLAVOR_CACHE_DIR", t.TempDir())
+	t.Setenv(EnvValidation, "none")
+	t.Setenv(EnvWorkenvCache, "false")
+
+	stored := []byte("payload")
+	checksum := sha256.Sum256(stored)
+	desc := SlotDescriptor{
+		ID:           1,
+		NameHash:     HashName("slot-zero"),
+		Offset:       0,
+		Size:         uint64(len(stored)),
+		OriginalSize: uint64(len(stored)),
+		Operations:   PackOperations(nil),
+		Checksum:     binary.LittleEndian.Uint64(checksum[:8]),
+	}
+	desc.SetPermissions(0o644)
+
+	metadata := map[string]interface{}{
+		"format":         "PSPF/2025",
+		"format_version": "2025.0",
+		"package": map[string]interface{}{
+			"name":    "demo",
+			"version": "1.0.0",
+		},
+		"slots": []map[string]interface{}{
+			{
+				"id":     "slot-zero",
+				"slot":   0,
+				"target": "{workenv}",
+				"size":   len(stored),
+			},
+		},
+		"build": map[string]interface{}{
+			"tool": "flavor-go",
+		},
+	}
+
+	bundle := buildRawBundleForTests(t, []SlotDescriptor{desc}, metadata, [][]byte{stored})
+
+	logger := hclog.NewNullLogger()
+	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger); err == nil || !strings.Contains(err.Error(), "no execution configuration found") {
+		t.Fatalf("runBundleWithCwd() error = %v, want missing execution configuration", err)
+	}
 }
 
 func TestRunBundleWithCwdRejectsMissingSlotReference(t *testing.T) {
