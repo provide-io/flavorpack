@@ -271,7 +271,7 @@ pub fn enforce_policy(
 ) -> std::result::Result<(), String> {
     let current_platform = get_current_platform();
 
-    // Platform check
+    // 1. Platform check
     if !policy.platforms.is_empty() && !policy.platforms.contains(&current_platform) {
         return Err(format!(
             "platform not permitted: {} not in {:?}",
@@ -279,17 +279,22 @@ pub fn enforce_policy(
         ));
     }
 
-    // Root / Administrator check
+    // 2. OS keychain check
+    if policy.use_os_keychain {
+        return Err("use_os_keychain is not supported by this launcher".to_string());
+    }
+
+    // 3. Root / Administrator check
     #[cfg(unix)]
     if policy.refuse_root && unsafe { libc::geteuid() } == 0 {
-        return Err("refused to run as root".to_string());
+        return Err("refused to run as root or Administrator".to_string());
     }
     #[cfg(target_os = "windows")]
     if policy.refuse_root && is_windows_admin() {
-        return Err("refused to run as Administrator".to_string());
+        return Err("refused to run as root or Administrator".to_string());
     }
 
-    // Age check
+    // 4. Age check
     if let Some(max_days) = policy.max_age_days {
         if build_timestamp > 0 {
             let now = SystemTime::now()
@@ -306,28 +311,22 @@ pub fn enforce_policy(
         }
     }
 
-    // Environment variable check
+    // 5. Environment variable check
     for var in &policy.require_env {
-        if std::env::var(var).is_err() {
-            return Err(format!("required environment variable not set: {}", var));
+        match std::env::var(var) {
+            Ok(val) if !val.is_empty() => {}
+            _ => return Err(format!("required environment variable not set: {}", var)),
         }
     }
 
-    // SBOM check
+    // 6. SBOM check
     if policy.require_sbom && !has_sbom {
         return Err(
             "package built without attestation slot — operator policy requires SBOM".to_string(),
         );
     }
 
-    if policy.use_os_keychain {
-        return Err(
-            "operator policy requests OS keychain trust, but Rust launcher does not support it"
-                .to_string(),
-        );
-    }
-
-    // Trusted key check
+    // 7. Trusted key check
     if policy.require_trusted_key && !key_trusted {
         return Err(
             "operator policy requires a trusted signing key — package key is not in the trusted store"
