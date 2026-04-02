@@ -2,12 +2,14 @@
 # Build and smoke-test Go helpers inside the FreeBSD VM.
 # Called by cross-platform-actions/action; workspace files are synced in.
 #
-# Usage: build-freebsd.sh <version>
+# Usage: build-freebsd.sh <version> [arch]
+#   arch defaults to amd64
 
 set -eo pipefail
 
 VERSION="${1:?version argument required}"
-PLATFORM="freebsd_amd64"
+ARCH="${2:-amd64}"
+PLATFORM="freebsd_${ARCH}"
 
 echo "🐡 FreeBSD $(uname -r) — $(uname -m)"
 echo "📦 Version: $VERSION"
@@ -24,7 +26,7 @@ mkdir -p dist/bin
 cd src/flavor-go
 
 export GOOS=freebsd
-export GOARCH=amd64
+export GOARCH="${ARCH}"
 export CGO_ENABLED=0
 
 go build -buildvcs=false -ldflags "-X main.Version=$VERSION" \
