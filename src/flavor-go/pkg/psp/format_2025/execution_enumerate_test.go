@@ -1,12 +1,9 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // TestRunBundleWithCwdEnumerateAndExecuteNoMatches covers execution.go:489-491:
@@ -45,7 +42,7 @@ func TestRunBundleWithCwdEnumerateAndExecuteNoMatches(t *testing.T) {
 		Build:     &BuildInfo{Tool: "test"},
 	})
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	// Should succeed: empty glob matches falls back to running command directly.
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
@@ -90,7 +87,7 @@ func TestRunBundleWithCwdEnumerateAndExecuteGlobError(t *testing.T) {
 		Build:     &BuildInfo{Tool: "test"},
 	})
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	// Glob error is a warning; execution continues.
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {

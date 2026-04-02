@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -9,7 +6,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // TestRunBundleWithCwdHasSBOMTrue covers lines 302-305 in execution.go:
@@ -45,7 +42,7 @@ func TestRunBundleWithCwdHasSBOMTrue(t *testing.T) {
 		},
 	})
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
 		t.Fatalf("runBundleWithCwd() error = %v", err)
@@ -84,7 +81,7 @@ func TestRunBundleWithCwdWorkenvMkdirAllFailure(t *testing.T) {
 		Target: "{workenv}",
 	}, 0, false)
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {
 		t.Fatal("expected error when workenv dir cannot be created")
@@ -123,7 +120,7 @@ func TestRunBundleWithCwdWorkenvDirectoryEscapesWorkenv(t *testing.T) {
 		},
 	})
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {
 		t.Fatal("expected error when workenv directory path escapes workenv")

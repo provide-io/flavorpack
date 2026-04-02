@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 //go:build !windows
 
 package format_2025
@@ -10,7 +7,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // TestTryAcquireLockPermissionDenied covers locking.go:71 (return false, err)
@@ -25,7 +22,7 @@ func TestTryAcquireLockPermissionDenied(t *testing.T) {
 	}
 
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/test.pspf")
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	// Create the Extract() directory so MkdirAll inside TryAcquireLock succeeds.
 	extractDir := paths.Extract()

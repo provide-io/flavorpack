@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -9,7 +6,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // TestExtractAndMergeSlotsToWorkenv_MetadataDirMkdirAllFailure covers lines 56-59 in
@@ -27,7 +24,7 @@ func TestExtractAndMergeSlotsToWorkenv_MetadataDirMkdirAllFailure(t *testing.T) 
 	slotContents := []byte("meta-dir-fail-data")
 	bundlePath, _ := buildSlotsBundleForSlotsTest(t, "meta-dir-fail", slotContents)
 
-	reader, err := NewReaderWithLogger(bundlePath, logging.NewNullLogger())
+	reader, err := NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger: %v", err)
 	}
@@ -63,7 +60,7 @@ func TestExtractAndMergeSlotsToWorkenv_MetadataDirMkdirAllFailure(t *testing.T) 
 	}
 	t.Cleanup(func() { _ = os.Chmod(paths.Metadata(), 0o755) })
 
-	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logging.NewNullLogger())
+	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, hclog.NewNullLogger())
 	if err == nil {
 		t.Fatal("expected error when MkdirAll(packageMetadataDir) fails")
 	}
@@ -83,7 +80,7 @@ func TestExtractAndMergeSlotsToWorkenv_MetadataWriteFileFailure(t *testing.T) {
 	slotContents := []byte("meta-write-fail-data")
 	bundlePath, _ := buildSlotsBundleForSlotsTest(t, "meta-write-fail", slotContents)
 
-	reader, err := NewReaderWithLogger(bundlePath, logging.NewNullLogger())
+	reader, err := NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger: %v", err)
 	}
@@ -121,7 +118,7 @@ func TestExtractAndMergeSlotsToWorkenv_MetadataWriteFileFailure(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Chmod(packageMetadataDir, 0o755) })
 
-	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logging.NewNullLogger())
+	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, hclog.NewNullLogger())
 	if err == nil {
 		t.Fatal("expected error when os.WriteFile for metadataFile fails")
 	}
@@ -141,7 +138,7 @@ func TestExtractAndMergeSlotsToWorkenv_ReadDirTempExtractFailure(t *testing.T) {
 	slotContents := []byte("readdir-fail-data")
 	bundlePath, _ := buildSlotsBundleForSlotsTest(t, "readdir-fail", slotContents)
 
-	reader, err := NewReaderWithLogger(bundlePath, logging.NewNullLogger())
+	reader, err := NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger: %v", err)
 	}
@@ -181,7 +178,7 @@ func TestExtractAndMergeSlotsToWorkenv_ReadDirTempExtractFailure(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Chmod(tempExtractDir, 0o755) })
 
-	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logging.NewNullLogger())
+	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, hclog.NewNullLogger())
 	if err == nil {
 		t.Fatal("expected error when os.ReadDir(tempExtractDir) fails")
 	}

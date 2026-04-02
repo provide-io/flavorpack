@@ -56,7 +56,7 @@ func TestGetCacheRootLinuxHome(t *testing.T) {
 	t.Setenv("XDG_CACHE_HOME", "")
 	t.Setenv("HOME", "/home/testuser")
 	got := GetCacheRoot()
-	if want := "/REDACTED_ABS_PATH"; got != want {
+	if want := "/home/testuser/.cache/flavor"; got != want {
 		t.Fatalf("GetCacheRoot() linux HOME = %q, want %q", got, want)
 	}
 }

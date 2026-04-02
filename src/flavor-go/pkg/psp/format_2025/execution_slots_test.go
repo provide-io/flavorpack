@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -10,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // buildSlotsBundleForSlotsTest creates a minimal PSPF bundle with a single raw (non-tar)
@@ -101,7 +98,7 @@ func TestExtractAndMergeSlotsToWorkenv_HappyPath(t *testing.T) {
 	slotContents := []byte("hello workenv")
 	bundlePath, _ := buildSlotsBundleForSlotsTest(t, "payload", slotContents)
 
-	reader, err := NewReaderWithLogger(bundlePath, logging.NewNullLogger())
+	reader, err := NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger: %v", err)
 	}
@@ -122,7 +119,7 @@ func TestExtractAndMergeSlotsToWorkenv_HappyPath(t *testing.T) {
 		t.Fatalf("MkdirAll(workenv): %v", err)
 	}
 
-	slotPaths, err := extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logging.NewNullLogger())
+	slotPaths, err := extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("extractAndMergeSlotsToWorkenv: %v", err)
 	}
@@ -162,7 +159,7 @@ func TestExtractAndMergeSlotsToWorkenv_TarSlot(t *testing.T) {
 
 	bundlePath, _ := buildSlotsBundleWithTarForSlotsTest(t, "hello.txt", []byte("tar content"))
 
-	reader, err := NewReaderWithLogger(bundlePath, logging.NewNullLogger())
+	reader, err := NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger: %v", err)
 	}
@@ -183,7 +180,7 @@ func TestExtractAndMergeSlotsToWorkenv_TarSlot(t *testing.T) {
 		t.Fatalf("MkdirAll(workenv): %v", err)
 	}
 
-	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logging.NewNullLogger())
+	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("extractAndMergeSlotsToWorkenv: %v", err)
 	}
@@ -209,7 +206,7 @@ func TestExtractAndMergeSlotsToWorkenv_Slot0Directory(t *testing.T) {
 	slotContents := []byte("real slot data")
 	bundlePath, _ := buildSlotsBundleForSlotsTest(t, "myslot", slotContents)
 
-	reader, err := NewReaderWithLogger(bundlePath, logging.NewNullLogger())
+	reader, err := NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger: %v", err)
 	}
@@ -244,7 +241,7 @@ func TestExtractAndMergeSlotsToWorkenv_Slot0Directory(t *testing.T) {
 		t.Fatalf("WriteFile(injected.txt): %v", err)
 	}
 
-	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logging.NewNullLogger())
+	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("extractAndMergeSlotsToWorkenv: %v", err)
 	}
@@ -269,7 +266,7 @@ func TestExtractAndMergeSlotsToWorkenv_SlotNDirectory(t *testing.T) {
 	slotContents := []byte("base slot data")
 	bundlePath, _ := buildSlotsBundleForSlotsTest(t, "base", slotContents)
 
-	reader, err := NewReaderWithLogger(bundlePath, logging.NewNullLogger())
+	reader, err := NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger: %v", err)
 	}
@@ -302,7 +299,7 @@ func TestExtractAndMergeSlotsToWorkenv_SlotNDirectory(t *testing.T) {
 		t.Fatalf("WriteFile(extra.txt): %v", err)
 	}
 
-	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logging.NewNullLogger())
+	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("extractAndMergeSlotsToWorkenv: %v", err)
 	}
@@ -327,7 +324,7 @@ func TestExtractAndMergeSlotsToWorkenv_DirectoryInTempRoot(t *testing.T) {
 	slotContents := []byte("slot content")
 	bundlePath, _ := buildSlotsBundleForSlotsTest(t, "myid", slotContents)
 
-	reader, err := NewReaderWithLogger(bundlePath, logging.NewNullLogger())
+	reader, err := NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger: %v", err)
 	}
@@ -359,7 +356,7 @@ func TestExtractAndMergeSlotsToWorkenv_DirectoryInTempRoot(t *testing.T) {
 		t.Fatalf("WriteFile(mylib.so): %v", err)
 	}
 
-	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logging.NewNullLogger())
+	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("extractAndMergeSlotsToWorkenv: %v", err)
 	}
@@ -423,7 +420,7 @@ func TestExtractAndMergeSlotsToWorkenv_BinDirShebangFix(t *testing.T) {
 	spec := multiSlotBundleSpec{meta: slotMeta, storedData: tarData, originalData: tarData}
 	bundlePath := buildMultiSlotBundleForTests(t, []multiSlotBundleSpec{spec}, md)
 
-	reader, err := NewReaderWithLogger(bundlePath, logging.NewNullLogger())
+	reader, err := NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger: %v", err)
 	}
@@ -444,7 +441,7 @@ func TestExtractAndMergeSlotsToWorkenv_BinDirShebangFix(t *testing.T) {
 		t.Fatalf("MkdirAll(workenv): %v", err)
 	}
 
-	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logging.NewNullLogger())
+	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("extractAndMergeSlotsToWorkenv: %v", err)
 	}
@@ -476,7 +473,7 @@ func TestExtractAndMergeSlotsToWorkenv_ExtractSlotFailure(t *testing.T) {
 	// Use corruptChecksum=true via buildSingleSlotBundleForTests
 	bundlePath := buildSingleSlotBundleForTests(t, slotContents, nil, nil, slotMeta, 0, true)
 
-	reader, err := NewReaderWithLogger(bundlePath, logging.NewNullLogger())
+	reader, err := NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger: %v", err)
 	}
@@ -499,7 +496,7 @@ func TestExtractAndMergeSlotsToWorkenv_ExtractSlotFailure(t *testing.T) {
 		t.Fatalf("MkdirAll(workenv): %v", err)
 	}
 
-	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logging.NewNullLogger())
+	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, hclog.NewNullLogger())
 	if err == nil {
 		t.Fatal("expected error from corrupted slot, got nil")
 	}
@@ -518,7 +515,7 @@ func TestExtractAndMergeSlotsToWorkenv_Slot0DirWithSubdir(t *testing.T) {
 	slotContents := []byte("plain slot")
 	bundlePath, _ := buildSlotsBundleForSlotsTest(t, "myslot2", slotContents)
 
-	reader, err := NewReaderWithLogger(bundlePath, logging.NewNullLogger())
+	reader, err := NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger: %v", err)
 	}
@@ -551,7 +548,7 @@ func TestExtractAndMergeSlotsToWorkenv_Slot0DirWithSubdir(t *testing.T) {
 		t.Fatalf("WriteFile(readme.txt): %v", err)
 	}
 
-	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logging.NewNullLogger())
+	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("extractAndMergeSlotsToWorkenv: %v", err)
 	}
@@ -575,7 +572,7 @@ func TestExtractAndMergeSlotsToWorkenv_SlotNDirWithSubdir(t *testing.T) {
 	slotContents := []byte("slot n content")
 	bundlePath, _ := buildSlotsBundleForSlotsTest(t, "slotN", slotContents)
 
-	reader, err := NewReaderWithLogger(bundlePath, logging.NewNullLogger())
+	reader, err := NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger: %v", err)
 	}
@@ -608,7 +605,7 @@ func TestExtractAndMergeSlotsToWorkenv_SlotNDirWithSubdir(t *testing.T) {
 		t.Fatalf("WriteFile(config.cfg): %v", err)
 	}
 
-	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logging.NewNullLogger())
+	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("extractAndMergeSlotsToWorkenv: %v", err)
 	}
@@ -648,7 +645,7 @@ func TestExtractAndMergeSlotsToWorkenv_MultipleSlots(t *testing.T) {
 	}
 	bundlePath := buildMultiSlotBundleForTests(t, specs, md)
 
-	reader, err := NewReaderWithLogger(bundlePath, logging.NewNullLogger())
+	reader, err := NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger: %v", err)
 	}
@@ -669,7 +666,7 @@ func TestExtractAndMergeSlotsToWorkenv_MultipleSlots(t *testing.T) {
 		t.Fatalf("MkdirAll(workenv): %v", err)
 	}
 
-	slotPaths, err := extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logging.NewNullLogger())
+	slotPaths, err := extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("extractAndMergeSlotsToWorkenv: %v", err)
 	}
@@ -690,7 +687,7 @@ func TestExtractAndMergeSlotsToWorkenv_Slot0DirReadFailure(t *testing.T) {
 	slotContents := []byte("data")
 	bundlePath, _ := buildSlotsBundleForSlotsTest(t, "testslot", slotContents)
 
-	reader, err := NewReaderWithLogger(bundlePath, logging.NewNullLogger())
+	reader, err := NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger: %v", err)
 	}
@@ -727,7 +724,7 @@ func TestExtractAndMergeSlotsToWorkenv_Slot0DirReadFailure(t *testing.T) {
 	// Restore permissions for cleanup.
 	t.Cleanup(func() { _ = os.Chmod(slotDir, 0o755) })
 
-	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logging.NewNullLogger())
+	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, hclog.NewNullLogger())
 	if err == nil {
 		t.Fatal("expected error when slot_0_* directory is unreadable, got nil")
 	}
@@ -744,7 +741,7 @@ func TestExtractAndMergeSlotsToWorkenv_SlotNDirReadFailure(t *testing.T) {
 	slotContents := []byte("data")
 	bundlePath, _ := buildSlotsBundleForSlotsTest(t, "base", slotContents)
 
-	reader, err := NewReaderWithLogger(bundlePath, logging.NewNullLogger())
+	reader, err := NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger: %v", err)
 	}
@@ -779,7 +776,7 @@ func TestExtractAndMergeSlotsToWorkenv_SlotNDirReadFailure(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Chmod(slotDir, 0o755) })
 
-	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logging.NewNullLogger())
+	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, hclog.NewNullLogger())
 	if err == nil {
 		t.Fatal("expected error when slot_N_* directory is unreadable, got nil")
 	}
@@ -797,7 +794,7 @@ func TestExtractAndMergeSlotsToWorkenv_MetadataWriteFailure(t *testing.T) {
 	slotContents := []byte("data")
 	bundlePath, _ := buildSlotsBundleForSlotsTest(t, "wfail", slotContents)
 
-	reader, err := NewReaderWithLogger(bundlePath, logging.NewNullLogger())
+	reader, err := NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger: %v", err)
 	}
@@ -829,7 +826,7 @@ func TestExtractAndMergeSlotsToWorkenv_MetadataWriteFailure(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Chmod(packageMetadataDir, 0o755) })
 
-	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logging.NewNullLogger())
+	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, hclog.NewNullLogger())
 	if err == nil {
 		t.Fatal("expected error when metadata psp.json write fails, got nil")
 	}

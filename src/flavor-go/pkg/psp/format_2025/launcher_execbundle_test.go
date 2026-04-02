@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -9,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // buildLauncherTestBundleWithNilEnv builds a bundle whose runBundleWithCwd result
@@ -35,7 +32,7 @@ func TestExecBundleReplaceEnvvNil(t *testing.T) {
 	t.Setenv(EnvExecMode, "exec")
 
 	bundle := buildLauncherTestBundle(t)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	err := execBundleReplace(bundle, nil, t.TempDir(), logger)
 	// We expect the injected error to be returned.
@@ -62,7 +59,7 @@ func TestExecBundleReplaceSyscallError(t *testing.T) {
 	t.Setenv(EnvValidation, "none")
 
 	bundle := buildLauncherTestBundle(t)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	err := execBundleReplace(bundle, nil, t.TempDir(), logger)
 	if err == nil {
@@ -100,7 +97,7 @@ func TestExecBundleReplaceLookPathSuccess(t *testing.T) {
 
 	// Build bundle with command set to just the basename (non-absolute).
 	bundle := buildLauncherTestBundleWithCommand(t, "mytool", binDir)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	err := execBundleReplace(bundle, nil, t.TempDir(), logger)
 	// We expect injected error.
@@ -131,7 +128,7 @@ func TestExecBundleReplaceLookPathFailure(t *testing.T) {
 	// Build a bundle whose command is a relative name that definitely won't exist
 	// in the workenv/bin PATH.
 	bundle := buildLauncherTestBundleWithCommand(t, "definitelynonexistent_xyz_cmd_12345", "")
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	err := execBundleReplace(bundle, nil, t.TempDir(), logger)
 	// The function should still proceed (log warning) and reach syscallExecFn.

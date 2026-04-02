@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -8,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // TestShowMetadataNewReaderError covers lines 205-208 in launcher_cli.go:
@@ -19,7 +16,7 @@ func TestShowMetadataNewReaderError(t *testing.T) {
 	// Non-existent path so prepareBundlePath returns it directly,
 	// but NewReaderWithLogger fails to open it.
 	nonExistent := filepath.Join(t.TempDir(), "nonexistent.psp")
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	exitCode, panicked := withStubbedExit(func() {
 		showMetadata(nonExistent, logger)
@@ -71,7 +68,7 @@ func TestShowMetadataReadMetadataError(t *testing.T) {
 		t.Fatalf("WriteFile: %v", err)
 	}
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	exitCode, panicked := withStubbedExit(func() {
 		showMetadata(bundle, logger)
 	})
@@ -87,7 +84,7 @@ func TestShowMetadataReadMetadataError(t *testing.T) {
 // when NewReaderWithLogger fails, showBundleInfo calls osExitFn(1).
 func TestShowBundleInfoNewReaderError(t *testing.T) {
 	nonExistent := filepath.Join(t.TempDir(), "nonexistent.psp")
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	exitCode, panicked := withStubbedExit(func() {
 		showBundleInfo(nonExistent, logger)
@@ -104,7 +101,7 @@ func TestShowBundleInfoNewReaderError(t *testing.T) {
 // when NewReaderWithLogger fails, extractSlot calls osExitFn(1).
 func TestExtractSlotNewReaderError(t *testing.T) {
 	nonExistent := filepath.Join(t.TempDir(), "nonexistent.psp")
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	exitCode, panicked := withStubbedExit(func() {
 		extractSlot(nonExistent, "0", t.TempDir(), logger)
@@ -121,7 +118,7 @@ func TestExtractSlotNewReaderError(t *testing.T) {
 // when NewReaderWithLogger fails, verifyBundle calls osExitFn(1).
 func TestVerifyBundleNewReaderError(t *testing.T) {
 	nonExistent := filepath.Join(t.TempDir(), "nonexistent.psp")
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	exitCode, panicked := withStubbedExit(func() {
 		verifyBundle(nonExistent, logger)

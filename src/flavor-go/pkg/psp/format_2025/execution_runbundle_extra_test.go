@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -10,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // TestRunBundleWithCwdSaveChecksumFails covers lines 434-436 in execution.go:
@@ -19,7 +16,7 @@ import (
 // the warning log in runBundleWithCwd.
 func TestRunBundleWithCwdSaveChecksumFails(t *testing.T) {
 	bundle := buildLauncherTestBundle(t)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	cacheRoot := t.TempDir()
 	t.Setenv(EnvCacheDir, cacheRoot)
@@ -57,7 +54,7 @@ func TestRunBundleWithCwdLockAcquireError(t *testing.T) {
 	}
 
 	bundle := buildLauncherTestBundle(t)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	cacheRoot := t.TempDir()
 	t.Setenv(EnvCacheDir, cacheRoot)
@@ -93,7 +90,7 @@ func TestRunBundleWithCwdLockAcquireError(t *testing.T) {
 // After the lock is released, WaitForExtraction succeeds.
 func TestRunBundleWithCwdNotAcquiredThenWait(t *testing.T) {
 	bundle := buildLauncherTestBundle(t)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	cacheRoot := t.TempDir()
 	t.Setenv(EnvCacheDir, cacheRoot)
@@ -126,7 +123,7 @@ func TestRunBundleWithCwdNotAcquiredThenWait(t *testing.T) {
 		time.Sleep(150 * time.Millisecond)
 		_ = os.Remove(paths.LockFile())
 		// Also mark extraction complete so checkWorkenvValidity passes.
-		_ = MarkExtractionComplete(paths, logging.NewNullLogger())
+		_ = MarkExtractionComplete(paths, hclog.NewNullLogger())
 	}()
 
 	// runBundleWithCwd will detect the held lock, wait, then recheck.

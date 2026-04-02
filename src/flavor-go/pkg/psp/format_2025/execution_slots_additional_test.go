@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -11,7 +8,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // buildTarSlotBundle creates a bundle whose slot 0 payload is a tar archive
@@ -83,7 +80,7 @@ func TestExtractAndMergeSlotsToWorkenv_Slot0DirCopyDirAllFailure(t *testing.T) {
 	slotContents := []byte("minimal")
 	bundlePath, _ := buildSlotsBundleForSlotsTest(t, "minimal", slotContents)
 
-	reader, err := NewReaderWithLogger(bundlePath, logging.NewNullLogger())
+	reader, err := NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger: %v", err)
 	}
@@ -124,7 +121,7 @@ func TestExtractAndMergeSlotsToWorkenv_Slot0DirCopyDirAllFailure(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Chmod(workenvDir, 0o755) })
 
-	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logging.NewNullLogger())
+	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, hclog.NewNullLogger())
 	if err == nil {
 		t.Fatal("expected error when copyDirAll fails for slot_0_ directory")
 	}
@@ -141,7 +138,7 @@ func TestExtractAndMergeSlotsToWorkenv_SlotNDirCopyDirAllFailure(t *testing.T) {
 	slotContents := []byte("minimal")
 	bundlePath, _ := buildSlotsBundleForSlotsTest(t, "minimal2", slotContents)
 
-	reader, err := NewReaderWithLogger(bundlePath, logging.NewNullLogger())
+	reader, err := NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger: %v", err)
 	}
@@ -181,7 +178,7 @@ func TestExtractAndMergeSlotsToWorkenv_SlotNDirCopyDirAllFailure(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Chmod(workenvDir, 0o755) })
 
-	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logging.NewNullLogger())
+	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, hclog.NewNullLogger())
 	if err == nil {
 		t.Fatal("expected error when copyDirAll fails for slot_N_ directory")
 	}
@@ -197,7 +194,7 @@ func TestExtractAndMergeSlotsToWorkenv_RegularDirCopyDirAllFailure(t *testing.T)
 	slotContents := []byte("minimal")
 	bundlePath, _ := buildSlotsBundleForSlotsTest(t, "minimal3", slotContents)
 
-	reader, err := NewReaderWithLogger(bundlePath, logging.NewNullLogger())
+	reader, err := NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger: %v", err)
 	}
@@ -236,7 +233,7 @@ func TestExtractAndMergeSlotsToWorkenv_RegularDirCopyDirAllFailure(t *testing.T)
 	}
 	t.Cleanup(func() { _ = os.Chmod(workenvDir, 0o755) })
 
-	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logging.NewNullLogger())
+	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, hclog.NewNullLogger())
 	if err == nil {
 		t.Fatal("expected error when copyDirAll fails for regular directory")
 	}
@@ -254,7 +251,7 @@ func TestExtractAndMergeSlotsToWorkenv_ExtractionFailed(t *testing.T) {
 		Target: "{workenv}",
 	}, 0, true /* corruptChecksum */)
 
-	reader, err := NewReaderWithLogger(bundlePath, logging.NewNullLogger())
+	reader, err := NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger: %v", err)
 	}
@@ -275,7 +272,7 @@ func TestExtractAndMergeSlotsToWorkenv_ExtractionFailed(t *testing.T) {
 		t.Fatalf("MkdirAll(workenv): %v", err)
 	}
 
-	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logging.NewNullLogger())
+	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, hclog.NewNullLogger())
 	if err == nil {
 		t.Fatal("expected error when ExtractSlot fails due to corrupt checksum")
 	}

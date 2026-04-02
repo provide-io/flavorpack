@@ -1,15 +1,11 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
 	"errors"
-	"log/slog"
 	"os"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 func TestPrepareBundlePathPEResourceSuccess(t *testing.T) {
@@ -23,12 +19,12 @@ func TestPrepareBundlePathPEResourceSuccess(t *testing.T) {
 	})
 
 	pspfData := []byte("fake-pspf-data-long-enough")
-	hasPSPFResourceFn = func(path string, logger *slog.Logger) bool { return true }
-	readPSPFFromResourceFn = func(path string, logger *slog.Logger) ([]byte, error) {
+	hasPSPFResourceFn = func(path string, logger hclog.Logger) bool { return true }
+	readPSPFFromResourceFn = func(path string, logger hclog.Logger) ([]byte, error) {
 		return pspfData, nil
 	}
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	bundlePath, cleanup, err := prepareBundlePath("/fake/exe", logger)
 	if err != nil {
 		t.Fatalf("prepareBundlePath() error = %v", err)
@@ -55,12 +51,12 @@ func TestPrepareBundlePathPEResourceReadError(t *testing.T) {
 		readPSPFFromResourceFn = oldRead
 	})
 
-	hasPSPFResourceFn = func(path string, logger *slog.Logger) bool { return true }
-	readPSPFFromResourceFn = func(path string, logger *slog.Logger) ([]byte, error) {
+	hasPSPFResourceFn = func(path string, logger hclog.Logger) bool { return true }
+	readPSPFFromResourceFn = func(path string, logger hclog.Logger) ([]byte, error) {
 		return nil, errors.New("resource read failed")
 	}
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	_, _, err := prepareBundlePath("/fake/exe", logger)
 	if err == nil {
 		t.Fatal("expected error from PE resource read failure")
@@ -70,9 +66,9 @@ func TestPrepareBundlePathPEResourceReadError(t *testing.T) {
 func TestPrepareBundlePathNoPEResource(t *testing.T) {
 	oldHas := hasPSPFResourceFn
 	t.Cleanup(func() { hasPSPFResourceFn = oldHas })
-	hasPSPFResourceFn = func(path string, logger *slog.Logger) bool { return false }
+	hasPSPFResourceFn = func(path string, logger hclog.Logger) bool { return false }
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	bundlePath, cleanup, err := prepareBundlePath("/some/bundle.pspf", logger)
 	if err != nil {
 		t.Fatalf("prepareBundlePath() error = %v", err)
@@ -93,5 +89,5 @@ func TestRemoveAllQuietlyLogsOnError(t *testing.T) {
 	}
 
 	// Should not panic — just logs the error
-	removeAllQuietly("/fake/path", "test-context", logging.NewNullLogger())
+	removeAllQuietly("/fake/path", "test-context", hclog.NewNullLogger())
 }
