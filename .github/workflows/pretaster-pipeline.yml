@@ -78,9 +78,26 @@ jobs:
         with:
           persist-credentials: false
 
-      # Native platforms use separate Go/Rust helper artifacts
       - name: 📥 Download Go helpers
-        if: ${{ matrix.vm_arch == '' }}
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v19
+        with:
+          workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
+          name: flavor-go-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
+          path: ./helpers-dist
+
+      - name: 📥 Download Rust helpers
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v19
+        with:
+          workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
+          name: flavor-rust-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
+          path: ./helpers-dist
+
+      - name: 📥 Download combined helpers (FreeBSD)
+        continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
           workflow: helper-prep.yml
@@ -105,15 +122,6 @@ jobs:
           workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
-          path: ./helpers-dist
-
-      # Download tastesh (embedded shell for self-contained PSPs)
-      - name: 📥 Download tastesh
-        uses: dawidd6/action-download-artifact@v19
-        with:
-          workflow: helper-prep.yml
-          run_id: ${{ needs.setup.outputs.helper_run_id }}
-          name: flavor-tastesh-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
 
       - name: 🔧 Setup helpers
@@ -366,36 +374,34 @@ jobs:
         with:
           persist-credentials: false
 
-      # Native platforms use separate Go/Rust helper artifacts
       - name: 📥 Download Go helpers
-        if: ${{ matrix.vm_arch == '' }}
+        continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: helper-prep.yml
+          workflow: 01-helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-go-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
 
       - name: 📥 Download Rust helpers
-        if: ${{ matrix.vm_arch == '' }}
+        continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: helper-prep.yml
+          workflow: 01-helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-rust-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
 
-      # FreeBSD uses a single combined helpers artifact
       - name: 📥 Download combined helpers (FreeBSD)
-        if: ${{ matrix.vm_arch != '' }}
+        continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: helper-prep.yml
+          workflow: 01-helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
 
-      - name: 🔧 Extract helpers
+      - name: 🔧 Build pretaster PSP
         shell: bash
         run: |
           # The dawidd6 action downloads the artifact contents (zip files) to helpers-dist/
