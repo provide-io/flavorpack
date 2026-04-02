@@ -50,6 +50,8 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       
       - name: 🔍 Detect Project License
         id: detect
@@ -139,6 +141,8 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       
       - name: 📦 Setup uv + Python
         uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
@@ -335,6 +339,8 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       
       - name: 🐹 Setup Go
         uses: actions/setup-go@v6
@@ -424,6 +430,8 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       
       - name: 🦀 Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -530,6 +538,8 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       
       - name: 🛠️ Install SBOM Tools
         run: |
@@ -772,32 +782,3 @@ jobs:
           name: compliance-summary
           path: compliance-summary.json
       
-      - name: 💬 Comment on PR
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v8
-        with:
-          script: |
-            const fs = require('fs');
-            const summary = JSON.parse(fs.readFileSync('compliance-summary.json', 'utf8'));
-            
-            const comment = `## ⚖️ License Compliance Check
-            
-            **Project License:** ${summary.project_license}
-            **Overall Compliance:** ${summary.compliance.overall ? '✅ Compliant' : '❌ Issues Detected'}
-            
-            | Language | Status |
-            |----------|--------|
-            | 🐍 Python | ${summary.compliance.python ? '✅' : '⚠️'} |
-            | 🐹 Go | ${summary.compliance.go ? '✅' : '⚠️'} |
-            | 🦀 Rust | ${summary.compliance.rust ? '✅' : '⚠️'} |
-            
-            ${summary.violations.python > 0 ? `⚠️ Python has ${summary.violations.python} license violations` : ''}
-            
-            [View Full Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
-            
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: comment
-            });

@@ -18,7 +18,7 @@ func buildTarWithSymlink(name, linkTarget string) []byte {
 		Name:     name,
 		Linkname: linkTarget,
 	})
-	tw.Close()
+	_ = tw.Close()
 	return buf.Bytes()
 }
 
@@ -28,7 +28,7 @@ func buildGzippedTarWithSymlink(name, linkTarget string) []byte {
 	var buf bytes.Buffer
 	gw := gzip.NewWriter(&buf)
 	_, _ = gw.Write(raw)
-	gw.Close()
+	_ = gw.Close()
 	return buf.Bytes()
 }
 

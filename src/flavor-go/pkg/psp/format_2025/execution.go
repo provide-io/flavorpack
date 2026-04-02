@@ -83,17 +83,17 @@ func prepareBundlePath(exePath string, logger hclog.Logger) (string, func(), err
 		bytesWritten, err := tmpFile.Write(pspfData)
 		if err != nil {
 			logger.Error("Failed to write PSPF data to temp file", "error", err, "path", tmpPath)
-			tmpFile.Close()
+			_ = tmpFile.Close()
 			logger.Trace("Cleaning up temp file after write failure", "path", tmpPath)
-			os.Remove(tmpPath)
+			_ = os.Remove(tmpPath)
 			return "", nil, fmt.Errorf("failed to write PSPF to temp file: %w", err)
 		}
 		logger.Debug("Wrote PSPF data to temp file", "bytes", bytesWritten, "expected", len(pspfData))
 
 		if bytesWritten != len(pspfData) {
 			logger.Error("Incomplete write to temp file", "written", bytesWritten, "expected", len(pspfData))
-			tmpFile.Close()
-			os.Remove(tmpPath)
+			_ = tmpFile.Close()
+			_ = os.Remove(tmpPath)
 			return "", nil, fmt.Errorf("incomplete write: wrote %d bytes, expected %d", bytesWritten, len(pspfData))
 		}
 
@@ -101,7 +101,7 @@ func prepareBundlePath(exePath string, logger hclog.Logger) (string, func(), err
 		if err := tmpFile.Close(); err != nil {
 			logger.Error("Failed to close temp file", "error", err, "path", tmpPath)
 			logger.Trace("Cleaning up temp file after close failure", "path", tmpPath)
-			os.Remove(tmpPath)
+			_ = os.Remove(tmpPath)
 			return "", nil, fmt.Errorf("failed to close temp file: %w", err)
 		}
 		logger.Debug("Temp file closed successfully", "path", tmpPath)
