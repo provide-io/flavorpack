@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -9,7 +6,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // TestSpawnBundleSuccessPathNoOpExit exercises the success branch of spawnBundle
@@ -21,7 +18,7 @@ func TestSpawnBundleSuccessPathNoOpExit(t *testing.T) {
 	}
 
 	bundle := buildLauncherTestBundle(t)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	cacheRoot := t.TempDir()
 	t.Setenv(EnvCacheDir, cacheRoot)
@@ -70,7 +67,7 @@ func TestSpawnBundleFailingCommandNoOpExit(t *testing.T) {
 		},
 	}, metadata)
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	cacheRoot := t.TempDir()
 	t.Setenv(EnvCacheDir, cacheRoot)
 	t.Setenv(EnvWorkenvCache, "false")
@@ -102,7 +99,7 @@ func TestSpawnBundleWorkenvSetup(t *testing.T) {
 	}
 
 	bundle := buildLauncherTestBundle(t)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	workenvDir := filepath.Join(t.TempDir(), "custom_workenv")
 	t.Setenv(EnvWorkenv, workenvDir)
@@ -122,7 +119,7 @@ func TestSpawnBundleWorkenvSetup(t *testing.T) {
 // TestSpawnBundlePrepareFails verifies that spawnBundle returns a non-nil error
 // when the bundle path is invalid (prepareBundlePath/NewReaderWithLogger fails).
 func TestSpawnBundlePrepareFails(t *testing.T) {
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	err := spawnBundle("/nonexistent/path/fake.psp", nil, t.TempDir(), logger)
 	if err == nil {
 		t.Fatal("expected error for non-existent bundle path")

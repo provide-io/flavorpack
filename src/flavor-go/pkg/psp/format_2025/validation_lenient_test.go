@@ -1,12 +1,9 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // buildUnsignedBundle builds a bundle without an integrity seal signature.
@@ -34,7 +31,7 @@ func TestRunBundleWithCwdValidationMinimalBadSeal(t *testing.T) {
 	t.Setenv(EnvValidation, "minimal")
 
 	bundle := buildUnsignedBundle(t)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
@@ -54,7 +51,7 @@ func TestRunBundleWithCwdValidationRelaxedBadSeal(t *testing.T) {
 	t.Setenv(EnvValidation, "relaxed")
 
 	bundle := buildUnsignedBundle(t)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
@@ -82,7 +79,7 @@ func TestRunBundleWithCwdValidationMinimalSbomDigestError(t *testing.T) {
 	// validation block is entered and attestation digest check returns no-error
 	// (all zeros = skip). This still covers the ValidationMinimal seal error path.
 	bundle := buildUnsignedBundle(t)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
@@ -100,7 +97,7 @@ func TestRunBundleWithCwdValidationStandardBadSeal(t *testing.T) {
 	t.Setenv(EnvValidation, "standard")
 
 	bundle := buildUnsignedBundle(t)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {
@@ -117,7 +114,7 @@ func TestRunBundleWithCwdValidationStrictBadSeal(t *testing.T) {
 	t.Setenv(EnvValidation, "strict")
 
 	bundle := buildUnsignedBundle(t)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {

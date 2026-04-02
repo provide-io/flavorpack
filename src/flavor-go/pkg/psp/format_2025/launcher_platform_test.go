@@ -1,12 +1,9 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 func TestExecBundleWindowsForcesSpawnMode(t *testing.T) {
@@ -17,7 +14,7 @@ func TestExecBundleWindowsForcesSpawnMode(t *testing.T) {
 	// On Windows (simulated), execBundle should force spawn mode.
 	// We capture whether spawnBundle is called by having it return an error.
 	// Use a non-existent bundle path so spawnBundle returns quickly.
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	err := execBundle("/nonexistent/fake.pspf", []string{}, "/tmp", logger)
 	// The error comes from spawnBundle trying to open the file — that's fine.
 	// What matters is no panic and we took the spawn path.
@@ -32,7 +29,7 @@ func TestExecBundleWindowsForcesSpawnModeEvenWhenExecEnvSet(t *testing.T) {
 	// Set exec mode explicitly — should still be overridden to spawn on Windows
 	t.Setenv("FLAVOR_EXEC_MODE", "exec")
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	err := execBundle("/nonexistent/fake.pspf", []string{}, "/tmp", logger)
 	_ = err
 }

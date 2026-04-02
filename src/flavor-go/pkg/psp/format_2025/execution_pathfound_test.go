@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -9,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // TestRunBundleWithCwdPathNotFoundInEnvironment covers lines 672-677 in
@@ -32,7 +29,7 @@ func TestRunBundleWithCwdPathNotFoundInEnvironment(t *testing.T) {
 	}
 
 	bundle := buildLauncherTestBundle(t)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	cacheRoot := t.TempDir()
 	t.Setenv(EnvCacheDir, cacheRoot)
@@ -73,7 +70,7 @@ func TestRunBundleWithCwdWindowsScriptsDir(t *testing.T) {
 	t.Cleanup(func() { currentGOOS = old })
 
 	bundle := buildLauncherTestBundle(t)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	cacheRoot := t.TempDir()
 	t.Setenv(EnvCacheDir, cacheRoot)
@@ -123,7 +120,7 @@ func TestRunBundleWithCwdWindowsScriptsDirNoPath(t *testing.T) {
 	}
 
 	bundle := buildLauncherTestBundle(t)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	cacheRoot := t.TempDir()
 	t.Setenv(EnvCacheDir, cacheRoot)

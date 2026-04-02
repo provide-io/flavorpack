@@ -1,14 +1,10 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
 	"errors"
-	"log/slog"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // stubPEResourceReadError injects hasPSPFResourceFn to return true and
@@ -19,8 +15,8 @@ func stubPEResourceReadError(t *testing.T) func() {
 	t.Helper()
 	oldHas := hasPSPFResourceFn
 	oldRead := readPSPFFromResourceFn
-	hasPSPFResourceFn = func(path string, logger *slog.Logger) bool { return true }
-	readPSPFFromResourceFn = func(path string, logger *slog.Logger) ([]byte, error) {
+	hasPSPFResourceFn = func(path string, logger hclog.Logger) bool { return true }
+	readPSPFFromResourceFn = func(path string, logger hclog.Logger) ([]byte, error) {
 		return nil, errors.New("injected: failed to read PSPF from PE resource")
 	}
 	return func() {
@@ -35,7 +31,7 @@ func TestPrepareBundlePathReadResourceError(t *testing.T) {
 	restore := stubPEResourceReadError(t)
 	defer restore()
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	_, _, err := prepareBundlePath("/fake/exe", logger)
 	if err == nil {
 		t.Fatal("expected error when readPSPFFromResourceFn fails")
@@ -49,7 +45,7 @@ func TestShowBundleInfoPrepareBundlePathError(t *testing.T) {
 	defer restore()
 
 	exitCode, panicked := withStubbedExit(func() {
-		showBundleInfo("/fake/exe", logging.NewNullLogger())
+		showBundleInfo("/fake/exe", hclog.NewNullLogger())
 	})
 	if panicked {
 		t.Fatal("unexpected non-exit panic in showBundleInfo")
@@ -66,7 +62,7 @@ func TestShowMetadataPrepareBundlePathError(t *testing.T) {
 	defer restore()
 
 	exitCode, panicked := withStubbedExit(func() {
-		showMetadata("/fake/exe", logging.NewNullLogger())
+		showMetadata("/fake/exe", hclog.NewNullLogger())
 	})
 	if panicked {
 		t.Fatal("unexpected non-exit panic in showMetadata")
@@ -83,7 +79,7 @@ func TestVerifyBundlePrepareBundlePathError(t *testing.T) {
 	defer restore()
 
 	exitCode, panicked := withStubbedExit(func() {
-		verifyBundle("/fake/exe", logging.NewNullLogger())
+		verifyBundle("/fake/exe", hclog.NewNullLogger())
 	})
 	if panicked {
 		t.Fatal("unexpected non-exit panic in verifyBundle")
@@ -100,7 +96,7 @@ func TestExtractSlotPrepareBundlePathError(t *testing.T) {
 	defer restore()
 
 	exitCode, panicked := withStubbedExit(func() {
-		extractSlot("/fake/exe", "0", t.TempDir(), logging.NewNullLogger())
+		extractSlot("/fake/exe", "0", t.TempDir(), hclog.NewNullLogger())
 	})
 	if panicked {
 		t.Fatal("unexpected non-exit panic in extractSlot")
@@ -116,7 +112,7 @@ func TestRunBundleWithCwdPrepareBundlePathErrorPE(t *testing.T) {
 	restore := stubPEResourceReadError(t)
 	defer restore()
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	_, err := runBundleWithCwd("/fake/exe", nil, t.TempDir(), logger)
 	if err == nil {
 		t.Fatal("expected error when prepareBundlePath fails in runBundleWithCwd")
@@ -135,12 +131,12 @@ func TestRunBundleWithCwdPrepareBundlePathCleanup(t *testing.T) {
 		readPSPFFromResourceFn = oldRead
 	})
 	// Return "has resource" = true with invalid (tiny) bundle data → NewReaderWithLogger fails
-	hasPSPFResourceFn = func(path string, logger *slog.Logger) bool { return true }
-	readPSPFFromResourceFn = func(path string, logger *slog.Logger) ([]byte, error) {
+	hasPSPFResourceFn = func(path string, logger hclog.Logger) bool { return true }
+	readPSPFFromResourceFn = func(path string, logger hclog.Logger) ([]byte, error) {
 		return []byte("not-a-real-pspf-bundle-data"), nil
 	}
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	_, err := runBundleWithCwd("/fake/exe", nil, t.TempDir(), logger)
 	// We expect an error (NewReaderWithLogger fails on tiny data).
 	if err == nil {
@@ -152,7 +148,7 @@ func TestRunBundleWithCwdPrepareBundlePathCleanup(t *testing.T) {
 // when the slot string is not a valid integer, extractSlot calls osExitFn(1).
 func TestExtractSlotInvalidSlotIndex(t *testing.T) {
 	bundle := buildLauncherTestBundle(t)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	exitCode, panicked := withStubbedExit(func() {
 		extractSlot(bundle, "not-an-int", t.TempDir(), logger)
@@ -169,7 +165,7 @@ func TestExtractSlotInvalidSlotIndex(t *testing.T) {
 // when the slot index is out of range, extractSlot calls osExitFn(1).
 func TestExtractSlotOutOfRange(t *testing.T) {
 	bundle := buildLauncherTestBundle(t)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	exitCode, panicked := withStubbedExit(func() {
 		extractSlot(bundle, "999", t.TempDir(), logger)

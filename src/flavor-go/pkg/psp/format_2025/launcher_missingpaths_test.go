@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -9,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // TestLaunchWithLogLevelNonCLIExecBundleError exercises the non-CLI path
@@ -208,7 +205,7 @@ func TestLaunchWithLogLevelRunCommandPostExitFn(t *testing.T) {
 // json.NewEncoder(os.Stdout).Encode(...) will fail.
 func TestShowMetadataEncodeFailure(t *testing.T) {
 	bundle := buildLauncherTestBundle(t)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	oldExit := osExitFn
 	var capturedCode int
@@ -247,7 +244,7 @@ func TestShowMetadataEncodeFailure(t *testing.T) {
 func TestShowMetadataNewReaderFailure(t *testing.T) {
 	// buildBundleWithBadMetadata creates a valid index but unreadable metadata.
 	bundle := buildBundleWithBadMetadata(t)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	exitCode, panicked := withStubbedExit(func() {
 		showMetadata(bundle, logger)
@@ -343,7 +340,7 @@ func TestExecBundleReplaceArgvAndEnvCapture(t *testing.T) {
 	t.Setenv(EnvValidation, "none")
 
 	bundle := buildLauncherTestBundle(t)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	err := execBundleReplace(bundle, nil, t.TempDir(), logger)
 	if err == nil || !strings.Contains(err.Error(), "unexpectedly") {
