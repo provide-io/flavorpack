@@ -237,7 +237,7 @@ class PSPFLauncher(PSPFReader):
 
         is_tarball = False
         with (
-            contextlib.suppress(tarfile.TarError, EOFError, OSError),
+            contextlib.suppress(tarfile.TarError, EOFError),
             tarfile.open(fileobj=io.BytesIO(data), mode="r:*"),
         ):
             # If we can open it, it's a tarball
