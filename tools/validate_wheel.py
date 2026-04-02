@@ -63,6 +63,17 @@ HELPER_FAMILIES = [
 ]
 
 
+def _os_from_tag(tag: str) -> str:
+    """Return OS portion of a PSPF platform name from a wheel platform tag."""
+    if "win" in tag:
+        return "windows"
+    if "linux" in tag:
+        return "linux"
+    if "freebsd" in tag:
+        return "freebsd"
+    return "darwin"
+
+
 def _parse_wheel_platform(wheel_path: Path) -> str:
     """Parse and normalize the platform tag from a wheel filename."""
     parts = wheel_path.stem.split("-")
@@ -76,15 +87,9 @@ def _parse_wheel_platform(wheel_path: Path) -> str:
     if platform_tag == "any":
         return "any"
     if "x86_64" in platform_tag or "amd64" in platform_tag:
-        if "win" in platform_tag:
-            return "windows_amd64"
-        return "linux_amd64" if "linux" in platform_tag else "darwin_amd64"
+        return f"{_os_from_tag(platform_tag)}_amd64"
     if "aarch64" in platform_tag or "arm64" in platform_tag:
-        if "win" in platform_tag:
-            return "windows_arm64"
-        if "linux" in platform_tag:
-            return "linux_arm64"
-        return "darwin_arm64"  # macosx_*_arm64
+        return f"{_os_from_tag(platform_tag)}_arm64"
     return platform_tag  # fallback: return as-is
 
 
