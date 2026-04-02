@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/go-hclog"
@@ -350,6 +351,13 @@ func TestDoBuildLoadsKeyFilesAndCarriesRuntimeMetadata(t *testing.T) {
 	}
 	if !bytes.Equal(index.PublicKey[:32], publicKey[:32]) {
 		t.Fatalf("expected index public key to match loaded key")
+	}
+	expectedFP, err := ComputeKeyFingerprint(publicKey)
+	if err != nil {
+		t.Fatalf("ComputeKeyFingerprint() error = %v", err)
+	}
+	if got := strings.TrimRight(string(index.AttestationKeyFp[:]), "\x00"); got != expectedFP {
+		t.Fatalf("expected attestation fingerprint %q, got %q", expectedFP, got)
 	}
 	if metadata.Execution == nil || metadata.Execution.Environment["APP_MODE"] != "test" {
 		t.Fatalf("expected execution environment metadata, got %#v", metadata.Execution)

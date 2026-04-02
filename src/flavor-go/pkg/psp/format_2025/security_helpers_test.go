@@ -59,6 +59,24 @@ func TestIntToUint64Checked(t *testing.T) {
 	}
 }
 
+func TestFloat64ToFileModeChecked(t *testing.T) {
+	t.Parallel()
+
+	got, err := float64ToFileModeChecked(0o640, "mode")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != 0o640 {
+		t.Fatalf("got %o, want 0640", got)
+	}
+
+	for _, value := range []float64{-1, math.MaxUint32 + 1, 12.5} {
+		if _, err := float64ToFileModeChecked(value, "mode"); err == nil {
+			t.Fatalf("expected range error for %v", value)
+		}
+	}
+}
+
 func TestJoinUnderBase(t *testing.T) {
 	t.Parallel()
 
