@@ -12,6 +12,7 @@ import (
 )
 
 var executablePathFn = os.Executable
+var launchFn = format_2025.LaunchWithLogLevel
 
 func main() {
 	// Set up panic recovery to return specific exit code

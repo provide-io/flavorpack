@@ -109,7 +109,7 @@ func savePackageChecksum(paths *WorkenvPaths, checksum uint32, logger *slog.Logg
 	checksumStr := fmt.Sprintf("%08x", checksum)
 
 	// Open file with explicit sync to ensure write is flushed before exec
-	file, err := openFileFn(checksumPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, FilePerms)
+	file, err := openFileFn(checksumPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		logger.Debug("⚠️ Failed to open checksum file", "error", err)
 		return err
