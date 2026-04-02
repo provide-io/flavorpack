@@ -186,7 +186,7 @@ jobs:
           version: '14.2'
           architecture: x86-64
           shell: bash
-          sync_files: runner-to-vm
+          sync_files: true
           run: ci/freebsd-test-go.sh
 
       - name: 📦 Package artifacts
@@ -303,7 +303,7 @@ jobs:
           version: '14.2'
           architecture: arm64
           shell: bash
-          sync_files: runner-to-vm
+          sync_files: true
           run: ci/freebsd-test-go.sh
 
       - name: 📦 Package artifacts
