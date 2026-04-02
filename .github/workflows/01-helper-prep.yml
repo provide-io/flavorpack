@@ -50,9 +50,9 @@ jobs:
           # In local act mode we keep this to linux_amd64 so the workflow stays executable.
           # FreeBSD platforms have dedicated jobs below; Windows is included here.
           if [ "${ACT:-}" = "true" ]; then
-            ALL_PLATFORMS='[{"platform":"linux_amd64","os":"ubuntu-24.04","rust_target":"x86_64-unknown-linux-musl","use_musl":true}]'
+            ALL_PLATFORMS='[{"platform":"linux_amd64","os":"ubuntu-24.04","rust_target":"x86_64-unknown-linux-musl","use_musl":true,"emoji":"🐧"}]'
           else
-            ALL_PLATFORMS='[{"platform":"linux_amd64","os":"ubuntu-24.04","rust_target":"x86_64-unknown-linux-musl","use_musl":true},{"platform":"linux_arm64","os":"ubuntu-24.04-arm","rust_target":"aarch64-unknown-linux-musl","use_musl":true},{"platform":"darwin_amd64","os":"macos-15-intel","rust_target":"x86_64-apple-darwin","use_musl":false},{"platform":"darwin_arm64","os":"macos-15","rust_target":"aarch64-apple-darwin","use_musl":false},{"platform":"windows_amd64","os":"windows-2022","rust_target":"x86_64-pc-windows-msvc","use_musl":false},{"platform":"windows_arm64","os":"windows-11-arm","rust_target":"aarch64-pc-windows-msvc","use_musl":false}]'
+            ALL_PLATFORMS='[{"platform":"linux_amd64","os":"ubuntu-24.04","rust_target":"x86_64-unknown-linux-musl","use_musl":true,"emoji":"🐧"},{"platform":"linux_arm64","os":"ubuntu-24.04-arm","rust_target":"aarch64-unknown-linux-musl","use_musl":true,"emoji":"🐧"},{"platform":"darwin_amd64","os":"macos-15-intel","rust_target":"x86_64-apple-darwin","use_musl":false,"emoji":"🍎"},{"platform":"darwin_arm64","os":"macos-15","rust_target":"aarch64-apple-darwin","use_musl":false,"emoji":"🍎"},{"platform":"windows_amd64","os":"windows-2022","rust_target":"x86_64-pc-windows-msvc","use_musl":false,"emoji":"🪟"},{"platform":"windows_arm64","os":"windows-11-arm","rust_target":"aarch64-pc-windows-msvc","use_musl":false,"emoji":"🪟"}]'
           fi
 
           PLATFORMS="${{ inputs.platforms }}"
@@ -75,7 +75,7 @@ jobs:
   # ── Native platform builds (Linux, macOS, Windows) ─────────────────────────
   # Uses the reusable build-platform.yml workflow to avoid duplication.
   build:
-    name: 🔨 ${{ matrix.platform }}
+    name: ${{ matrix.emoji }} ${{ matrix.platform }}
     needs: setup
     strategy:
       fail-fast: false
@@ -94,7 +94,7 @@ jobs:
   # Go helpers only — no Rust target for FreeBSD yet.
   # Both jobs run on ubuntu-24.04; cross-platform-actions ships x86-64 QEMU binaries only.
   build-freebsd-amd64:
-    name: 🐡 freebsd_amd64
+    name: 😈 freebsd_amd64
     needs: setup
     runs-on: ubuntu-24.04
     continue-on-error: true
@@ -155,7 +155,7 @@ jobs:
           path: artifacts/metadata/
 
   build-freebsd-arm64:
-    name: 🐡 freebsd_arm64
+    name: 😈 freebsd_arm64
     needs: setup
     runs-on: ubuntu-24.04
     continue-on-error: true
