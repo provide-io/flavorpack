@@ -4,10 +4,15 @@ import (
 	"archive/tar"
 	"bytes"
 	"compress/gzip"
+	"crypto/ed25519"
+	cryptorand "crypto/rand"
 	"crypto/sha256"
+	"crypto/x509"
 	"encoding/binary"
 	"encoding/json"
+	"encoding/pem"
 	"errors"
+	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -240,6 +245,79 @@ func buildRawBundleForTests(t *testing.T, slotDescriptors []SlotDescriptor, meta
 	}
 
 	return bundlePath
+}
+
+func buildSignedBundleForPolicyTests(t *testing.T, manifest BuildOptions) string {
+	t.Helper()
+
+	if manifest.Package.Name == "" {
+		manifest.Package.Name = "demo"
+	}
+	if manifest.Package.Version == "" {
+		manifest.Package.Version = "1.0.0"
+	}
+	if manifest.Execution.Command == "" {
+		manifest.Execution.Command = "/bin/true"
+	}
+
+	dir := t.TempDir()
+	manifestPath := filepath.Join(dir, "manifest.json")
+	outputPath := filepath.Join(dir, "bundle.psp")
+	launcherPath := filepath.Join(dir, "launcher.sh")
+	privateKeyPath := filepath.Join(dir, "private.pem")
+	publicKeyPath := filepath.Join(dir, "public.pem")
+
+	if err := os.WriteFile(launcherPath, []byte("#!/bin/sh\nexit 0\n"), 0o755); err != nil {
+		t.Fatalf("WriteFile(launcher) error = %v", err)
+	}
+
+	pub, priv, err := ed25519.GenerateKey(cryptorand.Reader)
+	if err != nil {
+		t.Fatalf("GenerateKey() error = %v", err)
+	}
+	privDER, err := x509.MarshalPKCS8PrivateKey(priv)
+	if err != nil {
+		t.Fatalf("MarshalPKCS8PrivateKey() error = %v", err)
+	}
+	pubDER, err := x509.MarshalPKIXPublicKey(pub)
+	if err != nil {
+		t.Fatalf("MarshalPKIXPublicKey() error = %v", err)
+	}
+	if err := os.WriteFile(privateKeyPath, pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: privDER}), 0o600); err != nil {
+		t.Fatalf("WriteFile(private key) error = %v", err)
+	}
+	if err := os.WriteFile(publicKeyPath, pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: pubDER}), 0o600); err != nil {
+		t.Fatalf("WriteFile(public key) error = %v", err)
+	}
+
+	manifestJSON, err := json.Marshal(manifest)
+	if err != nil {
+		t.Fatalf("json.Marshal(manifest) error = %v", err)
+	}
+	if err := os.WriteFile(manifestPath, manifestJSON, 0o600); err != nil {
+		t.Fatalf("WriteFile(manifest) error = %v", err)
+	}
+
+	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, privateKeyPath, publicKeyPath, "")
+	return outputPath
+}
+
+func patchBundleBuildTimestamp(t *testing.T, bundlePath string, buildTimestamp uint64) {
+	t.Helper()
+
+	data, err := os.ReadFile(bundlePath)
+	if err != nil {
+		t.Fatalf("ReadFile(bundle) error = %v", err)
+	}
+	if len(data) < MagicTrailerSize {
+		t.Fatalf("bundle too small to patch build timestamp: %d", len(data))
+	}
+
+	trailerStart := len(data) - MagicTrailerSize
+	binary.LittleEndian.PutUint64(data[trailerStart+4+704:trailerStart+4+712], buildTimestamp)
+	if err := os.WriteFile(bundlePath, data, 0o600); err != nil {
+		t.Fatalf("WriteFile(bundle) error = %v", err)
+	}
 }
 
 // This test only proves the non-Windows/appended-EOF path. The PE-resource
@@ -1153,6 +1231,221 @@ func TestRunBundleWithCwdRejectsPolicyViolation(t *testing.T) {
 	logger := hclog.NewNullLogger()
 	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger); err == nil || !strings.Contains(err.Error(), "policy violation") {
 		t.Fatalf("runBundleWithCwd() error = %v, want policy violation", err)
+	}
+}
+
+func TestRunBundleWithCwdRejectsUnsignedBundleWhenTrustedKeyRequired(t *testing.T) {
+	t.Setenv(EnvCacheDir, t.TempDir())
+	t.Setenv(EnvValidation, "none")
+	t.Setenv(EnvWorkenvCache, "false")
+	t.Setenv(EnvTrustedKeysDir, filepath.Join(t.TempDir(), "missing-trusted-keys"))
+
+	policyDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(policyDir, "policy.toml"), []byte("[trust]\nrequire_trusted_key = true\n"), 0o600); err != nil {
+		t.Fatalf("WriteFile(policy) error = %v", err)
+	}
+	t.Setenv(EnvConfigDir, policyDir)
+
+	bundle := buildMultiSlotBundleForTests(t, []multiSlotBundleSpec{
+		{
+			meta: SlotMetadata{
+				ID:     "policy-slot",
+				Target: "{workenv}",
+			},
+			storedData:   []byte("payload"),
+			originalData: []byte("payload"),
+			permissions:  0o644,
+		},
+	}, Metadata{
+		Format:        "PSPF/2025",
+		FormatVersion: "2025.0",
+		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
+		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Build:         &BuildInfo{Tool: "flavor-go"},
+	})
+
+	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), hclog.NewNullLogger()); err == nil || !strings.Contains(err.Error(), "policy violation") {
+		t.Fatalf("runBundleWithCwd() error = %v, want require_trusted_key failure", err)
+	}
+}
+
+func TestRunBundleWithCwdRejectsSignedBundleWhenTrustedKeyStoreMissing(t *testing.T) {
+	t.Setenv(EnvCacheDir, t.TempDir())
+	t.Setenv(EnvValidation, "none")
+	t.Setenv(EnvWorkenvCache, "false")
+	t.Setenv(EnvTrustedKeysDir, filepath.Join(t.TempDir(), "missing-trusted-keys"))
+
+	policyDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(policyDir, "policy.toml"), []byte("[trust]\nrequire_trusted_key = true\n"), 0o600); err != nil {
+		t.Fatalf("WriteFile(policy) error = %v", err)
+	}
+	t.Setenv(EnvConfigDir, policyDir)
+
+	bundle := buildSignedBundleForPolicyTests(t, BuildOptions{
+		Package:   PackageConfig{Name: "signed-demo", Version: "1.0.0"},
+		Execution: ExecutionConfig{Command: "/bin/true"},
+	})
+
+	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), hclog.NewNullLogger()); err == nil || !strings.Contains(err.Error(), "policy violation") {
+		t.Fatalf("runBundleWithCwd() error = %v, want missing trust-store failure", err)
+	}
+}
+
+func TestRunBundleWithCwdRejectsUnsupportedOsKeychainPolicy(t *testing.T) {
+	t.Setenv(EnvCacheDir, t.TempDir())
+	t.Setenv(EnvValidation, "none")
+	t.Setenv(EnvWorkenvCache, "false")
+
+	policyDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(policyDir, "policy.toml"), []byte("[trust]\nuse_os_keychain = true\n"), 0o600); err != nil {
+		t.Fatalf("WriteFile(policy) error = %v", err)
+	}
+	t.Setenv(EnvConfigDir, policyDir)
+
+	bundle := buildMultiSlotBundleForTests(t, []multiSlotBundleSpec{
+		{
+			meta: SlotMetadata{
+				ID:     "policy-slot",
+				Target: "{workenv}",
+			},
+			storedData:   []byte("payload"),
+			originalData: []byte("payload"),
+			permissions:  0o644,
+		},
+	}, Metadata{
+		Format:        "PSPF/2025",
+		FormatVersion: "2025.0",
+		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
+		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Build:         &BuildInfo{Tool: "flavor-go"},
+	})
+
+	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), hclog.NewNullLogger()); err == nil || !strings.Contains(err.Error(), "policy violation") {
+		t.Fatalf("runBundleWithCwd() error = %v, want unsupported keychain policy failure", err)
+	}
+}
+
+func TestRunBundleWithCwdRejectsInvalidOperatorPolicyFile(t *testing.T) {
+	t.Setenv(EnvCacheDir, t.TempDir())
+	t.Setenv(EnvValidation, "none")
+	t.Setenv(EnvWorkenvCache, "false")
+
+	policyDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(policyDir, "policy.toml"), []byte("[trust\nrequire_trusted_key = true\n"), 0o600); err != nil {
+		t.Fatalf("WriteFile(policy) error = %v", err)
+	}
+	t.Setenv(EnvConfigDir, policyDir)
+
+	bundle := buildMultiSlotBundleForTests(t, []multiSlotBundleSpec{
+		{
+			meta: SlotMetadata{
+				ID:     "policy-slot",
+				Target: "{workenv}",
+			},
+			storedData:   []byte("payload"),
+			originalData: []byte("payload"),
+			permissions:  0o644,
+		},
+	}, Metadata{
+		Format:        "PSPF/2025",
+		FormatVersion: "2025.0",
+		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
+		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Build:         &BuildInfo{Tool: "flavor-go"},
+	})
+
+	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), hclog.NewNullLogger()); err == nil || !strings.Contains(err.Error(), "failed to load operator policy") {
+		t.Fatalf("runBundleWithCwd() error = %v, want invalid policy failure", err)
+	}
+}
+
+func TestRunBundleWithCwdRejectsWriteFilePathEscapeViaPackageNamePlaceholder(t *testing.T) {
+	t.Setenv(EnvCacheDir, t.TempDir())
+	t.Setenv(EnvValidation, "none")
+	t.Setenv(EnvWorkenvCache, "false")
+
+	bundle := buildMultiSlotBundleForTests(t, []multiSlotBundleSpec{
+		{
+			meta: SlotMetadata{
+				ID:     "dir-slot",
+				Target: "{workenv}",
+			},
+			storedData:   []byte("payload"),
+			originalData: []byte("payload"),
+			permissions:  0o644,
+		},
+	}, Metadata{
+		Format:        "PSPF/2025",
+		FormatVersion: "2025.0",
+		Package:       PackageInfo{Name: "../escape", Version: "1.0.0"},
+		SetupCommands: []interface{}{map[string]interface{}{
+			"type":    "write_file",
+			"path":    "{workenv}/{package_name}.txt",
+			"content": "hello",
+		}},
+		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Build:     &BuildInfo{Tool: "flavor-go"},
+	})
+
+	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), hclog.NewNullLogger()); err == nil || !strings.Contains(err.Error(), "escapes work environment directory") {
+		t.Fatalf("runBundleWithCwd() error = %v, want write_file path escape failure", err)
+	}
+}
+
+func TestRunBundleWithCwdRejectsBuildTimestampOverflow(t *testing.T) {
+	t.Setenv(EnvCacheDir, t.TempDir())
+	t.Setenv(EnvValidation, "none")
+	t.Setenv(EnvWorkenvCache, "false")
+
+	bundle := buildSignedBundleForPolicyTests(t, BuildOptions{
+		Package:   PackageConfig{Name: "signed-demo", Version: "1.0.0"},
+		Execution: ExecutionConfig{Command: "/bin/true"},
+	})
+	patchBundleBuildTimestamp(t, bundle, math.MaxInt64+1)
+
+	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), hclog.NewNullLogger()); err == nil || !strings.Contains(err.Error(), "invalid build timestamp") {
+		t.Fatalf("runBundleWithCwd() error = %v, want invalid build timestamp", err)
+	}
+}
+
+func TestRunBundleWithCwdRejectsOutOfRangeWriteFileMode(t *testing.T) {
+	t.Setenv(EnvCacheDir, t.TempDir())
+	t.Setenv(EnvValidation, "none")
+	t.Setenv(EnvWorkenvCache, "false")
+
+	bundle := buildMultiSlotBundleForTests(t, []multiSlotBundleSpec{
+		{
+			meta: SlotMetadata{
+				ID:     "policy-slot",
+				Target: "{workenv}",
+			},
+			storedData:   []byte("payload"),
+			originalData: []byte("payload"),
+			permissions:  0o644,
+		},
+	}, Metadata{
+		Format:        "PSPF/2025",
+		FormatVersion: "2025.0",
+		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
+		Workenv: &WorkenvInfo{
+			Directories: []DirectorySpec{
+				{Path: "{workenv}/metadata", Mode: "0700"},
+			},
+		},
+		SetupCommands: []interface{}{
+			map[string]interface{}{
+				"type":    "write_file",
+				"path":    "{workenv}/metadata/generated.txt",
+				"content": "hello",
+				"mode":    float64(math.MaxUint32) + 1,
+			},
+		},
+		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Build:     &BuildInfo{Tool: "flavor-go"},
+	})
+
+	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), hclog.NewNullLogger()); err == nil || !strings.Contains(err.Error(), "setup command mode") {
+		t.Fatalf("runBundleWithCwd() error = %v, want setup command mode range failure", err)
 	}
 }
 

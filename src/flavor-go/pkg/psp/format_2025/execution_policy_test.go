@@ -43,6 +43,21 @@ func TestMergePolicy_MaxAgeDays(t *testing.T) {
 	}
 }
 
+func TestMergePolicy_OperatorFlagsPropagated(t *testing.T) {
+	pkg := PackagePolicy{}
+	op := OperatorPolicy{RequireTrustedKey: true, UseOsKeychain: true, RequireSBOM: true}
+	eff := MergePolicy(pkg, op)
+	if !eff.RequireTrustedKey {
+		t.Fatal("expected require_trusted_key to propagate")
+	}
+	if !eff.UseOsKeychain {
+		t.Fatal("expected use_os_keychain to propagate")
+	}
+	if !eff.RequireSBOM {
+		t.Fatal("expected require_sbom to propagate")
+	}
+}
+
 func TestMergePolicy_Platforms_Intersection(t *testing.T) {
 	pkg := PackagePolicy{Platforms: []string{"linux_amd64", "darwin_arm64"}}
 	op := OperatorPolicy{AllowPlatforms: []string{"linux_amd64", "linux_arm64"}}
@@ -74,6 +89,13 @@ func TestEnforcePolicy_Permissive(t *testing.T) {
 	eff := EffectivePolicy{}
 	if err := EnforcePolicy(eff, 0, false, true); err != nil {
 		t.Errorf("expected no error, got: %v", err)
+	}
+}
+
+func TestEnforcePolicy_UseOsKeychainUnsupported(t *testing.T) {
+	eff := EffectivePolicy{UseOsKeychain: true}
+	if err := EnforcePolicy(eff, 0, false, true); err == nil {
+		t.Fatal("expected use_os_keychain to be rejected")
 	}
 }
 
@@ -195,33 +217,6 @@ func TestLoadOperatorPolicy_WithFile(t *testing.T) {
 	}
 }
 
-func TestParseMinimalTOML_MaxAgeDays(t *testing.T) {
-	content := "[execution]\nmax_age_days = 90\n"
-	policy := OperatorPolicy{}
-	parseMinimalTOML([]byte(content), &policy)
-	if policy.MaxAgeDays == nil || *policy.MaxAgeDays != 90 {
-		t.Errorf("expected max_age_days=90, got %v", policy.MaxAgeDays)
-	}
-}
-
-func TestParseMinimalTOML_RequireSBOM(t *testing.T) {
-	content := "[attestation]\nrequire_sbom = true\n"
-	policy := OperatorPolicy{}
-	parseMinimalTOML([]byte(content), &policy)
-	if !policy.RequireSBOM {
-		t.Error("expected require_sbom=true")
-	}
-}
-
-func TestParseMinimalTOML_IgnoresComments(t *testing.T) {
-	content := "# comment\n[trust]\n# another comment\nrequire_trusted_key = true\n"
-	policy := OperatorPolicy{}
-	parseMinimalTOML([]byte(content), &policy)
-	if !policy.RequireTrustedKey {
-		t.Error("expected require_trusted_key=true after ignoring comments")
-	}
-}
-
 func TestGetUserPolicyFile_XDG(t *testing.T) {
 	t.Setenv(EnvConfigDir, "")
 	t.Setenv("XDG_CONFIG_HOME", "/tmp/xdg")
@@ -252,27 +247,6 @@ func TestGetUserPolicyFile_NoEnv(t *testing.T) {
 	_ = getUserPolicyFile()
 }
 
-func TestParseMinimalTOML_InlineComment(t *testing.T) {
-	content := "[execution]\nrefuse_root = true # disable if needed\n"
-	policy := OperatorPolicy{}
-	parseMinimalTOML([]byte(content), &policy)
-	if !policy.RefuseRoot {
-		t.Error("expected refuse_root=true after stripping inline comment")
-	}
-}
-
-func TestParseMinimalTOML_AllowPlatforms(t *testing.T) {
-	content := "[execution]\nallow_platforms = [\"linux_amd64\", \"linux_arm64\"]\n"
-	policy := OperatorPolicy{}
-	parseMinimalTOML([]byte(content), &policy)
-	if len(policy.AllowPlatforms) != 2 {
-		t.Errorf("expected 2 platforms, got %d: %v", len(policy.AllowPlatforms), policy.AllowPlatforms)
-	}
-	if policy.AllowPlatforms[0] != "linux_amd64" {
-		t.Errorf("expected linux_amd64, got %s", policy.AllowPlatforms[0])
-	}
-}
-
 func TestLoadOperatorPolicyReturnsErrorWhenPolicyPathIsDirectory(t *testing.T) {
 	dir := t.TempDir()
 	policyDir := filepath.Join(dir, "policy.toml")
@@ -287,25 +261,54 @@ func TestLoadOperatorPolicyReturnsErrorWhenPolicyPathIsDirectory(t *testing.T) {
 	}
 }
 
-func TestParseMinimalTOMLParsesExtendedFieldsAndListFallback(t *testing.T) {
-	content := "[trust]\nuse_os_keychain = true\n[execution]\nmax_age_days = not-a-number\nallow_platforms = ['linux_amd64', \"linux_arm64\"]\n[attestation]\nrequire_sbom = true\n"
-	policy := OperatorPolicy{}
-	parseMinimalTOML([]byte(content), &policy)
+func TestLoadOperatorPolicyRejectsMalformedUserPolicy(t *testing.T) {
+	dir := t.TempDir()
+	policyPath := filepath.Join(dir, "policy.toml")
+	if err := os.WriteFile(policyPath, []byte("[broken toml\nnot valid ===\n"), 0o600); err != nil {
+		t.Fatalf("WriteFile(policy) error = %v", err)
+	}
 
-	if !policy.UseOsKeychain {
-		t.Fatal("expected use_os_keychain=true")
+	t.Setenv(EnvConfigDir, dir)
+	_, err := LoadOperatorPolicy()
+	if err == nil {
+		t.Fatal("expected malformed user policy to fail closed")
 	}
-	if policy.MaxAgeDays != nil {
-		t.Fatalf("expected invalid max_age_days to be ignored, got %v", policy.MaxAgeDays)
+}
+
+func TestLoadOperatorPolicyRejectsMalformedSystemPolicy(t *testing.T) {
+	dir := t.TempDir()
+	systemPath := filepath.Join(dir, "system-policy.toml")
+	if err := os.WriteFile(systemPath, []byte("[broken toml\nnot valid ===\n"), 0o600); err != nil {
+		t.Fatalf("WriteFile(system policy) error = %v", err)
 	}
-	if !policy.RequireSBOM {
-		t.Fatal("expected require_sbom=true")
+
+	oldSystem := getSystemPolicyFileImpl
+	oldUser := getUserPolicyFileImpl
+	t.Cleanup(func() {
+		getSystemPolicyFileImpl = oldSystem
+		getUserPolicyFileImpl = oldUser
+	})
+
+	getSystemPolicyFileImpl = func() string { return systemPath }
+	getUserPolicyFileImpl = func() string { return filepath.Join(dir, "missing-user-policy.toml") }
+
+	_, err := LoadOperatorPolicy()
+	if err == nil {
+		t.Fatal("expected malformed system policy to fail closed")
 	}
-	if len(policy.AllowPlatforms) != 2 || policy.AllowPlatforms[0] != "linux_amd64" || policy.AllowPlatforms[1] != "linux_arm64" {
-		t.Fatalf("unexpected allow_platforms: %v", policy.AllowPlatforms)
+}
+
+func TestLoadOperatorPolicyRejectsUnknownUserPolicyKey(t *testing.T) {
+	dir := t.TempDir()
+	policyPath := filepath.Join(dir, "policy.toml")
+	if err := os.WriteFile(policyPath, []byte("[trust]\nrequire_trusted_key = true\nunexpected = true\n"), 0o600); err != nil {
+		t.Fatalf("WriteFile(policy) error = %v", err)
 	}
-	if got := parseTOMLStringList("not-a-list"); got != nil {
-		t.Fatalf("parseTOMLStringList() = %v, want nil for invalid input", got)
+
+	t.Setenv(EnvConfigDir, dir)
+	_, err := LoadOperatorPolicy()
+	if err == nil {
+		t.Fatal("expected unknown user policy key to fail closed")
 	}
 }
 
