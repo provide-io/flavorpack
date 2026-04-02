@@ -125,7 +125,18 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
+      - name: 💾 Cache FreeBSD helpers
+        id: cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            dist/bin/flavor-go-*-${{ needs.setup.outputs.version }}-freebsd_amd64
+            dist/bin/flavor-rs-*-${{ needs.setup.outputs.version }}-freebsd_amd64
+            artifacts/*.zip
+          key: ${{ needs.setup.outputs.go_cache_key_base }}-${{ needs.setup.outputs.rust_cache_key_base }}-freebsd_amd64-${{ needs.setup.outputs.version }}
+
       - name: 🏗️ Prep FreeBSD system
+        if: steps.cache.outputs.cache-hit != 'true'
         uses: cross-platform-actions/action@v0.32.0
         with:
           operating_system: freebsd
@@ -135,6 +146,7 @@ jobs:
           run: ci/freebsd-prep-system.sh
 
       - name: 🐹 Build Go helpers
+        if: steps.cache.outputs.cache-hit != 'true'
         uses: cross-platform-actions/action@v0.32.0
         with:
           operating_system: freebsd
@@ -145,6 +157,7 @@ jobs:
           run: ci/freebsd-build-go.sh ${{ needs.setup.outputs.version }} amd64
 
       - name: 🦀 Prep Rust
+        if: steps.cache.outputs.cache-hit != 'true'
         uses: cross-platform-actions/action@v0.32.0
         with:
           operating_system: freebsd
@@ -155,6 +168,7 @@ jobs:
           run: ci/freebsd-prep-rust.sh
 
       - name: 🔨 Build Rust helpers
+        if: steps.cache.outputs.cache-hit != 'true'
         uses: cross-platform-actions/action@v0.32.0
         with:
           operating_system: freebsd
@@ -165,6 +179,7 @@ jobs:
           run: ci/freebsd-build-rust.sh ${{ needs.setup.outputs.version }} amd64
 
       - name: 🧪 Test Go
+        if: steps.cache.outputs.cache-hit != 'true'
         uses: cross-platform-actions/action@v0.32.0
         with:
           operating_system: freebsd
@@ -175,6 +190,7 @@ jobs:
           run: ci/freebsd-test-go.sh
 
       - name: 📦 Package artifacts
+        if: steps.cache.outputs.cache-hit != 'true'
         shell: bash
         run: ci/package-helpers.sh freebsd_amd64 ${{ needs.setup.outputs.version }}
 
@@ -190,7 +206,7 @@ jobs:
         shell: bash
         run: |
           export PYTHONUTF8=1 PYTHONIOENCODING=utf-8
-          python3 ci/test-metadata.py platform freebsd_amd64 ${{ needs.setup.outputs.version }} false
+          python3 ci/test-metadata.py platform freebsd_amd64 ${{ needs.setup.outputs.version }} ${{ steps.cache.outputs.cache-hit }}
 
       - name: 📤 Upload artifacts
         uses: actions/upload-artifact@v7
@@ -226,7 +242,18 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
+      - name: 💾 Cache FreeBSD helpers
+        id: cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            dist/bin/flavor-go-*-${{ needs.setup.outputs.version }}-freebsd_arm64
+            dist/bin/flavor-rs-*-${{ needs.setup.outputs.version }}-freebsd_arm64
+            artifacts/*.zip
+          key: ${{ needs.setup.outputs.go_cache_key_base }}-${{ needs.setup.outputs.rust_cache_key_base }}-freebsd_arm64-${{ needs.setup.outputs.version }}
+
       - name: 🏗️ Prep FreeBSD system
+        if: steps.cache.outputs.cache-hit != 'true'
         uses: cross-platform-actions/action@v0.32.0
         with:
           operating_system: freebsd
@@ -235,7 +262,8 @@ jobs:
           shell: bash
           run: ci/freebsd-prep-system.sh
 
-      - name: 🐹 Prep Go
+      - name: 🐹 Build Go helpers
+        if: steps.cache.outputs.cache-hit != 'true'
         uses: cross-platform-actions/action@v0.32.0
         with:
           operating_system: freebsd
@@ -246,6 +274,7 @@ jobs:
           run: ci/freebsd-build-go.sh ${{ needs.setup.outputs.version }} arm64
 
       - name: 🦀 Prep Rust
+        if: steps.cache.outputs.cache-hit != 'true'
         uses: cross-platform-actions/action@v0.32.0
         with:
           operating_system: freebsd
@@ -256,6 +285,7 @@ jobs:
           run: ci/freebsd-prep-rust.sh
 
       - name: 🔨 Build Rust helpers
+        if: steps.cache.outputs.cache-hit != 'true'
         uses: cross-platform-actions/action@v0.32.0
         with:
           operating_system: freebsd
@@ -266,6 +296,7 @@ jobs:
           run: ci/freebsd-build-rust.sh ${{ needs.setup.outputs.version }} arm64
 
       - name: 🧪 Test Go
+        if: steps.cache.outputs.cache-hit != 'true'
         uses: cross-platform-actions/action@v0.32.0
         with:
           operating_system: freebsd
@@ -276,6 +307,7 @@ jobs:
           run: ci/freebsd-test-go.sh
 
       - name: 📦 Package artifacts
+        if: steps.cache.outputs.cache-hit != 'true'
         shell: bash
         run: ci/package-helpers.sh freebsd_arm64 ${{ needs.setup.outputs.version }}
 
@@ -291,7 +323,7 @@ jobs:
         shell: bash
         run: |
           export PYTHONUTF8=1 PYTHONIOENCODING=utf-8
-          python3 ci/test-metadata.py platform freebsd_arm64 ${{ needs.setup.outputs.version }} false
+          python3 ci/test-metadata.py platform freebsd_arm64 ${{ needs.setup.outputs.version }} ${{ steps.cache.outputs.cache-hit }}
 
       - name: 📤 Upload artifacts
         uses: actions/upload-artifact@v7
