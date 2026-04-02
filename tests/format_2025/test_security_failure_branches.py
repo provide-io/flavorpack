@@ -72,7 +72,7 @@ class TestVerifyIntegrityFailureBranches:
         assert result["valid"] is True  # STANDARD only needs readable metadata
 
     def test_unsigned_bundle_strict_not_tampered(self, mock_test_package: Path) -> None:
-        """Unsigned bundle (zero sig) with STRICT → signature_valid=False."""
+        """Unsigned bundle (zero sig) with STRICT → signature_valid=False, valid=False."""
         verifier = self._verifier()
         unsigned_idx = self._make_unsigned_index()
 
@@ -91,6 +91,7 @@ class TestVerifyIntegrityFailureBranches:
             result = verifier.verify_integrity(mock_test_package)
 
         assert result["signature_valid"] is False
+        assert result["valid"] is False  # STRICT: valid = signature_valid AND ...
 
     def test_no_sig_fields_in_index_standard(self, mock_test_package: Path) -> None:
         """Index without integrity_signature attr → no_sig_fields branch, STANDARD."""
@@ -114,7 +115,7 @@ class TestVerifyIntegrityFailureBranches:
         assert result["signature_valid"] is False
 
     def test_no_sig_fields_in_index_strict(self, mock_test_package: Path) -> None:
-        """Index without signature fields → strict branch logs error."""
+        """Index without signature fields → strict branch logs error, valid=False."""
         verifier = self._verifier()
         bare_idx = self._make_no_sig_fields_index()
 
@@ -133,6 +134,7 @@ class TestVerifyIntegrityFailureBranches:
             result = verifier.verify_integrity(mock_test_package)
 
         assert result["signature_valid"] is False
+        assert result["valid"] is False  # STRICT: invalid sig → valid=False
 
     def _make_signed_index(self) -> MagicMock:
         """Index with non-zero signature that will fail verification."""
@@ -235,6 +237,7 @@ class TestVerifyIntegrityFailureBranches:
 
         assert result["tamper_detected"] is True
         assert result["signature_valid"] is False
+        assert result["valid"] is False  # STRICT: tamper_detected → valid=False
 
     def test_slot_integrity_fails_standard(self, mock_test_package: Path) -> None:
         """Slot checksum failure on STANDARD → warns, tamper_detected stays False."""
