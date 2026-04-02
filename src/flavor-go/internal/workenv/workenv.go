@@ -47,7 +47,7 @@ func GetCacheRoot() string {
 		if home := os.Getenv("HOME"); home != "" {
 			return filepath.Join(home, "Library", "Caches", "flavor")
 		}
-	case "linux":
+	case "linux", "freebsd":
 		if xdgCache := os.Getenv("XDG_CACHE_HOME"); xdgCache != "" {
 			return filepath.Join(xdgCache, "flavor")
 		}
