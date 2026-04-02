@@ -251,6 +251,12 @@ fn verify_slot_checksums(reader: &mut super::reader::Reader) -> Result<bool> {
         while remaining > 0 {
             let to_read = remaining.min(CHUNK) as usize;
             let chunk = reader.backend_mut().read_at(offset, to_read)?;
+            if chunk.is_empty() {
+                return Err(FlavorError::Generic(format!(
+                    "Backend returned empty read for slot {} at offset {:#x} (remaining {})",
+                    i, offset, remaining
+                )));
+            }
             if first_chunk_preview.is_none() {
                 first_chunk_preview = Some(chunk[..16.min(chunk.len())].to_vec());
             }
