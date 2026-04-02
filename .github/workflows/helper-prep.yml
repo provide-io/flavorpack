@@ -134,17 +134,8 @@ jobs:
           path: |
             dist/bin/flavor-go-*-${{ needs.setup.outputs.version }}-freebsd_amd64
             dist/bin/flavor-rs-*-${{ needs.setup.outputs.version }}-freebsd_amd64
-            dist/bin/flavor-tastesh-freebsd_amd64
             artifacts/*.zip
-          key: ${{ needs.setup.outputs.go_cache_key_base }}-${{ needs.setup.outputs.rust_cache_key_base }}-${{ needs.setup.outputs.tastesh_cache_key_base }}-freebsd_amd64-${{ needs.setup.outputs.version }}
-
-      - name: 💾 Cache Rust toolchain + registry
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: actions/cache@v5
-        with:
-          path: vm-rust-home
-          key: freebsd-rust-amd64-${{ vars.RUST_VERSION }}-${{ hashFiles('src/flavor-rs/Cargo.lock') }}
-          restore-keys: freebsd-rust-amd64-${{ vars.RUST_VERSION }}-
+          key: ${{ needs.setup.outputs.go_cache_key_base }}-${{ needs.setup.outputs.rust_cache_key_base }}-freebsd_amd64-${{ needs.setup.outputs.version }}
 
       - name: 🏗️ Prep FreeBSD system
         if: steps.cache.outputs.cache-hit != 'true'
@@ -168,6 +159,7 @@ jobs:
           run: ci/freebsd-build-go.sh ${{ needs.setup.outputs.version }} amd64
 
       - name: 🦀 Prep Rust
+        if: steps.cache.outputs.cache-hit != 'true'
         uses: cross-platform-actions/action@v0.32.0
         with:
           operating_system: freebsd
@@ -178,6 +170,7 @@ jobs:
           run: ci/freebsd-prep-rust.sh
 
       - name: 🔨 Build Rust helpers
+        if: steps.cache.outputs.cache-hit != 'true'
         uses: cross-platform-actions/action@v0.32.0
         with:
           operating_system: freebsd
@@ -188,6 +181,7 @@ jobs:
           run: ci/freebsd-build-rust.sh ${{ needs.setup.outputs.version }} amd64
 
       - name: 🧪 Test Go
+        if: steps.cache.outputs.cache-hit != 'true'
         uses: cross-platform-actions/action@v0.32.0
         with:
           operating_system: freebsd
@@ -198,6 +192,7 @@ jobs:
           run: ci/freebsd-test-go.sh
 
       - name: 📦 Package artifacts
+        if: steps.cache.outputs.cache-hit != 'true'
         shell: bash
         run: ci/package-helpers.sh freebsd_amd64 ${{ needs.setup.outputs.version }}
 
@@ -262,17 +257,8 @@ jobs:
           path: |
             dist/bin/flavor-go-*-${{ needs.setup.outputs.version }}-freebsd_arm64
             dist/bin/flavor-rs-*-${{ needs.setup.outputs.version }}-freebsd_arm64
-            dist/bin/flavor-tastesh-freebsd_arm64
             artifacts/*.zip
-          key: ${{ needs.setup.outputs.go_cache_key_base }}-${{ needs.setup.outputs.rust_cache_key_base }}-${{ needs.setup.outputs.tastesh_cache_key_base }}-freebsd_arm64-${{ needs.setup.outputs.version }}
-
-      - name: 💾 Cache Rust toolchain + registry
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: actions/cache@v5
-        with:
-          path: vm-rust-home
-          key: freebsd-rust-arm64-${{ vars.RUST_VERSION }}-${{ hashFiles('src/flavor-rs/Cargo.lock') }}
-          restore-keys: freebsd-rust-arm64-${{ vars.RUST_VERSION }}-
+          key: ${{ needs.setup.outputs.go_cache_key_base }}-${{ needs.setup.outputs.rust_cache_key_base }}-freebsd_arm64-${{ needs.setup.outputs.version }}
 
       - name: 🏗️ Prep FreeBSD system
         if: steps.cache.outputs.cache-hit != 'true'
@@ -284,7 +270,8 @@ jobs:
           shell: bash
           run: ci/freebsd-prep-system.sh
 
-      - name: 🐹 Prep Go
+      - name: 🐹 Build Go helpers
+        if: steps.cache.outputs.cache-hit != 'true'
         uses: cross-platform-actions/action@v0.32.0
         with:
           operating_system: freebsd
@@ -295,6 +282,7 @@ jobs:
           run: ci/freebsd-build-go.sh ${{ needs.setup.outputs.version }} arm64
 
       - name: 🦀 Prep Rust
+        if: steps.cache.outputs.cache-hit != 'true'
         uses: cross-platform-actions/action@v0.32.0
         with:
           operating_system: freebsd
@@ -305,6 +293,7 @@ jobs:
           run: ci/freebsd-prep-rust.sh
 
       - name: 🔨 Build Rust helpers
+        if: steps.cache.outputs.cache-hit != 'true'
         uses: cross-platform-actions/action@v0.32.0
         with:
           operating_system: freebsd
@@ -315,6 +304,7 @@ jobs:
           run: ci/freebsd-build-rust.sh ${{ needs.setup.outputs.version }} arm64
 
       - name: 🧪 Test Go
+        if: steps.cache.outputs.cache-hit != 'true'
         uses: cross-platform-actions/action@v0.32.0
         with:
           operating_system: freebsd
@@ -325,6 +315,7 @@ jobs:
           run: ci/freebsd-test-go.sh
 
       - name: 📦 Package artifacts
+        if: steps.cache.outputs.cache-hit != 'true'
         shell: bash
         run: ci/package-helpers.sh freebsd_arm64 ${{ needs.setup.outputs.version }}
 
