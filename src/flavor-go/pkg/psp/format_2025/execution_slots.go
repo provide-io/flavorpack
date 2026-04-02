@@ -11,6 +11,15 @@ import (
 	"github.com/hashicorp/go-hclog"
 )
 
+var osRenameFn = os.Rename
+var jsonMarshalIndentFn = json.MarshalIndent
+var osReadDirFn = os.ReadDir
+var mkdirAllParentFn = os.MkdirAll
+var fixShebangsFn = fixShebangs
+var osRemoveAllFn = os.RemoveAll
+var saveIndexMetadataFn = saveIndexMetadata
+var markExtractionCompleteFn = MarkExtractionComplete
+
 // extractAndMergeSlotsToWorkenv extracts slots to temporary directory and merges them to final workenv location
 // It handles the complex slot merging logic where slot_N_* directories need to be merged (not replaced)
 func extractAndMergeSlotsToWorkenv(
@@ -59,7 +68,7 @@ func extractAndMergeSlotsToWorkenv(
 		return nil, fmt.Errorf("failed to create package metadata directory: %w", err)
 	}
 	metadataFile := filepath.Join(packageMetadataDir, "psp.json")
-	metadataJSON, err := json.MarshalIndent(metadata, "", "  ")
+	metadataJSON, err := jsonMarshalIndentFn(metadata, "", "  ")
 	if err != nil {
 		logger.Error("❌ Failed to marshal metadata", "error", err)
 		_ = os.RemoveAll(tempExtractDir)
@@ -76,7 +85,7 @@ func extractAndMergeSlotsToWorkenv(
 	logger.Info("🔄 Moving extracted content to final location...")
 
 	// List all top-level items in temp directory
-	entries, err := os.ReadDir(tempExtractDir)
+	entries, err := osReadDirFn(tempExtractDir)
 	if err != nil {
 		logger.Error("❌ Failed to read temp directory", "error", err)
 		_ = os.RemoveAll(tempExtractDir)
@@ -151,7 +160,7 @@ func extractAndMergeSlotsToWorkenv(
 				} else {
 					// For files, remove destination and move
 					_ = os.Remove(slotDest) // Remove existing file if any
-					if err := os.Rename(slotSource, slotDest); err != nil {
+					if err := osRenameFn(slotSource, slotDest); err != nil {
 						// If rename fails (e.g., cross-filesystem), fall back to copy
 						logger.Warn("Rename failed, falling back to copy", "error", err)
 						if err := copyFile(slotSource, slotDest); err != nil {
@@ -195,7 +204,7 @@ func extractAndMergeSlotsToWorkenv(
 				} else {
 					// For files, remove destination and move
 					_ = os.Remove(slotDest) // Remove existing file if any
-					if err := os.Rename(slotSource, slotDest); err != nil {
+					if err := osRenameFn(slotSource, slotDest); err != nil {
 						// If rename fails (e.g., cross-filesystem), fall back to copy
 						logger.Warn("Rename failed, falling back to copy", "error", err)
 						if err := copyFile(slotSource, slotDest); err != nil {
@@ -224,13 +233,13 @@ func extractAndMergeSlotsToWorkenv(
 				}
 				_ = os.RemoveAll(source)
 			} else {
-				if err := os.MkdirAll(filepath.Dir(dest), os.FileMode(DirPerms)); err != nil {
+				if err := mkdirAllParentFn(filepath.Dir(dest), os.FileMode(DirPerms)); err != nil {
 					logger.Error("❌ Failed to create parent directory for file", "dest", dest, "error", err)
 					_ = os.RemoveAll(tempExtractDir)
 					return nil, fmt.Errorf("failed to create parent directory for file: %w", err)
 				}
 				// For files, try rename first, then copy
-				if err := os.Rename(source, dest); err != nil {
+				if err := osRenameFn(source, dest); err != nil {
 					// If rename fails (e.g., cross-filesystem or destination exists), fall back to copy
 					logger.Warn("Rename failed, falling back to copy", "error", err)
 					if err := copyFile(source, dest); err != nil {
@@ -248,23 +257,23 @@ func extractAndMergeSlotsToWorkenv(
 	binDir := filepath.Join(workenvDir, "bin")
 	if _, err := os.Stat(binDir); err == nil {
 		logger.Info("🔧 Fixing shebangs in scripts...")
-		if err := fixShebangs(binDir, tempExtractDir, workenvDir, logger); err != nil {
+		if err := fixShebangsFn(binDir, tempExtractDir, workenvDir, logger); err != nil {
 			logger.Warn("⚠️ Failed to fix some shebangs", "error", err)
 		}
 	}
 
 	// Remove the now-empty temp directory
-	if err := os.RemoveAll(tempExtractDir); err != nil {
+	if err := osRemoveAllFn(tempExtractDir); err != nil {
 		logger.Debug("⚠️ Failed to remove temp directory", "error", err)
 	}
 
 	// Save index metadata for inspection
-	if err := saveIndexMetadata(paths, index, logger); err != nil {
+	if err := saveIndexMetadataFn(paths, index, logger); err != nil {
 		logger.Debug("⚠️ Failed to save index metadata", "error", err)
 	}
 
 	// Mark extraction as complete
-	if err := MarkExtractionComplete(paths, logger); err != nil {
+	if err := markExtractionCompleteFn(paths, logger); err != nil {
 		logger.Debug("⚠️ Failed to mark extraction complete", "error", err)
 	}
 

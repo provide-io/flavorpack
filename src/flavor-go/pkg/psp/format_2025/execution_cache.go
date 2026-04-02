@@ -9,6 +9,9 @@ import (
 	"github.com/hashicorp/go-hclog"
 )
 
+var mkdirAllFn = os.MkdirAll
+var openFileFn = os.OpenFile
+
 // checkDiskSpace verifies there's enough disk space for extraction
 func checkDiskSpace(paths *WorkenvPaths, metadata *Metadata, logger hclog.Logger) error {
 	// Calculate total size needed (compressed size * DiskSpaceMultiplier for safety)
@@ -95,7 +98,7 @@ func validatePackageChecksum(paths *WorkenvPaths, currentChecksum uint32, logger
 // savePackageChecksum saves the package checksum to the cache
 func savePackageChecksum(paths *WorkenvPaths, checksum uint32, logger hclog.Logger) error {
 	instanceDir := paths.Instance()
-	if err := os.MkdirAll(instanceDir, os.FileMode(DirPerms)); err != nil {
+	if err := mkdirAllFn(instanceDir, os.FileMode(DirPerms)); err != nil {
 		return fmt.Errorf("failed to create instance directory: %w", err)
 	}
 
@@ -103,7 +106,7 @@ func savePackageChecksum(paths *WorkenvPaths, checksum uint32, logger hclog.Logg
 	checksumStr := fmt.Sprintf("%08x", checksum)
 
 	// Open file with explicit sync to ensure write is flushed before exec
-	file, err := os.OpenFile(checksumPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	file, err := openFileFn(checksumPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		logger.Debug("⚠️ Failed to open checksum file", "error", err)
 		return err
@@ -147,7 +150,7 @@ type IndexMetadata struct {
 // saveIndexMetadata saves index metadata to JSON file for inspection
 func saveIndexMetadata(paths *WorkenvPaths, index *PSPFIndex, logger hclog.Logger) error {
 	instanceDir := paths.Instance()
-	if err := os.MkdirAll(instanceDir, os.FileMode(DirPerms)); err != nil {
+	if err := mkdirAllFn(instanceDir, os.FileMode(DirPerms)); err != nil {
 		return fmt.Errorf("failed to create instance directory: %w", err)
 	}
 

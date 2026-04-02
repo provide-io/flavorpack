@@ -22,6 +22,19 @@ var (
 	ErrLockAcquisition      = errors.New("failed to acquire lock")
 )
 
+var tryAcquireLockFn = TryAcquireLock
+var waitForExtractionFn = WaitForExtraction
+var checkWorkenvValidityAfterWaitFn = checkWorkenvValidity
+var chmodValidatedFn = chmodValidated
+var hasPSPFResourceFn = HasPSPFResource
+var readPSPFFromResourceFn = ReadPSPFFromResource
+var verifyIntegritySealFn = (*Reader).VerifyIntegritySeal
+var createTempFn = os.CreateTemp
+var removeAllFn = os.RemoveAll
+var runBundleReaderCloseFn = (*Reader).Close
+var tmpFileWriteFn = func(f *os.File, d []byte) (int, error) { return f.Write(d) }
+var tmpFileCloseFn = func(f *os.File) error { return f.Close() }
+
 func removeFileQuietly(path, context string, logger hclog.Logger) {
 	if err := os.Remove(path); err != nil {
 		logger.Trace("Ignoring cleanup error", "context", context, "path", path, "error", err)
@@ -29,7 +42,7 @@ func removeFileQuietly(path, context string, logger hclog.Logger) {
 }
 
 func removeAllQuietly(path, context string, logger hclog.Logger) {
-	if err := os.RemoveAll(path); err != nil {
+	if err := removeAllFn(path); err != nil {
 		logger.Trace("Ignoring cleanup error", "context", context, "path", path, "error", err)
 	}
 }
@@ -55,13 +68,13 @@ func prepareBundlePath(exePath string, logger hclog.Logger) (string, func(), err
 
 	// Check if PSPF is embedded as a PE resource
 	logger.Trace("Checking for PE resource embedding")
-	if HasPSPFResource(exePath, logger) {
+	if hasPSPFResourceFn(exePath, logger) {
 		logger.Info("🪟 Detected PSPF embedded as PE resource, extracting to temp file")
 		logger.Debug("Starting PE resource extraction workflow")
 
 		// Read PSPF data from resource
 		logger.Trace("Reading PSPF data from PE resource")
-		pspfData, err := ReadPSPFFromResource(exePath, logger)
+		pspfData, err := readPSPFFromResourceFn(exePath, logger)
 		if err != nil {
 			logger.Error("Failed to read PSPF from PE resource", "error", err)
 			return "", nil, fmt.Errorf("failed to read PSPF from resource: %w", err)
@@ -70,7 +83,7 @@ func prepareBundlePath(exePath string, logger hclog.Logger) (string, func(), err
 
 		// Create temporary file for PSPF data
 		logger.Trace("Creating temporary file for extracted PSPF data")
-		tmpFile, err := os.CreateTemp("", "pspf-*.psp")
+		tmpFile, err := createTempFn("", "pspf-*.psp")
 		if err != nil {
 			logger.Error("Failed to create temp file for PSPF extraction", "error", err)
 			return "", nil, fmt.Errorf("failed to create temp file: %w", err)
@@ -80,10 +93,10 @@ func prepareBundlePath(exePath string, logger hclog.Logger) (string, func(), err
 
 		// Write PSPF data to temp file
 		logger.Trace("Writing PSPF data to temp file", "size", len(pspfData))
-		bytesWritten, err := tmpFile.Write(pspfData)
+		bytesWritten, err := tmpFileWriteFn(tmpFile, pspfData)
 		if err != nil {
 			logger.Error("Failed to write PSPF data to temp file", "error", err, "path", tmpPath)
-			_ = tmpFile.Close()
+			_ = tmpFileCloseFn(tmpFile)
 			logger.Trace("Cleaning up temp file after write failure", "path", tmpPath)
 			_ = os.Remove(tmpPath)
 			return "", nil, fmt.Errorf("failed to write PSPF to temp file: %w", err)
@@ -92,13 +105,13 @@ func prepareBundlePath(exePath string, logger hclog.Logger) (string, func(), err
 
 		if bytesWritten != len(pspfData) {
 			logger.Error("Incomplete write to temp file", "written", bytesWritten, "expected", len(pspfData))
-			_ = tmpFile.Close()
+			_ = tmpFileCloseFn(tmpFile)
 			_ = os.Remove(tmpPath)
 			return "", nil, fmt.Errorf("incomplete write: wrote %d bytes, expected %d", bytesWritten, len(pspfData))
 		}
 
 		logger.Trace("Closing temp file")
-		if err := tmpFile.Close(); err != nil {
+		if err := tmpFileCloseFn(tmpFile); err != nil {
 			logger.Error("Failed to close temp file", "error", err, "path", tmpPath)
 			logger.Trace("Cleaning up temp file after close failure", "path", tmpPath)
 			_ = os.Remove(tmpPath)
@@ -143,7 +156,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		return nil, fmt.Errorf("failed to create reader: %w", err)
 	}
 	defer func() {
-		if err := reader.Close(); err != nil {
+		if err := runBundleReaderCloseFn(reader); err != nil {
 			logger.Error("Failed to close reader", "error", err)
 		}
 	}()
@@ -202,7 +215,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		logger.Warn("⚠️ VALIDATION DISABLED: Skipping integrity verification", "level", validationLevel)
 	default:
 		logger.Debug("🔍 Verifying package integrity", "level", validationLevel)
-		valid, err := reader.VerifyIntegritySeal()
+		valid, err := verifyIntegritySealFn(reader)
 		if err != nil {
 			switch validationLevel {
 			case ValidationMinimal, ValidationRelaxed:
@@ -358,7 +371,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 				// Parse octal mode string (e.g., "0700")
 				mode, err := strconv.ParseUint(strings.TrimPrefix(dirSpec.Mode, "0"), 8, 32)
 				if err == nil {
-					if err := chmodValidated(dirPath, os.FileMode(mode)); err != nil {
+					if err := chmodValidatedFn(dirPath, os.FileMode(mode)); err != nil {
 						logger.Debug("Failed to set permissions", "path", dirPath, "mode", dirSpec.Mode, "error", err)
 					} else {
 						logger.Debug("🔒 Set permissions", "path", dirPath, "mode", dirSpec.Mode)
@@ -398,7 +411,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		}
 
 		// Acquire lock before extraction
-		acquiredLock, err := TryAcquireLock(paths, logger)
+		acquiredLock, err := tryAcquireLockFn(paths, logger)
 		if err != nil {
 			logger.Error("❌ Failed to acquire extraction lock", "error", err)
 			return nil, err
@@ -406,11 +419,11 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		if !acquiredLock {
 			// Another process is extracting, wait for it
 			logger.Info("⏳ Another process is extracting, waiting...")
-			if err := WaitForExtraction(paths, 60, logger); err != nil {
+			if err := waitForExtractionFn(paths, 60, logger); err != nil {
 				return nil, err
 			}
 			// Re-check validity after waiting
-			valid, err := checkWorkenvValidity(paths, index, metadata, logger)
+			valid, err := checkWorkenvValidityAfterWaitFn(paths, index, metadata, logger)
 			if err != nil {
 				return nil, err
 			}

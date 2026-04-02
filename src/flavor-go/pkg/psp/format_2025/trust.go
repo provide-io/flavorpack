@@ -15,6 +15,9 @@ import (
 	"github.com/provide-io/flavor/go/flavor/internal/workenv"
 )
 
+var computeKeyFingerprintFn = ComputeKeyFingerprint
+var getSystemConfigRootFn = workenv.GetSystemConfigRoot
+
 // TrustedKey holds metadata about a trusted public key loaded from the key store.
 type TrustedKey struct {
 	Fingerprint string
@@ -99,7 +102,7 @@ func loadKeyFromFile(path string) (TrustedKey, error) {
 		return TrustedKey{}, fmt.Errorf("key in %s is not an Ed25519 public key", path)
 	}
 
-	fp, err := ComputeKeyFingerprint([]byte(edPub))
+	fp, err := computeKeyFingerprintFn([]byte(edPub))
 	if err != nil {
 		return TrustedKey{}, fmt.Errorf("computing fingerprint for %s: %w", path, err)
 	}
@@ -152,7 +155,7 @@ func LoadTrustedKeys(includeSystem bool) (map[string]TrustedKey, error) {
 	}
 
 	if includeSystem {
-		sysDir := filepath.Join(workenv.GetSystemConfigRoot(), "trusted-keys")
+		sysDir := filepath.Join(getSystemConfigRootFn(), "trusted-keys")
 		if _, err := loadKeysFromDir(sysDir, keys); err != nil {
 			return keys, err
 		}
@@ -172,7 +175,7 @@ func IsKeyTrusted(fingerprint string, includeSystem bool) (*bool, error) {
 
 	sysExists := false
 	if includeSystem {
-		sysDir := filepath.Join(workenv.GetSystemConfigRoot(), "trusted-keys")
+		sysDir := filepath.Join(getSystemConfigRootFn(), "trusted-keys")
 		if _, err := os.Stat(sysDir); err == nil {
 			sysExists = true
 		}
