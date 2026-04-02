@@ -4,8 +4,10 @@
 //! Launch-time policy enforcement for the Rust launcher.
 
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
+
+use crate::exceptions::{FlavorError, Result};
 
 /// Package-declared constraints (from package metadata).
 #[derive(Default, Debug, serde::Deserialize)]
@@ -35,7 +37,46 @@ pub struct EffectivePolicy {
     pub max_age_days: Option<u64>,
     pub require_env: Vec<String>,
     pub require_trusted_key: bool,
+    pub use_os_keychain: bool,
     pub require_sbom: bool,
+}
+
+#[derive(Default, Debug, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct OperatorPolicyFile {
+    #[serde(default)]
+    trust: Option<TrustSection>,
+    #[serde(default)]
+    execution: Option<ExecutionSection>,
+    #[serde(default)]
+    attestation: Option<AttestationSection>,
+}
+
+#[derive(Default, Debug, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct TrustSection {
+    #[serde(default)]
+    require_trusted_key: Option<bool>,
+    #[serde(default)]
+    use_os_keychain: Option<bool>,
+}
+
+#[derive(Default, Debug, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ExecutionSection {
+    #[serde(default)]
+    refuse_root: Option<bool>,
+    #[serde(default)]
+    max_age_days: Option<u64>,
+    #[serde(default)]
+    allow_platforms: Option<Vec<String>>,
+}
+
+#[derive(Default, Debug, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct AttestationSection {
+    #[serde(default)]
+    require_sbom: Option<bool>,
 }
 
 fn get_system_policy_path() -> PathBuf {
@@ -69,73 +110,75 @@ fn get_user_policy_path() -> Option<PathBuf> {
     None
 }
 
-/// Parse a minimal TOML policy file. Handles only the fields FlavorPack needs.
-fn parse_policy_file(content: &str, policy: &mut OperatorPolicy) {
-    let mut section = String::new();
-    for line in content.lines() {
-        let line = line.trim();
-        if line.is_empty() || line.starts_with('#') {
-            continue;
+fn apply_operator_policy_file(policy: &mut OperatorPolicy, file: OperatorPolicyFile) {
+    if let Some(trust) = file.trust {
+        if let Some(value) = trust.require_trusted_key {
+            policy.require_trusted_key = value;
         }
-        if line.starts_with('[') && line.ends_with(']') {
-            section = line[1..line.len() - 1].to_lowercase();
-            continue;
+        if let Some(value) = trust.use_os_keychain {
+            policy.use_os_keychain = value;
         }
-        let parts: Vec<&str> = line.splitn(2, '=').collect();
-        if parts.len() != 2 {
-            continue;
+    }
+    if let Some(execution) = file.execution {
+        if let Some(value) = execution.refuse_root {
+            policy.refuse_root = value;
         }
-        let key = parts[0].trim();
-        // Strip inline comments from value
-        let raw_val = parts[1];
-        let val = if let Some(idx) = raw_val.find('#') {
-            raw_val[..idx].trim()
-        } else {
-            raw_val.trim()
-        };
-        match (section.as_str(), key) {
-            ("trust", "require_trusted_key") => policy.require_trusted_key = val == "true",
-            ("trust", "use_os_keychain") => policy.use_os_keychain = val == "true",
-            ("execution", "refuse_root") => policy.refuse_root = val == "true",
-            ("execution", "max_age_days") => {
-                if let Ok(n) = val.parse::<u64>() {
-                    policy.max_age_days = Some(n);
-                }
-            }
-            ("execution", "allow_platforms") => {
-                policy.allow_platforms = parse_toml_string_list(val);
-            }
-            ("attestation", "require_sbom") => policy.require_sbom = val == "true",
-            _ => {}
+        if let Some(value) = execution.max_age_days {
+            policy.max_age_days = Some(value);
         }
+        if let Some(value) = execution.allow_platforms {
+            policy.allow_platforms = value;
+        }
+    }
+    if let Some(attestation) = file.attestation
+        && let Some(value) = attestation.require_sbom
+    {
+        policy.require_sbom = value;
     }
 }
 
-fn parse_toml_string_list(val: &str) -> Vec<String> {
-    let val = val.trim();
-    if !val.starts_with('[') || !val.ends_with(']') {
-        return Vec::new();
-    }
-    let inner = &val[1..val.len() - 1];
-    inner
-        .split(',')
-        .map(|s| s.trim().trim_matches(|c| c == '"' || c == '\'').to_string())
-        .filter(|s| !s.is_empty())
-        .collect()
+fn parse_policy_file(content: &str, policy: &mut OperatorPolicy) -> Result<()> {
+    let file: OperatorPolicyFile = toml::from_str(content)
+        .map_err(|e| FlavorError::Generic(format!("invalid policy.toml: {e}")))?;
+    apply_operator_policy_file(policy, file);
+    Ok(())
 }
 
 /// Load operator policy from system and user files.
-pub fn load_operator_policy() -> OperatorPolicy {
+pub fn load_operator_policy() -> Result<OperatorPolicy> {
+    let system_path = get_system_policy_path();
+    let user_path = get_user_policy_path();
+    load_operator_policy_from_paths(Some(&system_path), user_path.as_deref())
+}
+
+fn load_operator_policy_from_paths(
+    system_path: Option<&Path>,
+    user_path: Option<&Path>,
+) -> Result<OperatorPolicy> {
     let mut policy = OperatorPolicy::default();
-    if let Ok(content) = fs::read_to_string(get_system_policy_path()) {
-        parse_policy_file(&content, &mut policy);
-    }
-    if let Some(path) = get_user_policy_path() {
-        if let Ok(content) = fs::read_to_string(path) {
-            parse_policy_file(&content, &mut policy);
+    if let Some(path) = system_path {
+        if let Some(content) = read_policy_file(path)? {
+            parse_policy_file(&content, &mut policy)?;
         }
     }
-    policy
+    if let Some(path) = user_path {
+        if let Some(content) = read_policy_file(path)? {
+            parse_policy_file(&content, &mut policy)?;
+        }
+    }
+    Ok(policy)
+}
+
+fn read_policy_file(path: &Path) -> Result<Option<String>> {
+    match fs::read_to_string(path) {
+        Ok(content) => Ok(Some(content)),
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(err) => Err(FlavorError::Generic(format!(
+            "reading policy {}: {}",
+            path.display(),
+            err
+        ))),
+    }
 }
 
 /// Merge package + operator policy. Stricter always wins.
@@ -166,6 +209,7 @@ pub fn merge_policy(pkg: PackagePolicy, op: OperatorPolicy) -> EffectivePolicy {
         max_age_days,
         require_env: pkg.require_env,
         require_trusted_key: op.require_trusted_key,
+        use_os_keychain: op.use_os_keychain,
         require_sbom: op.require_sbom,
     }
 }
@@ -224,7 +268,7 @@ pub fn enforce_policy(
     build_timestamp: u64,
     has_sbom: bool,
     key_trusted: bool,
-) -> Result<(), String> {
+) -> std::result::Result<(), String> {
     let current_platform = get_current_platform();
 
     // Platform check
@@ -273,6 +317,13 @@ pub fn enforce_policy(
     if policy.require_sbom && !has_sbom {
         return Err(
             "package built without attestation slot — operator policy requires SBOM".to_string(),
+        );
+    }
+
+    if policy.use_os_keychain {
+        return Err(
+            "operator policy requests OS keychain trust, but Rust launcher does not support it"
+                .to_string(),
         );
     }
 
@@ -381,6 +432,17 @@ mod tests {
     }
 
     #[test]
+    fn test_merge_policy_propagates_os_keychain_flag() {
+        let pkg = PackagePolicy::default();
+        let op = OperatorPolicy {
+            use_os_keychain: true,
+            ..Default::default()
+        };
+        let eff = merge_policy(pkg, op);
+        assert!(eff.use_os_keychain);
+    }
+
+    #[test]
     fn test_enforce_policy_permissive() {
         let eff = EffectivePolicy::default();
         assert!(enforce_policy(&eff, 0, false, true).is_ok());
@@ -467,21 +529,41 @@ mod tests {
 
     #[test]
     fn test_load_operator_policy_missing_file() {
-        unsafe {
-            env::set_var(
-                crate::env_vars::CONFIG_DIR,
-                "/tmp/__nonexistent_flavor_policy_dir__",
-            );
-        }
-        let policy = load_operator_policy();
+        let system = std::path::PathBuf::from("/tmp/__nonexistent_flavor_system_policy.toml");
+        let user = std::path::PathBuf::from("/tmp/__nonexistent_flavor_user_policy.toml");
+        let policy =
+            load_operator_policy_from_paths(Some(&system), Some(&user)).expect("policy load");
         assert!(!policy.require_trusted_key);
+    }
+
+    #[test]
+    fn test_load_operator_policy_invalid_system_file_errors() {
+        let system_dir = tempfile::TempDir::new().expect("tempdir");
+        let system_file = system_dir.path().join("policy.toml");
+        std::fs::write(&system_file, b"[trust\nrequire_trusted_key = true\n")
+            .expect("write bad policy");
+        let result = load_operator_policy_from_paths(Some(&system_file), None);
+        assert!(result.is_err(), "invalid system policy must fail closed");
+    }
+
+    #[test]
+    fn test_load_operator_policy_invalid_user_file_errors() {
+        let user_dir = tempfile::TempDir::new().expect("tempdir");
+        let user_file = user_dir.path().join("policy.toml");
+        std::fs::write(
+            &user_file,
+            b"[trust]\nrequire_trusted_key = true\nunknown_key = true\n",
+        )
+        .expect("write bad policy");
+        let result = load_operator_policy_from_paths(None, Some(&user_file));
+        assert!(result.is_err(), "invalid user policy must fail closed");
     }
 
     #[test]
     fn test_parse_policy_file_all_fields() {
         let content = "[trust]\nrequire_trusted_key = true\nuse_os_keychain = true\n[execution]\nrefuse_root = true\nmax_age_days = 90\n[attestation]\nrequire_sbom = true\n";
         let mut policy = OperatorPolicy::default();
-        parse_policy_file(content, &mut policy);
+        parse_policy_file(content, &mut policy).expect("parse policy");
         assert!(policy.require_trusted_key);
         assert!(policy.use_os_keychain);
         assert!(policy.refuse_root);
@@ -493,7 +575,7 @@ mod tests {
     fn test_parse_policy_file_ignores_comments() {
         let content = "# top comment\n[trust]\n# inline comment\nrequire_trusted_key = true\n";
         let mut policy = OperatorPolicy::default();
-        parse_policy_file(content, &mut policy);
+        parse_policy_file(content, &mut policy).expect("parse policy");
         assert!(policy.require_trusted_key);
     }
 
@@ -501,7 +583,7 @@ mod tests {
     fn test_parse_policy_file_inline_comment() {
         let content = "[execution]\nrefuse_root = true # disable if needed\n";
         let mut policy = OperatorPolicy::default();
-        parse_policy_file(content, &mut policy);
+        parse_policy_file(content, &mut policy).expect("parse policy");
         assert!(policy.refuse_root, "should strip inline comment");
     }
 
@@ -509,26 +591,34 @@ mod tests {
     fn test_parse_policy_file_allow_platforms() {
         let content = "[execution]\nallow_platforms = [\"linux_amd64\", \"linux_arm64\"]\n";
         let mut policy = OperatorPolicy::default();
-        parse_policy_file(content, &mut policy);
+        parse_policy_file(content, &mut policy).expect("parse policy");
         assert_eq!(policy.allow_platforms, vec!["linux_amd64", "linux_arm64"]);
     }
 
     #[test]
-    fn test_parse_toml_string_list_single_quotes() {
-        let result = parse_toml_string_list("['darwin_arm64', 'linux_amd64']");
-        assert_eq!(result, vec!["darwin_arm64", "linux_amd64"]);
+    fn test_parse_policy_file_preserves_hash_inside_string() {
+        let content = "[execution]\nallow_platforms = [\"linux_amd64#beta\"]\n";
+        let mut policy = OperatorPolicy::default();
+        parse_policy_file(content, &mut policy).expect("parse policy");
+        assert_eq!(policy.allow_platforms, vec!["linux_amd64#beta"]);
     }
 
     #[test]
-    fn test_parse_toml_string_list_empty() {
-        let result = parse_toml_string_list("[]");
-        assert!(result.is_empty());
+    fn test_parse_policy_file_rejects_unknown_keys() {
+        let content = "[trust]\nrequire_trusted_key = true\nunknown_key = true\n";
+        let mut policy = OperatorPolicy::default();
+        let err = parse_policy_file(content, &mut policy).expect_err("unknown key must fail");
+        let err = err.to_string();
+        assert!(err.contains("unknown_key") || err.contains("unknown"));
     }
 
     #[test]
-    fn test_parse_toml_string_list_invalid() {
-        let result = parse_toml_string_list("not_a_list");
-        assert!(result.is_empty());
+    fn test_enforce_policy_rejects_use_os_keychain() {
+        let eff = EffectivePolicy {
+            use_os_keychain: true,
+            ..Default::default()
+        };
+        assert!(enforce_policy(&eff, 0, false, true).is_err());
     }
 
     #[test]
