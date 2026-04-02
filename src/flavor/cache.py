@@ -15,7 +15,7 @@ from provide.foundation.file.directory import ensure_dir, safe_rmtree
 from provide.foundation.file.formats import read_json
 from provide.foundation.utils.environment import get_str
 
-from flavor.config.defaults import ENV_CACHE_DIR
+from flavor.config.defaults import ENV_CACHE_COMPAT, ENV_CACHE_DIR
 from flavor.console import get_command_logger
 
 log = get_command_logger("cache")
@@ -38,7 +38,7 @@ def get_cache_dir() -> Path:
         return Path(cache_dir)
 
     # Check FLAVOR_CACHE (cross-language env var set by Go/Rust launchers in child env)
-    flavor_cache = get_str("FLAVOR_CACHE")
+    flavor_cache = get_str(ENV_CACHE_COMPAT)
     if flavor_cache:
         if log.is_trace_enabled():
             log.trace(f"🗂️ Using FLAVOR_CACHE: {flavor_cache}")
@@ -57,6 +57,14 @@ def get_cache_dir() -> Path:
     if log.is_trace_enabled():
         log.trace(f"🗂️ Using default cache: {default}")
     return default
+
+
+def get_xdg_cache_base() -> Path:
+    """Return the XDG cache base directory.
+
+    Uses XDG_CACHE_HOME if set, otherwise defaults to ~/.cache.
+    """
+    return Path(os.environ.get("XDG_CACHE_HOME", str(Path("~/.cache").expanduser())))
 
 
 class CacheManager:

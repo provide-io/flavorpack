@@ -312,7 +312,7 @@ pub fn run_command(
     }
 
     // Override/add FLAVOR_WORKENV environment variable
-    command.env("FLAVOR_WORKENV", workenv_dir);
+    command.env(crate::env_vars::WORKENV, workenv_dir);
 
     // Add execution environment from metadata
     for (key, value) in exec_env {

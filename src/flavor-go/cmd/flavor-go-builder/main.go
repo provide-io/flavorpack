@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/provide-io/flavor/go/flavor/pkg"
+	"github.com/provide-io/flavor/go/flavor/pkg/envvars"
 	"github.com/spf13/cobra"
 )
 
@@ -93,7 +94,7 @@ func buildBundle(cmd *cobra.Command, args []string) {
 	}
 	// Set workenv base if provided via flag
 	if workenvBase != "" {
-		os.Setenv("FLAVOR_WORKENV_BASE", workenvBase)
+		os.Setenv(envvars.EnvWorkenvBase, workenvBase)
 	}
 	pkg.BuildPackageWithLogLevel(manifestPath, outputPath, launcherBin, privateKeyPath, publicKeyPath, keySeed, logLevel)
 }

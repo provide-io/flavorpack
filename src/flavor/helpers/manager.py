@@ -10,13 +10,14 @@ from __future__ import annotations
 import contextlib
 from dataclasses import dataclass
 import hashlib
-import os
 from pathlib import Path
 from typing import Any
 
 from provide.foundation.file.directory import ensure_dir
 from provide.foundation.platform import get_platform_string
 from provide.foundation.process import run
+
+from flavor.cache import get_xdg_cache_base
 
 
 @dataclass
@@ -43,8 +44,7 @@ class HelperManager:
         self.helpers_bin = self.helpers_dir / "bin"
 
         # Also check XDG cache location for installed helpers
-        xdg_cache = os.environ.get("XDG_CACHE_HOME", str(Path("~/.cache").expanduser()))
-        self.installed_helpers_bin = Path(xdg_cache) / "flavor" / "helpers" / "bin"
+        self.installed_helpers_bin = get_xdg_cache_base() / "flavor" / "helpers" / "bin"
 
         # Source directories are in src/<language>
         self.go_src_dir = self.flavor_root / "src" / "flavor-go"
