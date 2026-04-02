@@ -43,6 +43,7 @@ target/
 flavor-manifest.json
 tests/pretaster/pretaster-build-manifest.json
 tests/pretaster/test-runner.sh
+tests/pretaster/**/*.tar.gz
 *bfile*
 .hypothesis
 *.whl

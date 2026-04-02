@@ -181,42 +181,43 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
     let key_trusted = {
         use super::trust;
 
-        let pk = &index.public_key;
-        let mut trusted = true;
-        if !pk.iter().all(|&b| b == 0) {
-            match trust::compute_key_fingerprint(pk) {
-                Ok(fp) => match trust::is_key_trusted(&fp, true) {
-                    None => {
-                        // No trust store exists — backwards-compatible, allow execution
-                        debug!("🔑 No trusted-keys store found; skipping trust check");
-                    }
-                    Some(true) => {
-                        debug!("✅ Package signing key is trusted (fp={})", &fp[..16]);
-                    }
-                    Some(false) => {
-                        trusted = false;
-                        let msg = format!(
-                            "Package signing key is not in the trusted-keys store (fp={})",
-                            fp
-                        );
-                        if matches!(validation_level, ValidationLevel::Strict) {
-                            error!("❌ {}", msg);
-                            return Err(FlavorError::Generic(msg));
-                        } else {
-                            eprintln!("flavor: warning: {msg}");
-                            warn!("⚠️ {}", msg);
-                        }
-                    }
-                },
-                Err(e) => {
-                    warn!(
-                        "⚠️ Failed to compute key fingerprint for trust check: {}",
-                        e
-                    );
+        match trust::derive_index_key_fingerprint(&index) {
+            Ok(Some(fp)) => match trust::is_key_trusted(&fp, true) {
+                None => {
+                    warn!("⚠️ No trusted-keys store found; treating package as untrusted");
+                    false
                 }
+                Some(true) => {
+                    debug!("✅ Package signing key is trusted (fp={})", &fp[..16]);
+                    true
+                }
+                Some(false) => {
+                    let msg = format!(
+                        "Package signing key is not in the trusted-keys store (fp={})",
+                        fp
+                    );
+                    if matches!(validation_level, ValidationLevel::Strict) {
+                        error!("❌ {}", msg);
+                        return Err(FlavorError::Generic(msg));
+                    } else {
+                        eprintln!("flavor: warning: {msg}");
+                        warn!("⚠️ {}", msg);
+                        false
+                    }
+                }
+            },
+            Ok(None) => {
+                warn!("⚠️ Package is unsigned; treating signing key as untrusted");
+                false
+            }
+            Err(e) => {
+                error!("❌ Invalid attestation key fingerprint metadata: {}", e);
+                return Err(FlavorError::Generic(format!(
+                    "invalid attestation key fingerprint metadata: {}",
+                    e
+                )));
             }
         }
-        trusted
     };
 
     // Read metadata and clone to avoid borrow issues
@@ -226,7 +227,7 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
     {
         use crate::psp::format_2025::policy;
 
-        let op_policy = policy::load_operator_policy();
+        let op_policy = policy::load_operator_policy()?;
         let pkg_policy = {
             // Deserialise the package-declared policy from the metadata "policy" JSON value.
             // If the key is absent or cannot be parsed, default to a permissive empty policy.
