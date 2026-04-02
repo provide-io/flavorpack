@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -8,12 +5,11 @@ import (
 	"crypto/ed25519"
 	cryptorand "crypto/rand"
 	"errors"
-	"log/slog"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // TestBuildWithLogLevelJSONNocolon covers the "json" prefix without a ":" part —
@@ -23,7 +19,7 @@ func TestBuildWithLogLevelJSONNocolon(t *testing.T) {
 	t.Cleanup(func() { buildImpl = oldBuildImpl })
 
 	called := false
-	buildImpl = func(_ *slog.Logger, _, _, _, _, _, _ string) { called = true }
+	buildImpl = func(_ hclog.Logger, _, _, _, _, _, _ string) { called = true }
 
 	dir := t.TempDir()
 	logPath := filepath.Join(dir, "builder.log")
@@ -55,7 +51,7 @@ func TestBuildWithLogLevelJSONNocolon(t *testing.T) {
 func TestAdjustPSPFOffsetsMissingMagicWandAtEnd(t *testing.T) {
 	t.Parallel()
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	validData, _ := syntheticPSPFDataForBuilderTest(t, 100, 180, 200, 240)
 
 	// Corrupt only the magic wand at the end (last 4 bytes).
@@ -73,7 +69,7 @@ func TestAdjustPSPFOffsetsMissingMagicWandAtEnd(t *testing.T) {
 func TestAdjustPSPFOffsetsNegativeLauncherSize(t *testing.T) {
 	t.Parallel()
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	validData, _ := syntheticPSPFDataForBuilderTest(t, 100, 180, 200, 240)
 
 	_, err := adjustPSPFOffsets(validData, -1, logger)
@@ -88,7 +84,7 @@ func TestAdjustPSPFOffsetsNegativeLauncherSize(t *testing.T) {
 func TestAdjustPSPFOffsetsDescriptorOutOfBounds(t *testing.T) {
 	t.Parallel()
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	// Build a PSPF where SlotCount=1000 but the data is way too small to hold
 	// 1000 slot descriptors. launcherSize=100, slotTableOffset=200.
@@ -134,7 +130,7 @@ func buildTinyPSPFWithLargeSlotCount(t *testing.T, slotCount uint32, slotTableOf
 func TestAdjustPSPFOffsetsMetadataOffsetUnderflow(t *testing.T) {
 	t.Parallel()
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	// Build PSPF with launcherSize=100, metadataOffset=50 (less than launcherSize).
 	// slotTableOffset must be >= launcherSize to pass the earlier checks.
@@ -153,7 +149,7 @@ func TestAdjustPSPFOffsetsMetadataOffsetUnderflow(t *testing.T) {
 func TestAdjustPSPFOffsetsSlotTableOffsetUnderflow(t *testing.T) {
 	t.Parallel()
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	// Build PSPF with valid metadataOffset=180 (>launcherSize=100) but
 	// slotTableOffset=90 (< launcherSize=100). This is tricky because
@@ -213,7 +209,7 @@ func buildPSPFWithCustomOffsets(t *testing.T, launcherSize, metadataOffset, slot
 func TestConvertToResourceEmbeddingReadFileFailure(t *testing.T) {
 	t.Parallel()
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	err := convertToResourceEmbedding("/nonexistent/path/bundle.pspf", 100, logger)
 	if err == nil || !bytes.Contains([]byte(err.Error()), []byte("failed to read file")) {
 		t.Fatalf("convertToResourceEmbedding() error = %v, want 'failed to read file'", err)
@@ -236,7 +232,7 @@ func TestConvertToResourceEmbeddingAdjustError(t *testing.T) {
 		t.Fatalf("WriteFile() error = %v", err)
 	}
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	err := convertToResourceEmbedding(filePath, launcherSize, logger)
 	if err == nil || !bytes.Contains([]byte(err.Error()), []byte("failed to adjust PSPF offsets")) {
 		t.Fatalf("convertToResourceEmbedding() error = %v, want 'failed to adjust PSPF offsets'", err)
@@ -260,11 +256,11 @@ func TestConvertToResourceEmbeddingEmbedError(t *testing.T) {
 	oldEmbed := embedPSPFAsResourceImpl
 	t.Cleanup(func() { embedPSPFAsResourceImpl = oldEmbed })
 
-	embedPSPFAsResourceImpl = func(_ string, _ []byte, _ *slog.Logger) error {
+	embedPSPFAsResourceImpl = func(_ string, _ []byte, _ hclog.Logger) error {
 		return errors.New("embed failed intentionally")
 	}
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	err := convertToResourceEmbedding(filePath, launcherSize, logger)
 	if err == nil || !bytes.Contains([]byte(err.Error()), []byte("failed to embed as resource")) {
 		t.Fatalf("convertToResourceEmbedding() error = %v, want 'failed to embed as resource'", err)
@@ -292,14 +288,14 @@ func TestConvertToResourceEmbeddingAtomicReplaceError(t *testing.T) {
 		atomicReplaceImpl = oldAtomic
 	})
 
-	embedPSPFAsResourceImpl = func(exePath string, data []byte, _ *slog.Logger) error {
+	embedPSPFAsResourceImpl = func(exePath string, data []byte, _ hclog.Logger) error {
 		return os.WriteFile(exePath, data, 0o700)
 	}
-	atomicReplaceImpl = func(_, _ string, _ *slog.Logger) error {
+	atomicReplaceImpl = func(_, _ string, _ hclog.Logger) error {
 		return errors.New("atomic replace failed intentionally")
 	}
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	err := convertToResourceEmbedding(filePath, launcherSize, logger)
 	if err == nil || !bytes.Contains([]byte(err.Error()), []byte("failed to replace original file")) {
 		t.Fatalf("convertToResourceEmbedding() error = %v, want 'failed to replace original file'", err)

@@ -1,13 +1,10 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package pkg
 
 import (
 	"errors"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 	"github.com/provide-io/flavor/go/flavor/pkg/psp/format_2025"
 )
 
@@ -25,6 +22,6 @@ func TestVerifyBundleWithLoggerReaderCloseFails(t *testing.T) {
 	}
 
 	// VerifyBundleWithLogger should succeed (the close error is just logged, not fatal)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	VerifyBundleWithLogger(bundle, logger)
 }

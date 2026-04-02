@@ -1,19 +1,16 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // TestShowMetadataSuccess covers the happy path of showMetadata:
 // reads metadata from a valid bundle and encodes it to stdout without error.
 func TestShowMetadataSuccess(t *testing.T) {
 	bundle := buildLauncherTestBundle(t)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	// Should not panic or call osExitFn.
 	oldExit := osExitFn
@@ -28,7 +25,7 @@ func TestShowMetadataSuccess(t *testing.T) {
 // TestShowBundleInfoSuccess covers the happy path of showBundleInfo with a valid bundle.
 func TestShowBundleInfoSuccess(t *testing.T) {
 	bundle := buildLauncherTestBundle(t)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	oldExit := osExitFn
 	t.Cleanup(func() { osExitFn = oldExit })

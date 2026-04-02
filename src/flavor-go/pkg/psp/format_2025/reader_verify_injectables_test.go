@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -12,7 +9,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // TestVerifyIntegritySealIoReadAllFails covers reader_verify.go:85-87
@@ -29,7 +26,7 @@ func TestVerifyIntegritySealIoReadAllFails(t *testing.T) {
 		return nil, errors.New("injected io.ReadAll failure")
 	}
 
-	reader, _ := NewReaderWithLogger(bundle, logging.NewNullLogger())
+	reader, _ := NewReaderWithLogger(bundle, hclog.NewNullLogger())
 	defer func() { _ = reader.Close() }()
 
 	_, err := reader.VerifyIntegritySeal()
@@ -52,7 +49,7 @@ func TestVerifyAttestationSbomDigestSeekFails(t *testing.T) {
 		return 0, errors.New("injected seek failure in attestation verification")
 	}
 
-	reader, _ := NewReaderWithLogger(bundle, logging.NewNullLogger())
+	reader, _ := NewReaderWithLogger(bundle, hclog.NewNullLogger())
 	defer func() { _ = reader.Close() }()
 
 	err := reader.VerifyAttestationSbomDigest()
@@ -90,7 +87,7 @@ func TestVerifyAttestationPolicyHashJsonUnmarshalFails(t *testing.T) {
 		return errors.New("injected json.Unmarshal failure")
 	}
 
-	reader, _ := NewReaderWithLogger(bundle, logging.NewNullLogger())
+	reader, _ := NewReaderWithLogger(bundle, hclog.NewNullLogger())
 	defer func() { _ = reader.Close() }()
 
 	err = reader.VerifyAttestationPolicyHash()

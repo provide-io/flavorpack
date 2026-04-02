@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -8,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // buildUnsignedBundleForValidTest builds a bundle suitable for !valid path testing.
@@ -39,7 +36,7 @@ func TestRunBundleValidFalseMinimalContinues(t *testing.T) {
 	t.Cleanup(func() { verifyIntegritySealFn = old })
 	verifyIntegritySealFn = func(_ *Reader) (bool, error) { return false, nil }
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
 		t.Fatalf("runBundleWithCwd() error = %v (minimal validation should continue on !valid)", err)
@@ -62,7 +59,7 @@ func TestRunBundleValidFalseRelaxedContinues(t *testing.T) {
 	t.Cleanup(func() { verifyIntegritySealFn = old })
 	verifyIntegritySealFn = func(_ *Reader) (bool, error) { return false, nil }
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
 		t.Fatalf("runBundleWithCwd() error = %v (relaxed validation should continue on !valid)", err)
@@ -85,7 +82,7 @@ func TestRunBundleValidFalseStandardContinues(t *testing.T) {
 	t.Cleanup(func() { verifyIntegritySealFn = old })
 	verifyIntegritySealFn = func(_ *Reader) (bool, error) { return false, nil }
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
 		t.Fatalf("runBundleWithCwd() error = %v (standard validation should continue on !valid)", err)
@@ -108,7 +105,7 @@ func TestRunBundleValidFalseStrictFails(t *testing.T) {
 	t.Cleanup(func() { verifyIntegritySealFn = old })
 	verifyIntegritySealFn = func(_ *Reader) (bool, error) { return false, nil }
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {
 		t.Fatal("expected error from runBundleWithCwd with strict validation and !valid seal")
@@ -142,7 +139,7 @@ func TestRunBundleChmodValidatedFailLogs(t *testing.T) {
 		},
 	})
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
 		t.Fatalf("runBundleWithCwd() error = %v", err)
@@ -180,7 +177,7 @@ func TestRunBundleCheckDiskSpaceFailReturnsError(t *testing.T) {
 		return 0, nil // Zero space available
 	}
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {
 		t.Fatal("expected error from checkDiskSpace with zero available disk space")
@@ -219,7 +216,7 @@ func TestRunBundleWaitForExtractionLockFileSetup(t *testing.T) {
 	t.Cleanup(func() { isProcessRunningFn = oldIsRunning })
 	isProcessRunningFn = func(pid int) bool { return true }
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	// Build paths and write a lock file with a fake PID
 	paths := NewWorkenvPaths(cacheRoot, bundle)
@@ -247,7 +244,7 @@ func TestRunBundleWaitForExtractionTimeout(t *testing.T) {
 		// Create extract directory
 	}
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	// Write a lock file so WaitForExtraction sees it
 	extractDir := paths.Extract()

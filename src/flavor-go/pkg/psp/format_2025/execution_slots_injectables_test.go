@@ -1,15 +1,11 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
 	"errors"
-	"log/slog"
 	"os"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // TestExtractAndMergeJsonMarshalFails covers execution_slots.go:66-70
@@ -36,7 +32,7 @@ func TestExtractAndMergeJsonMarshalFails(t *testing.T) {
 		return nil, errors.New("injected json marshal failure")
 	}
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {
 		t.Fatal("expected error from runBundleWithCwd when json.MarshalIndent fails")
@@ -67,7 +63,7 @@ func TestExtractAndMergeReadDirFails(t *testing.T) {
 		return nil, errors.New("injected ReadDir failure")
 	}
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {
 		t.Fatal("expected error from runBundleWithCwd when os.ReadDir fails")
@@ -102,7 +98,7 @@ func TestExtractAndMergeMkdirAllParentFails(t *testing.T) {
 		return errors.New("injected MkdirAll failure for file parent directory")
 	}
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {
 		t.Fatal("expected error from runBundleWithCwd when mkdirAllParentFn fails")
@@ -136,12 +132,12 @@ func TestExtractAndMergeFixShebangsFails(t *testing.T) {
 
 	oldFn := fixShebangsFn
 	t.Cleanup(func() { fixShebangsFn = oldFn })
-	fixShebangsFn = func(_, _, _ string, _ *slog.Logger) error {
+	fixShebangsFn = func(_, _, _ string, _ hclog.Logger) error {
 		return errors.New("injected fixShebangs failure")
 	}
 
 	// fixShebangs failure is warned but not fatal
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
 		t.Fatalf("runBundleWithCwd() error = %v (fixShebangs failure should be non-fatal)", err)
@@ -176,7 +172,7 @@ func TestExtractAndMergeRemoveAllFails(t *testing.T) {
 	}
 
 	// RemoveAll failure is non-fatal
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
 		t.Fatalf("runBundleWithCwd() error = %v (RemoveAll failure should be non-fatal)", err)
@@ -206,12 +202,12 @@ func TestExtractAndMergeSaveIndexMetadataFails(t *testing.T) {
 
 	oldFn := saveIndexMetadataFn
 	t.Cleanup(func() { saveIndexMetadataFn = oldFn })
-	saveIndexMetadataFn = func(_ *WorkenvPaths, _ *PSPFIndex, _ *slog.Logger) error {
+	saveIndexMetadataFn = func(_ *WorkenvPaths, _ *PSPFIndex, _ hclog.Logger) error {
 		return errors.New("injected saveIndexMetadata failure")
 	}
 
 	// saveIndexMetadata failure is non-fatal
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
 		t.Fatalf("runBundleWithCwd() error = %v (saveIndexMetadata failure should be non-fatal)", err)
@@ -241,12 +237,12 @@ func TestExtractAndMergeMarkExtractionCompleteFails(t *testing.T) {
 
 	oldFn := markExtractionCompleteFn
 	t.Cleanup(func() { markExtractionCompleteFn = oldFn })
-	markExtractionCompleteFn = func(_ *WorkenvPaths, _ *slog.Logger) error {
+	markExtractionCompleteFn = func(_ *WorkenvPaths, _ hclog.Logger) error {
 		return errors.New("injected MarkExtractionComplete failure")
 	}
 
 	// MarkExtractionComplete failure is non-fatal
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
 		t.Fatalf("runBundleWithCwd() error = %v (MarkExtractionComplete failure should be non-fatal)", err)

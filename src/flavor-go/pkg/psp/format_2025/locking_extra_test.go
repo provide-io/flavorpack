@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -8,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // TestTryAcquireLockOpenFileFailure covers the os.OpenFile failure path in
@@ -20,7 +17,7 @@ func TestTryAcquireLockOpenFileFailure(t *testing.T) {
 	}
 
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/test.pspf")
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	// Create the extract dir with proper permissions first.
 	extractDir := paths.Extract()
@@ -54,7 +51,7 @@ func TestTryAcquireLockOpenFileFailure(t *testing.T) {
 // at exactly the lock file path so OpenFile fails with EISDIR.
 func TestTryAcquireLockLockPathIsDir(t *testing.T) {
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/test.pspf")
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	// Create extract dir and place a DIRECTORY at the lock file path so
 	// O_CREATE|O_EXCL|O_WRONLY fails but NOT with os.IsExist (it's EISDIR).
@@ -81,7 +78,7 @@ func TestMarkExtractionCompleteCannotCreateFile(t *testing.T) {
 	}
 
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/test.pspf")
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	// Create extract dir then make it read-only.
 	if err := os.MkdirAll(paths.Extract(), 0o755); err != nil {
@@ -102,7 +99,7 @@ func TestMarkExtractionCompleteCannotCreateFile(t *testing.T) {
 // as a file (so MkdirAll cannot create the extract dir).
 func TestMarkExtractionCompleteMkdirAllFails(t *testing.T) {
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/test.pspf")
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	// Place a regular file at the extract dir path so MkdirAll fails.
 	extractParent := filepath.Dir(paths.Extract())
@@ -123,7 +120,7 @@ func TestMarkExtractionCompleteMkdirAllFails(t *testing.T) {
 func TestCleanupStaleExtractionsNoTmpDir(t *testing.T) {
 	// Use a path that doesn't exist.
 	paths := NewWorkenvPaths(filepath.Join(t.TempDir(), "nonexistent"), "/tmp/test.pspf")
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	if err := CleanupStaleExtractions(paths, logger); err != nil {
 		t.Fatalf("expected nil from CleanupStaleExtractions when tmp not exists: %v", err)

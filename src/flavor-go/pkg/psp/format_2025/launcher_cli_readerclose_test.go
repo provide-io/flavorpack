@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -8,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // TestShowBundleInfoReaderCloseLogs covers launcher_cli.go:28-30
@@ -35,7 +32,7 @@ func TestShowBundleInfoReaderCloseLogs(t *testing.T) {
 	// showBundleInfo always calls the deferred reader close, so the error path is exercised
 	func() {
 		defer func() { _ = recover() }()
-		showBundleInfo(bundle, logging.NewNullLogger())
+		showBundleInfo(bundle, hclog.NewNullLogger())
 	}()
 
 	_ = exitCalled
@@ -78,7 +75,7 @@ func TestShowBundleInfoVerifyMagicTrailerFailsViaNonPSPFFile(t *testing.T) {
 
 	func() {
 		defer func() { _ = recover() }()
-		showBundleInfo(notBundle, logging.NewNullLogger())
+		showBundleInfo(notBundle, hclog.NewNullLogger())
 	}()
 
 	if !exitCalled {
@@ -109,7 +106,7 @@ func TestExtractSlotReaderCloseLogs(t *testing.T) {
 
 	func() {
 		defer func() { _ = recover() }()
-		extractSlot(bundle, "0", outputDir, logging.NewNullLogger())
+		extractSlot(bundle, "0", outputDir, hclog.NewNullLogger())
 	}()
 
 	_ = exitCalled
@@ -137,7 +134,7 @@ func TestShowMetadataReaderCloseLogs(t *testing.T) {
 
 	func() {
 		defer func() { _ = recover() }()
-		showMetadata(bundle, logging.NewNullLogger())
+		showMetadata(bundle, hclog.NewNullLogger())
 	}()
 
 	_ = exitCalled
@@ -165,7 +162,7 @@ func TestVerifyBundleReaderCloseLogs(t *testing.T) {
 
 	func() {
 		defer func() { _ = recover() }()
-		verifyBundle(bundle, logging.NewNullLogger())
+		verifyBundle(bundle, hclog.NewNullLogger())
 	}()
 
 	_ = exitCalled
