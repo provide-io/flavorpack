@@ -1,4 +1,4 @@
-name: Build Platform (reusable)
+name: Build Rust Helpers (reusable)
 # ─────────────────────────────────────────────────────────────────────────────
 # Script policy: keep inline run: blocks to ≤ 3 lines.
 # Anything longer belongs in ci/ and should be called from here.
@@ -27,14 +27,14 @@ on:
         description: 'Package version string'
         required: true
         type: string
-      cache_key_base:
-        description: 'Base cache key from setup job'
+      rust_cache_key_base:
+        description: 'Base cache key for Rust helpers'
         required: true
         type: string
 
 jobs:
   build:
-    name: 🔨 Build ${{ inputs.platform }}
+    name: 🔨 Build Rust ${{ inputs.platform }}
     runs-on: ${{ inputs.os }}
     steps:
       - name: 📥 Checkout
@@ -42,28 +42,21 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: 💾 Cache helpers
+      - name: 💾 Cache Rust helpers
         id: cache
         uses: actions/cache@v5
         with:
           path: |
-            dist/bin/*-${{ inputs.version }}-${{ inputs.platform }}
-            dist/bin/*-${{ inputs.version }}-${{ inputs.platform }}.exe
+            dist/bin/flavor-rs-*-${{ inputs.version }}-${{ inputs.platform }}
+            dist/bin/flavor-rs-*-${{ inputs.version }}-${{ inputs.platform }}.exe
             artifacts/*.zip
-          key: ${{ inputs.cache_key_base }}-${{ inputs.platform }}-${{ inputs.version }}
+          key: ${{ inputs.rust_cache_key_base }}-${{ inputs.platform }}-${{ inputs.version }}
 
       - name: 📦 Setup uv + Python
         uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
         with:
           python-version: '3.11'
           enable-cache: false
-
-      - name: 🐹 Setup Go
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: actions/setup-go@v6
-        with:
-          go-version: "${{ vars.GO_VERSION }}"
-          cache-dependency-path: src/flavor-go/go.sum
 
       - name: 🦀 Setup Rust
         if: steps.cache.outputs.cache-hit != 'true'
@@ -83,12 +76,6 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: rm -rf dist/bin && mkdir -p dist/bin
 
-      - name: 🐹 Build Go helpers
-        if: steps.cache.outputs.cache-hit != 'true'
-        shell: bash
-        working-directory: src/flavor-go
-        run: ../../ci/build-go-helpers.sh ${{ inputs.platform }} ${{ inputs.version }}
-
       - name: 🔍 Debug Rust environment
         if: steps.cache.outputs.cache-hit != 'true'
         shell: bash
@@ -105,19 +92,18 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
-          chmod +x dist/bin/* 2>/dev/null || true
-          echo "✅ Build complete for ${{ inputs.platform }}"
-          ls -la dist/bin/*-${{ inputs.platform }}*
+          chmod +x dist/bin/flavor-rs-* 2>/dev/null || true
+          ls -la dist/bin/flavor-rs-*-${{ inputs.platform }}*
 
       - name: 📦 Package artifacts (Unix)
         if: runner.os != 'Windows'
         shell: bash
-        run: ci/package-helpers.sh ${{ inputs.platform }} ${{ inputs.version }}
+        run: ci/package-rust-helpers.sh ${{ inputs.platform }} ${{ inputs.version }}
 
       - name: 📦 Package artifacts (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        run: ci/package-helpers.ps1 -Platform ${{ inputs.platform }} -Version ${{ inputs.version }}
+        run: ci/package-rust-helpers.ps1 -Platform ${{ inputs.platform }} -Version ${{ inputs.version }}
 
       - name: 🧪 Test binaries
         continue-on-error: true
@@ -137,19 +123,19 @@ jobs:
       - name: 📤 Upload artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: flavor-helpers-${{ inputs.version }}-${{ inputs.platform }}
+          name: flavor-rust-helpers-${{ inputs.version }}-${{ inputs.platform }}
           path: artifacts/*.zip
 
       - name: 📤 Upload test results
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: test-results-${{ inputs.platform }}
+          name: test-results-rust-${{ inputs.platform }}
           path: test-results/
 
       - name: 📤 Upload metadata
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: metadata-${{ inputs.platform }}
+          name: metadata-rust-${{ inputs.platform }}
           path: artifacts/metadata/
