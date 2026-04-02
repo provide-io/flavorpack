@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Unified Pretaster Build Script
 # Usage: build-pretaster.sh <platform> <version> [build_type] [output_dir]
 #
