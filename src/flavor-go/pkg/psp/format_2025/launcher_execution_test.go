@@ -2030,5 +2030,8 @@ func TestExecutionQuietRemovalHelpers(t *testing.T) {
 		t.Fatalf("expected file removal, err=%v", err)
 	}
 
+	// Call again on the already-removed file — triggers the error-log branch.
+	removeFileQuietly(filePath, "test-error-path", logger)
+
 	removeAllQuietly(filepath.Join(dir, "missing-dir"), "test", logger)
 }
