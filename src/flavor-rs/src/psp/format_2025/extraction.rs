@@ -403,6 +403,7 @@ mod tests {
     use super::*;
     use flate2::Compression;
     use flate2::write::GzEncoder;
+    use proptest::prelude::*;
     use std::io::Write;
     use tar::{Builder, EntryType, Header};
     use tempfile::tempdir;
@@ -642,5 +643,39 @@ mod tests {
     #[test]
     fn test_is_gzipped_tarball_rejects_non_gzip_input() {
         assert!(is_gzipped_tarball(b"plain bytes").is_err());
+    }
+
+    proptest! {
+        /// Any accepted path must resolve under dest_dir.
+        #[test]
+        fn prop_resolve_always_under_dest(target in "([a-z0-9_./]{0,50})") {
+            let dest = Path::new("/tmp/workenv");
+            match resolve_in_workenv(dest, Path::new(&target)) {
+                Ok(resolved) => prop_assert!(
+                    resolved.starts_with(dest),
+                    "Resolved path {:?} escapes {:?}",
+                    resolved, dest
+                ),
+                Err(_) => {} // Rejection is always safe
+            }
+        }
+
+        /// Paths with .. must always be rejected.
+        #[test]
+        fn prop_parent_traversal_always_rejected(
+            prefix in "[a-z]{0,5}",
+            suffix in "[a-z]{0,5}"
+        ) {
+            let target = format!("{prefix}/../{suffix}");
+            let dest = Path::new("/tmp/workenv");
+            prop_assert!(resolve_in_workenv(dest, Path::new(&target)).is_err());
+        }
+
+        /// Absolute paths must always be rejected.
+        #[test]
+        fn prop_absolute_paths_always_rejected(path in "/[a-z/]{1,20}") {
+            let dest = Path::new("/tmp/workenv");
+            prop_assert!(resolve_in_workenv(dest, Path::new(&path)).is_err());
+        }
     }
 }

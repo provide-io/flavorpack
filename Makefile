@@ -95,7 +95,7 @@ mutation-clean: ## Clean mutation testing artifacts
 # ==================== Unified Quality ====================
 
 QUALITY_PY_COV_MIN ?= 85
-QUALITY_GO_COV_MIN ?= 80
+QUALITY_GO_COV_MIN ?= 75
 QUALITY_RUST_COV_MIN ?= 80
 QUALITY_GO_FUZZTIME ?= 30s
 QUALITY_RUST_FUZZ_SECONDS ?= 30

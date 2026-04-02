@@ -179,16 +179,10 @@ fn verify_integrity_seal(file: &mut File, index: &super::index::Index) -> Result
     let mut metadata_bytes = vec![0u8; index.metadata_size as usize];
     file.read_exact(&mut metadata_bytes)?;
 
-    // Decompress metadata if needed
-    let json_bytes = if true {
-        // Always gzip for now
-        let gz = GzDecoder::new(&metadata_bytes[..]);
-        let mut json_data = Vec::new();
-        gz.take(1024 * 1024).read_to_end(&mut json_data)?;
-        json_data
-    } else {
-        metadata_bytes.clone()
-    };
+    // Decompress gzip metadata
+    let gz = GzDecoder::new(&metadata_bytes[..]);
+    let mut json_bytes = Vec::new();
+    gz.take(1024 * 1024).read_to_end(&mut json_bytes)?;
 
     // Get signature from index
     let sig_bytes = &index.integrity_signature;
@@ -418,6 +412,7 @@ fn verify_attestation_policy_hash(reader: &mut super::reader::Reader) -> Result<
 mod tests {
     use super::*;
     use crate::psp::format_2025::slots::SlotDescriptor;
+    use proptest::prelude::*;
 
     #[test]
     fn test_verify_slot_checksum_detects_tampering() {
@@ -844,5 +839,45 @@ mod tests {
             err.to_string().contains("policy"),
             "error should mention policy: {err}"
         );
+    }
+
+    proptest! {
+        /// Checksum of data always matches descriptor built from that data.
+        #[test]
+        fn prop_checksum_consistent(data in proptest::collection::vec(any::<u8>(), 0..1024)) {
+            let checksum = Sha256::digest(&data);
+            let mut checksum_bytes = [0u8; 8];
+            checksum_bytes.copy_from_slice(&checksum[..8]);
+            let expected = u64::from_le_bytes(checksum_bytes);
+
+            let mut descriptor = SlotDescriptor::new(1);
+            descriptor.checksum = expected;
+            descriptor.size = data.len() as u64;
+            descriptor.original_size = data.len() as u64;
+
+            prop_assert!(verify_slot_checksum(&descriptor, &data));
+        }
+
+        /// Changing any byte in data must cause checksum mismatch.
+        #[test]
+        fn prop_tamper_always_detected(
+            data in proptest::collection::vec(any::<u8>(), 1..256),
+            flip_idx in any::<proptest::sample::Index>()
+        ) {
+            let checksum = Sha256::digest(&data);
+            let mut checksum_bytes = [0u8; 8];
+            checksum_bytes.copy_from_slice(&checksum[..8]);
+            let expected = u64::from_le_bytes(checksum_bytes);
+
+            let mut descriptor = SlotDescriptor::new(1);
+            descriptor.checksum = expected;
+            descriptor.size = data.len() as u64;
+            descriptor.original_size = data.len() as u64;
+
+            let mut tampered = data.clone();
+            let idx = flip_idx.index(tampered.len());
+            tampered[idx] ^= 0xFF;
+            prop_assert!(!verify_slot_checksum(&descriptor, &tampered));
+        }
     }
 }

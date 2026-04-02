@@ -37,7 +37,7 @@ func buildAttestationBundle(t *testing.T, slotContents []byte, digestHex string)
 	if err != nil {
 		t.Fatalf("create temp file: %v", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	var offset uint64
 
@@ -132,7 +132,7 @@ func TestVerifyAttestationSbomDigest_Match(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader: %v", err)
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	if err := reader.VerifyAttestationSbomDigest(); err != nil {
 		t.Errorf("expected no error for matching digest, got: %v", err)
@@ -151,7 +151,7 @@ func TestVerifyAttestationSbomDigest_Mismatch(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader: %v", err)
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	err = reader.VerifyAttestationSbomDigest()
 	if err == nil {
@@ -171,7 +171,7 @@ func TestVerifyAttestationSbomDigest_NoDigest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReader: %v", err)
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	if err := reader.VerifyAttestationSbomDigest(); err != nil {
 		t.Errorf("expected no error when digest field is absent, got: %v", err)
@@ -186,7 +186,7 @@ func TestVerifyAttestationSbomDigest_DigestPresentNoSlot(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create temp file: %v", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	// Write a single non-attestation slot (lifecycle = LifecycleRuntime = 2).
 	slotContent := []byte("payload")
@@ -250,13 +250,13 @@ func TestVerifyAttestationSbomDigest_DigestPresentNoSlot(t *testing.T) {
 		t.Fatalf("write MagicTrailer: %v", err)
 	}
 	bundlePath := f.Name()
-	f.Close()
+	_ = f.Close()
 
 	reader, err := NewReader(bundlePath)
 	if err != nil {
 		t.Fatalf("NewReader: %v", err)
 	}
-	defer reader.Close()
+	defer func() { _ = reader.Close() }()
 
 	err = reader.VerifyAttestationSbomDigest()
 	if err == nil {
