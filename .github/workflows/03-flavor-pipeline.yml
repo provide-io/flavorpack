@@ -222,8 +222,9 @@ jobs:
             python_platform: win_arm64
           - platform: freebsd_amd64
             runner: ubuntu-24.04
-            # FreeBSD amd64: uname -m returns "amd64" (not "x86_64"), so pip/uv
-            # generate freebsd_14_2_release_amd64 compatible tags — use amd64 here.
+            # PEP 425 has no backward-compat expansion for FreeBSD (unlike macOS).
+            # The tag must exactly match sysconfig.get_platform() on the target VM.
+            # cross-platform-actions version:'14.2' → freebsd_14_2_release_amd64.
             python_platform: freebsd_14_2_release_amd64
             continue_on_error: true
           - platform: freebsd_arm64
