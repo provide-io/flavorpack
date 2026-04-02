@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Run pretaster test suite
 # Usage: run-pretaster-tests.sh <platform> <version> <test_suite> [pretaster_psp]
 
