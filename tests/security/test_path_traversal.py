@@ -7,10 +7,18 @@
 
 from __future__ import annotations
 
+import re
+
 from hypothesis import assume, given, settings, strategies as st
 import pytest
 
 from flavor.psp.format_2025.targets import normalize_workenv_target
+
+
+def _safe_param_id(prefix: str, value: str) -> str:
+    """Return a pytest CLI-safe id for path-like adversarial inputs."""
+    slug = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+    return f"{prefix}-{slug or 'empty'}"
 
 
 @pytest.mark.security
@@ -29,7 +37,7 @@ class TestNormalizeWorkenvTargetRejectsTraversal:
             "{workenv}/../../root",
             "{workenv}/bin/../../../etc/shadow",
         ],
-        ids=lambda t: f"traversal:{t[:30]}",
+        ids=lambda t: _safe_param_id("traversal", t),
     )
     def test_rejects_parent_traversal(self, malicious_target: str) -> None:
         with pytest.raises(ValueError, match="path traversal"):
@@ -43,7 +51,7 @@ class TestNormalizeWorkenvTargetRejectsTraversal:
             "/absolute/path",
             "//double/slash",
         ],
-        ids=lambda t: f"absolute:{t[:30]}",
+        ids=lambda t: _safe_param_id("absolute", t),
     )
     def test_rejects_posix_absolute_paths(self, malicious_target: str) -> None:
         with pytest.raises(ValueError, match="absolute paths"):
@@ -57,7 +65,7 @@ class TestNormalizeWorkenvTargetRejectsTraversal:
             "c:\\users\\admin",
             "Z:\\share\\file",
         ],
-        ids=lambda t: f"windows:{t[:30]}",
+        ids=lambda t: _safe_param_id("windows", t),
     )
     def test_rejects_windows_drive_paths(self, malicious_target: str) -> None:
         with pytest.raises(ValueError, match="absolute paths"):
@@ -139,3 +147,20 @@ class TestNormalizeWorkenvTargetHypothesis:
         assume(path.strip())
         result = normalize_workenv_target(path)
         assert result
+
+
+class TestSafeParamId:
+    """Regression coverage for pytest selector-safe adversarial ids."""
+
+    @pytest.mark.parametrize(
+        ("prefix", "value", "expected"),
+        [
+            ("traversal", "{workenv}/../escape", "traversal-workenv-escape"),
+            ("absolute", "/etc/passwd", "absolute-etc-passwd"),
+            ("windows", "C:\\Windows\\System32", "windows-c-windows-system32"),
+            ("windows", "D:/autoexec.bat", "windows-d-autoexec-bat"),
+            ("windows", "\t", "windows-empty"),
+        ],
+    )
+    def test_safe_param_id_emits_cli_safe_slugs(self, prefix: str, value: str, expected: str) -> None:
+        assert _safe_param_id(prefix, value) == expected
