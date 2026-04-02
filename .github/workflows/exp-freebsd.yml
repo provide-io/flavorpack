@@ -29,7 +29,7 @@ jobs:
           echo "📦 Version: $VERSION"
 
       - name: 🐡 Build and test inside FreeBSD VM
-        uses: cross-platform-actions/action@v0.27.0
+        uses: cross-platform-actions/action@v0.32.0
         with:
           operating_system: freebsd
           version: ${{ inputs.freebsd_version || '14.2' }}
@@ -46,8 +46,7 @@ jobs:
 
             # ── Install Go ──────────────────────────────────────────────
             echo "🐹 Installing Go..."
-            sudo env IGNORE_OSVERSION=yes pkg update -f
-            sudo env IGNORE_OSVERSION=yes pkg install -y go
+            pkg install -y go
 
             GO_VERSION=$(go version)
             echo "✅ $GO_VERSION"
