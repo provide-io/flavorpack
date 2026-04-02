@@ -16,6 +16,7 @@ from provide.foundation import CLIContext, TelemetryConfig, get_hub
 from provide.foundation.utils import get_version
 
 # Import all commands at module level
+from flavor.commands.doctor import doctor_command
 from flavor.commands.extract import extract_all_command, extract_command
 from flavor.commands.helpers import helper_group
 from flavor.commands.init import init_command
@@ -96,6 +97,7 @@ def cli(ctx: click.Context) -> None:
 
 
 # Register simple commands
+cli.add_command(doctor_command, name="doctor")
 cli.add_command(init_command, name="init")
 cli.add_command(keygen_command, name="keygen")
 cli.add_command(pack_command, name="pack")

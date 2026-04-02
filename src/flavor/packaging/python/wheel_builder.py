@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import importlib.metadata as importlib_metadata
 from pathlib import Path
-import tempfile
 from typing import Any
 
 from provide.foundation.file.directory import ensure_dir
@@ -189,7 +188,8 @@ class WheelBuilder:
         python_exe: Path,
         requirements_file: Path | None = None,
         packages: list[str] | None = None,
-        output_dir: Path | None = None,
+        *,
+        output_dir: Path,
         use_uv_for_resolution: bool = True,
     ) -> Path:
         """
@@ -206,11 +206,6 @@ class WheelBuilder:
             Path to locked requirements file
         """
         logger.info("🔍📝 Resolving dependencies")
-
-        if output_dir is None:
-            # Use a temporary directory that will persist for the caller.
-            # The caller is responsible for cleanup via the returned path.
-            output_dir = Path(tempfile.mkdtemp(prefix="flavor-resolve-"))
 
         # Create input requirements file if packages provided
         if packages and not requirements_file:
