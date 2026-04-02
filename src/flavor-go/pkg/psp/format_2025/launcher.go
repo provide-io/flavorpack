@@ -16,6 +16,9 @@ import (
 	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
+var syscallExecFn = syscall.Exec
+var osExitFn = os.Exit
+
 // LaunchWithLogLevel launches with explicit log level control
 func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource string) {
 	// Determine log level and source
@@ -25,12 +28,12 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 	if cliLogLevel != "" {
 		logLevel = cliLogLevel
 		logSource = cliLogSource
-	} else if envLevel := os.Getenv("FLAVOR_LAUNCHER_LOG_LEVEL"); envLevel != "" {
+	} else if envLevel := os.Getenv(EnvLauncherLogLevel); envLevel != "" {
 		logLevel = envLevel
-		logSource = "FLAVOR_LAUNCHER_LOG_LEVEL"
-	} else if envLevel := os.Getenv("FLAVOR_LOG_LEVEL"); envLevel != "" {
+		logSource = EnvLauncherLogLevel
+	} else if envLevel := os.Getenv(EnvLogLevel); envLevel != "" {
 		logLevel = envLevel
-		logSource = "FLAVOR_LOG_LEVEL"
+		logSource = EnvLogLevel
 	} else {
 		logLevel = "trace" // Default to trace for comprehensive diagnostics
 		logSource = "default"
@@ -53,7 +56,7 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 	var output io.Writer = os.Stderr
 
 	// Support log file output
-	if logPath := os.Getenv("FLAVOR_LOG_PATH"); logPath != "" {
+	if logPath := os.Getenv(EnvLogPath); logPath != "" {
 		if file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644); err == nil {
 			defer file.Close()
 			output = file
@@ -102,7 +105,7 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 	userCwd, err := os.Getwd()
 	if err != nil {
 		logger.Error("❌ Failed to get current directory", "error", err)
-		os.Exit(ExitIOError)
+		osExitFn(ExitIOError)
 	}
 	logger.Debug("📁 User working directory", "path", userCwd)
 
@@ -125,17 +128,17 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 			if len(args) < 3 {
 				fmt.Fprintf(os.Stderr, "Error: extract requires slot index and output directory\n")
 				fmt.Fprintf(os.Stderr, "Usage: extract <slot_index> <output_dir>\n")
-				os.Exit(ExitInvalidArgs)
+				osExitFn(ExitInvalidArgs)
 			}
 			extractSlot(exePath, args[1], args[2], logger)
 		case "run":
 			// Run with remaining arguments
 			if err := execBundle(exePath, args[1:], userCwd, logger); err != nil {
 				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-				os.Exit(ExitExecutionError)
+				osExitFn(ExitExecutionError)
 			}
 			// If we reach here, exec failed
-			os.Exit(ExitExecutionError)
+			osExitFn(ExitExecutionError)
 		case "help", "--help":
 			fmt.Println("PSPF Package Launcher - CLI Mode")
 			fmt.Println()
@@ -157,7 +160,7 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 		default:
 			fmt.Fprintf(os.Stderr, "Error: Unknown command '%s'\n", args[0])
 			fmt.Fprintf(os.Stderr, "Available commands: info, verify, metadata, extract, run, help\n")
-			os.Exit(ExitInvalidArgs)
+			osExitFn(ExitInvalidArgs)
 		}
 		return
 	}
@@ -167,16 +170,16 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 		// Determine error type based on error message
 		errStr := err.Error()
 		if strings.Contains(errStr, "PSPF") || strings.Contains(errStr, "magic") {
-			os.Exit(ExitPSPFError)
+			osExitFn(ExitPSPFError)
 		} else if strings.Contains(errStr, "extract") || strings.Contains(errStr, "slot") {
-			os.Exit(ExitExtractionError)
+			osExitFn(ExitExtractionError)
 		} else if strings.Contains(errStr, "file") || strings.Contains(errStr, "I/O") {
-			os.Exit(ExitIOError)
+			osExitFn(ExitIOError)
 		}
-		os.Exit(ExitExecutionError)
+		osExitFn(ExitExecutionError)
 	}
 	// If we reach here, exec failed (shouldn't happen on Unix)
-	os.Exit(ExitExecutionError)
+	osExitFn(ExitExecutionError)
 }
 
 // Launch is the backward-compatible entry point
@@ -187,7 +190,7 @@ func Launch(exePath string, args []string) {
 // execBundle prepares and executes a bundle
 func execBundle(exePath string, args []string, userCwd string, logger hclog.Logger) error {
 	// Check execution mode
-	execMode := os.Getenv("FLAVOR_EXEC_MODE")
+	execMode := os.Getenv(EnvExecMode)
 	useSpawn := strings.ToLower(execMode) == "spawn"
 
 	// Force spawn mode on Windows (exec mode not supported)
@@ -255,7 +258,7 @@ func execBundleReplace(exePath string, args []string, userCwd string, logger hcl
 	logger.Trace("About to call syscall.Exec - process will be replaced")
 
 	// This replaces the current process and never returns on success
-	err = syscall.Exec(binary, argv, envv)
+	err = syscallExecFn(binary, argv, envv)
 
 	// If we reach here, syscall.Exec failed
 	logger.Error("🚨 syscall.Exec failed", "error", err, "binary", binary, "argv", argv)

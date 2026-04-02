@@ -22,6 +22,18 @@ var (
 	ErrLockAcquisition      = errors.New("failed to acquire lock")
 )
 
+func removeFileQuietly(path, context string, logger hclog.Logger) {
+	if err := os.Remove(path); err != nil {
+		logger.Trace("Ignoring cleanup error", "context", context, "path", path, "error", err)
+	}
+}
+
+func removeAllQuietly(path, context string, logger hclog.Logger) {
+	if err := os.RemoveAll(path); err != nil {
+		logger.Trace("Ignoring cleanup error", "context", context, "path", path, "error", err)
+	}
+}
+
 // Utility functions: see execution_utils.go
 // Cache functions: see execution_cache.go
 
@@ -134,6 +146,23 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		return nil, fmt.Errorf("failed to read index: %w", err)
 	}
 
+	// Check signing key trust status.
+	// keyTrusted is false only when the trusted store exists AND the key is explicitly absent.
+	// It stays true when: no attestation fingerprint, store missing (nil), or key is trusted.
+	keyTrusted := true
+	if fp := strings.TrimRight(string(index.AttestationKeyFp[:]), "\x00"); fp != "" {
+		trusted, err := IsKeyTrusted(fp, true)
+		if err != nil {
+			logger.Warn("⚠️ Failed to check trusted key store", "error", err)
+		} else if trusted != nil && !*trusted {
+			keyTrusted = false
+			fmt.Fprintf(os.Stderr, "⚠️ SECURITY WARNING: Package signing key is not in the trusted store\n")
+			fmt.Fprintf(os.Stderr, "⚠️ Key fingerprint: %s\n", fp)
+			fmt.Fprintf(os.Stderr, "⚠️ Use 'flavor trust add <key-file>' to trust this key\n")
+			logger.Warn("⚠️ Package signing key not in trusted store", "fingerprint", fp)
+		}
+	}
+
 	validationLevel := getValidationLevel()
 
 	switch validationLevel {
@@ -173,6 +202,38 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		} else {
 			logger.Debug("✅ Package integrity verified")
 		}
+
+		// Verify attestation SBOM digest (fail-closed: digest present but slot absent = error)
+		logger.Debug("🔍 Verifying attestation SBOM digest", "level", validationLevel)
+		if err := reader.VerifyAttestationSbomDigest(); err != nil {
+			switch validationLevel {
+			case ValidationMinimal, ValidationRelaxed:
+				fmt.Fprintf(os.Stderr, "⚠️ SECURITY WARNING: Failed to verify attestation SBOM digest: %v\n", err)
+				fmt.Fprintf(os.Stderr, "⚠️ Continuing due to validation level: %v\n", validationLevel)
+				logger.Warn("⚠️ Failed to verify attestation SBOM digest, continuing", "error", err, "level", validationLevel)
+			default: // ValidationStrict, ValidationStandard
+				logger.Error("❌ Failed to verify attestation SBOM digest", "error", err)
+				return nil, fmt.Errorf("failed to verify attestation SBOM digest: %w", err)
+			}
+		} else {
+			logger.Debug("✅ Attestation SBOM digest verified")
+		}
+
+		// Verify attestation policy hash (fail-closed: hash present but no policy = error)
+		logger.Debug("🔍 Verifying attestation policy hash", "level", validationLevel)
+		if err := reader.VerifyAttestationPolicyHash(); err != nil {
+			switch validationLevel {
+			case ValidationMinimal, ValidationRelaxed:
+				fmt.Fprintf(os.Stderr, "⚠️ SECURITY WARNING: Failed to verify attestation policy hash: %v\n", err)
+				fmt.Fprintf(os.Stderr, "⚠️ Continuing due to validation level: %v\n", validationLevel)
+				logger.Warn("⚠️ Failed to verify attestation policy hash, continuing", "error", err, "level", validationLevel)
+			default: // ValidationStrict, ValidationStandard
+				logger.Error("❌ Failed to verify attestation policy hash", "error", err)
+				return nil, fmt.Errorf("failed to verify attestation policy hash: %w", err)
+			}
+		} else {
+			logger.Debug("✅ Attestation policy hash verified")
+		}
 	}
 
 	metadata, err := reader.ReadMetadata()
@@ -185,9 +246,37 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 	logger.Debug("🎯 Primary slot", "slot", metadata.Execution.PrimarySlot)
 	logger.Debug("🔧 Command", "command", metadata.Execution.Command)
 
+	// Policy enforcement
+	opPolicy, policyErr := LoadOperatorPolicy()
+	if policyErr != nil {
+		fmt.Fprintf(os.Stderr, "WARN: failed to load operator policy: %v\n", policyErr)
+		opPolicy = OperatorPolicy{}
+	}
+
+	var pkgPolicy PackagePolicy
+	if metadata.Policy != nil {
+		pkgPolicy = *metadata.Policy
+	}
+
+	effective := MergePolicy(pkgPolicy, opPolicy)
+
+	hasSBOM := false
+	for _, slot := range metadata.Slots {
+		if slot.Lifecycle == "attestation" {
+			hasSBOM = true
+			break
+		}
+	}
+
+	if enforceErr := EnforcePolicy(effective, int64(index.BuildTimestamp), hasSBOM, keyTrusted); enforceErr != nil {
+		logger.Error("❌ Policy violation", "error", enforceErr)
+		return nil, fmt.Errorf("policy violation: %w", enforceErr)
+	}
+	logger.Debug("✅ Policy enforcement passed")
+
 	// Create WorkenvPaths structure
 	var paths *WorkenvPaths
-	if customWorkenv := os.Getenv("FLAVOR_WORKENV"); customWorkenv != "" {
+	if customWorkenv := os.Getenv(EnvWorkenv); customWorkenv != "" {
 		// Use custom workenv path from environment variable
 		logger.Info("📁 Using custom work environment from FLAVOR_WORKENV", "path", customWorkenv)
 		// Extract cache dir from custom workenv (go up two levels)
@@ -243,7 +332,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 	}
 
 	// Check if we should use cache
-	useCache := os.Getenv("FLAVOR_WORKENV_CACHE") != "false" && os.Getenv("FLAVOR_WORKENV_CACHE") != "0"
+	useCache := os.Getenv(EnvWorkenvCache) != "false" && os.Getenv(EnvWorkenvCache) != "0"
 
 	workenvValid := false
 	if useCache {
@@ -305,10 +394,6 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		if err := savePackageChecksum(paths, index.IndexChecksum, logger); err != nil {
 			logger.Warn("⚠️ Failed to save package checksum", "error", err)
 		}
-
-		// Clean up init lifecycle slots after extraction (regardless of setup commands)
-		logger.Info("🧹 Cleaning up lifecycle slots...")
-		cleanupLifecycleSlots(workenvDir, metadata, slotPaths, logger)
 	} else {
 		logger.Info("✅ Work environment is valid, skipping persistent slot extraction")
 		for _, slot := range metadata.Slots {
@@ -443,6 +528,9 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 			}
 		}
 
+		// Clean up init lifecycle slots after setup commands have run
+		logger.Info("🧹 Cleaning up lifecycle slots...")
+		cleanupLifecycleSlots(workenvDir, metadata, slotPaths, logger)
 	}
 
 	if metadata.Execution == nil {

@@ -42,10 +42,15 @@ class ExecutionConfig:
 
 
 @define(frozen=True, kw_only=True)
-class BuildConfig:
+class BuildConfig(RuntimeConfig):
     """Build-related configuration from the manifest."""
 
     dependencies: list[str] = field(factory=list)
+    include_build_host: bool = config_field(
+        default=False,
+        description="Include build host info in package metadata",
+        env_var="FLAVOR_INCLUDE_BUILD_HOST",
+    )
 
 
 @define(frozen=True, kw_only=True)
@@ -85,6 +90,11 @@ class PathsConfig(RuntimeConfig):
         default=None,
         description="Base directory for work environment",
         env_var="FLAVOR_WORKENV_BASE",
+    )
+    wheel_cache: str | None = config_field(
+        default=None,
+        description="Pre-built wheels directory for offline builds",
+        env_var="FLAVOR_WHEEL_CACHE",
     )
     xdg_cache_home: str | None = config_field(
         default=None,

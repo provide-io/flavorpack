@@ -450,7 +450,7 @@ def create_backend(mode: int = ACCESS_AUTO, path: Path | None = None) -> Backend
                     file_size_mb=file_size / 1024 / 1024,
                 )
             # Use streaming for very large files on limited memory
-            elif file_size > 100 * 1024 * 1024 and sys.platform == "win32":
+            elif file_size > 100 * 1024 * 1024 and sys.platform == "win32":  # pragma: no cover
                 mode = ACCESS_STREAM
                 logger.debug(
                     "🤖 Auto-selected stream backend",

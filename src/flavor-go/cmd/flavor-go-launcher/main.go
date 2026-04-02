@@ -8,6 +8,8 @@ import (
 	"github.com/provide-io/flavor/go/flavor/pkg/psp/format_2025"
 )
 
+var executablePathFn = os.Executable
+
 func main() {
 	// Set up panic recovery to return specific exit code
 	defer func() {
@@ -18,7 +20,7 @@ func main() {
 		}
 	}()
 
-	exePath, err := os.Executable()
+	exePath, err := executablePathFn()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to get executable path: %v\n", err)
 		os.Exit(format_2025.ExitIOError)

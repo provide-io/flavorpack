@@ -98,7 +98,8 @@ class TestSlotTableReading:
         # This method needs to be implemented
         slot_table = launcher.read_slot_table()
 
-        assert len(slot_table) == 2
+        # Builder always appends an attestation slot (lifecycle=11), so 2 user slots + 1 attestation
+        assert len(slot_table) == 3
 
         # Check first slot entry
         slot0 = slot_table[0]
@@ -120,12 +121,18 @@ class TestSlotTableReading:
             9,
             10,
             11,
-        ]  # init, startup, runtime, shutdown, cache, temp, volatile, lazy, eager, dev, config, platform
+        ]  # init, startup, runtime, shutdown, cache, temp, volatile, lazy, eager, dev, config, attestation
 
         # Check second slot
         slot1 = slot_table[1]
         assert slot1["offset"] > slot0["offset"]
         assert slot1["size"] > 0
+
+        # Third slot is the attestation slot (lifecycle=11)
+        slot2 = slot_table[2]
+        assert slot2["offset"] > slot1["offset"]
+        assert slot2["size"] > 0
+        assert slot2["lifecycle"] == 11
 
     def test_slot_table_alignment(self, test_bundle_with_slots: Path) -> None:
         """Test that slots are properly aligned to DEFAULT_SLOT_ALIGNMENT boundaries."""

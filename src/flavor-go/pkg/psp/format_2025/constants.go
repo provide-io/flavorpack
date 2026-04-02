@@ -31,15 +31,16 @@ const (
 	PurposeTool    = PurposeConfig // Deprecated: use PurposeConfig
 
 	// Lifecycle types - part of format spec
-	LifecycleInit      = 0  // First run only, removed after initialization
-	LifecycleStartup   = 1  // Extracted/executed at every startup
-	LifecycleRuntime   = 2  // Available during application execution (default)
-	LifecycleShutdown  = 3  // Executed during cleanup/exit phase
-	LifecycleCache     = 4  // Kept for performance, can be regenerated
-	LifecycleTemporary = 5  // Removed after current session ends
-	LifecycleLazy      = 6  // Loaded on-demand, not extracted initially
-	LifecycleEager     = 7  // Loaded immediately on startup
-	LifecycleDev       = 8  // Only extracted in development/debug mode
-	LifecycleConfig    = 9  // User-modifiable configuration files
-	LifecyclePlatform  = 10 // Platform/OS specific content
+	LifecycleInit        = 0  // First run only, removed after initialization
+	LifecycleStartup     = 1  // Extracted/executed at every startup
+	LifecycleRuntime     = 2  // Available during application execution (default)
+	LifecycleShutdown    = 3  // Executed during cleanup/exit phase
+	LifecycleCache       = 4  // Kept for performance, can be regenerated
+	LifecycleTemporary   = 5  // Removed after current session ends
+	LifecycleLazy        = 6  // Loaded on-demand, not extracted initially
+	LifecycleEager       = 7  // Loaded immediately on startup
+	LifecycleDev         = 8  // Only extracted in development/debug mode
+	LifecycleConfig      = 9  // User-modifiable configuration files
+	LifecyclePlatform    = 10 // Platform/OS specific content
+	LifecycleAttestation = 11 // Security attestation slot (SBOM + provenance)
 )

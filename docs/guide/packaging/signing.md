@@ -35,8 +35,8 @@ flavor pack --manifest pyproject.toml --private-key keys/flavor-private.key --pu
 flavor verify myapp-1.0.0.psp
 ```
 
-!!! info "Public Key Verification"
-    The `verify` command automatically uses the public key embedded in the package. External key verification is planned for a future release.
+!!! info "Trusted Key Verification"
+    The `verify` command checks the signature against the public key embedded in the package. To check whether a package was signed by a key in your local trusted key store, use `flavor trust verify package.psp`.
 
 ## Key Management
 
@@ -227,23 +227,27 @@ flavor verify package.psp
 # ✅ Package integrity confirmed
 ```
 
-#### Verification with External Key
+#### Verification Against a Trusted Key Store
 
-!!! info "📋 Planned Feature"
-    External key verification is planned for a future release. Currently, verification uses the public key embedded in the package.
+Use `flavor trust verify` to check that a package was signed by a key you explicitly trust:
 
-**Current verification:**
 ```bash
-# Verify with embedded public key
-flavor verify package.psp
+# First, import the signer's public key
+flavor trust add signer.pub
+
+# Then verify the package against the trusted key store
+flavor trust verify package.psp
+# Exit 0 = signed by a trusted key
+# Non-zero = key not trusted or signature mismatch
+
+# List all trusted keys and their fingerprints
+flavor trust list
+
+# Remove a key by fingerprint
+flavor trust remove <64-hex-char fingerprint>
 ```
 
-**Planned verification (future release):**
-```bash
-# Verify against external trusted key (not yet implemented)
-flavor verify package.psp --public-key trusted.pub
-flavor verify package.psp --trusted-keys keys/trusted/
-```
+`flavor trust verify` matches the `attestation_key_fp` field in the package index against all keys stored under `~/.config/flavor/trusted-keys/` (user) or `/etc/flavor/trusted-keys/` (system). The fingerprint is the hex-encoded SHA-256 of the raw Ed25519 public key bytes (64-character string).
 
 ### Programmatic Verification
 
@@ -282,59 +286,47 @@ trust_model = "self-signed"
 flavor verify package.psp
 ```
 
-### 2. Pre-Shared Keys
+### 2. Trusted Key Store
 
-!!! info "📋 Planned Feature"
-    Pre-shared key verification with external key management is planned for a future release.
+Distribute signing public keys to recipients who register them locally. FlavorPack maintains a per-user and system-wide trusted key store:
 
-Distribute public keys separately:
+- **User store**: `~/.config/flavor/trusted-keys/` (keys added with `flavor trust add`)
+- **System store**: `/etc/flavor/trusted-keys/` (managed by administrators)
 
-```toml
-# Planned configuration format
-[tool.flavor.security]
-trust_model = "pre-shared"
-require_known_key = true
-```
+Each key is stored as a PEM file. The fingerprint is `sha256(raw_ed25519_public_key_bytes).hexdigest()` — a 64-character hex string.
 
-**Planned Distribution Methods**:
+**Distribution workflow:**
+
 ```bash
-# Via secure channel
-scp public.pem user@server:/etc/flavor/trusted-keys/
+# Signer generates a key pair
+flavor keygen --out-dir keys/
 
-# Via configuration management
+# Signer distributes public key to recipients via secure channel
+scp keys/flavor-public.key user@server:~
+
+# Or via configuration management
 ansible-playbook deploy-keys.yml
-
-# Via package manager
-apt-get install myapp-signing-keys
 ```
 
-**Current Verification**:
+**Recipient registers and verifies:**
+
 ```bash
-# Currently: Verify with embedded public key
-flavor verify package.psp
+# Import the signer's public key
+flavor trust add flavor-public.key
+
+# List trusted keys (shows fingerprint and path)
+flavor trust list
+
+# Verify any package signed by that key
+flavor trust verify package.psp
 ```
 
-**Planned Verification**:
-```bash
-# Future: Verify against trusted keys
-# flavor verify package.psp --trusted-keys /etc/flavor/trusted-keys/
-```
+`flavor trust verify` reads the `attestation_key_fp` field in the package index and checks it against all keys in the trusted stores. This confirms not just integrity but that the package came from a specific known signer.
 
 ### 3. Web of Trust (Future)
 
 !!! info "Planned Feature"
-    Multiple signatures from trusted parties is planned for a future release.
-
-    **Planned workflow:**
-    ```bash
-    # Sign with multiple keys (not yet implemented)
-    flavor pack --manifest pyproject.toml --private-key key1.pem
-    flavor cosign package.psp --private-key key2.pem
-    flavor cosign package.psp --private-key key3.pem
-
-    # Verify requires threshold
-    flavor verify package.psp --min-signatures 2
-    ```
+    Multiple signatures from trusted parties (N-of-M threshold schemes) are planned for a future release. Currently FlavorPack supports a single signer per package with trusted key store verification.
 
 ### 4. Certificate Authority (Future)
 
@@ -538,43 +530,68 @@ flavor inspect package.psp
 # - Format version and metadata
 ```
 
-## Advanced Topics (Future Features)
+## Advanced Topics
 
-The following features are planned for future releases:
+### Trusted Key Store
+
+The trusted key store lets operators control which signers are allowed in their environment.
+
+**How fingerprints work:**
+
+A key fingerprint is the hex-encoded SHA-256 digest of the raw (32-byte) Ed25519 public key bytes:
+
+```python
+import hashlib
+from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+
+raw_bytes = public_key.public_bytes(Encoding.Raw, PublicFormat.Raw)
+fingerprint = hashlib.sha256(raw_bytes).hexdigest()  # 64-char hex string
+```
+
+The PSPF index block stores the first 32 bytes of this fingerprint string in the `attestation_key_fp` field. `flavor trust verify` reads this field and cross-references it with the keys on disk.
+
+**Key store locations:**
+
+| Scope | Path |
+|-------|------|
+| User | `~/.config/flavor/trusted-keys/` |
+| System | `/etc/flavor/trusted-keys/` |
+
+Both directories are scanned; either match is sufficient.
+
+**Full workflow:**
+
+```bash
+# 1. Generate key pair
+flavor keygen --out-dir keys/
+
+# 2. Sign package at build time
+flavor pack --manifest pyproject.toml \
+  --private-key keys/flavor-private.key \
+  --public-key keys/flavor-public.key
+
+# 3. Distribute public key to recipients
+scp keys/flavor-public.key ops@deploy-host:~
+
+# 4. Recipient registers the key
+flavor trust add flavor-public.key
+
+# 5. Recipient verifies any package from that signer
+flavor trust verify app.psp
+
+# 6. Remove a key when it is no longer trusted
+flavor trust remove <64-hex-char fingerprint>
+```
 
 ### Multi-Signature Packages (Planned)
 
 !!! info "Future Feature"
-    Support for multiple signatures per package is under development.
-
-    **Planned API:**
-    ```python
-    # Sign with multiple keys (not yet implemented)
-    from flavor.signing import multi_sign
-
-    multi_sign("package.psp", [
-        "key1.pem",
-        "key2.pem",
-        "key3.pem"
-    ])
-    ```
-
-### Threshold Signatures (Planned)
-
-!!! info "Future Feature"
-    Threshold signature schemes (N-of-M signatures required) are planned.
-
-    **Planned manifest format:**
-    ```toml
-    [tool.flavor.security.multisig]
-    required_signatures = 2
-    total_signers = 3
-    ```
+    Threshold signature schemes (N-of-M signatures required) are planned for a future release. Currently FlavorPack supports a single signer per package with trusted key store verification.
 
 ### Hardware Token Integration (Planned)
 
 !!! info "Future Feature"
-    PKCS#11 hardware token support (YubiKey, HSM, etc.) is planned.
+    PKCS#11 hardware token support (YubiKey, HSM, etc.) is planned for a future release.
 
     **Planned workflow:**
     ```bash
