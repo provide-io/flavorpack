@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Echo test script (Windows-compatible bash version of echo_test.py)
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
