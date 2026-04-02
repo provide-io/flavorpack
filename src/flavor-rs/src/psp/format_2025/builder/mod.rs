@@ -16,6 +16,7 @@ use super::defaults::{CAPABILITY_MMAP, CAPABILITY_SIGNED};
 use super::index::Index;
 use super::keys::load_or_generate_keys;
 use super::manifest::BuildManifest;
+use super::trust::compute_key_fingerprint;
 use crate::api::BuildOptions;
 use crate::exceptions::{FlavorError, Result};
 use log::{debug, info, trace};
@@ -132,6 +133,9 @@ fn initialize_index(launcher_size: u64, public_key: &ed25519_dalek::VerifyingKey
     let mut index = Index::new();
     index.launcher_size = launcher_size;
     index.public_key.copy_from_slice(public_key.as_bytes());
+    if let Ok(fp) = compute_key_fingerprint(public_key.as_bytes()) {
+        index.attestation_key_fp[..64].copy_from_slice(fp.as_bytes());
+    }
     index.capabilities = CAPABILITY_MMAP | CAPABILITY_SIGNED;
 
     index
@@ -374,6 +378,10 @@ mod tests {
         let slot_count = index.slot_count;
         assert_eq!(package_size, bytes.len() as u64);
         assert_eq!(slot_count, 1);
+        assert_ne!(
+            index.attestation_key_fp, [0u8; 64],
+            "attestation_key_fp should be populated for signed bundles"
+        );
     }
 
     // This test verifies that on non-Windows, the file is truncated before the

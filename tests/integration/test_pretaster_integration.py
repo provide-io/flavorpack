@@ -96,10 +96,15 @@ class TestPretasterIntegration:
 
     @pytest.mark.integration
     @pytest.mark.cross_language
+    @pytest.mark.requires_helpers
     def test_shell_package_execution(self, pretaster_dir: Path) -> None:
         """Test that shell package can be created and executed."""
         if not pretaster_dir.exists():
             pytest.skip("Pretaster directory not found")
+
+        dist_dir = pretaster_dir.parent.parent / "dist" / "bin"
+        if not any(dist_dir.glob("flavor-*-builder-*")):
+            pytest.skip("Helpers not built - run ./build.sh first")
 
         shell_package = pretaster_dir / "dist" / "shell-test.psp"
 
@@ -132,10 +137,15 @@ class TestPretasterIntegration:
 
     @pytest.mark.integration
     @pytest.mark.slow
+    @pytest.mark.requires_helpers
     def test_orchestration_package(self, pretaster_dir: Path) -> None:
         """Test complex multi-slot orchestration package."""
         if not pretaster_dir.exists():
             pytest.skip("Pretaster directory not found")
+
+        dist_dir = pretaster_dir.parent.parent / "dist" / "bin"
+        if not any(dist_dir.glob("flavor-*-builder-*")):
+            pytest.skip("Helpers not built - run ./build.sh first")
 
         orchestrate_package = pretaster_dir / "dist" / "orchestrate-test.psp"
 
