@@ -103,7 +103,27 @@ def test_platform_wheel_duplicate_helpers_fails() -> None:
     try:
         success, msgs = validate_helpers(whl)
         assert not success
-        assert any("Multiple" in m for m in msgs)
+        assert any("Unexpected helper" in m or "Expected helper not found" in m for m in msgs)
+    finally:
+        whl.unlink(missing_ok=True)
+
+
+def test_platform_wheel_extra_foreign_platform_helper_fails() -> None:
+    """Platform wheels must contain exactly the helper set for their own platform."""
+    whl = make_wheel(
+        "flavorpack-0.3.21-py3-none-linux_x86_64",
+        [
+            "flavor-go-builder-0.3.21-linux_amd64",
+            "flavor-go-launcher-0.3.21-linux_amd64",
+            "flavor-rs-builder-0.3.21-linux_amd64",
+            "flavor-rs-launcher-0.3.21-linux_amd64",
+            "flavor-rs-launcher-0.3.21-windows_amd64",
+        ],
+    )
+    try:
+        success, msgs = validate_helpers(whl)
+        assert not success
+        assert any("unexpected helper" in m.lower() or "foreign-platform" in m.lower() for m in msgs)
     finally:
         whl.unlink(missing_ok=True)
 
@@ -119,6 +139,46 @@ def test_platform_wheel_missing_helper_fails() -> None:
     try:
         success, _ = validate_helpers(whl)
         assert not success
+    finally:
+        whl.unlink(missing_ok=True)
+
+
+def test_platform_wheel_wrong_helper_version_fails() -> None:
+    """Platform wheels must not validate against stale helper versions."""
+    whl = make_wheel(
+        "flavorpack-0.3.21-py3-none-linux_x86_64",
+        [
+            "flavor-go-builder-0.3.20-linux_amd64",
+            "flavor-go-launcher-0.3.21-linux_amd64",
+            "flavor-rs-builder-0.3.21-linux_amd64",
+            "flavor-rs-launcher-0.3.21-linux_amd64",
+        ],
+    )
+    try:
+        success, msgs = validate_helpers(whl)
+        assert not success
+        assert any("Expected helper not found" in m for m in msgs)
+        assert any("Unexpected helper" in m for m in msgs)
+    finally:
+        whl.unlink(missing_ok=True)
+
+
+def test_platform_wheel_wrong_helper_prefix_fails() -> None:
+    """Platform wheels must not accept helpers that only share a broad family prefix."""
+    whl = make_wheel(
+        "flavorpack-0.3.21-py3-none-linux_x86_64",
+        [
+            "flavor-go-builder-malicious-0.3.21-linux_amd64",
+            "flavor-go-launcher-0.3.21-linux_amd64",
+            "flavor-rs-builder-0.3.21-linux_amd64",
+            "flavor-rs-launcher-0.3.21-linux_amd64",
+        ],
+    )
+    try:
+        success, msgs = validate_helpers(whl)
+        assert not success
+        assert any("Expected helper not found" in m for m in msgs)
+        assert any("Unexpected helper" in m for m in msgs)
     finally:
         whl.unlink(missing_ok=True)
 
