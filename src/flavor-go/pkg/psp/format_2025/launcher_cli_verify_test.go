@@ -1,13 +1,10 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
 	"errors"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // TestShowBundleInfoVerifyMagicTrailerFails covers launcher_cli.go:72-74
@@ -33,7 +30,7 @@ func TestShowBundleInfoVerifyMagicTrailerFails(t *testing.T) {
 	// showBundleInfo should complete normally (✗ is just displayed, not fatal)
 	func() {
 		defer func() { _ = recover() }()
-		showBundleInfo(bundle, logging.NewNullLogger())
+		showBundleInfo(bundle, hclog.NewNullLogger())
 	}()
 
 	// exitCalled should be false — VerifyMagicTrailer failure is non-fatal (just changes display)

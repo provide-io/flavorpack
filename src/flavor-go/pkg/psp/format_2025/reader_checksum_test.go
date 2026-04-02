@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -11,7 +8,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // TestReadMetadataArchiveChecksumMismatchViaBundle covers reader.go:197-199
@@ -60,7 +57,7 @@ func TestReadMetadataArchiveChecksumMismatchViaBundle(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Remove(corruptPath) })
 
-	reader, _ := NewReaderWithLogger(corruptPath, logging.NewNullLogger())
+	reader, _ := NewReaderWithLogger(corruptPath, hclog.NewNullLogger())
 	defer func() { _ = reader.Close() }()
 
 	_, err = reader.ReadMetadataArchive()
@@ -83,7 +80,7 @@ func TestReadMetadataArchiveFileReadFails(t *testing.T) {
 		return 0, errors.New("injected file.Read failure for metadata archive")
 	}
 
-	reader, _ := NewReaderWithLogger(bundle, logging.NewNullLogger())
+	reader, _ := NewReaderWithLogger(bundle, hclog.NewNullLogger())
 	defer func() { _ = reader.Close() }()
 
 	_, err := reader.ReadMetadataArchive()

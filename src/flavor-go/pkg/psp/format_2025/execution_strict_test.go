@@ -1,12 +1,9 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // buildSignedBundleWithSBOMDigestMismatch creates a properly signed bundle
@@ -62,7 +59,7 @@ func TestRunBundleWithCwdValidationStandardSBOMError(t *testing.T) {
 
 	bundle := buildSignedBundleWithSBOMDigestMismatch(t)
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {
 		t.Fatal("expected error from runBundleWithCwd with ValidationStandard and SBOM digest error")
@@ -79,7 +76,7 @@ func TestRunBundleWithCwdValidationStrictSBOMError(t *testing.T) {
 
 	bundle := buildSignedBundleWithSBOMDigestMismatch(t)
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {
 		t.Fatal("expected error from runBundleWithCwd with ValidationStrict and SBOM digest error")
@@ -96,7 +93,7 @@ func TestRunBundleWithCwdValidationStandardPolicyHashError(t *testing.T) {
 
 	bundle := buildSignedBundleWithPolicyHashMismatch(t)
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {
 		t.Fatal("expected error from runBundleWithCwd with ValidationStandard and policy hash error")
@@ -113,7 +110,7 @@ func TestRunBundleWithCwdValidationStrictPolicyHashError(t *testing.T) {
 
 	bundle := buildSignedBundleWithPolicyHashMismatch(t)
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {
 		t.Fatal("expected error from runBundleWithCwd with ValidationStrict and policy hash error")

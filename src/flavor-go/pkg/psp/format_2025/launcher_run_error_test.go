@@ -1,12 +1,10 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
 	"errors"
-	"log/slog"
 	"testing"
+
+	"github.com/hashicorp/go-hclog"
 )
 
 // TestLaunchWithLogLevelRunCommandError covers lines 135-138 in launcher.go:
@@ -94,8 +92,8 @@ func TestLaunchWithLogLevelPSPFErrorClassification(t *testing.T) {
 		hasPSPFResourceFn = oldHas
 		readPSPFFromResourceFn = oldRead
 	})
-	hasPSPFResourceFn = func(path string, logger *slog.Logger) bool { return true }
-	readPSPFFromResourceFn = func(path string, logger *slog.Logger) ([]byte, error) {
+	hasPSPFResourceFn = func(path string, logger hclog.Logger) bool { return true }
+	readPSPFFromResourceFn = func(path string, logger hclog.Logger) ([]byte, error) {
 		return nil, errors.New("PSPF resource extraction failed")
 	}
 

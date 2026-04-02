@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package pkg
 
 import (
@@ -9,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 	format_2025 "github.com/provide-io/flavor/go/flavor/pkg/psp/format_2025"
 )
 
@@ -59,6 +56,6 @@ func TestVerifyBundleWithLoggerValidSlot(t *testing.T) {
 	}
 
 	// Call VerifyBundleWithLogger — should succeed and hit line 57-59 in the slot loop.
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	VerifyBundleWithLogger(bundlePath, logger)
 }

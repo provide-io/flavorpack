@@ -1,18 +1,14 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log/slog"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // buildManifestWithSelfRefSlot writes a manifest that includes a self-referential slot
@@ -49,7 +45,7 @@ func TestDoBuildSelfRefSlotSkipped(t *testing.T) {
 	outputPath := filepath.Join(dir, "bundle.pspf")
 	launcherPath := minimalLauncher(t, dir)
 
-	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
+	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
 
 	// Verify the bundle was written (self-ref slot should be skipped gracefully)
 	if _, err := os.Stat(outputPath); err != nil {
@@ -76,7 +72,7 @@ func TestDoBuildWriteMetadataFailureExits(t *testing.T) {
 	defer cleanup()
 	defer assertBuilderExited(t, 1)
 
-	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
+	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
 }
 
 // TestDoBuildLauncherWriteFailureExits covers builder.go:196-199 (out.Write(launcherData) failure).
@@ -109,7 +105,7 @@ func TestDoBuildLauncherWriteFailureExits(t *testing.T) {
 	defer cleanup()
 	defer assertBuilderExited(t, 1)
 
-	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
+	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
 }
 
 // TestDoBuildPackageEmojiWriteFailureExits covers builder.go:449-452 (out.Write(PackageEmojiBytes)).
@@ -152,7 +148,7 @@ func TestDoBuildChmodFailureExits(t *testing.T) {
 	defer cleanup()
 	defer assertBuilderExited(t, 1)
 
-	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
+	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
 }
 
 // TestDoBuildCloseFailureExits covers builder.go:488-491 (outCloseFn failure).
@@ -174,7 +170,7 @@ func TestDoBuildCloseFailureExits(t *testing.T) {
 	defer cleanup()
 	defer assertBuilderExited(t, 1)
 
-	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
+	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
 }
 
 // TestDoBuildAlignmentPaddingWriteFailureExits covers builder.go:384-389
@@ -234,7 +230,7 @@ func TestDoBuildAlignmentPaddingWriteFailure(t *testing.T) {
 	defer cleanup()
 	defer assertBuilderExited(t, 1)
 
-	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
+	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
 }
 
 // TestDoBuildPackageEmojiWriteFailure covers builder.go:449-452 using /dev/full.
@@ -267,7 +263,7 @@ func TestDoBuildPackageEmojiWriteFailure(t *testing.T) {
 	defer cleanup()
 	defer assertBuilderExited(t, 1)
 
-	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
+	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
 }
 
 // TestConvertToResourceEmbeddingTempFileWriteFailure covers the tempFile.Write failure path.
@@ -291,7 +287,7 @@ func TestConvertToResourceEmbeddingTempFileWriteFailure(t *testing.T) {
 		return 0, errors.New("injected tempFile.Write failure")
 	}
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	err := convertToResourceEmbedding(filePath, launcherSize, logger)
 	if err == nil {
 		t.Fatal("expected error from convertToResourceEmbedding when tempFile.Write fails")
@@ -327,7 +323,7 @@ func TestConvertToResourceEmbeddingTempFileWriteFailureWithCloseError(t *testing
 		return errors.New("injected tempFile.Close failure")
 	}
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	err := convertToResourceEmbedding(filePath, launcherSize, logger)
 	if err == nil {
 		t.Fatal("expected error from convertToResourceEmbedding when write and close both fail")
@@ -355,7 +351,7 @@ func TestConvertToResourceEmbeddingTempFileCloseFailure(t *testing.T) {
 		return errors.New("injected tempFile.Close failure")
 	}
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	err := convertToResourceEmbedding(filePath, launcherSize, logger)
 	if err == nil {
 		t.Fatal("expected error from convertToResourceEmbedding when tempFile.Close fails")
@@ -406,7 +402,7 @@ func TestDoBuildAlignmentPaddingWriteFailureExits(t *testing.T) {
 	defer cleanup()
 	defer assertBuilderExited(t, 1)
 
-	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
+	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
 }
 
 // TestDoBuildSlotDataWriteFailureExits covers the outWriteFn failure for slot data writes.
@@ -431,7 +427,7 @@ func TestDoBuildSlotDataWriteFailureExits(t *testing.T) {
 	defer cleanup()
 	defer assertBuilderExited(t, 1)
 
-	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
+	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
 }
 
 // TestDoBuildSlotDescriptorWriteFailureExits covers the outBinaryWriteFn failure for slot descriptor writes.
@@ -453,7 +449,7 @@ func TestDoBuildSlotDescriptorWriteFailureExits(t *testing.T) {
 	defer cleanup()
 	defer assertBuilderExited(t, 1)
 
-	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
+	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
 }
 
 // TestDoBuildPackageEmojiWriteFailureExits covers the outWriteFn failure for the package emoji write.
@@ -482,7 +478,7 @@ func TestDoBuildPackageEmojiWriteFailureExits(t *testing.T) {
 	defer cleanup()
 	defer assertBuilderExited(t, 1)
 
-	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
+	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
 }
 
 // TestDoBuildIndexWriteFailureExits covers the outWriteFn failure for the index write.
@@ -511,7 +507,7 @@ func TestDoBuildIndexWriteFailureExits(t *testing.T) {
 	defer cleanup()
 	defer assertBuilderExited(t, 1)
 
-	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
+	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
 }
 
 // TestDoBuildMagicWandEmojiWriteFailureExits covers the outWriteFn failure for the magic wand emoji write.
@@ -540,7 +536,7 @@ func TestDoBuildMagicWandEmojiWriteFailureExits(t *testing.T) {
 	defer cleanup()
 	defer assertBuilderExited(t, 1)
 
-	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
+	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
 }
 
 // TestConvertToResourceEmbeddingRemovePathFailsAfterEmbedError covers the defer cleanup path
@@ -559,7 +555,7 @@ func TestConvertToResourceEmbeddingRemovePathFailsAfterEmbedError(t *testing.T) 
 
 	oldEmbed := embedPSPFAsResourceImpl
 	t.Cleanup(func() { embedPSPFAsResourceImpl = oldEmbed })
-	embedPSPFAsResourceImpl = func(_ string, _ []byte, _ *slog.Logger) error {
+	embedPSPFAsResourceImpl = func(_ string, _ []byte, _ hclog.Logger) error {
 		return errors.New("injected embed failure to trigger cleanup")
 	}
 
@@ -569,7 +565,7 @@ func TestConvertToResourceEmbeddingRemovePathFailsAfterEmbedError(t *testing.T) 
 		return errors.New("injected removePath failure during cleanup")
 	}
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	err := convertToResourceEmbedding(filePath, launcherSize, logger)
 	// The returned error should be the embed error (the cleanup error is logged as Warn, not returned)
 	if err == nil {
@@ -598,16 +594,16 @@ func TestConvertToResourceEmbeddingGetFileSizeWarning(t *testing.T) {
 		atomicReplaceImpl = oldAtomic
 	})
 
-	embedPSPFAsResourceImpl = func(exePath string, data []byte, _ *slog.Logger) error {
+	embedPSPFAsResourceImpl = func(exePath string, data []byte, _ hclog.Logger) error {
 		return nil
 	}
 	// After atomicReplace, remove the file so getFileSize fails
-	atomicReplaceImpl = func(sourcePath, destPath string, _ *slog.Logger) error {
+	atomicReplaceImpl = func(sourcePath, destPath string, _ hclog.Logger) error {
 		_ = os.Remove(destPath) // make getFileSize fail
 		return nil
 	}
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	// This should succeed but log a warning about getFileSize failure
 	err := convertToResourceEmbedding(filePath, launcherSize, logger)
 	// The function should return nil (getFileSize warning is non-fatal)

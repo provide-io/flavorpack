@@ -1,18 +1,14 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
 	"crypto/sha256"
 	"encoding/json"
-	"log/slog"
 	"os"
 	"runtime"
 	"strings"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // stubPEResourceWithInvalidBundle injects hasPSPFResourceFn and readPSPFFromResourceFn
@@ -23,8 +19,8 @@ func stubPEResourceWithInvalidBundle(t *testing.T) func() {
 	t.Helper()
 	oldHas := hasPSPFResourceFn
 	oldRead := readPSPFFromResourceFn
-	hasPSPFResourceFn = func(path string, logger *slog.Logger) bool { return true }
-	readPSPFFromResourceFn = func(path string, logger *slog.Logger) ([]byte, error) {
+	hasPSPFResourceFn = func(path string, logger hclog.Logger) bool { return true }
+	readPSPFFromResourceFn = func(path string, logger hclog.Logger) ([]byte, error) {
 		// Return valid-length but non-PSPF data (too small to be a real bundle).
 		return []byte("not-a-pspf-bundle-xxxxxxxxxxxx"), nil
 	}
@@ -189,7 +185,7 @@ func withStubbedExit(fn func()) (exitCode int, panicked bool) {
 // when the bundle has an invalid index format version (ReadIndex fails).
 func TestShowBundleInfoReadIndexErrorPath(t *testing.T) {
 	bundlePath := buildBundleWithBadIndex(t)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	exitCode, panicked := withStubbedExit(func() {
 		showBundleInfo(bundlePath, logger)
@@ -206,7 +202,7 @@ func TestShowBundleInfoReadIndexErrorPath(t *testing.T) {
 // osExitFn(1) when the bundle has a correct index but corrupt metadata.
 func TestShowBundleInfoReadMetadataErrorPath(t *testing.T) {
 	bundlePath := buildBundleWithBadMetadata(t)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	exitCode, panicked := withStubbedExit(func() {
 		showBundleInfo(bundlePath, logger)
@@ -229,7 +225,7 @@ func TestShowBundleInfoVerifyStatusFail(t *testing.T) {
 		0, false,
 	)
 	corruptMagicTrailerBytes(t, bundle)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	// The bundle now has a corrupt magic trailer. showBundleInfo should still
 	// display info but set verifyStatus = "✗". However, ReadIndex/ReadMetadata
@@ -257,7 +253,7 @@ func TestShowBundleInfoVerifyStatusFail(t *testing.T) {
 func TestExtractSlotExtractionFailure(t *testing.T) {
 	bundlePath := buildBundleWithBadSlotData(t)
 	outputDir := t.TempDir()
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	exitCode, panicked := withStubbedExit(func() {
 		extractSlot(bundlePath, "0", outputDir, logger)
@@ -274,7 +270,7 @@ func TestExtractSlotExtractionFailure(t *testing.T) {
 // osExitFn(1) when the bundle has a bad metadata checksum.
 func TestShowMetadataReadMetadataErrorPath(t *testing.T) {
 	bundlePath := buildBundleWithBadMetadata(t)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	exitCode, panicked := withStubbedExit(func() {
 		showMetadata(bundlePath, logger)
@@ -295,7 +291,7 @@ func TestVerifyBundleSlotReadFailure(t *testing.T) {
 	}
 
 	bundlePath := buildBundleWithBadSlotData(t)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	// verifyBundle calls osExitFn(1) when errors are found; stub it.
 	output := captureStdout(t, func() {
@@ -324,7 +320,7 @@ func TestShowBundleInfoWithCleanupAndReaderFailure(t *testing.T) {
 	defer restore()
 
 	exitCode, panicked := withStubbedExit(func() {
-		showBundleInfo("/fake/exe", logging.NewNullLogger())
+		showBundleInfo("/fake/exe", hclog.NewNullLogger())
 	})
 	if panicked {
 		t.Fatal("unexpected non-exit panic")
@@ -341,7 +337,7 @@ func TestExtractSlotWithCleanupAndReaderFailure(t *testing.T) {
 	defer restore()
 
 	exitCode, panicked := withStubbedExit(func() {
-		extractSlot("/fake/exe", "0", t.TempDir(), logging.NewNullLogger())
+		extractSlot("/fake/exe", "0", t.TempDir(), hclog.NewNullLogger())
 	})
 	if panicked {
 		t.Fatal("unexpected non-exit panic")
@@ -358,7 +354,7 @@ func TestShowMetadataWithCleanupAndReaderFailure(t *testing.T) {
 	defer restore()
 
 	exitCode, panicked := withStubbedExit(func() {
-		showMetadata("/fake/exe", logging.NewNullLogger())
+		showMetadata("/fake/exe", hclog.NewNullLogger())
 	})
 	if panicked {
 		t.Fatal("unexpected non-exit panic")
@@ -383,7 +379,7 @@ func TestVerifyBundleWithCleanupAndReaderFailure(t *testing.T) {
 			osExitFn = old
 			recover()
 		}()
-		verifyBundle("/fake/exe", logging.NewNullLogger())
+		verifyBundle("/fake/exe", hclog.NewNullLogger())
 	})
 	// verifyBundle may print verification failure info or exit with code 1.
 	_ = output

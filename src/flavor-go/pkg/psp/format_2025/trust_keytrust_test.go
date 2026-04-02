@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -8,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // TestRunBundleWithCwdIsKeyTrustedError covers lines 182-184 in execution.go:
@@ -31,7 +28,7 @@ func TestRunBundleWithCwdIsKeyTrustedError(t *testing.T) {
 	_ = f.Close()
 	t.Setenv(EnvTrustedKeysDir, f.Name())
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	// IsKeyTrusted error is a warning — runBundleWithCwd should continue.
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
@@ -58,7 +55,7 @@ func TestRunBundleWithCwdUntrustedKeyWarning(t *testing.T) {
 	trustedDir := t.TempDir()
 	t.Setenv(EnvTrustedKeysDir, trustedDir)
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	// The key is not in the trusted store — warning is printed but execution continues.
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
@@ -76,9 +73,8 @@ func TestEnforcePolicyUseOsKeychain(t *testing.T) {
 
 	eff := EffectivePolicy{
 		UseOsKeychain: true,
-		Enforcement:   NewDefaultEnforcementPolicy(),
 	}
-	_, err := EnforcePolicy(eff, 0, false, false)
+	err := EnforcePolicy(eff, 0, false, false)
 	if err == nil {
 		t.Fatal("expected error for UseOsKeychain=true, got nil")
 	}
@@ -160,7 +156,7 @@ func TestRunBundleWithCwdTrustedKeyFound(t *testing.T) {
 		t.Fatalf("WriteFile(trusted): %v", err)
 	}
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	// Key is trusted — runBundleWithCwd should set keyTrusted=true and continue.
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {

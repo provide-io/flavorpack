@@ -1,18 +1,14 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
 	"crypto/ed25519"
 	cryptorand "crypto/rand"
 	"encoding/binary"
-	"log/slog"
 	"os"
 	"strings"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // patchBundleIndexBytes reads the bundle, applies fn to the raw PSPFIndex bytes
@@ -175,7 +171,7 @@ func TestRunBundleWithCwdValidationMinimalIntegritySealError(t *testing.T) {
 		Target: "{workenv}",
 	}, 0, false)
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
 		t.Fatalf("runBundleWithCwd() error = %v (expected continuation with warning)", err)
@@ -198,7 +194,7 @@ func TestRunBundleWithCwdValidationRelaxedIntegritySealError(t *testing.T) {
 		Target: "{workenv}",
 	}, 0, false)
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
 		t.Fatalf("runBundleWithCwd() error = %v (expected continuation with warning)", err)
@@ -220,7 +216,7 @@ func TestRunBundleWithCwdValidationMinimalInvalidSignature(t *testing.T) {
 
 	bundle := buildBundleWithFakeSignature(t)
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
 		t.Fatalf("runBundleWithCwd() error = %v (expected continuation with warning)", err)
@@ -240,7 +236,7 @@ func TestRunBundleWithCwdAttestationFPMismatch(t *testing.T) {
 
 	bundle := buildBundleWithAttestationFPMismatch(t)
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {
 		t.Fatal("expected error for attestation FP mismatch")
@@ -260,7 +256,7 @@ func TestRunBundleWithCwdAttestationFPWithNoPublicKey(t *testing.T) {
 
 	bundle := buildBundleWithAttestationFPButNoPublicKey(t)
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {
 		t.Fatal("expected error for attestation FP with missing public key")
@@ -280,7 +276,7 @@ func TestRunBundleWithCwdValidationMinimalSBOMError(t *testing.T) {
 
 	bundle := buildBundleWithSBOMDigestMismatch(t)
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
 		t.Fatalf("runBundleWithCwd() error = %v (expected continuation with SBOM warning)", err)
@@ -299,7 +295,7 @@ func TestRunBundleWithCwdValidationRelaxedSBOMError(t *testing.T) {
 
 	bundle := buildBundleWithSBOMDigestMismatch(t)
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
 		t.Fatalf("runBundleWithCwd() error = %v", err)
@@ -319,7 +315,7 @@ func TestRunBundleWithCwdValidationMinimalPolicyHashError(t *testing.T) {
 
 	bundle := buildBundleWithPolicyHashMismatch(t)
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
 		t.Fatalf("runBundleWithCwd() error = %v (expected continuation with policy hash warning)", err)
@@ -338,7 +334,7 @@ func TestRunBundleWithCwdValidationRelaxedPolicyHashError(t *testing.T) {
 
 	bundle := buildBundleWithPolicyHashMismatch(t)
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
 		t.Fatalf("runBundleWithCwd() error = %v", err)
@@ -379,12 +375,12 @@ func TestPrepareBundlePathCleanupRemovesFails(t *testing.T) {
 	})
 
 	pspfData := []byte("fake-pspf-data")
-	hasPSPFResourceFn = func(path string, logger *slog.Logger) bool { return true }
-	readPSPFFromResourceFn = func(path string, logger *slog.Logger) ([]byte, error) {
+	hasPSPFResourceFn = func(path string, logger hclog.Logger) bool { return true }
+	readPSPFFromResourceFn = func(path string, logger hclog.Logger) ([]byte, error) {
 		return pspfData, nil
 	}
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	bundlePath, cleanup, err := prepareBundlePath("/fake/exe", logger)
 	if err != nil {
 		t.Fatalf("prepareBundlePath() error = %v", err)
@@ -413,12 +409,12 @@ func TestRunBundleWithCwdPrepareBundlePathError(t *testing.T) {
 		readPSPFFromResourceFn = oldRead
 	})
 
-	hasPSPFResourceFn = func(path string, logger *slog.Logger) bool { return true }
-	readPSPFFromResourceFn = func(path string, logger *slog.Logger) ([]byte, error) {
+	hasPSPFResourceFn = func(path string, logger hclog.Logger) bool { return true }
+	readPSPFFromResourceFn = func(path string, logger hclog.Logger) ([]byte, error) {
 		return nil, os.ErrNotExist
 	}
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	_, err := runBundleWithCwd("/fake/exe", nil, t.TempDir(), logger)
 	if err == nil {
 		t.Fatal("expected error when prepareBundlePath fails")

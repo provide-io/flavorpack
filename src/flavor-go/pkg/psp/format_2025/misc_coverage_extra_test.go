@@ -13,8 +13,70 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
+
+// ---------------------------------------------------------------------------
+// mustInt: cover int8, int16, uint, and overflow paths
+// ---------------------------------------------------------------------------
+
+func TestMustIntInt8(t *testing.T) {
+	t.Parallel()
+	v, err := mustInt("field", int8(42))
+	if err != nil || v != 42 {
+		t.Fatalf("mustInt(int8) = %d, %v", v, err)
+	}
+}
+
+func TestMustIntInt16(t *testing.T) {
+	t.Parallel()
+	v, err := mustInt("field", int16(1000))
+	if err != nil || v != 1000 {
+		t.Fatalf("mustInt(int16) = %d, %v", v, err)
+	}
+}
+
+func TestMustIntUintInRange(t *testing.T) {
+	t.Parallel()
+	v, err := mustInt("field", uint(100))
+	if err != nil || v != 100 {
+		t.Fatalf("mustInt(uint in-range) = %d, %v", v, err)
+	}
+}
+
+func TestMustIntUintOverflow(t *testing.T) {
+	t.Parallel()
+	// uint(math.MaxInt + 1) overflows int — but MaxUint > MaxInt always.
+	// Use MaxUint64 cast to uint to be safe.
+	_, err := mustInt("field", uint(math.MaxUint))
+	if err == nil {
+		t.Fatal("expected overflow error for uint(MaxUint), got nil")
+	}
+}
+
+func TestMustIntInt64Overflow(t *testing.T) {
+	t.Parallel()
+	_, err := mustInt("field", int64(math.MaxInt64))
+	// On 64-bit systems MaxInt64 == MaxInt, so no overflow — no error expected.
+	// On 32-bit systems it would overflow. We just ensure no panic.
+	_ = err
+}
+
+func TestMustIntInt64NegativeOverflow(t *testing.T) {
+	t.Parallel()
+	// int64(math.MinInt64) is more negative than -MaxInt-1 on 32-bit systems.
+	// On 64-bit systems MinInt64 == MinInt, so no overflow. Ensure no panic.
+	_, err := mustInt("field", int64(math.MinInt64))
+	_ = err
+}
+
+func TestMustIntUint64Overflow(t *testing.T) {
+	t.Parallel()
+	_, err := mustInt("field", uint64(math.MaxUint64))
+	if err == nil {
+		t.Fatal("expected overflow error for uint64(MaxUint64), got nil")
+	}
+}
 
 // ---------------------------------------------------------------------------
 // EnforcePolicy: cover the RefuseRoot path when user is not privileged
@@ -25,8 +87,8 @@ func TestEnforcePolicyRefuseRootNotPrivileged(t *testing.T) {
 	// In a typical CI environment the test user is not root, so RefuseRoot should
 	// NOT trigger an error. This exercises the branch where RefuseRoot=true but
 	// isPrivilegedUser()=false.
-	eff := EffectivePolicy{RefuseRoot: true, Enforcement: NewDefaultEnforcementPolicy()}
-	_, err := EnforcePolicy(eff, 0, false, true)
+	eff := EffectivePolicy{RefuseRoot: true}
+	err := EnforcePolicy(eff, 0, false, true)
 	// If the test runner IS root this will fail — skip in that case.
 	if isPrivilegedUser() {
 		t.Skip("running as root/Administrator — cannot test non-privileged RefuseRoot path")
@@ -55,16 +117,32 @@ func TestMetadataUnmarshalJSONPolicyIsString(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// applyOperatorPolicyJSON: cover enforcement validation error path
+// applyExecutionPolicySection: cover the unknown-key error path
 // ---------------------------------------------------------------------------
 
-func TestApplyOperatorPolicyJSONInvalidEnforcementMode(t *testing.T) {
+func TestApplyExecutionPolicySectionUnknownKey(t *testing.T) {
 	t.Parallel()
-	policy := &OperatorPolicy{Enforcement: NewDefaultEnforcementPolicy()}
-	data := []byte(`{"version": 1, "enforcement": {"default": "explode"}}`)
-	err := applyOperatorPolicyJSON(data, policy)
+	section := map[string]any{
+		"unknown_key": "value",
+	}
+	policy := &OperatorPolicy{}
+	err := applyExecutionPolicySection(section, policy)
 	if err == nil {
-		t.Fatal("expected error for invalid enforcement mode, got nil")
+		t.Fatal("expected error for unknown key in [execution] section, got nil")
+	}
+}
+
+// TestApplyExecutionPolicySectionAllowPlatformsNotStringList covers the error path
+// where allow_platforms is not a valid string list.
+func TestApplyExecutionPolicySectionAllowPlatformsNotStringList(t *testing.T) {
+	t.Parallel()
+	section := map[string]any{
+		"allow_platforms": 42, // not a string list
+	}
+	policy := &OperatorPolicy{}
+	err := applyExecutionPolicySection(section, policy)
+	if err == nil {
+		t.Fatal("expected error when allow_platforms is not a string list, got nil")
 	}
 }
 
@@ -77,7 +155,7 @@ func TestApplyOperatorPolicyJSONInvalidEnforcementMode(t *testing.T) {
 func TestValidatePackageChecksumReadError(t *testing.T) {
 	t.Parallel()
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/demo.pspf")
 
 	// Create the instance directory and the checksum file.
@@ -112,7 +190,7 @@ func TestValidatePackageChecksumReadError(t *testing.T) {
 func TestExpandDOSStubSectionOffsetOverflow(t *testing.T) {
 	t.Parallel()
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	// Build a PE at 0x80 (triggers expansion by 0x70 bytes).
 	data, layout := buildSyntheticPEForTests(t, 0x80, false)

@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -9,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // TestFixShebangsReadDirError covers the os.ReadDir error path (line 78-80)
@@ -31,7 +28,7 @@ func TestFixShebangsReadDirError(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Chmod(binDir, 0o755) })
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	err := fixShebangs(binDir, "/old", "/new", logger)
 	if err == nil {
 		t.Fatal("expected error from fixShebangs when binDir is not readable")
@@ -42,7 +39,7 @@ func TestFixShebangsReadDirError(t *testing.T) {
 // in cleanupLifecycleSlots (line 147-152).
 func TestCleanupLifecycleSlotsInitLifecycle(t *testing.T) {
 	workenvDir := t.TempDir()
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	// Create a slot directory that should be removed.
 	slotDir := filepath.Join(workenvDir, "my-init-slot")
@@ -163,7 +160,7 @@ func TestFixShebangsReadFileFails(t *testing.T) {
 		return nil, os.ErrPermission
 	}
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	// fixShebangs should skip the file (continue) without returning an error.
 	if err := fixShebangs(binDir, "/bin", "/usr/local/bin", logger); err != nil {
 		t.Fatalf("fixShebangs() should not return error when ReadFile fails, got: %v", err)

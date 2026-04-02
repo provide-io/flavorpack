@@ -1,13 +1,10 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
 	"os"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // TestRunBundleWithCwdWaitForExtractionTimeout covers lines 412-414 in execution.go:
@@ -98,7 +95,7 @@ func TestRunBundleWithCwdWorkenvDirChmodFailure(t *testing.T) {
 		},
 	}, metadata)
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	cacheRoot := t.TempDir()
 	t.Setenv(EnvCacheDir, cacheRoot)
 	t.Setenv(EnvWorkenvCache, "false")

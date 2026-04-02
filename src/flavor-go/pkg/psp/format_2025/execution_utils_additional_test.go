@@ -1,17 +1,13 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
 	"bytes"
-	"log/slog"
 	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // TestFixShebangsSingleLineNoNewline covers the len(lines) <= 1 false branch
@@ -31,7 +27,7 @@ func TestFixShebangsSingleLineNoNewline(t *testing.T) {
 	}
 
 	var logs bytes.Buffer
-	logger := logging.NewBufferLogger(&logs, slog.LevelDebug)
+	logger := hclog.New(&hclog.LoggerOptions{Name: "test", Level: hclog.Debug, Output: &logs})
 	if err := fixShebangs(binDir, "/old/prefix", "/new/prefix", logger); err != nil {
 		t.Fatalf("fixShebangs() error = %v", err)
 	}
@@ -67,7 +63,7 @@ func TestFixShebangsWriteFileFailure(t *testing.T) {
 	t.Cleanup(func() { _ = os.Chmod(script, 0o644) })
 
 	var logs bytes.Buffer
-	logger := logging.NewBufferLogger(&logs, slog.LevelDebug)
+	logger := hclog.New(&hclog.LoggerOptions{Name: "test", Level: hclog.Debug, Output: &logs})
 
 	// fixShebangs should not return an error even if WriteFile fails – it only logs.
 	if err := fixShebangs(binDir, "/old/prefix", "/new/prefix", logger); err != nil {

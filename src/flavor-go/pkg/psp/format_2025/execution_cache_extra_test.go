@@ -1,13 +1,10 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
 	"os"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // TestSavePackageChecksumMkdirAllFailurePermission covers the mkdirAllFn failure path
@@ -19,7 +16,7 @@ func TestSavePackageChecksumMkdirAllFailurePermission(t *testing.T) {
 		return os.ErrPermission
 	}
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/demo.pspf")
 	if err := savePackageChecksum(paths, 0x12345678, logger); err == nil {
 		t.Fatal("expected error when MkdirAll fails in savePackageChecksum")
@@ -46,7 +43,7 @@ func TestSavePackageChecksumWriteFailure(t *testing.T) {
 		return os.OpenFile(tmpPath, os.O_RDONLY, 0o400)
 	}
 
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/demo.pspf")
 	// Call savePackageChecksum — mkdirAllFn must succeed for this test.
 	oldMkdir := mkdirAllFn
