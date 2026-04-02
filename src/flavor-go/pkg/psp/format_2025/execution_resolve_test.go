@@ -38,3 +38,44 @@ func TestResolveExecutableAndLookPathInEnv(t *testing.T) {
 		t.Fatal("expected PATH lookup error")
 	}
 }
+
+func TestResolveExecutableUsesPathAndLookPathInEnvSupportsEmptyPathEntry(t *testing.T) {
+	logger := hclog.NewNullLogger()
+	dir := t.TempDir()
+	tool := filepath.Join(dir, "tool")
+	if err := os.WriteFile(tool, []byte("#!/bin/sh\n"), 0o700); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+
+	t.Setenv("PATH", dir)
+	if got := resolveExecutable("/missing/tool", logger); got != tool {
+		t.Fatalf("resolveExecutable() PATH resolution = %q, want %q", got, tool)
+	}
+
+	wd := t.TempDir()
+	localTool := filepath.Join(wd, "local-tool")
+	if err := os.WriteFile(localTool, []byte("#!/bin/sh\n"), 0o700); err != nil {
+		t.Fatalf("WriteFile(local tool) error = %v", err)
+	}
+
+	oldWd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Getwd() error = %v", err)
+	}
+	if err := os.Chdir(wd); err != nil {
+		t.Fatalf("Chdir() error = %v", err)
+	}
+	t.Cleanup(func() {
+		if err := os.Chdir(oldWd); err != nil {
+			t.Errorf("restore cwd error = %v", err)
+		}
+	})
+
+	resolved, err := lookPathInEnv("local-tool", []string{"PATH=" + string(os.PathListSeparator) + "/nowhere"})
+	if err != nil {
+		t.Fatalf("lookPathInEnv() error = %v", err)
+	}
+	if resolved != filepath.Join(".", "local-tool") && resolved != "local-tool" {
+		t.Fatalf("lookPathInEnv() with empty PATH entry = %q, want local tool path", resolved)
+	}
+}

@@ -2,7 +2,13 @@ package format_2025
 
 import (
 	"bytes"
+	"crypto/ed25519"
+	cryptorand "crypto/rand"
+	"crypto/sha256"
+	"crypto/x509"
 	"encoding/binary"
+	"encoding/json"
+	"encoding/pem"
 	"math"
 	"os"
 	"path/filepath"
@@ -76,6 +82,337 @@ func TestBuilderBuildWithOptionsDelegates(t *testing.T) {
 
 	if got.manifestPath != "manifest.json" || got.outputPath != "bundle.pspf" || got.launcherBin != "launcher.bin" || got.privateKeyPath != "private.key" || got.publicKeyPath != "public.key" || got.keySeed != "seed" {
 		t.Fatalf("BuildWithOptions() delegated unexpected arguments: %#v", got)
+	}
+}
+
+func TestBuilderBuildWithLogLevelWritesExpectedLogs(t *testing.T) {
+	oldBuildImpl := buildImpl
+	t.Cleanup(func() {
+		buildImpl = oldBuildImpl
+	})
+
+	cases := []struct {
+		name       string
+		cliLog     string
+		builderLog string
+		globalLog  string
+		wantSource string
+		wantJSON   bool
+	}{
+		{
+			name:       "builder env wins",
+			builderLog: "debug",
+			globalLog:  "error",
+			wantSource: EnvBuilderLogLevel,
+		},
+		{
+			name:       "global env fallback",
+			globalLog:  "debug",
+			wantSource: EnvLogLevel,
+		},
+		{
+			name:       "cli json overrides env",
+			cliLog:     "json:debug",
+			builderLog: "debug",
+			globalLog:  "error",
+			wantSource: "CLI --log-level",
+			wantJSON:   true,
+		},
+	}
+
+	for _, tt := range cases {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			dir := t.TempDir()
+			logPath := filepath.Join(dir, "builder.log")
+			t.Setenv(EnvLogPath, logPath)
+			if tt.builderLog != "" {
+				t.Setenv(EnvBuilderLogLevel, tt.builderLog)
+			}
+			if tt.globalLog != "" {
+				t.Setenv(EnvLogLevel, tt.globalLog)
+			}
+
+			called := false
+			buildImpl = func(_ hclog.Logger, manifestPath, outputPath, launcherBin, privateKeyPath, publicKeyPath, keySeed string) {
+				called = true
+				if manifestPath != "manifest.json" || outputPath != "bundle.pspf" || launcherBin != "launcher.bin" || privateKeyPath != "private.key" || publicKeyPath != "public.key" || keySeed != "seed" {
+					t.Fatalf("BuildWithLogLevel() delegated unexpected arguments: %q %q %q %q %q %q", manifestPath, outputPath, launcherBin, privateKeyPath, publicKeyPath, keySeed)
+				}
+			}
+
+			BuildWithLogLevel("manifest.json", "bundle.pspf", "launcher.bin", "private.key", "public.key", "seed", tt.cliLog)
+
+			if !called {
+				t.Fatal("expected buildImpl to be called")
+			}
+
+			data, err := os.ReadFile(logPath)
+			if err != nil {
+				t.Fatalf("ReadFile() error = %v", err)
+			}
+			if !bytes.Contains(data, []byte(tt.wantSource)) {
+				t.Fatalf("expected log output to mention %q, got %q", tt.wantSource, string(data))
+			}
+
+			firstLine := data
+			if newline := bytes.IndexByte(firstLine, '\n'); newline >= 0 {
+				firstLine = firstLine[:newline]
+			}
+			if tt.wantJSON {
+				if !bytes.HasPrefix(firstLine, []byte("{")) {
+					t.Fatalf("expected JSON log output, got %q", string(data))
+				}
+				if !bytes.Contains(data, []byte(`"@level":"debug"`)) {
+					t.Fatalf("expected JSON log output, got %q", string(data))
+				}
+			} else {
+				if !bytes.HasPrefix(firstLine, []byte("🐹 ")) {
+					t.Fatalf("expected prefixed text log output, got %q", string(data))
+				}
+				if bytes.Contains(data, []byte(`"@level":"debug"`)) {
+					t.Fatalf("expected text log output, got %q", string(data))
+				}
+			}
+		})
+	}
+}
+
+func TestDoBuildSuccessWithConcreteSlot(t *testing.T) {
+	dir := t.TempDir()
+	manifestPath := filepath.Join(dir, "manifest.json")
+	outputPath := filepath.Join(dir, "bundle.pspf")
+	launcherPath := filepath.Join(dir, "launcher.sh")
+	slotSource := filepath.Join(dir, "payload.txt")
+
+	if err := os.WriteFile(slotSource, []byte("payload-data"), 0o600); err != nil {
+		t.Fatalf("WriteFile(slot source) error = %v", err)
+	}
+
+	launcherScript := []byte("#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then\n  echo launcher 1.0\nfi\n")
+	if err := os.WriteFile(launcherPath, launcherScript, 0o755); err != nil {
+		t.Fatalf("WriteFile(launcher) error = %v", err)
+	}
+
+	manifest := BuildOptions{
+		Package: PackageConfig{
+			Name:    "demo",
+			Version: "1.0.0",
+		},
+		Execution: ExecutionConfig{
+			Command: "/bin/true",
+		},
+		Slots: []Slot{
+			{
+				ID:     "payload",
+				Source: slotSource,
+				Target: "payload.txt",
+			},
+		},
+	}
+
+	manifestData, err := json.Marshal(manifest)
+	if err != nil {
+		t.Fatalf("json.Marshal() error = %v", err)
+	}
+	if err := os.WriteFile(manifestPath, manifestData, 0o600); err != nil {
+		t.Fatalf("WriteFile(manifest) error = %v", err)
+	}
+
+	t.Setenv("SOURCE_DATE_EPOCH", "1735689600")
+
+	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
+
+	got, err := os.ReadFile(outputPath)
+	if err != nil {
+		t.Fatalf("ReadFile(output) error = %v", err)
+	}
+	if len(got) <= len(launcherScript) {
+		t.Fatalf("expected bundled output to be larger than launcher, got %d bytes", len(got))
+	}
+
+	trailerStart := len(got) - MagicTrailerSize
+	if !bytes.Equal(got[trailerStart:trailerStart+4], PackageEmojiBytes) {
+		t.Fatalf("output trailer missing package emoji: %q", got[trailerStart:trailerStart+4])
+	}
+	if !bytes.Equal(got[trailerStart+MagicTrailerSize-4:], MagicWandEmojiBytes) {
+		t.Fatalf("output trailer missing magic wand emoji: %q", got[trailerStart+MagicTrailerSize-4:])
+	}
+
+	var index PSPFIndex
+	if err := index.Unpack(got[trailerStart+4 : trailerStart+4+IndexSize]); err != nil {
+		t.Fatalf("index.Unpack() error = %v", err)
+	}
+	if got, want := index.LauncherSize, uint64(len(launcherScript)); got != want {
+		t.Fatalf("index.LauncherSize = %d, want %d", got, want)
+	}
+	if got, want := index.SlotCount, uint32(1); got != want {
+		t.Fatalf("index.SlotCount = %d, want %d", got, want)
+	}
+}
+
+func TestDoBuildLoadsKeyFilesAndCarriesRuntimeMetadata(t *testing.T) {
+	dir := t.TempDir()
+	manifestPath := filepath.Join(dir, "manifest.json")
+	outputPath := filepath.Join(dir, "bundle.pspf")
+	launcherPath := filepath.Join(dir, "launcher.sh")
+	slotSource := filepath.Join(dir, "payload.txt")
+	privateKeyPath := filepath.Join(dir, "private.pem")
+	publicKeyPath := filepath.Join(dir, "public.pem")
+
+	if err := os.WriteFile(slotSource, []byte("payload-data"), 0o600); err != nil {
+		t.Fatalf("WriteFile(slot source) error = %v", err)
+	}
+	if err := os.WriteFile(launcherPath, []byte("#!/bin/sh\nexit 0\n"), 0o755); err != nil {
+		t.Fatalf("WriteFile(launcher) error = %v", err)
+	}
+
+	publicKey, privateKey, err := ed25519.GenerateKey(cryptorand.Reader)
+	if err != nil {
+		t.Fatalf("GenerateKey() error = %v", err)
+	}
+	privateDER, err := x509.MarshalPKCS8PrivateKey(privateKey)
+	if err != nil {
+		t.Fatalf("MarshalPKCS8PrivateKey() error = %v", err)
+	}
+	publicDER, err := x509.MarshalPKIXPublicKey(publicKey)
+	if err != nil {
+		t.Fatalf("MarshalPKIXPublicKey() error = %v", err)
+	}
+	if err := os.WriteFile(privateKeyPath, pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: privateDER}), 0o600); err != nil {
+		t.Fatalf("WriteFile(private key) error = %v", err)
+	}
+	if err := os.WriteFile(publicKeyPath, pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: publicDER}), 0o600); err != nil {
+		t.Fatalf("WriteFile(public key) error = %v", err)
+	}
+
+	manifest := BuildOptions{
+		Package: PackageConfig{Name: "demo", Version: "2.0.0"},
+		Execution: ExecutionConfig{
+			Command: "/bin/true",
+			Environment: map[string]string{
+				"APP_MODE": "test",
+			},
+		},
+		Runtime: &RuntimeConfig{
+			Env: map[string]interface{}{
+				"set": map[string]interface{}{"RUNTIME_FLAG": "1"},
+			},
+		},
+		CacheValidation: &CacheValidationConfig{
+			CheckFile:       "{workenv}/ready.txt",
+			ExpectedContent: "ok",
+		},
+		SetupCommands: []interface{}{
+			"/bin/true",
+		},
+		Slots: []Slot{
+			{ID: "payload", Source: slotSource, Target: "payload.txt"},
+		},
+	}
+
+	manifestData, err := json.Marshal(manifest)
+	if err != nil {
+		t.Fatalf("json.Marshal() error = %v", err)
+	}
+	if err := os.WriteFile(manifestPath, manifestData, 0o600); err != nil {
+		t.Fatalf("WriteFile(manifest) error = %v", err)
+	}
+
+	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, privateKeyPath, publicKeyPath, "")
+
+	reader, err := NewReader(outputPath)
+	if err != nil {
+		t.Fatalf("NewReader() error = %v", err)
+	}
+	defer reader.Close()
+
+	index, err := reader.ReadIndex()
+	if err != nil {
+		t.Fatalf("ReadIndex() error = %v", err)
+	}
+
+	metadata, err := reader.ReadMetadata()
+	if err != nil {
+		t.Fatalf("ReadMetadata() error = %v", err)
+	}
+	if metadata.Package.Version != "2.0.0" {
+		t.Fatalf("metadata package version = %q", metadata.Package.Version)
+	}
+	if metadata.Runtime == nil || metadata.Runtime.Env == nil {
+		t.Fatal("expected runtime env metadata to be present")
+	}
+	if metadata.CacheValidation == nil || metadata.CacheValidation.ExpectedContent != "ok" {
+		t.Fatalf("expected cache validation metadata, got %#v", metadata.CacheValidation)
+	}
+	if metadata.Verification == nil || metadata.Verification.IntegritySeal.Algorithm != "ed25519" {
+		t.Fatalf("expected verification metadata, got %#v", metadata.Verification)
+	}
+	if !bytes.Equal(index.PublicKey[:32], publicKey[:32]) {
+		t.Fatalf("expected index public key to match loaded key")
+	}
+	if metadata.Execution == nil || metadata.Execution.Environment["APP_MODE"] != "test" {
+		t.Fatalf("expected execution environment metadata, got %#v", metadata.Execution)
+	}
+}
+
+func TestDoBuildUsesEnvSeedWhenRequested(t *testing.T) {
+	dir := t.TempDir()
+	manifestPath := filepath.Join(dir, "manifest.json")
+	outputPath := filepath.Join(dir, "bundle.pspf")
+	launcherPath := filepath.Join(dir, "launcher.sh")
+	slotSource := filepath.Join(dir, "payload.txt")
+
+	if err := os.WriteFile(slotSource, []byte("payload-data"), 0o600); err != nil {
+		t.Fatalf("WriteFile(slot source) error = %v", err)
+	}
+	if err := os.WriteFile(launcherPath, []byte("#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then\n  exit 1\nfi\nexit 0\n"), 0o755); err != nil {
+		t.Fatalf("WriteFile(launcher) error = %v", err)
+	}
+
+	manifest := BuildOptions{
+		Package:   PackageConfig{Name: "seeded", Version: "3.0.0"},
+		Execution: ExecutionConfig{Command: "/bin/true"},
+		Slots: []Slot{
+			{ID: "payload", Source: slotSource, Target: "payload.txt"},
+		},
+	}
+	manifestData, err := json.Marshal(manifest)
+	if err != nil {
+		t.Fatalf("json.Marshal() error = %v", err)
+	}
+	if err := os.WriteFile(manifestPath, manifestData, 0o600); err != nil {
+		t.Fatalf("WriteFile(manifest) error = %v", err)
+	}
+
+	t.Setenv(EnvKeySeed, "seed-from-env")
+	t.Setenv("SOURCE_DATE_EPOCH", "not-a-number")
+
+	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "env")
+
+	reader, err := NewReader(outputPath)
+	if err != nil {
+		t.Fatalf("NewReader() error = %v", err)
+	}
+	defer reader.Close()
+
+	index, err := reader.ReadIndex()
+	if err != nil {
+		t.Fatalf("ReadIndex() error = %v", err)
+	}
+	metadata, err := reader.ReadMetadata()
+	if err != nil {
+		t.Fatalf("ReadMetadata() error = %v", err)
+	}
+
+	expectedSeed := sha256.Sum256([]byte("seed-from-env"))
+	expectedPrivate := ed25519.NewKeyFromSeed(expectedSeed[:])
+	expectedPublic := expectedPrivate.Public().(ed25519.PublicKey)
+	if !bytes.Equal(index.PublicKey[:32], expectedPublic[:32]) {
+		t.Fatalf("expected index public key to match env-derived seed")
+	}
+	if metadata.Build == nil || metadata.Build.Timestamp == "" || metadata.Build.Platform.Host == "" {
+		t.Fatalf("expected build metadata to be populated, got %#v", metadata.Build)
 	}
 }
 
