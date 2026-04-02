@@ -26,6 +26,9 @@ var (
 	// ErrSlotExtractionFailed is already declared in execution.go
 )
 
+var fileSeekFn = func(f *os.File, offset int64, whence int) (int64, error) { return f.Seek(offset, whence) }
+var fileReadFn = func(f *os.File, buf []byte) (int, error) { return f.Read(buf) }
+
 // Reader reads PSPF 2025 bundles
 type Reader struct {
 	bundlePath string
@@ -156,13 +159,13 @@ func (r *Reader) ReadMetadata() (*Metadata, error) {
 	}
 
 	// Seek to metadata
-	if _, err := r.file.Seek(int64(index.MetadataOffset), io.SeekStart); err != nil {
+	if _, err := fileSeekFn(r.file, int64(index.MetadataOffset), io.SeekStart); err != nil {
 		return nil, err
 	}
 
 	// Read metadata archive
 	archiveData := make([]byte, index.MetadataSize)
-	if _, err := r.file.Read(archiveData); err != nil {
+	if _, err := fileReadFn(r.file, archiveData); err != nil {
 		return nil, err
 	}
 
@@ -195,12 +198,12 @@ func (r *Reader) ReadMetadataArchive() ([]byte, error) {
 	}
 
 	// Read metadata archive
-	if _, err := r.file.Seek(int64(index.MetadataOffset), io.SeekStart); err != nil {
+	if _, err := fileSeekFn(r.file, int64(index.MetadataOffset), io.SeekStart); err != nil {
 		return nil, err
 	}
 
 	metadataData := make([]byte, index.MetadataSize)
-	if _, err := r.file.Read(metadataData); err != nil {
+	if _, err := fileReadFn(r.file, metadataData); err != nil {
 		return nil, err
 	}
 
