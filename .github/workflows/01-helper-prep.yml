@@ -135,6 +135,14 @@ jobs:
             artifacts/*.zip
           key: ${{ needs.setup.outputs.go_cache_key_base }}-${{ needs.setup.outputs.rust_cache_key_base }}-freebsd_amd64-${{ needs.setup.outputs.version }}
 
+      - name: 💾 Cache Cargo registry
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache@v5
+        with:
+          path: vm-cargo-cache
+          key: freebsd-cargo-registry-${{ hashFiles('src/flavor-rs/Cargo.lock') }}
+          restore-keys: freebsd-cargo-registry-
+
       - name: 🏗️ Prep FreeBSD system
         if: steps.cache.outputs.cache-hit != 'true'
         uses: cross-platform-actions/action@v0.32.0
@@ -251,6 +259,14 @@ jobs:
             dist/bin/flavor-rs-*-${{ needs.setup.outputs.version }}-freebsd_arm64
             artifacts/*.zip
           key: ${{ needs.setup.outputs.go_cache_key_base }}-${{ needs.setup.outputs.rust_cache_key_base }}-freebsd_arm64-${{ needs.setup.outputs.version }}
+
+      - name: 💾 Cache Cargo registry
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache@v5
+        with:
+          path: vm-cargo-cache
+          key: freebsd-cargo-registry-${{ hashFiles('src/flavor-rs/Cargo.lock') }}
+          restore-keys: freebsd-cargo-registry-
 
       - name: 🏗️ Prep FreeBSD system
         if: steps.cache.outputs.cache-hit != 'true'
