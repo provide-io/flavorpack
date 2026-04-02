@@ -25,6 +25,19 @@ var (
 	ErrLockAcquisition      = errors.New("failed to acquire lock")
 )
 
+var tryAcquireLockFn = TryAcquireLock
+var waitForExtractionFn = WaitForExtraction
+var checkWorkenvValidityAfterWaitFn = checkWorkenvValidity
+var chmodValidatedFn = chmodValidated
+var hasPSPFResourceFn = HasPSPFResource
+var readPSPFFromResourceFn = ReadPSPFFromResource
+var verifyIntegritySealFn = (*Reader).VerifyIntegritySeal
+var createTempFn = os.CreateTemp
+var removeAllFn = os.RemoveAll
+var runBundleReaderCloseFn = (*Reader).Close
+var tmpFileWriteFn = func(f *os.File, d []byte) (int, error) { return f.Write(d) }
+var tmpFileCloseFn = func(f *os.File) error { return f.Close() }
+
 func removeFileQuietly(path, context string, logger hclog.Logger) {
 	if err := os.Remove(path); err != nil {
 		logger.Trace("Ignoring cleanup error", "context", context, "path", path, "error", err)
@@ -32,7 +45,7 @@ func removeFileQuietly(path, context string, logger hclog.Logger) {
 }
 
 func removeAllQuietly(path, context string, logger hclog.Logger) {
-	if err := os.RemoveAll(path); err != nil {
+	if err := removeAllFn(path); err != nil {
 		logger.Trace("Ignoring cleanup error", "context", context, "path", path, "error", err)
 	}
 }
@@ -57,13 +70,13 @@ func prepareBundlePath(exePath string, logger *slog.Logger) (string, func(), err
 	logger.Debug("Checking bundle path preparation method", "exe", exePath)
 
 	// Check if PSPF is embedded as a PE resource
-	logging.Trace(logger, "Checking for PE resource embedding")
+	logger.Trace("Checking for PE resource embedding")
 	if hasPSPFResourceFn(exePath, logger) {
 		logger.Info("🪟 Detected PSPF embedded as PE resource, extracting to temp file")
 		logger.Debug("Starting PE resource extraction workflow")
 
 		// Read PSPF data from resource
-		logging.Trace(logger, "Reading PSPF data from PE resource")
+		logger.Trace("Reading PSPF data from PE resource")
 		pspfData, err := readPSPFFromResourceFn(exePath, logger)
 		if err != nil {
 			logger.Error("Failed to read PSPF from PE resource", "error", err)
@@ -72,7 +85,7 @@ func prepareBundlePath(exePath string, logger *slog.Logger) (string, func(), err
 		logger.Debug("Successfully read PSPF from PE resource", "size", len(pspfData))
 
 		// Create temporary file for PSPF data
-		logging.Trace(logger, "Creating temporary file for extracted PSPF data")
+		logger.Trace("Creating temporary file for extracted PSPF data")
 		tmpFile, err := createTempFn("", "pspf-*.psp")
 		if err != nil {
 			logger.Error("Failed to create temp file for PSPF extraction", "error", err)
@@ -82,11 +95,11 @@ func prepareBundlePath(exePath string, logger *slog.Logger) (string, func(), err
 		logger.Debug("Created temp file", "path", tmpPath)
 
 		// Write PSPF data to temp file
-		logging.Trace(logger, "Writing PSPF data to temp file", "size", len(pspfData))
+		logger.Trace("Writing PSPF data to temp file", "size", len(pspfData))
 		bytesWritten, err := tmpFileWriteFn(tmpFile, pspfData)
 		if err != nil {
 			logger.Error("Failed to write PSPF data to temp file", "error", err, "path", tmpPath)
-			_ = tmpFile.Close()
+			_ = tmpFileCloseFn(tmpFile)
 			logger.Trace("Cleaning up temp file after write failure", "path", tmpPath)
 			_ = os.Remove(tmpPath)
 			return "", nil, fmt.Errorf("failed to write PSPF to temp file: %w", err)
@@ -95,12 +108,12 @@ func prepareBundlePath(exePath string, logger *slog.Logger) (string, func(), err
 
 		if bytesWritten != len(pspfData) {
 			logger.Error("Incomplete write to temp file", "written", bytesWritten, "expected", len(pspfData))
-			_ = tmpFile.Close()
+			_ = tmpFileCloseFn(tmpFile)
 			_ = os.Remove(tmpPath)
 			return "", nil, fmt.Errorf("incomplete write: wrote %d bytes, expected %d", bytesWritten, len(pspfData))
 		}
 
-		logging.Trace(logger, "Closing temp file")
+		logger.Trace("Closing temp file")
 		if err := tmpFileCloseFn(tmpFile); err != nil {
 			logger.Error("Failed to close temp file", "error", err, "path", tmpPath)
 			logger.Trace("Cleaning up temp file after close failure", "path", tmpPath)
@@ -361,7 +374,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger *slo
 				// Parse octal mode string (e.g., "0700")
 				mode, err := strconv.ParseUint(strings.TrimPrefix(dirSpec.Mode, "0"), 8, 32)
 				if err == nil {
-					if err := chmodValidated(dirPath, os.FileMode(mode)); err != nil {
+					if err := chmodValidatedFn(dirPath, os.FileMode(mode)); err != nil {
 						logger.Debug("Failed to set permissions", "path", dirPath, "mode", dirSpec.Mode, "error", err)
 					} else {
 						logger.Debug("🔒 Set permissions", "path", dirPath, "mode", dirSpec.Mode)
