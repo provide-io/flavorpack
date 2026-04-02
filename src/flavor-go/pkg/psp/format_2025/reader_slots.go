@@ -219,7 +219,7 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 	} else {
 		// Target has a subpath - join it with destDir
 		destPath = filepath.Join(destDir, targetPath)
-		extractDir = filepath.Dir(destPath)
+		extractDir = destPath
 	}
 
 	logger.Trace("🔍 Slot data check", "isTarball", isTar, "dataLen", len(decompressed), "destPath", destPath)

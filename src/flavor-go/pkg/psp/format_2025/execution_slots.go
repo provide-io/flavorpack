@@ -224,6 +224,11 @@ func extractAndMergeSlotsToWorkenv(
 				}
 				os.RemoveAll(source)
 			} else {
+				if err := os.MkdirAll(filepath.Dir(dest), os.FileMode(DirPerms)); err != nil {
+					logger.Error("❌ Failed to create parent directory for file", "dest", dest, "error", err)
+					os.RemoveAll(tempExtractDir)
+					return nil, fmt.Errorf("failed to create parent directory for file: %w", err)
+				}
 				// For files, try rename first, then copy
 				if err := os.Rename(source, dest); err != nil {
 					// If rename fails (e.g., cross-filesystem or destination exists), fall back to copy

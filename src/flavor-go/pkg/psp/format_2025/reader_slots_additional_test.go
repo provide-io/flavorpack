@@ -305,3 +305,39 @@ func TestExtractSlotRejectsSymlink(t *testing.T) {
 		t.Fatalf("ExtractSlot(symlink) error = %v, want symlink rejection", err)
 	}
 }
+
+func TestExtractSlotTarRespectsTargetSubdirectory(t *testing.T) {
+	t.Parallel()
+
+	tarRaw := buildTarArchiveWithDirAndFile(t, "images", "logo.txt", 0o644, []byte("logo"))
+	tarStored := gzipData(t, tarRaw)
+	bundle := buildSingleSlotBundleForTests(t, tarStored, tarRaw, []uint8{OP_TAR, OP_GZIP}, SlotMetadata{
+		ID:     "assets-slot",
+		Target: "assets",
+	}, 0, false)
+
+	reader, err := NewReader(bundle)
+	if err != nil {
+		t.Fatalf("NewReader() error = %v", err)
+	}
+	defer reader.Close()
+
+	destDir := filepath.Join(t.TempDir(), "targeted")
+	extractedDir, err := reader.ExtractSlot(0, destDir)
+	if err != nil {
+		t.Fatalf("ExtractSlot(targeted tar) error = %v", err)
+	}
+
+	wantDir := filepath.Join(destDir, "assets")
+	if extractedDir != wantDir {
+		t.Fatalf("ExtractSlot(targeted tar) path = %q, want %q", extractedDir, wantDir)
+	}
+
+	got, err := os.ReadFile(filepath.Join(wantDir, "images", "logo.txt"))
+	if err != nil {
+		t.Fatalf("ReadFile(targeted tar payload) error = %v", err)
+	}
+	if string(got) != "logo" {
+		t.Fatalf("targeted tar payload = %q, want %q", string(got), "logo")
+	}
+}

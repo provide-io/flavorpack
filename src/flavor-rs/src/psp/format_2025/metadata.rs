@@ -126,7 +126,9 @@ pub struct BuildInfo {
 pub struct PlatformInfo {
     pub os: String,
     pub arch: String,
-    pub host: String,
+    /// Optional: only present when FLAVOR_INCLUDE_BUILD_HOST=1 was set at build time.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub host: Option<String>,
 }
 
 /// Launcher information
@@ -267,7 +269,7 @@ mod tests {
                 platform: PlatformInfo {
                     os: "linux".to_string(),
                     arch: "x86_64".to_string(),
-                    host: "linux/x86_64 test-host".to_string(),
+                    host: Some("linux/x86_64 test-host".to_string()),
                 },
             }),
             launcher: Some(LauncherInfo {
