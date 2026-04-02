@@ -107,14 +107,34 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
-      - name: 🐡 Build and test inside FreeBSD VM
+      - name: 🏗️ Prep FreeBSD system
         uses: cross-platform-actions/action@v0.32.0
         with:
           operating_system: freebsd
           version: '14.2'
           architecture: x86-64
           shell: bash
-          run: ci/build-freebsd.sh ${{ needs.setup.outputs.version }} amd64
+          run: ci/freebsd-prep-system.sh
+
+      - name: 🐹 Build Go helpers
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: x86-64
+          shell: bash
+          sync-files: runner-to-vm
+          run: ci/freebsd-build-go.sh ${{ needs.setup.outputs.version }} amd64
+
+      - name: 🧪 Test Go
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: x86-64
+          shell: bash
+          sync-files: runner-to-vm
+          run: ci/freebsd-test-go.sh
 
       - name: 📦 Package artifacts
         shell: bash
@@ -168,14 +188,34 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
-      - name: 🐡 Build and test inside FreeBSD VM
+      - name: 🏗️ Prep FreeBSD system
         uses: cross-platform-actions/action@v0.32.0
         with:
           operating_system: freebsd
           version: '14.2'
           architecture: arm64
           shell: bash
-          run: ci/build-freebsd.sh ${{ needs.setup.outputs.version }} arm64
+          run: ci/freebsd-prep-system.sh
+
+      - name: 🐹 Build Go helpers
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: arm64
+          shell: bash
+          sync-files: runner-to-vm
+          run: ci/freebsd-build-go.sh ${{ needs.setup.outputs.version }} arm64
+
+      - name: 🧪 Test Go
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: arm64
+          shell: bash
+          sync-files: runner-to-vm
+          run: ci/freebsd-test-go.sh
 
       - name: 📦 Package artifacts
         shell: bash
