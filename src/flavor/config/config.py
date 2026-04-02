@@ -19,6 +19,16 @@ from provide.foundation.config.env import RuntimeConfig
 
 from flavor.config.defaults import (
     DEFAULT_VALIDATION_LEVEL,
+    ENV_BUILDER_BIN,
+    ENV_ENTRY_POINT,
+    ENV_INCLUDE_BUILD_HOST,
+    ENV_LAUNCHER_BIN,
+    ENV_METADATA_PACKAGE_NAME,
+    ENV_PACKAGE_NAME,
+    ENV_VALIDATION,
+    ENV_VERSION,
+    ENV_WHEEL_CACHE,
+    ENV_WORKENV_BASE,
     VALIDATION_LEVELS,
 )
 from flavor.exceptions import ValidationError
@@ -49,7 +59,7 @@ class BuildConfig(RuntimeConfig):
     include_build_host: bool = config_field(
         default=False,
         description="Include build host info in package metadata",
-        env_var="FLAVOR_INCLUDE_BUILD_HOST",
+        env_var=ENV_INCLUDE_BUILD_HOST,
     )
 
 
@@ -60,7 +70,7 @@ class SecurityConfig(RuntimeConfig):
     validation_level: str = config_field(
         default=DEFAULT_VALIDATION_LEVEL,
         description="Package validation level (strict/standard/relaxed/minimal/none)",
-        env_var="FLAVOR_VALIDATION",
+        env_var=ENV_VALIDATION,
     )
 
     def __attrs_post_init__(self) -> None:
@@ -79,22 +89,22 @@ class PathsConfig(RuntimeConfig):
     builder_bin: str | None = config_field(
         default=None,
         description="Path to custom builder binary",
-        env_var="FLAVOR_BUILDER_BIN",
+        env_var=ENV_BUILDER_BIN,
     )
     launcher_bin: str | None = config_field(
         default=None,
         description="Path to custom launcher binary",
-        env_var="FLAVOR_LAUNCHER_BIN",
+        env_var=ENV_LAUNCHER_BIN,
     )
     workenv_base: str | None = config_field(
         default=None,
         description="Base directory for work environment",
-        env_var="FLAVOR_WORKENV_BASE",
+        env_var=ENV_WORKENV_BASE,
     )
     wheel_cache: str | None = config_field(
         default=None,
         description="Pre-built wheels directory for offline builds",
-        env_var="FLAVOR_WHEEL_CACHE",
+        env_var=ENV_WHEEL_CACHE,
     )
     xdg_cache_home: str | None = config_field(
         default=None,
@@ -154,7 +164,7 @@ class MetadataConfig(RuntimeConfig):
     package_name: str | None = config_field(
         default=None,
         description="Override package name",
-        env_var="FLAVOR_METADATA_PACKAGE_NAME",
+        env_var=ENV_METADATA_PACKAGE_NAME,
     )
 
 
@@ -162,9 +172,9 @@ class MetadataConfig(RuntimeConfig):
 class FlavorConfig(BaseConfig):  # ty: ignore[invalid-frozen-dataclass-subclass]
     """Top-level structured configuration for the `[tool.flavor]` section."""
 
-    name: str = config_field(description="Package name", env_var="FLAVOR_PACKAGE_NAME")
-    version: str = config_field(description="Package version", env_var="FLAVOR_VERSION")
-    entry_point: str = config_field(description="Application entry point", env_var="FLAVOR_ENTRY_POINT")
+    name: str = config_field(description="Package name", env_var=ENV_PACKAGE_NAME)
+    version: str = config_field(description="Package version", env_var=ENV_VERSION)
+    entry_point: str = config_field(description="Application entry point", env_var=ENV_ENTRY_POINT)
     metadata: MetadataConfig = field(factory=MetadataConfig)
     build: BuildConfig = field(factory=BuildConfig)
     execution: ExecutionConfig = field(factory=ExecutionConfig)
