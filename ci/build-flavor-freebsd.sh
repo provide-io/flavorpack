@@ -5,13 +5,18 @@
 # Expects:
 #   _stage/flavorpack-*.whl  — staged wheel (gitignored *.whl staged before VM sync)
 #   helpers/bin/             — helper binaries synced from runner
+#
+# cryptography has no pre-built FreeBSD wheel on PyPI and fails to build from
+# source via maturin (FreeBSD SOABI is "cpython-311" which maturin rejects).
+# Install it via pkg (pre-compiled), then create a --system-site-packages venv
+# so uv sees cryptography as already satisfied and skips the source build.
 
 set -euo pipefail
 
 PLATFORM="${1}"
 VERSION="${2}"
 
-sudo env IGNORE_OSVERSION=yes pkg install -y python311 uv
+sudo env IGNORE_OSVERSION=yes pkg install -y python311 uv py311-cryptography
 
 WHEEL=$(find _stage -name "flavorpack-*.whl" | head -1)
 if [ -z "$WHEEL" ]; then
@@ -20,8 +25,11 @@ if [ -z "$WHEEL" ]; then
     exit 1
 fi
 
-uv tool install --python python3.11 "$WHEEL"
-export PATH="$HOME/.local/bin:$PATH"
+# Create venv with access to pkg-installed system packages (avoids building
+# cryptography from source, which fails on FreeBSD due to SOABI mismatch).
+uv venv /tmp/flavorenv --python python3.11 --system-site-packages
+uv pip install --python /tmp/flavorenv/bin/python3.11 "$WHEEL"
+export PATH="/tmp/flavorenv/bin:$PATH"
 
 LAUNCHER="helpers/bin/flavor-rs-launcher-${VERSION}-${PLATFORM}"
 if [ ! -f "$LAUNCHER" ]; then
