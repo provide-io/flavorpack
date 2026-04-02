@@ -80,3 +80,4 @@ memray-output/
 # Generated test artifacts
 coverage.json
 tests/pretaster/logs/
+.claude/worktrees/

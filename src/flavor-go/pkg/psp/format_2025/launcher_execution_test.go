@@ -965,7 +965,7 @@ func TestExecBundleSpawnMode(t *testing.T) {
 		}
 	}()
 
-	execBundle(bundle, nil, t.TempDir(), logger)
+	_ = execBundle(bundle, nil, t.TempDir(), logger)
 }
 
 func TestRunBundleWithCwdUsesValidCache(t *testing.T) {

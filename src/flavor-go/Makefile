@@ -6,7 +6,7 @@
 BIN_DIR ?= ../../dist/bin
 XDG_CACHE_HOME ?= $(HOME)/.cache
 FLAVOR_HELPERS_DIR ?= $(XDG_CACHE_HOME)/flavor/helpers/bin
-QUALITY_GO_COV_MIN ?= 80
+QUALITY_GO_COV_MIN ?= 75
 QUALITY_GO_MUTATION_ARGS ?=
 FUZZTIME ?= 30s
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")

@@ -2,8 +2,11 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 #
+# mypy: disable-error-code="import-not-found"
 
 """Tests for the crosslang command."""
+
+from __future__ import annotations
 
 import json
 from pathlib import Path
@@ -131,7 +134,7 @@ class TestCrossLangTester:
             taster_dir = Path(tmpdir)
 
             # Track created files to prevent deletion issues
-            created_files = []
+            created_files: list[Path] = []
 
             # Create mock launcher info
             from unittest.mock import MagicMock
@@ -183,18 +186,19 @@ class TestCrossLangTester:
 
             tester = CrossLangTester(json_output=True)
             tester.taster_dir = taster_dir
-            tester.python_builder = Path("/fake/python/builder")
-            tester.go_builder = Path("/fake/go/builder")
-            tester.rust_builder = Path("/fake/rust/builder")
 
-            # Mock the build methods to return None (simulating failure)
-            tester.build_with_python = Mock(return_value=None)
-            tester.build_with_go = Mock(return_value=None)
-            tester.build_with_rust = Mock(return_value=None)
+            launcher_info = MagicMock()
+            launcher_info.name = "flavor-go-launcher"
+            launcher_info.language = "go"
+            launcher_info.path = Path("/fake/go/launcher")
 
-            exit_code = tester.run_all_tests()
+            with (
+                patch.object(tester, "_resolve_launchers", return_value=[launcher_info]),
+                patch.object(tester, "build_with_launcher", return_value=None),
+                patch.object(tester, "test_reproducible_build", return_value=False),
+            ):
+                exit_code = tester.run_all_tests()
 
-            # Should fail since no builds succeeded
             assert exit_code == 1
             assert tester.results["summary"]["overall_success"] is False
 
