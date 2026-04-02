@@ -79,7 +79,7 @@ func GetConfigRoot() string {
 	if xdgConfig := os.Getenv("XDG_CONFIG_HOME"); xdgConfig != "" {
 		return filepath.Join(xdgConfig, "flavor")
 	}
-	switch runtime.GOOS {
+	switch currentGOOS {
 	case "windows":
 		if appData := os.Getenv("APPDATA"); appData != "" {
 			return filepath.Join(appData, "flavor")
@@ -96,7 +96,7 @@ func GetConfigRoot() string {
 // Linux/macOS: /etc/flavor
 // Windows:     %PROGRAMDATA%\flavor
 func GetSystemConfigRoot() string {
-	if runtime.GOOS == "windows" {
+	if currentGOOS == "windows" {
 		if programData := os.Getenv("PROGRAMDATA"); programData != "" {
 			return filepath.Join(programData, "flavor")
 		}

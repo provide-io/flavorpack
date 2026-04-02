@@ -163,7 +163,7 @@ func extractAndMergeSlotsToWorkenv(
 				} else {
 					// For files, remove destination and move
 					_ = os.Remove(slotDest) // Remove existing file if any
-					if err := os.Rename(slotSource, slotDest); err != nil {
+					if err := osRenameFn(slotSource, slotDest); err != nil {
 						// If rename fails (e.g., cross-filesystem), fall back to copy
 						logger.Warn("Rename failed, falling back to copy", "error", err)
 						if err := copyFile(slotSource, slotDest); err != nil {
@@ -207,7 +207,7 @@ func extractAndMergeSlotsToWorkenv(
 				} else {
 					// For files, remove destination and move
 					_ = os.Remove(slotDest) // Remove existing file if any
-					if err := os.Rename(slotSource, slotDest); err != nil {
+					if err := osRenameFn(slotSource, slotDest); err != nil {
 						// If rename fails (e.g., cross-filesystem), fall back to copy
 						logger.Warn("Rename failed, falling back to copy", "error", err)
 						if err := copyFile(slotSource, slotDest); err != nil {
@@ -236,7 +236,7 @@ func extractAndMergeSlotsToWorkenv(
 				}
 				_ = os.RemoveAll(source)
 			} else {
-				if err := os.MkdirAll(filepath.Dir(dest), os.FileMode(DirPerms)); err != nil {
+				if err := mkdirAllParentFn(filepath.Dir(dest), os.FileMode(DirPerms)); err != nil {
 					logger.Error("❌ Failed to create parent directory for file", "dest", dest, "error", err)
 					_ = os.RemoveAll(tempExtractDir)
 					return nil, fmt.Errorf("failed to create parent directory for file: %w", err)
