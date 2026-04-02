@@ -46,7 +46,8 @@ jobs:
 
             # ── Install Go ──────────────────────────────────────────────
             echo "🐹 Installing Go..."
-            pkg install -y go
+            sudo pkg update -f
+            sudo pkg install -y go
 
             GO_VERSION=$(go version)
             echo "✅ $GO_VERSION"
