@@ -186,48 +186,32 @@ jobs:
           name: pretaster-psp-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./build
       
-      # Native platforms use separate Go/Rust helper artifacts
       - name: 📥 Download Go helpers
-        if: ${{ matrix.vm_arch == '' }}
+        continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: helper-prep.yml
+          workflow: 01-helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-go-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
 
       - name: 📥 Download Rust helpers
-        if: ${{ matrix.vm_arch == '' }}
+        continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: helper-prep.yml
+          workflow: 01-helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-rust-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
 
-      # FreeBSD uses a single combined helpers artifact
       - name: 📥 Download combined helpers (FreeBSD)
-        if: ${{ matrix.vm_arch != '' }}
+        continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: helper-prep.yml
+          workflow: 01-helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
-
-      # Download tastesh (embedded shell for self-contained PSPs)
-      - name: 📥 Download tastesh
-        uses: dawidd6/action-download-artifact@v19
-        with:
-          workflow: helper-prep.yml
-          run_id: ${{ needs.setup.outputs.helper_run_id }}
-          name: flavor-tastesh-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
-          path: ./helpers-dist
-
-      # Extract and symlink all helpers including tastesh
-      - name: 🔧 Setup helpers
-        shell: bash
-        run: ci/download-helpers.sh helpers-dist "${{ needs.setup.outputs.version }}" "${{ matrix.platform }}"
 
       - name: 🔍 Verify Cross-Language Package
         shell: bash
