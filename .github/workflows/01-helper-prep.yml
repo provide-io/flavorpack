@@ -135,13 +135,13 @@ jobs:
             artifacts/*.zip
           key: ${{ needs.setup.outputs.go_cache_key_base }}-${{ needs.setup.outputs.rust_cache_key_base }}-freebsd_amd64-${{ needs.setup.outputs.version }}
 
-      - name: 💾 Cache Cargo registry
+      - name: 💾 Cache Rust toolchain + registry
         if: steps.cache.outputs.cache-hit != 'true'
         uses: actions/cache@v5
         with:
-          path: vm-cargo-cache
-          key: freebsd-cargo-registry-${{ hashFiles('src/flavor-rs/Cargo.lock') }}
-          restore-keys: freebsd-cargo-registry-
+          path: vm-rust-home
+          key: freebsd-rust-amd64-1.94.0-${{ hashFiles('src/flavor-rs/Cargo.lock') }}
+          restore-keys: freebsd-rust-amd64-1.94.0-
 
       - name: 🏗️ Prep FreeBSD system
         if: steps.cache.outputs.cache-hit != 'true'
@@ -260,13 +260,13 @@ jobs:
             artifacts/*.zip
           key: ${{ needs.setup.outputs.go_cache_key_base }}-${{ needs.setup.outputs.rust_cache_key_base }}-freebsd_arm64-${{ needs.setup.outputs.version }}
 
-      - name: 💾 Cache Cargo registry
+      - name: 💾 Cache Rust toolchain + registry
         if: steps.cache.outputs.cache-hit != 'true'
         uses: actions/cache@v5
         with:
-          path: vm-cargo-cache
-          key: freebsd-cargo-registry-${{ hashFiles('src/flavor-rs/Cargo.lock') }}
-          restore-keys: freebsd-cargo-registry-
+          path: vm-rust-home
+          key: freebsd-rust-arm64-1.94.0-${{ hashFiles('src/flavor-rs/Cargo.lock') }}
+          restore-keys: freebsd-rust-arm64-1.94.0-
 
       - name: 🏗️ Prep FreeBSD system
         if: steps.cache.outputs.cache-hit != 'true'
