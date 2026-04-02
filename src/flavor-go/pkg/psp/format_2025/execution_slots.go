@@ -65,7 +65,7 @@ func extractAndMergeSlotsToWorkenv(
 		_ = os.RemoveAll(tempExtractDir)
 		return nil, fmt.Errorf("failed to marshal metadata: %w", err)
 	}
-	if err := os.WriteFile(metadataFile, metadataJSON, 0644); err != nil {
+	if err := os.WriteFile(metadataFile, metadataJSON, FilePerms); err != nil {
 		logger.Error("❌ Failed to write metadata", "error", err)
 		_ = os.RemoveAll(tempExtractDir)
 		return nil, fmt.Errorf("failed to write metadata: %w", err)
