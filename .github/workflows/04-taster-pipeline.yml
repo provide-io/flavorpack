@@ -22,7 +22,7 @@ jobs:
   # Setup and download Flavor PSP
   setup:
     name: 🔧 Setup & Get Flavor PSP
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # Only run taster when the triggering Flavor pipeline succeeded.
     # workflow_run fires on all conclusions (success, failure, cancelled);
     # this if-guard skips everything when Flavor failed or was cancelled.
@@ -146,7 +146,7 @@ jobs:
       - name: 🔧 Extract helpers
         shell: bash
         run: |
-          .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.version }}" "${{ matrix.platform }}"
+          ci/download-helpers.sh helpers-dist "${{ needs.setup.outputs.version }}" "${{ matrix.platform }}"
 
       - name: 🔨 Build Taster using Flavor PSP
         id: build
@@ -188,7 +188,7 @@ jobs:
           fi
 
           # Use script to build Taster
-          .github/scripts/build-taster-with-psp.sh \
+          ci/build-taster-with-psp.sh \
             "$FLAVOR_PSP" \
             "$LAUNCHER" \
             "${{ matrix.platform }}" \
@@ -216,7 +216,7 @@ jobs:
         run: |
           TASTER="${{ steps.build.outputs.taster_path }}"
           WITH_TIMEOUT="${{ runner.os == 'Linux' && 'true' || 'false' }}"
-          .github/scripts/test-taster-basic.sh "$TASTER" "$WITH_TIMEOUT"
+          ci/test-taster-basic.sh "$TASTER" "$WITH_TIMEOUT"
           
           # Test with user-provided args if any
           if [ -n "${{ inputs.taster_args }}" ]; then
@@ -268,14 +268,14 @@ jobs:
       matrix:
         include:
           # Linux: both launchers are reliable
-          - runner: ubuntu-latest
+          - runner: ubuntu-24.04
             platform: linux_amd64
             activate: workenv/bin/activate
             launcher_ext: ""
             bundled_launcher: flavor-rs-launcher
             launcher_name: rust
             allow_failure: false
-          - runner: ubuntu-latest
+          - runner: ubuntu-24.04
             platform: linux_amd64
             activate: workenv/bin/activate
             launcher_ext: ""
@@ -342,7 +342,7 @@ jobs:
 
       - name: 🔧 Extract all helpers
         run: |
-          .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}"
+          ci/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}"
 
       - name: 🔧 Copy helpers into flavor wheel source
         run: |
@@ -369,7 +369,7 @@ jobs:
           python-version: '3.11'
 
       - name: 📦 Setup environment
-        run: .github/scripts/setup-python-workenv.sh
+        run: ci/setup-python-workenv.sh
 
       - name: 🧪 Test 1 - Flavor pack with explicit launcher
         run: |
@@ -576,7 +576,7 @@ jobs:
           fi
 
           # Use script to test self-packaging
-          ../../.github/scripts/test-taster-self-package.sh \
+          ../../ci/test-taster-self-package.sh \
             ./taster-bundled.psp \
             "$LAUNCHER"
 
@@ -599,7 +599,7 @@ jobs:
     name: ✅ Validate & Summary
     needs: [setup, test-taster, comprehensive-test]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6

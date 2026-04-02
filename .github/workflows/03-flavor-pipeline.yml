@@ -21,7 +21,7 @@ jobs:
   # Setup and download helper artifacts
   setup:
     name: 🔧 Setup & Get Helpers
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       helper_version: ${{ steps.helpers.outputs.version }}
       helper_run_id: ${{ steps.helpers.outputs.run_id }}
@@ -39,7 +39,7 @@ jobs:
         id: helpers
         run: |
           # Source the script to get RUN_ID and VERSION
-          source .github/scripts/get-helper-run.sh "${{ inputs.helper_run_id }}"
+          source ci/get-helper-run.sh "${{ inputs.helper_run_id }}"
           
           echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
@@ -68,13 +68,13 @@ jobs:
           cat > matrix.json << 'EOF'
           {
             "include": [
-              {"name": "unit", "runner": "ubuntu-latest", "marker": "unit", "timeout": 10},
-              {"name": "integration", "runner": "ubuntu-latest", "marker": "integration", "timeout": 20},
-              {"name": "security", "runner": "ubuntu-latest", "marker": "security", "timeout": 15},
-              {"name": "format-2025", "runner": "ubuntu-latest", "path": "tests/format_2025", "timeout": 30},
-              {"name": "packaging", "runner": "ubuntu-latest", "path": "tests/packaging", "timeout": 25},
-              {"name": "cross-language", "runner": "ubuntu-latest", "marker": "cross_language", "timeout": 30},
-              {"name": "parity", "runner": "ubuntu-latest", "marker": "parity", "timeout": 10, "parity_report": true}
+              {"name": "unit", "runner": "ubuntu-24.04", "marker": "unit", "timeout": 10},
+              {"name": "integration", "runner": "ubuntu-24.04", "marker": "integration", "timeout": 20},
+              {"name": "security", "runner": "ubuntu-24.04", "marker": "security", "timeout": 15},
+              {"name": "format-2025", "runner": "ubuntu-24.04", "path": "tests/format_2025", "timeout": 30},
+              {"name": "packaging", "runner": "ubuntu-24.04", "path": "tests/packaging", "timeout": 25},
+              {"name": "cross-language", "runner": "ubuntu-24.04", "marker": "cross_language", "timeout": 30},
+              {"name": "parity", "runner": "ubuntu-24.04", "marker": "parity", "timeout": 10, "parity_report": true}
             ]
           }
           EOF
@@ -106,7 +106,7 @@ jobs:
       
       - name: 🔧 Extract helpers
         run: |
-          .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_arm64"
+          ci/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_arm64"
 
           # List available helpers
           ls -la helpers/bin/
@@ -139,7 +139,7 @@ jobs:
           if [ "${{ matrix.parity_report }}" = "true" ]; then
             EXTRA_ARGS="--parity-report"
           fi
-          .github/scripts/run-tests.sh "${{ matrix.marker }}" "${{ matrix.path }}" "${{ inputs.test_filter }}" "$EXTRA_ARGS"
+          ci/run-tests.sh "${{ matrix.marker }}" "${{ matrix.path }}" "${{ inputs.test_filter }}" "$EXTRA_ARGS"
         env:
           FLAVOR_REQUIRE_HELPERS: "1"
 
@@ -154,7 +154,7 @@ jobs:
       - name: 📊 Collect Test Metadata
         if: always()
         run: |
-          python3 .github/scripts/test-metadata.py collect test-metadata
+          python3 ci/test-metadata.py collect test-metadata
         continue-on-error: true
       
       - name: 📊 Test Summary
@@ -202,7 +202,7 @@ jobs:
       matrix:
         include:
           - platform: linux_amd64
-            runner: ubuntu-latest
+            runner: ubuntu-24.04
             python_platform: manylinux2014_x86_64
           - platform: linux_arm64
             runner: ubuntu-24.04-arm
@@ -258,7 +258,7 @@ jobs:
           mkdir -p src/flavor/helpers/bin
           
           # Extract platform-specific helpers
-          .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "${{ matrix.platform }}"
+          ci/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "${{ matrix.platform }}"
           
           # Copy ONLY the versioned platform-specific helpers to the package location
           echo "Copying ONLY versioned ${{ matrix.platform }} helpers to src/flavor/helpers/bin..."
@@ -326,7 +326,7 @@ jobs:
         shell: bash
         run: |
           source .venv/bin/activate 2>/dev/null || source .venv/Scripts/activate 2>/dev/null
-          .github/scripts/build-platform-wheel.sh "${{ matrix.python_platform }}"
+          ci/build-platform-wheel.sh "${{ matrix.python_platform }}"
       
       - name: 🔍 Validate wheel structure
         shell: bash
@@ -370,7 +370,7 @@ jobs:
       matrix:
         include:
           - platform: linux_amd64
-            runner: ubuntu-latest
+            runner: ubuntu-24.04
             python_platform: manylinux2014_x86_64
           - platform: linux_arm64
             runner: ubuntu-24.04-arm
@@ -431,14 +431,14 @@ jobs:
       - name: 🔧 Extract helpers
         shell: bash
         run: |
-          .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "${{ matrix.platform }}"
+          ci/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "${{ matrix.platform }}"
           ls -la helpers/bin/
       
       - name: 📦 Install Flavor from wheel
         shell: bash
         run: |
           export PATH="$HOME/.local/bin:$PATH"
-          bash .github/scripts/install-flavor-wheel.sh wheel-dist "${{ matrix.platform }}"
+          bash ci/install-flavor-wheel.sh wheel-dist "${{ matrix.platform }}"
       
       - name: 🔧 Prepare Flavor build
         id: prepare
@@ -478,7 +478,7 @@ jobs:
         shell: bash
         run: |
           export PATH="$HOME/.local/bin:$PATH"
-          bash .github/scripts/prewarm-wheel-cache.sh "$GITHUB_WORKSPACE/.flavor-wheel-cache"
+          bash ci/prewarm-wheel-cache.sh "$GITHUB_WORKSPACE/.flavor-wheel-cache"
         continue-on-error: true
 
       - name: 🔨 Build Flavor PSP using itself
@@ -490,7 +490,7 @@ jobs:
           export PYTHONIOENCODING=utf-8
           export PYTHONUTF8=1
           export FLAVOR_LOG_LEVEL=trace
-          .github/scripts/build-flavor-self.sh "${{ matrix.platform }}" "${{ needs.setup.outputs.helper_version }}" "${{ steps.prepare.outputs.wheel }}" "${{ steps.prepare.outputs.launcher }}"
+          ci/build-flavor-self.sh "${{ matrix.platform }}" "${{ needs.setup.outputs.helper_version }}" "${{ steps.prepare.outputs.wheel }}" "${{ steps.prepare.outputs.launcher }}"
       
       - name: 📤 Upload Flavor package
         uses: actions/upload-artifact@v7
@@ -511,7 +511,7 @@ jobs:
       matrix:
         include:
           - platform: linux_amd64
-            runner: ubuntu-latest
+            runner: ubuntu-24.04
           - platform: linux_arm64
             runner: ubuntu-24.04-arm
           - platform: darwin_amd64
@@ -544,7 +544,7 @@ jobs:
         env:
           FLAVOR_LOG_LEVEL: trace
         run: |
-          .github/scripts/test-flavor-self-contained.sh "${{ matrix.platform }}"
+          ci/test-flavor-self-contained.sh "${{ matrix.platform }}"
       
       - name: 📤 Upload results
         if: always()
@@ -559,7 +559,7 @@ jobs:
     name: ✅ Validate & Summary
     needs: [setup, test, build-wheels, build-flavor, test-flavor-psp]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
