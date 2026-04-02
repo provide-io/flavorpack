@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Security tests for FlavorPack pretaster
 #
 # Tests covered:
