@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
 # Build Rust helper binaries inside the FreeBSD VM.
 # Usage: freebsd-build-rust.sh <version> [arch]
 
@@ -17,13 +14,6 @@ case "$ARCH" in
   arm64) RUST_TARGET="aarch64-unknown-freebsd" ;;
   *) echo "❌ Unknown arch: $ARCH"; exit 1 ;;
 esac
-
-HOST_ARCH=$(uname -m)
-if [ "$HOST_ARCH" = "amd64" ]; then
-  export RUSTUP_HOME="$(pwd)/vm-rust-home/rustup"
-  export CARGO_HOME="$(pwd)/vm-rust-home/cargo"
-  export PATH="$CARGO_HOME/bin:$PATH"
-fi
 
 echo "🦀 Building Rust helpers for $PLATFORM ($RUST_TARGET)..."
 echo "   $(rustc --version)"
