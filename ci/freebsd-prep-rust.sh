@@ -15,8 +15,9 @@ if [ -x "$CARGO_HOME/bin/rustc" ]; then
   exit 0
 fi
 
-echo "🦀 Installing Rust 1.94.0 via rustup..."
-curl -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --default-toolchain 1.94.0
+RUST_VERSION="${RUST_VERSION:?RUST_VERSION env var required}"
+echo "🦀 Installing Rust $RUST_VERSION via rustup..."
+curl -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --default-toolchain "$RUST_VERSION"
 source "$CARGO_HOME/env"
 rustup target add x86_64-unknown-freebsd aarch64-unknown-freebsd
 echo "✅ $(rustc --version)"
