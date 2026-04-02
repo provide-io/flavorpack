@@ -633,14 +633,19 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
 #[allow(unsafe_code)]
 mod tests {
     use super::*;
+    #[cfg(unix)]
     use crate::api::BuildOptions;
+    #[cfg(unix)]
     use crate::psp::format_2025::build;
+    #[cfg(unix)]
     use serde_json::json;
+    #[cfg(unix)]
     use std::env;
     use std::fs;
     use std::path::PathBuf;
     use tempfile::tempdir;
 
+    #[cfg(unix)]
     fn build_real_bundle(temp: &tempfile::TempDir) -> PathBuf {
         let payload = temp.path().join("payload.txt");
         fs::write(&payload, b"payload contents").expect("write payload");
