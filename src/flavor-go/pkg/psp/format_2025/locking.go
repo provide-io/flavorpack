@@ -69,7 +69,7 @@ func TryAcquireLock(paths *WorkenvPaths, logger *slog.Logger) (bool, error) {
 	}
 
 	// Try to create lock file exclusively
-	file, err := openLockFileFn(lockPath, os.O_CREATE|os.O_EXCL|os.O_WRONLY, FilePerms)
+	file, err := openLockFileFn(lockPath, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
 	if err != nil {
 		if os.IsExist(err) {
 			logger.Debug("🔒 Lock file exists, another process is extracting")
@@ -80,7 +80,7 @@ func TryAcquireLock(paths *WorkenvPaths, logger *slog.Logger) (bool, error) {
 	defer func() { _ = file.Close() }()
 
 	// Write our PID to the lock file
-	if _, err := fmt.Fprintf(file, "%d\n", pid); err != nil {
+	if _, err := lockFprintfFn(file, "%d\n", pid); err != nil {
 		_ = os.Remove(lockPath)
 		return false, err
 	}
