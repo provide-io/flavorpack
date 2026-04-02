@@ -126,18 +126,15 @@ func TestSlotProcessorLoadSlotDataResolvesWorkenvPlaceholder(t *testing.T) {
 	t.Setenv(EnvWorkenvBase, tmpDir)
 
 	processor := NewSlotProcessor(nil, hclog.NewNullLogger())
-	original, compressed, encoding, err := processor.loadSlotData(&Slot{
+	rawData, err := processor.loadSlotData(&Slot{
 		Source:     "{workenv}/nested/payload.txt",
 		Operations: "raw",
 	})
 	if err != nil {
 		t.Fatalf("loadSlotData() error = %v", err)
 	}
-	if string(original) != "via-workenv" || string(compressed) != "via-workenv" {
-		t.Fatalf("unexpected slot contents: original=%q compressed=%q", string(original), string(compressed))
-	}
-	if encoding != 0 {
-		t.Fatalf("expected encoding 0 for raw slot, got %d", encoding)
+	if string(rawData) != "via-workenv" {
+		t.Fatalf("unexpected slot contents: %q", string(rawData))
 	}
 }
 
