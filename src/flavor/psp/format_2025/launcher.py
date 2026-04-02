@@ -239,8 +239,16 @@ class PSPFLauncher(PSPFReader):
             logger.debug(f"📤 Extracting tarball {slot_name} to {workenv_dir}")
             try:
                 with tarfile.open(fileobj=io.BytesIO(data), mode="r:*") as tar:
-                    # Use the filter parameter to avoid Python 3.14 deprecation warning
-                    tar.extractall(path=workenv_dir, filter="data")
+                    # "data" rejects absolute paths and .. but still allows symlinks;
+                    # we additionally strip symlinks to prevent link-based traversal.
+                    def _safe_filter(member: tarfile.TarInfo, path: str) -> tarfile.TarInfo | None:
+                        result = tarfile.data_filter(member, path)
+                        if result is not None and (result.issym() or result.islnk()):
+                            logger.warning(f"⚠️ Skipping symlink/hardlink in tarball: {result.name}")
+                            return None
+                        return result
+
+                    tar.extractall(path=workenv_dir, filter=_safe_filter)  # nosec B202
 
                 if slot_name in {".", "{workenv}"}:
                     return workenv_dir
@@ -268,7 +276,8 @@ class PSPFLauncher(PSPFReader):
             return
 
         try:
-            output_path.chmod(int(str(permissions), 8))
+            mode = int(str(permissions), 8) & 0o777  # Strip setuid/setgid/sticky bits
+            output_path.chmod(mode)
         except (OSError, ValueError) as e:
             logger.warning(f"⚠️ Failed to apply slot permissions to {output_path}: {e}")
 
