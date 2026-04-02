@@ -62,7 +62,7 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: "1.94.0"
+          toolchain: "${{ vars.RUST_VERSION }}"
           targets: ${{ inputs.rust_target }}
           components: rustfmt, clippy
 
