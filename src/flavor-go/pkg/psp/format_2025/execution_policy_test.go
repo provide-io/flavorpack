@@ -3,6 +3,7 @@ package format_2025
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -269,6 +270,72 @@ func TestParseMinimalTOML_AllowPlatforms(t *testing.T) {
 	}
 	if policy.AllowPlatforms[0] != "linux_amd64" {
 		t.Errorf("expected linux_amd64, got %s", policy.AllowPlatforms[0])
+	}
+}
+
+func TestLoadOperatorPolicyReturnsErrorWhenPolicyPathIsDirectory(t *testing.T) {
+	dir := t.TempDir()
+	policyDir := filepath.Join(dir, "policy.toml")
+	if err := os.MkdirAll(policyDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll(policy dir) error = %v", err)
+	}
+
+	t.Setenv(EnvConfigDir, dir)
+	_, err := LoadOperatorPolicy()
+	if err == nil || !strings.Contains(err.Error(), "reading policy") {
+		t.Fatalf("LoadOperatorPolicy() error = %v, want reading policy failure", err)
+	}
+}
+
+func TestParseMinimalTOMLParsesExtendedFieldsAndListFallback(t *testing.T) {
+	content := "[trust]\nuse_os_keychain = true\n[execution]\nmax_age_days = not-a-number\nallow_platforms = ['linux_amd64', \"linux_arm64\"]\n[attestation]\nrequire_sbom = true\n"
+	policy := OperatorPolicy{}
+	parseMinimalTOML([]byte(content), &policy)
+
+	if !policy.UseOsKeychain {
+		t.Fatal("expected use_os_keychain=true")
+	}
+	if policy.MaxAgeDays != nil {
+		t.Fatalf("expected invalid max_age_days to be ignored, got %v", policy.MaxAgeDays)
+	}
+	if !policy.RequireSBOM {
+		t.Fatal("expected require_sbom=true")
+	}
+	if len(policy.AllowPlatforms) != 2 || policy.AllowPlatforms[0] != "linux_amd64" || policy.AllowPlatforms[1] != "linux_arm64" {
+		t.Fatalf("unexpected allow_platforms: %v", policy.AllowPlatforms)
+	}
+	if got := parseTOMLStringList("not-a-list"); got != nil {
+		t.Fatalf("parseTOMLStringList() = %v, want nil for invalid input", got)
+	}
+}
+
+func TestMergePolicyUsesYoungerPackageAgeAndEmptyPlatformIntersection(t *testing.T) {
+	pkgAge := 30
+	opAge := 90
+	pkg := PackagePolicy{
+		Platforms:  []string{"linux_amd64"},
+		MaxAgeDays: &pkgAge,
+		RequireEnv: []string{"APP_TOKEN"},
+	}
+	op := OperatorPolicy{
+		AllowPlatforms:    []string{"darwin_arm64"},
+		MaxAgeDays:        &opAge,
+		RequireTrustedKey: true,
+		RequireSBOM:       true,
+	}
+
+	eff := MergePolicy(pkg, op)
+	if len(eff.Platforms) != 0 {
+		t.Fatalf("expected empty platform intersection, got %v", eff.Platforms)
+	}
+	if eff.MaxAgeDays == nil || *eff.MaxAgeDays != 30 {
+		t.Fatalf("expected younger package age to win, got %v", eff.MaxAgeDays)
+	}
+	if !eff.RequireTrustedKey || !eff.RequireSBOM {
+		t.Fatalf("expected operator requirements to propagate, got trusted=%v sbom=%v", eff.RequireTrustedKey, eff.RequireSBOM)
+	}
+	if len(eff.RequireEnv) != 1 || eff.RequireEnv[0] != "APP_TOKEN" {
+		t.Fatalf("unexpected RequireEnv: %v", eff.RequireEnv)
 	}
 }
 

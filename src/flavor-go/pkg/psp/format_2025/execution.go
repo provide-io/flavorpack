@@ -34,6 +34,15 @@ func removeAllQuietly(path, context string, logger hclog.Logger) {
 	}
 }
 
+func ensurePathWithinWorkenv(path, workenvDir, original string) error {
+	cleanPath := filepath.Clean(path)
+	cleanBase := filepath.Clean(workenvDir)
+	if !strings.HasPrefix(cleanPath, cleanBase+string(os.PathSeparator)) && cleanPath != cleanBase {
+		return fmt.Errorf("path %q escapes work environment directory", original)
+	}
+	return nil
+}
+
 // Utility functions: see execution_utils.go
 // Cache functions: see execution_cache.go
 
@@ -305,9 +314,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 			// Substitute {workenv} placeholder in the path
 			dirPath := strings.ReplaceAll(dirSpec.Path, "{workenv}", workenvDir)
 			// Path traversal protection: ensure dirPath stays within workenvDir
-			cleanDir := filepath.Clean(dirPath)
-			cleanBase := filepath.Clean(workenvDir)
-			if !strings.HasPrefix(cleanDir, cleanBase+string(os.PathSeparator)) && cleanDir != cleanBase {
+			if err := ensurePathWithinWorkenv(dirPath, workenvDir, dirSpec.Path); err != nil {
 				return nil, fmt.Errorf("directory path %q escapes work environment directory", dirSpec.Path)
 			}
 			logger.Debug("📁 Creating directory", "path", dirPath)
@@ -432,6 +439,10 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 						pattern, _ := enumerate["pattern"].(string)
 
 						path = strings.ReplaceAll(path, "{workenv}", workenvDir)
+						if err := ensurePathWithinWorkenv(path, workenvDir, path); err != nil {
+							logger.Error("❌ Enumerate path escapes work environment directory", "path", path, "error", err)
+							return nil, err
+						}
 
 						matches, err := filepath.Glob(filepath.Join(path, pattern))
 						if err != nil {
@@ -451,6 +462,10 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 					content, _ := cmd["content"].(string)
 
 					path = strings.ReplaceAll(path, "{workenv}", workenvDir)
+					if err := ensurePathWithinWorkenv(path, workenvDir, path); err != nil {
+						logger.Error("❌ Write-file path escapes work environment directory", "path", path, "error", err)
+						return nil, err
+					}
 					path = strings.ReplaceAll(path, "{package_name}", metadata.Package.Name)
 					path = strings.ReplaceAll(path, "{version}", metadata.Package.Version)
 
