@@ -91,8 +91,8 @@ jobs:
 
   # ── FreeBSD builds (QEMU VM via cross-platform-actions) ────────────────────
   # Separate dedicated jobs because these use a VM action rather than a native runner.
-  # Go helpers only — no Rust target for FreeBSD yet.
-  # Both jobs run on ubuntu-24.04; cross-platform-actions ships x86-64 QEMU binaries only.
+  # cross-platform-actions ships x86-64 QEMU binaries; all jobs run on ubuntu-24.04.
+  # freebsd_arm64 is additionally run on ubuntu-24.04-arm to benchmark QEMU performance.
   build-freebsd-amd64:
     name: 😈 freebsd_amd64
     needs: setup
@@ -125,6 +125,26 @@ jobs:
           shell: bash
           sync-files: runner-to-vm
           run: ci/freebsd-build-go.sh ${{ needs.setup.outputs.version }} amd64
+
+      - name: 🦀 Prep Rust
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: x86-64
+          shell: bash
+          sync-files: runner-to-vm
+          run: ci/freebsd-prep-rust.sh
+
+      - name: 🔨 Build Rust helpers
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: x86-64
+          shell: bash
+          sync-files: runner-to-vm
+          run: ci/freebsd-build-rust.sh ${{ needs.setup.outputs.version }} amd64
 
       - name: 🧪 Test Go
         uses: cross-platform-actions/action@v0.32.0
@@ -174,8 +194,9 @@ jobs:
           name: metadata-freebsd_amd64
           path: artifacts/metadata/
 
+  # freebsd_arm64 on x86 runner (QEMU full emulation — known working baseline)
   build-freebsd-arm64:
-    name: 😈 freebsd_arm64
+    name: 😈 freebsd_arm64 (x86 runner)
     needs: setup
     runs-on: ubuntu-24.04
     continue-on-error: true
@@ -197,7 +218,7 @@ jobs:
           shell: bash
           run: ci/freebsd-prep-system.sh
 
-      - name: 🐹 Build Go helpers
+      - name: 🐹 Prep Go
         uses: cross-platform-actions/action@v0.32.0
         with:
           operating_system: freebsd
@@ -206,6 +227,26 @@ jobs:
           shell: bash
           sync-files: runner-to-vm
           run: ci/freebsd-build-go.sh ${{ needs.setup.outputs.version }} arm64
+
+      - name: 🦀 Prep Rust
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: arm64
+          shell: bash
+          sync-files: runner-to-vm
+          run: ci/freebsd-prep-rust.sh
+
+      - name: 🔨 Build Rust helpers
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: arm64
+          shell: bash
+          sync-files: runner-to-vm
+          run: ci/freebsd-build-rust.sh ${{ needs.setup.outputs.version }} arm64
 
       - name: 🧪 Test Go
         uses: cross-platform-actions/action@v0.32.0
@@ -255,10 +296,113 @@ jobs:
           name: metadata-freebsd_arm64
           path: artifacts/metadata/
 
+  # freebsd_arm64 on arm64 runner (native KVM — benchmarking vs x86 runner above)
+  # cross-platform-actions ships x86-64 QEMU binaries; this may fail — continue-on-error.
+  build-freebsd-arm64-arm-runner:
+    name: 😈 freebsd_arm64 (arm64 runner)
+    needs: setup
+    runs-on: ubuntu-24.04-arm
+    continue-on-error: true
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: 🏗️ Prep FreeBSD system
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: arm64
+          shell: bash
+          run: ci/freebsd-prep-system.sh
+
+      - name: 🐹 Prep Go
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: arm64
+          shell: bash
+          sync-files: runner-to-vm
+          run: ci/freebsd-build-go.sh ${{ needs.setup.outputs.version }} arm64
+
+      - name: 🦀 Prep Rust
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: arm64
+          shell: bash
+          sync-files: runner-to-vm
+          run: ci/freebsd-prep-rust.sh
+
+      - name: 🔨 Build Rust helpers
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: arm64
+          shell: bash
+          sync-files: runner-to-vm
+          run: ci/freebsd-build-rust.sh ${{ needs.setup.outputs.version }} arm64
+
+      - name: 🧪 Test Go
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: arm64
+          shell: bash
+          sync-files: runner-to-vm
+          run: ci/freebsd-test-go.sh
+
+      - name: 📦 Package artifacts
+        shell: bash
+        run: ci/package-helpers.sh freebsd_arm64 ${{ needs.setup.outputs.version }}
+
+      - name: 🧪 Test binaries
+        continue-on-error: true
+        shell: bash
+        run: |
+          mkdir -p test-results
+          ci/test-binaries.sh freebsd_arm64 dist/bin test-results
+
+      - name: 📊 Generate metadata
+        if: always()
+        shell: bash
+        run: |
+          export PYTHONUTF8=1 PYTHONIOENCODING=utf-8
+          python3 ci/test-metadata.py platform freebsd_arm64 ${{ needs.setup.outputs.version }} false
+
+      - name: 📤 Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: flavor-helpers-${{ needs.setup.outputs.version }}-freebsd_arm64-arm-runner
+          path: artifacts/*.zip
+
+      - name: 📤 Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results-freebsd_arm64-arm-runner
+          path: test-results/
+
+      - name: 📤 Upload metadata
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: metadata-freebsd_arm64-arm-runner
+          path: artifacts/metadata/
+
   # ── Combine all artifacts ──────────────────────────────────────────────────
   combine:
     name: 📦 Combine & Validate
-    needs: [setup, build, build-freebsd-amd64, build-freebsd-arm64]
+    needs: [setup, build, build-freebsd-amd64, build-freebsd-arm64, build-freebsd-arm64-arm-runner]
     if: always()
     runs-on: ubuntu-24.04
     steps:
