@@ -1,7 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
-name: "~ Build Rust Helpers (reusable)"
+name: Build Rust Helpers (reusable)
 # ─────────────────────────────────────────────────────────────────────────────
 # Script policy: keep inline run: blocks to ≤ 3 lines.
 # Anything longer belongs in ci/ and should be called from here.
@@ -37,7 +34,7 @@ on:
 
 jobs:
   build:
-    name: 🔨 Build (${{ inputs.platform }})
+    name: 🔨 Build Rust ${{ inputs.platform }}
     runs-on: ${{ inputs.os }}
     steps:
       - name: 📥 Checkout
@@ -65,7 +62,7 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: "${{ vars.RUST_VERSION }}"
+          toolchain: "1.94.0"
           targets: ${{ inputs.rust_target }}
           components: rustfmt, clippy
 
@@ -77,7 +74,6 @@ jobs:
 
       - name: 🧹 Clean dist
         if: steps.cache.outputs.cache-hit != 'true'
-        shell: bash
         run: rm -rf dist/bin && mkdir -p dist/bin
 
       - name: 🔍 Debug Rust environment
