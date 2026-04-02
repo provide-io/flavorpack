@@ -232,7 +232,7 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 	if isTar {
 
 		// Ensure extraction directory exists
-		if err := os.MkdirAll(extractDir, os.FileMode(DirPerms)); err != nil {
+		if err := tarMkdirAllFn(extractDir, os.FileMode(DirPerms)); err != nil {
 			return "", fmt.Errorf("%w: failed to create extraction directory for slot %d: %v", ErrSlotExtractionFailed, slotIndex, err)
 		}
 
@@ -255,12 +255,12 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 
 			switch hdr.Typeflag {
 			case tar.TypeDir:
-				if err := os.MkdirAll(target, os.FileMode(hdr.Mode)); err != nil {
+				if err := tarMkdirAllFn(target, os.FileMode(hdr.Mode)); err != nil {
 					return "", fmt.Errorf("%w: failed to create directory during extraction: %v", ErrSlotExtractionFailed, err)
 				}
 			case tar.TypeReg:
 				// Ensure parent directory exists
-				if err := os.MkdirAll(filepath.Dir(target), os.FileMode(DirPerms)); err != nil {
+				if err := tarMkdirAllFn(filepath.Dir(target), os.FileMode(DirPerms)); err != nil {
 					return "", err
 				}
 
@@ -269,14 +269,14 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 					return "", err
 				}
 
-				if _, err := io.Copy(out, tr); err != nil {
-					if closeErr := out.Close(); closeErr != nil {
+				if _, err := tarIoCopyFn(out, tr); err != nil {
+					if closeErr := tarOutCloseFn(out); closeErr != nil {
 						// Log but don't mask the original error
 						_ = closeErr
 					}
 					return "", err
 				}
-				if err := out.Close(); err != nil {
+				if err := tarOutCloseFn(out); err != nil {
 					return "", fmt.Errorf("failed to close output file: %w", err)
 				}
 
