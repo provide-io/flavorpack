@@ -1,7 +1,7 @@
 name: 01 🥘 Helper Prep
 # ─────────────────────────────────────────────────────────────────────────────
 # Script policy: keep inline run: blocks to ≤ 3 lines.
-# Anything longer belongs in .github/scripts/ and should be called from here.
+# Anything longer belongs in ci/ and should be called from here.
 # ─────────────────────────────────────────────────────────────────────────────
 
 on:
@@ -17,7 +17,7 @@ jobs:
   # ── Setup ──────────────────────────────────────────────────────────────────
   setup:
     name: 📊 Setup
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.version.outputs.version }}
       matrix: ${{ steps.matrix.outputs.matrix }}
@@ -50,9 +50,9 @@ jobs:
           # In local act mode we keep this to linux_amd64 so the workflow stays executable.
           # FreeBSD platforms have dedicated jobs below; Windows is included here.
           if [ "${ACT:-}" = "true" ]; then
-            ALL_PLATFORMS='[{"platform":"linux_amd64","os":"ubuntu-latest","rust_target":"x86_64-unknown-linux-musl","use_musl":true}]'
+            ALL_PLATFORMS='[{"platform":"linux_amd64","os":"ubuntu-24.04","rust_target":"x86_64-unknown-linux-musl","use_musl":true}]'
           else
-            ALL_PLATFORMS='[{"platform":"linux_amd64","os":"ubuntu-latest","rust_target":"x86_64-unknown-linux-musl","use_musl":true},{"platform":"linux_arm64","os":"ubuntu-24.04-arm","rust_target":"aarch64-unknown-linux-musl","use_musl":true},{"platform":"darwin_amd64","os":"macos-15-intel","rust_target":"x86_64-apple-darwin","use_musl":false},{"platform":"darwin_arm64","os":"macos-15","rust_target":"aarch64-apple-darwin","use_musl":false},{"platform":"windows_amd64","os":"windows-2022","rust_target":"x86_64-pc-windows-msvc","use_musl":false},{"platform":"windows_arm64","os":"windows-11-arm","rust_target":"aarch64-pc-windows-msvc","use_musl":false}]'
+            ALL_PLATFORMS='[{"platform":"linux_amd64","os":"ubuntu-24.04","rust_target":"x86_64-unknown-linux-musl","use_musl":true},{"platform":"linux_arm64","os":"ubuntu-24.04-arm","rust_target":"aarch64-unknown-linux-musl","use_musl":true},{"platform":"darwin_amd64","os":"macos-15-intel","rust_target":"x86_64-apple-darwin","use_musl":false},{"platform":"darwin_arm64","os":"macos-15","rust_target":"aarch64-apple-darwin","use_musl":false},{"platform":"windows_amd64","os":"windows-2022","rust_target":"x86_64-pc-windows-msvc","use_musl":false},{"platform":"windows_arm64","os":"windows-11-arm","rust_target":"aarch64-pc-windows-msvc","use_musl":false}]'
           fi
 
           PLATFORMS="${{ inputs.platforms }}"
@@ -92,11 +92,11 @@ jobs:
   # ── FreeBSD builds (QEMU VM via cross-platform-actions) ────────────────────
   # Separate dedicated jobs because these use a VM action rather than a native runner.
   # Go helpers only — no Rust target for FreeBSD yet.
-  # arm64 job runs on ubuntu-24.04-arm for native KVM acceleration (no ISA translation).
+  # Both jobs run on ubuntu-24.04; cross-platform-actions ships x86-64 QEMU binaries only.
   build-freebsd-amd64:
     name: 🐡 freebsd_amd64
     needs: setup
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     continue-on-error: true
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -114,25 +114,25 @@ jobs:
           version: '14.2'
           architecture: x86-64
           shell: bash
-          run: .github/scripts/build-freebsd.sh ${{ needs.setup.outputs.version }} amd64
+          run: ci/build-freebsd.sh ${{ needs.setup.outputs.version }} amd64
 
       - name: 📦 Package artifacts
         shell: bash
-        run: .github/scripts/package-helpers.sh freebsd_amd64 ${{ needs.setup.outputs.version }}
+        run: ci/package-helpers.sh freebsd_amd64 ${{ needs.setup.outputs.version }}
 
       - name: 🧪 Test binaries
         continue-on-error: true
         shell: bash
         run: |
           mkdir -p test-results
-          .github/scripts/test-binaries.sh freebsd_amd64 dist/bin test-results
+          ci/test-binaries.sh freebsd_amd64 dist/bin test-results
 
       - name: 📊 Generate metadata
         if: always()
         shell: bash
         run: |
           export PYTHONUTF8=1 PYTHONIOENCODING=utf-8
-          python3 .github/scripts/test-metadata.py platform freebsd_amd64 ${{ needs.setup.outputs.version }} false
+          python3 ci/test-metadata.py platform freebsd_amd64 ${{ needs.setup.outputs.version }} false
 
       - name: 📤 Upload artifacts
         uses: actions/upload-artifact@v7
@@ -157,7 +157,7 @@ jobs:
   build-freebsd-arm64:
     name: 🐡 freebsd_arm64
     needs: setup
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     continue-on-error: true
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -175,25 +175,25 @@ jobs:
           version: '14.2'
           architecture: arm64
           shell: bash
-          run: .github/scripts/build-freebsd.sh ${{ needs.setup.outputs.version }} arm64
+          run: ci/build-freebsd.sh ${{ needs.setup.outputs.version }} arm64
 
       - name: 📦 Package artifacts
         shell: bash
-        run: .github/scripts/package-helpers.sh freebsd_arm64 ${{ needs.setup.outputs.version }}
+        run: ci/package-helpers.sh freebsd_arm64 ${{ needs.setup.outputs.version }}
 
       - name: 🧪 Test binaries
         continue-on-error: true
         shell: bash
         run: |
           mkdir -p test-results
-          .github/scripts/test-binaries.sh freebsd_arm64 dist/bin test-results
+          ci/test-binaries.sh freebsd_arm64 dist/bin test-results
 
       - name: 📊 Generate metadata
         if: always()
         shell: bash
         run: |
           export PYTHONUTF8=1 PYTHONIOENCODING=utf-8
-          python3 .github/scripts/test-metadata.py platform freebsd_arm64 ${{ needs.setup.outputs.version }} false
+          python3 ci/test-metadata.py platform freebsd_arm64 ${{ needs.setup.outputs.version }} false
 
       - name: 📤 Upload artifacts
         uses: actions/upload-artifact@v7
@@ -220,7 +220,7 @@ jobs:
     name: 📦 Combine & Validate
     needs: [setup, build, build-freebsd-amd64, build-freebsd-arm64]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
@@ -255,13 +255,13 @@ jobs:
             echo '{"platforms": {}, "summary": {"platforms_tested": 0, "total_tests": 0, "passed": 0, "failed": 0}}' > final/test-report.json
           else
             export PYTHONUTF8=1 PYTHONIOENCODING=utf-8
-            python3 .github/scripts/test-metadata.py combine all-artifacts final/test-report.json
+            python3 ci/test-metadata.py combine all-artifacts final/test-report.json
           fi
 
       - name: 📊 Generate summary
         run: |
           export PYTHONUTF8=1 PYTHONIOENCODING=utf-8
-          python3 .github/scripts/test-metadata.py summary final/test-report.json ${{ needs.setup.outputs.version }}
+          python3 ci/test-metadata.py summary final/test-report.json ${{ needs.setup.outputs.version }}
 
       - name: 📤 Upload combined artifacts
         uses: actions/upload-artifact@v7

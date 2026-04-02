@@ -28,7 +28,7 @@ VERSION=$(gh run view "$RUN_ID" --json jobs -q '.jobs[] | select(.name | contain
 
 # If we couldn't get version from the run, use the default
 if [ -z "$VERSION" ]; then
-    VERSION=$(.github/scripts/get-version.sh)
+    VERSION=$(ci/get-version.sh)
     echo "⚠️ Could not extract version from run, using default: $VERSION"
 fi
 

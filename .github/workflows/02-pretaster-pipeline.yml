@@ -21,7 +21,7 @@ on:
 jobs:
   setup:
     name: 🔧 Setup & Get Helpers
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.version.outputs.version }}
       helper_run_id: ${{ steps.helpers.outputs.run_id }}
@@ -57,7 +57,7 @@ jobs:
       - name: 🧪 Define test matrix
         id: matrix
         run: |
-          .github/scripts/create-pretaster-matrix.sh > matrix.json
+          ci/create-pretaster-matrix.sh > matrix.json
           MATRIX=$(cat matrix.json | jq -c .)
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
 
@@ -86,7 +86,7 @@ jobs:
         shell: bash
         run: |
           # Extract helpers and set up directory structure
-          .github/scripts/download-helpers.sh helpers-dist \
+          ci/download-helpers.sh helpers-dist \
             "${{ needs.setup.outputs.version }}" \
             "${{ matrix.platform }}"
 
@@ -221,7 +221,7 @@ jobs:
           TEST_SUITE="${{ inputs.test_suite }}"
           TEST_SUITE="${TEST_SUITE:-all}"
 
-          .github/scripts/run-pretaster-tests.sh \
+          ci/run-pretaster-tests.sh \
             "${{ matrix.platform }}" \
             "${{ needs.setup.outputs.version }}" \
             "$TEST_SUITE" \
@@ -277,13 +277,13 @@ jobs:
           ls -la helpers-dist/ || true
           
           # Extract the helper binaries
-          .github/scripts/download-helpers.sh helpers-dist \
+          ci/download-helpers.sh helpers-dist \
             "${{ needs.setup.outputs.version }}" \
             "${{ matrix.platform }}"
           
           # Build pretaster PSP using the consolidated script
           mkdir -p build
-          .github/scripts/build-pretaster.sh \
+          ci/build-pretaster.sh \
             "${{ matrix.platform }}" \
             "${{ needs.setup.outputs.version }}" \
             "simple" \
@@ -313,7 +313,7 @@ jobs:
     name: ✅ Validate PSPF Compatibility
     needs: [setup, test-pretaster, test-crosslang]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
@@ -328,4 +328,4 @@ jobs:
       
       - name: 📊 Generate compatibility report
         run: |
-          .github/scripts/generate-pspf-compatibility-report.sh all-logs
+          ci/generate-pspf-compatibility-report.sh all-logs
