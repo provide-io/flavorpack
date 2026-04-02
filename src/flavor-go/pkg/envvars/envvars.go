@@ -1,9 +1,8 @@
-// src/flavor-go/pkg/psp/format_2025/envvars.go
-package format_2025
-
-// Environment variable names used by the Flavor launcher and builder.
+// Package envvars defines FLAVOR_* environment variable name constants
+// for use by packages that cannot import pkg/psp/format_2025 (e.g. pkg/logging, internal/workenv).
 // All FLAVOR_* env vars must be referenced via these constants, never as inline strings.
-// These re-export the canonical values from pkg/envvars for use within this package.
+package envvars
+
 const (
 	// Logging
 	EnvLogLevel         = "FLAVOR_LOG_LEVEL"

@@ -344,9 +344,20 @@ class StreamBackend(Backend):
         return self.file.read(read_size)
 
     def read_slot(self, descriptor: SlotDescriptor) -> bytes:
-        """Read only first chunk of slot for streaming."""
-        # For streaming, we don't read the whole slot at once
-        return self.read_at(descriptor.offset, min(descriptor.size, self.chunk_size))
+        """Read full slot by assembling chunks (mirrors Rust StreamBackend.read_slot fix)."""
+        chunks = []
+        offset = descriptor.offset
+        remaining = descriptor.size
+        while remaining > 0:
+            chunk = self.read_at(offset, remaining)
+            if not chunk:
+                raise RuntimeError(
+                    f"StreamBackend returned empty read at offset {offset:#x} (remaining {remaining})"
+                )
+            chunks.append(chunk)
+            offset += len(chunk)
+            remaining -= len(chunk)
+        return b"".join(chunks)
 
     def stream_slot(
         self, descriptor: SlotDescriptor, chunk_size: int | None = None

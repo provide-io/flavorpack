@@ -83,7 +83,7 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 	logger := hclog.New(loggerOpts)
 
 	// Only log startup messages in CLI mode
-	if isEnvTrue("FLAVOR_LAUNCHER_CLI") {
+	if isEnvTrue(EnvLauncherCLI) {
 		logger.Info("🐹🐹🐹 Hello from Flavor's Go Launcher 🐹🐹🐹")
 		logger.Debug("Log level", "level", actualLevel, "source", logSource)
 		logger.Info("PSPF Go Launcher starting...")
@@ -109,7 +109,7 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 	}
 	logger.Debug("📁 User working directory", "path", userCwd)
 
-	if isEnvTrue("FLAVOR_LAUNCHER_CLI") {
+	if isEnvTrue(EnvLauncherCLI) {
 		logger.Debug("💻 Running in CLI mode")
 		if len(args) < 1 {
 			// Default to info command when no args provided

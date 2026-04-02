@@ -164,9 +164,9 @@ pub(super) fn prepare_command(
         .and_then(|n| n.to_str())
         .map(|s| s.to_string())
         .unwrap_or_else(|| package_path.to_string_lossy().to_string());
-    env_map.insert("FLAVOR_COMMAND_NAME".to_string(), binary_name);
+    env_map.insert(crate::env_vars::COMMAND_NAME.to_string(), binary_name);
     env_map.insert(
-        "FLAVOR_ORIGINAL_COMMAND".to_string(),
+        crate::env_vars::ORIGINAL_COMMAND.to_string(),
         package_path.to_string_lossy().to_string(),
     );
 
@@ -379,7 +379,9 @@ mod tests {
                 .to_string()
         );
         assert_eq!(
-            env_map.get("FLAVOR_COMMAND_NAME").expect("command name"),
+            env_map
+                .get(crate::env_vars::COMMAND_NAME)
+                .expect("command name"),
             "demo.psp"
         );
         let expected_workenv = workenv_path.to_string_lossy().to_string();
