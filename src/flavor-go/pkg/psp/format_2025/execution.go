@@ -526,7 +526,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 				setupExec.Dir = userCwd
 
 				setupExec.Env = os.Environ()
-				setupExec.Env = append(setupExec.Env, fmt.Sprintf("FLAVOR_WORKENV=%s", workenvDir))
+				setupExec.Env = append(setupExec.Env, fmt.Sprintf("%s=%s", EnvWorkenv, workenvDir))
 
 				for i, env := range setupExec.Env {
 					if strings.HasPrefix(env, "PATH=") {
@@ -612,15 +612,15 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 	cmd.Env = setFlavorCacheBeforeWorkenv(cmd.Env, logger)
 
 	// Add FLAVOR_* variables
-	cmd.Env = append(cmd.Env, fmt.Sprintf("FLAVOR_WORKENV=%s", workenvDir))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", EnvWorkenv, workenvDir))
 	logger.Debug("➕ Added FLAVOR_WORKENV", "path", workenvDir)
 
 	cmd.Env = append(cmd.Env,
-		fmt.Sprintf("FLAVOR_ORIGINAL_COMMAND=%s", originalCmd),
-		fmt.Sprintf("FLAVOR_COMMAND_NAME=%s", binaryName))
+		fmt.Sprintf("%s=%s", EnvOriginalCommand, originalCmd),
+		fmt.Sprintf("%s=%s", EnvCommandName, binaryName))
 	logger.Debug("🏷️ Added command name environment variables",
-		"FLAVOR_ORIGINAL_COMMAND", originalCmd,
-		"FLAVOR_COMMAND_NAME", binaryName)
+		EnvOriginalCommand, originalCmd,
+		EnvCommandName, binaryName)
 
 	// Prepend workenv/bin to PATH
 	pathFound := false

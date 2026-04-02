@@ -17,6 +17,7 @@ from provide.foundation.crypto import format_checksum as calculate_checksum
 from provide.foundation.platform import get_arch_name, get_os_name, get_platform_string
 from provide.foundation.utils import get_version
 
+from flavor.cache import get_xdg_cache_base
 from flavor.config.defaults import ENV_INCLUDE_BUILD_HOST, ENV_LAUNCHER_BIN
 from flavor.psp.format_2025.spec import BuildSpec
 from flavor.psp.format_2025.validation import extract_package_metadata
@@ -39,6 +40,20 @@ def _launcher_candidate_names(launcher_base: str, platform_str: str, is_windows:
     return names
 
 
+def _semver_key(path: Path) -> tuple[int, ...]:
+    """Extract numeric version tuple from a versioned helper filename for sorting.
+
+    Expects filenames like ``flavor-rs-launcher-0.3.21-darwin_arm64``.
+    Returns (0,) if no version segment is found (sorts lowest).
+    """
+    import re
+
+    m = re.search(r"-(\d+\.\d+(?:\.\d+)?(?:\.\d+)*)-", path.name)
+    if m:
+        return tuple(int(p) for p in m.group(1).split("."))
+    return (0,)
+
+
 def _find_launcher_in_dir(
     base_path: Path, launcher_base: str, platform_str: str, names: list[str], is_windows: bool
 ) -> Path | None:
@@ -52,7 +67,7 @@ def _find_launcher_in_dir(
         if is_windows:
             patterns.insert(0, f"{launcher_base}-*-{platform_str}.exe")
         for pattern in patterns:
-            matches = sorted(base_path.glob(pattern), reverse=True)
+            matches = sorted(base_path.glob(pattern), key=_semver_key, reverse=True)
             if matches:
                 return matches[0]
     return None
@@ -86,13 +101,12 @@ def load_launcher_binary(launcher_type: str, explicit_path: Path | None = None) 
 
     launcher_names = _launcher_candidate_names(launcher_base, platform_str, is_windows)
 
-    xdg_cache = os.environ.get("XDG_CACHE_HOME", str(Path("~/.cache").expanduser()))
     base_search_paths = [
         Path.cwd() / "dist" / "bin",
         Path.cwd() / "helpers" / "bin",
         Path.cwd().parent / "helpers" / "bin",
         Path.cwd().parent.parent / "helpers" / "bin",
-        Path(xdg_cache) / "flavor" / "helpers" / "bin",
+        get_xdg_cache_base() / "flavor" / "helpers" / "bin",
         Path.home() / ".cache" / "flavor" / "helpers" / "bin",
         Path.cwd() / "workenv" / "flavors" / platform_str,
         Path.cwd() / "src" / "flavor" / "helpers" / "bin",
