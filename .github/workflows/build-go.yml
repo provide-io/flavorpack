@@ -69,6 +69,7 @@ jobs:
 
       - name: 🧹 Clean dist
         if: steps.cache.outputs.cache-hit != 'true'
+        shell: bash
         run: rm -rf dist/bin && mkdir -p dist/bin
 
       - name: 🐹 Build Go helpers
