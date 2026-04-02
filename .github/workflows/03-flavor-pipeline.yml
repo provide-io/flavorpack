@@ -570,6 +570,15 @@ jobs:
           merge-multiple: true
         continue-on-error: true
       
+      - name: 🔍 Validate wheel contents
+        if: needs.build-wheels.result == 'success'
+        run: |
+          if ls wheel-artifacts/*.whl 2>/dev/null | head -1 | grep -q .; then
+            python3 tools/validate_wheel.py --all --dist-dir wheel-artifacts/
+          else
+            echo "No wheel files found to validate"
+          fi
+
       - name: 📥 Download Flavor packages
         if: needs.build-flavor.result == 'success'
         uses: actions/download-artifact@v8
@@ -577,7 +586,7 @@ jobs:
           pattern: flavor-${{ needs.setup.outputs.helper_version }}-*
           path: flavor-artifacts
           merge-multiple: true
-      
+
       - name: 📊 Generate summary
         run: |
           echo "## 🌶️ Flavor Pipeline Summary" >> $GITHUB_STEP_SUMMARY

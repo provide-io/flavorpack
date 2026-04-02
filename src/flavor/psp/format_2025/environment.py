@@ -23,6 +23,7 @@ from provide.foundation.platform import (
     get_platform_string,
 )
 
+from flavor.config.defaults import ENV_ARCH, ENV_CPU_TYPE, ENV_OS, ENV_OS_VERSION, ENV_PLATFORM
 from flavor.utils.log_guards import is_trace_enabled
 
 plog = get_logger()
@@ -211,19 +212,19 @@ def set_platform_environment(env: dict[str, str]) -> None:
     platform_str = get_platform_string()
 
     # Set required platform variables (override any existing values)
-    env["FLAVOR_OS"] = os_name
-    env["FLAVOR_ARCH"] = arch_name
-    env["FLAVOR_PLATFORM"] = platform_str
+    env[ENV_OS] = os_name
+    env[ENV_ARCH] = arch_name
+    env[ENV_PLATFORM] = platform_str
 
     # Try to get OS version
     os_version = get_os_version()
     if os_version:
-        env["FLAVOR_OS_VERSION"] = os_version
+        env[ENV_OS_VERSION] = os_version
 
     # Try to get CPU type
     cpu_type = get_cpu_type()
     if cpu_type:
-        env["FLAVOR_CPU_TYPE"] = cpu_type
+        env[ENV_CPU_TYPE] = cpu_type
 
 
 def apply_environment_layers(
