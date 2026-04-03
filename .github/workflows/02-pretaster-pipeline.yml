@@ -75,14 +75,33 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: 📥 Download helpers for platform
+      - name: 📥 Download Go helpers
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v19
+        with:
+          workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
+          name: flavor-go-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
+          path: ./helpers-dist
+
+      - name: 📥 Download Rust helpers
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v19
+        with:
+          workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
+          name: flavor-rust-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
+          path: ./helpers-dist
+
+      - name: 📥 Download combined helpers (FreeBSD)
+        continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
           workflow: 01-helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
-      
+
       - name: 🔧 Setup helpers
         shell: bash
         run: |
@@ -151,6 +170,7 @@ jobs:
     needs: [setup, build-pretaster, test-pretaster]
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
+    continue-on-error: ${{ matrix.continue_on_error == true }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.setup.outputs.test_matrix) }}
@@ -166,13 +186,33 @@ jobs:
           name: pretaster-psp-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./build
       
-      - name: 📥 Download helpers for platform
+      - name: 📥 Download Go helpers
+        continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
           workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
+          name: flavor-go-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
+          path: ./helpers-dist
+
+      - name: 📥 Download Rust helpers
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v19
+        with:
+          workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
+          name: flavor-rust-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
+          path: ./helpers-dist
+
+      - name: 📥 Download combined helpers (FreeBSD)
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v19
+        with:
+          workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
-      
+
       - name: 🔍 Verify Cross-Language Package
         shell: bash
         run: |
@@ -264,13 +304,33 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: 📥 Download helpers for platform
+      - name: 📥 Download Go helpers
+        continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
           workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
+          name: flavor-go-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
+          path: ./helpers-dist
+
+      - name: 📥 Download Rust helpers
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v19
+        with:
+          workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
+          name: flavor-rust-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
+          path: ./helpers-dist
+
+      - name: 📥 Download combined helpers (FreeBSD)
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v19
+        with:
+          workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
-      
+
       - name: 🔧 Build pretaster PSP
         shell: bash
         run: |
