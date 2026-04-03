@@ -9,123 +9,107 @@ import (
 func TestEnforcePolicyPlatformAllowed(t *testing.T) {
 	currentPlat := getCurrentPlatform()
 	eff := EffectivePolicy{
-		Platforms: []string{currentPlat},
+		Platforms:   []string{currentPlat},
+		Enforcement: NewDefaultEnforcementPolicy(),
 	}
-	if err := EnforcePolicy(eff, 0, false, true); err != nil {
+	_, err := EnforcePolicy(eff, 0, false, true)
+	if err != nil {
 		t.Fatalf("expected no error when current platform is allowed, got: %v", err)
 	}
 }
 
-// TestMustIntCasesForPlainInt covers the `case int` branch in mustInt.
-// This is called directly (not via TOML) to hit the plain int case.
-func TestMustIntCasesForPlainInt(t *testing.T) {
-	// case int
-	v, err := mustInt("test", int(42))
-	if err != nil {
-		t.Fatalf("mustInt(int) error = %v", err)
+// TestApplyOperatorPolicyJSON_AllSections covers parsing a fully populated JSON policy.
+func TestApplyOperatorPolicyJSON_AllSections(t *testing.T) {
+	policy := OperatorPolicy{Enforcement: NewDefaultEnforcementPolicy()}
+	data := []byte(`{
+		"version": 1,
+		"trust": {"require_trusted_key": true, "use_os_keychain": true},
+		"execution": {"refuse_root": true, "max_age_days": 90, "allow_platforms": ["linux_amd64"]},
+		"attestation": {"require_sbom": true},
+		"enforcement": {"default": "warn", "platform_mismatch": "allow"}
+	}`)
+	if err := applyOperatorPolicyJSON(data, &policy); err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
-	if v != 42 {
-		t.Fatalf("mustInt(int) = %d, want 42", v)
+	if !policy.RequireTrustedKey {
+		t.Error("expected RequireTrustedKey=true")
 	}
-
-	// case int8
-	v, err = mustInt("test", int8(10))
-	if err != nil {
-		t.Fatalf("mustInt(int8) error = %v", err)
+	if !policy.UseOsKeychain {
+		t.Error("expected UseOsKeychain=true")
 	}
-	if v != 10 {
-		t.Fatalf("mustInt(int8) = %d, want 10", v)
+	if !policy.RefuseRoot {
+		t.Error("expected RefuseRoot=true")
 	}
-
-	// case int16
-	v, err = mustInt("test", int16(100))
-	if err != nil {
-		t.Fatalf("mustInt(int16) error = %v", err)
+	if policy.MaxAgeDays == nil || *policy.MaxAgeDays != 90 {
+		t.Errorf("expected MaxAgeDays=90, got %v", policy.MaxAgeDays)
 	}
-	if v != 100 {
-		t.Fatalf("mustInt(int16) = %d, want 100", v)
+	if len(policy.AllowPlatforms) != 1 || policy.AllowPlatforms[0] != "linux_amd64" {
+		t.Errorf("expected AllowPlatforms=[linux_amd64], got %v", policy.AllowPlatforms)
 	}
-
-	// case int32
-	v, err = mustInt("test", int32(1000))
-	if err != nil {
-		t.Fatalf("mustInt(int32) error = %v", err)
+	if !policy.RequireSBOM {
+		t.Error("expected RequireSBOM=true")
 	}
-	if v != 1000 {
-		t.Fatalf("mustInt(int32) = %d, want 1000", v)
+	if policy.Enforcement.Default != ModeWarn {
+		t.Errorf("expected enforcement default=warn, got %s", policy.Enforcement.Default)
 	}
-
-	// case uint8
-	v, err = mustInt("test", uint8(5))
-	if err != nil {
-		t.Fatalf("mustInt(uint8) error = %v", err)
-	}
-	if v != 5 {
-		t.Fatalf("mustInt(uint8) = %d, want 5", v)
-	}
-
-	// case uint16
-	v, err = mustInt("test", uint16(500))
-	if err != nil {
-		t.Fatalf("mustInt(uint16) error = %v", err)
-	}
-	if v != 500 {
-		t.Fatalf("mustInt(uint16) = %d, want 500", v)
-	}
-
-	// case uint32
-	v, err = mustInt("test", uint32(9999))
-	if err != nil {
-		t.Fatalf("mustInt(uint32) error = %v", err)
-	}
-	if v != 9999 {
-		t.Fatalf("mustInt(uint32) = %d, want 9999", v)
+	if policy.Enforcement.PlatformMismatch != ModeAllow {
+		t.Errorf("expected enforcement platform_mismatch=allow, got %s", policy.Enforcement.PlatformMismatch)
 	}
 }
 
-// TestApplyExecutionPolicySectionMaxAgeDaysError covers the mustInt error path
-// when max_age_days has an invalid value type.
-func TestApplyExecutionPolicySectionMaxAgeDaysError(t *testing.T) {
-	policy := &OperatorPolicy{}
-	// raw["max_age_days"] = a boolean — mustInt will fail.
-	raw := map[string]any{
-		"max_age_days": "not-a-number",
-	}
-	if err := applyExecutionPolicySection(raw, policy); err == nil {
-		t.Fatal("expected error when max_age_days is a string, got nil")
+// TestApplyOperatorPolicyJSON_InvalidJSON covers the json.Unmarshal error path.
+func TestApplyOperatorPolicyJSON_InvalidJSON(t *testing.T) {
+	policy := OperatorPolicy{Enforcement: NewDefaultEnforcementPolicy()}
+	if err := applyOperatorPolicyJSON([]byte(`{broken`), &policy); err == nil {
+		t.Fatal("expected error for invalid JSON")
 	}
 }
 
-// TestApplyExecutionPolicySectionRefuseRootError covers the mustBool error path
-// when refuse_root has an invalid value type.
-func TestApplyExecutionPolicySectionRefuseRootError(t *testing.T) {
-	policy := &OperatorPolicy{}
-	raw := map[string]any{
-		"refuse_root": "not-a-bool",
-	}
-	if err := applyExecutionPolicySection(raw, policy); err == nil {
-		t.Fatal("expected error when refuse_root is a string, got nil")
+// TestApplyOperatorPolicyJSON_MissingVersion covers the version=0 error path.
+func TestApplyOperatorPolicyJSON_MissingVersion(t *testing.T) {
+	policy := OperatorPolicy{Enforcement: NewDefaultEnforcementPolicy()}
+	if err := applyOperatorPolicyJSON([]byte(`{"trust":{}}`), &policy); err == nil {
+		t.Fatal("expected error for missing version")
 	}
 }
 
-// TestMustIntOverflow covers the overflow paths in mustInt.
-func TestMustIntOverflow(t *testing.T) {
-	// uint overflow: uint(maxInt+1)
-	_, err := mustInt("test", uint(^uint(0)))
-	if err == nil {
-		t.Fatal("expected overflow error for large uint, got nil")
+// TestApplyOperatorPolicyJSON_EmptySections covers the case where sections are present but empty.
+func TestApplyOperatorPolicyJSON_EmptySections(t *testing.T) {
+	policy := OperatorPolicy{Enforcement: NewDefaultEnforcementPolicy()}
+	data := []byte(`{"version": 1, "trust": {}, "execution": {}, "attestation": {}}`)
+	if err := applyOperatorPolicyJSON(data, &policy); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+// TestEnforcementModeFor_AllChecks covers the ModeFor switch for each check name.
+func TestEnforcementModeFor_AllChecks(t *testing.T) {
+	ep := EnforcementPolicy{
+		Default:          ModeDeny,
+		PlatformMismatch: ModeWarn,
+		UntrustedKey:     ModeAllow,
+		ExpiredPackage:   ModeWarn,
+		MissingEnv:       ModeAllow,
+		MissingSBOM:      ModeWarn,
+		RootExecution:    ModeAllow,
+		OsKeychain:       ModeWarn,
 	}
 
-	// int64 positive overflow
-	_, err = mustInt("test", int64(1<<62)) // big but not overflowing on 64-bit
-	if err != nil {
-		// On 64-bit systems, this should succeed
-		t.Logf("int64(1<<62) = ok (expected on 64-bit)")
+	checks := map[string]EnforcementMode{
+		"platform_mismatch": ModeWarn,
+		"untrusted_key":     ModeAllow,
+		"expired_package":   ModeWarn,
+		"missing_env":       ModeAllow,
+		"missing_sbom":      ModeWarn,
+		"root_execution":    ModeAllow,
+		"os_keychain":       ModeWarn,
+		"unknown_check":     ModeDeny, // falls through to default
 	}
 
-	// uint64 overflow: math.MaxUint64
-	_, err = mustInt("test", uint64(^uint64(0)))
-	if err == nil {
-		t.Fatal("expected overflow error for uint64 max, got nil")
+	for check, want := range checks {
+		got := ep.ModeFor(check)
+		if got != want {
+			t.Errorf("ModeFor(%q) = %s, want %s", check, got, want)
+		}
 	}
 }

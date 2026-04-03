@@ -33,8 +33,8 @@ func TestEnforcePolicyRefusedRoot(t *testing.T) {
 	t.Cleanup(func() { getuidFn = old })
 	getuidFn = func() int { return 0 } // simulate root
 
-	eff := EffectivePolicy{RefuseRoot: true}
-	err := EnforcePolicy(eff, 0, false, true)
+	eff := EffectivePolicy{RefuseRoot: true, Enforcement: NewDefaultEnforcementPolicy()}
+	_, err := EnforcePolicy(eff, 0, false, true)
 	if err == nil {
 		t.Fatal("expected 'refused to run as root' error when RefuseRoot=true and UID=0")
 	}

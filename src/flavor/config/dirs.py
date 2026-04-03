@@ -97,19 +97,16 @@ def get_trusted_keys_dir(*, system: bool = False) -> Path:
 def get_policy_file(*, system: bool = False) -> Path:
     """Get the policy file path for Flavor.
 
+    Returns the path to policy.json in the appropriate config directory.
+
     Args:
         system: If True, return the system-level policy file.
                 If False (default), return the user-level policy file.
     """
-    if system:
-        result = get_system_config_dir() / "policy.toml"
-        if log.is_trace_enabled():
-            log.trace(f"🗂️ Using system policy file: {result}")
-        return result
-
-    result = get_config_dir() / "policy.toml"
+    config_dir = get_system_config_dir() if system else get_config_dir()
+    result = config_dir / "policy.json"
     if log.is_trace_enabled():
-        log.trace(f"🗂️ Using user policy file: {result}")
+        log.trace(f"🗂️ Using {'system' if system else 'user'} policy file: {result}")
     return result
 
 
