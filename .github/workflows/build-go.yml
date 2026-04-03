@@ -1,0 +1,131 @@
+name: Build Go Helpers (reusable)
+# ─────────────────────────────────────────────────────────────────────────────
+# Script policy: keep inline run: blocks to ≤ 3 lines.
+# Anything longer belongs in ci/ and should be called from here.
+# ─────────────────────────────────────────────────────────────────────────────
+
+on:
+  workflow_call:
+    inputs:
+      platform:
+        description: 'Target platform (e.g. linux_amd64, windows_arm64)'
+        required: true
+        type: string
+      os:
+        description: 'GitHub Actions runner image'
+        required: true
+        type: string
+      use_musl:
+        description: 'Install musl toolchain (Linux static linking)'
+        required: true
+        type: boolean
+      version:
+        description: 'Package version string'
+        required: true
+        type: string
+      go_cache_key_base:
+        description: 'Base cache key for Go helpers'
+        required: true
+        type: string
+
+jobs:
+  build:
+    name: 🔨 Build (${{ inputs.platform }})
+    runs-on: ${{ inputs.os }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: 💾 Cache Go helpers
+        id: cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            dist/bin/flavor-go-*-${{ inputs.version }}-${{ inputs.platform }}
+            dist/bin/flavor-go-*-${{ inputs.version }}-${{ inputs.platform }}.exe
+            artifacts/*.zip
+          key: ${{ inputs.go_cache_key_base }}-${{ inputs.platform }}-${{ inputs.version }}
+
+      - name: 📦 Setup uv + Python
+        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
+        with:
+          python-version: '3.11'
+          enable-cache: false
+
+      - name: 🐹 Setup Go
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/setup-go@v6
+        with:
+          go-version: "${{ vars.GO_VERSION }}"
+          cache-dependency-path: src/flavor-go/go.sum
+
+      - name: 🔧 Setup musl toolchain (Linux)
+        if: steps.cache.outputs.cache-hit != 'true' && inputs.use_musl
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+
+      - name: 🧹 Clean dist
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: rm -rf dist/bin && mkdir -p dist/bin
+
+      - name: 🐹 Build Go helpers
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: bash
+        working-directory: src/flavor-go
+        run: ../../ci/build-go-helpers.sh ${{ inputs.platform }} ${{ inputs.version }}
+
+      - name: ✅ Finalize build
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          chmod +x dist/bin/flavor-go-* 2>/dev/null || true
+          ls -la dist/bin/flavor-go-*-${{ inputs.platform }}*
+
+      - name: 📦 Package artifacts (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: ci/package-go-helpers.sh ${{ inputs.platform }} ${{ inputs.version }}
+
+      - name: 📦 Package artifacts (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ci/package-go-helpers.ps1 -Platform ${{ inputs.platform }} -Version ${{ inputs.version }}
+
+      - name: 🧪 Test binaries
+        continue-on-error: true
+        shell: bash
+        run: |
+          mkdir -p test-results
+          ci/test-binaries.sh ${{ inputs.platform }} dist/bin test-results
+
+      - name: 📊 Generate metadata
+        if: always()
+        shell: bash
+        run: |
+          export PYTHONUTF8=1 PYTHONIOENCODING=utf-8
+          python3 ci/test-metadata.py platform \
+            ${{ inputs.platform }} ${{ inputs.version }} ${{ steps.cache.outputs.cache-hit }}
+
+      - name: 📤 Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: flavor-go-helpers-${{ inputs.version }}-${{ inputs.platform }}
+          path: artifacts/*.zip
+
+      - name: 📤 Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results-go-${{ inputs.platform }}
+          path: test-results/
+
+      - name: 📤 Upload metadata
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: metadata-go-${{ inputs.platform }}
+          path: artifacts/metadata/

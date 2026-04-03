@@ -1,0 +1,71 @@
+name: Build tastesh (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      platform:
+        description: 'Target platform (e.g. linux_amd64, darwin_arm64)'
+        required: true
+        type: string
+      os:
+        description: 'GitHub Actions runner image'
+        required: true
+        type: string
+      use_musl:
+        description: 'Install musl toolchain (Linux static linking)'
+        required: true
+        type: boolean
+      version:
+        description: 'Package version string'
+        required: true
+        type: string
+      tastesh_cache_key_base:
+        description: 'Base cache key for tastesh'
+        required: true
+        type: string
+
+jobs:
+  build:
+    name: 🔨 Build (${{ inputs.platform }})
+    runs-on: ${{ inputs.os }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: 💾 Cache tastesh
+        id: cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            dist/bin/flavor-tastesh-${{ inputs.platform }}
+            dist/bin/flavor-tastesh-${{ inputs.platform }}.exe
+          key: ${{ inputs.tastesh_cache_key_base }}-${{ inputs.platform }}-${{ inputs.version }}
+
+      - name: 🔧 Setup musl toolchain (Linux)
+        if: steps.cache.outputs.cache-hit != 'true' && inputs.use_musl
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+
+      - name: 🔧 Install autotools (macOS)
+        if: steps.cache.outputs.cache-hit != 'true' && runner.os == 'macOS'
+        run: brew install autoconf automake libtool
+
+      - name: 🔧 Install autotools + mingw (Windows)
+        if: steps.cache.outputs.cache-hit != 'true' && runner.os == 'Windows'
+        shell: bash
+        run: |
+          pacman -S --noconfirm autoconf automake-wrapper libtool mingw-w64-x86_64-gcc
+
+      - name: 🐚 Build tastesh (dash)
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: ci/build-dash.sh dist/bin
+
+      - name: 📤 Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: flavor-tastesh-${{ inputs.version }}-${{ inputs.platform }}
+          path: dist/bin/flavor-tastesh-*
