@@ -58,7 +58,7 @@ case "$OS" in
     darwin)
         # macOS: dynamic (Apple linker doesn't support -static for executables)
         # Suppress K&R prototype errors in dash 0.5.12 with newer Xcode clang
-        CFLAGS="-Wno-error=deprecated-non-prototype" ./configure --quiet
+        CFLAGS="-Wno-deprecated-non-prototype -Wno-error=implicit-function-declaration" ./configure --quiet
         ;;
     freebsd)
         # FreeBSD: static if possible
