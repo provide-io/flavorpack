@@ -39,7 +39,7 @@ func TestGetCacheRoot(t *testing.T) {
 	}
 
 	t.Setenv(envvars.EnvCacheDir, "")
-	if runtime.GOOS == "linux" {
+	if runtime.GOOS == "linux" || runtime.GOOS == "freebsd" {
 		if got, want := GetCacheRoot(), filepath.Join("/tmp/xdg-cache", "flavor"); got != want {
 			t.Fatalf("GetCacheRoot xdg mismatch: got %q want %q", got, want)
 		}
@@ -56,7 +56,7 @@ func TestGetCacheRoot(t *testing.T) {
 	}
 
 	t.Setenv("XDG_CACHE_HOME", "")
-	if runtime.GOOS == "linux" {
+	if runtime.GOOS == "linux" || runtime.GOOS == "freebsd" {
 		if got, want := GetCacheRoot(), filepath.Join("/tmp/home", ".cache", "flavor"); got != want {
 			t.Fatalf("GetCacheRoot home mismatch: got %q want %q", got, want)
 		}

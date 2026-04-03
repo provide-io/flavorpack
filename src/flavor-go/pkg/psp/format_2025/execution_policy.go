@@ -411,6 +411,8 @@ func getCurrentPlatform() string {
 		osName = "darwin"
 	case "windows":
 		osName = "windows"
+	case "freebsd":
+		osName = "freebsd"
 	}
 	arch := "amd64"
 	if runtime.GOARCH == "arm64" {

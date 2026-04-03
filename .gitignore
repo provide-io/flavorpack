@@ -80,6 +80,5 @@ memray-output/
 
 # Generated test artifacts
 coverage.json
-src/flavor-go/coverage_*.out
 tests/pretaster/logs/
 .claude/worktrees/

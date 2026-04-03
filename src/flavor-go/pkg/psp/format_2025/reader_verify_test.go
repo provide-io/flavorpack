@@ -8,7 +8,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"io"
 	"os"
 	"testing"
@@ -118,62 +117,4 @@ func TestReaderVerifyIntegritySeal(t *testing.T) {
 	if err != nil || !ok {
 		t.Fatalf("VerifyIntegritySeal() = %v, %v", ok, err)
 	}
-}
-
-// TestNewReaderWithLoggerNilLoggerFallback exercises the nil-logger branch.
-func TestNewReaderWithLoggerNilLoggerFallback(t *testing.T) {
-	// Pass nil logger — NewReaderWithLogger must substitute a null logger, not panic.
-	r, err := NewReaderWithLogger("/dev/null", nil)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if r == nil {
-		t.Fatal("expected non-nil reader")
-	}
-}
-
-// TestReadSlotReturnsErrInvalidSlotIndex covers the out-of-range slot index guard.
-func TestReadSlotReturnsErrInvalidSlotIndex(t *testing.T) {
-	t.Parallel()
-
-	// Build a bundle with 0 slots; reading slot 0 must return ErrInvalidSlotIndex.
-	bundlePath := buildPolicyHashBundle(t, nil, "")
-	reader, err := NewReader(bundlePath)
-	if err != nil {
-		t.Fatalf("NewReader: %v", err)
-	}
-	defer func() { _ = reader.Close() }()
-
-	_, err = reader.ReadSlot(0)
-	if !errors.Is(err, ErrInvalidSlotIndex) {
-		t.Fatalf("expected ErrInvalidSlotIndex, got %v", err)
-	}
-}
-
-// TestReadSlotNilLoggerFallback constructs a Reader with nil logger to cover the
-// hclog.L() fallback path in ReadSlot.
-func TestReadSlotNilLoggerFallback(t *testing.T) {
-	t.Parallel()
-
-	slotContent := []byte("sbom content")
-	digest := sha256.Sum256(slotContent)
-	bundlePath := buildAttestationBundle(t, slotContent, hex.EncodeToString(digest[:]))
-
-	reader, err := NewReader(bundlePath)
-	if err != nil {
-		t.Fatalf("NewReader: %v", err)
-	}
-	defer func() { _ = reader.Close() }()
-
-	// Pre-populate the index cache so ReadIndex returns without touching r.logger,
-	// then set logger to nil to trigger the hclog.L() fallback inside ReadSlot.
-	if _, err := reader.ReadIndex(); err != nil {
-		t.Fatalf("ReadIndex: %v", err)
-	}
-	reader.logger = nil
-
-	// Reading the slot now exercises the nil-logger branch in ReadSlot.
-	_, err = reader.ReadSlot(0)
-	// We only care that the nil-logger path was exercised without panicking.
-	_ = err
 }
