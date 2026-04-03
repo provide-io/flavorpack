@@ -5,7 +5,7 @@
 # Usage: ci/build-dash.sh [output_dir]
 #   output_dir defaults to dist/bin
 #
-# Produces: flavor-sh-{platform} (or flavor-sh-{platform}.exe on Windows)
+# Produces: flavor-tastesh-{platform} (or flavor-tastesh-{platform}.exe on Windows)
 
 set -euo pipefail
 
@@ -27,7 +27,7 @@ esac
 PLATFORM="${OS}_${ARCH}"
 
 OUTPUT_DIR="$(cd "$(dirname "$0")/.." && pwd)/${OUTPUT_DIR}"
-OUTPUT="${OUTPUT_DIR}/flavor-sh-${PLATFORM}${EXT}"
+OUTPUT="${OUTPUT_DIR}/flavor-tastesh-${PLATFORM}${EXT}"
 mkdir -p "$OUTPUT_DIR"
 
 echo "Building dash ${DASH_VERSION} for ${PLATFORM}..."
