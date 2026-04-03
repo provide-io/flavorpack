@@ -299,10 +299,81 @@ jobs:
           name: metadata-${{ matrix.platform }}
           path: artifacts/metadata/
 
+  # FreeBSD job — uses QEMU VM, Go helpers only, experimental
+  build-freebsd:
+    name: 🐡 Build freebsd_amd64
+    needs: setup
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: 🐡 Build and test inside FreeBSD VM
+        uses: cross-platform-actions/action@v0.27.0
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: x86-64
+          shell: bash
+          run: .github/scripts/build-freebsd.sh ${{ needs.setup.outputs.version }}
+
+      - name: 📦 Package artifacts
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          cd dist/bin
+          zip -r ../../artifacts/flavor-helpers-${{ needs.setup.outputs.version }}-freebsd_amd64.zip \
+            *-${{ needs.setup.outputs.version }}-freebsd_amd64 || true
+
+      - name: 🧪 Test binaries
+        continue-on-error: true
+        shell: bash
+        run: |
+          mkdir -p test-results
+          .github/scripts/test-binaries.sh \
+            freebsd_amd64 \
+            dist/bin \
+            test-results
+
+      - name: 📊 Generate metadata
+        if: always()
+        shell: bash
+        run: |
+          export PYTHONUTF8=1
+          export PYTHONIOENCODING=utf-8
+          python3 .github/scripts/test-metadata.py platform \
+            freebsd_amd64 \
+            "${{ needs.setup.outputs.version }}" \
+            "false"
+
+      - name: 📤 Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: flavor-helpers-${{ needs.setup.outputs.version }}-freebsd_amd64
+          path: artifacts/*.zip
+
+      - name: 📤 Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results-freebsd_amd64
+          path: test-results/
+
+      - name: 📤 Upload metadata
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: metadata-freebsd_amd64
+          path: artifacts/metadata/
+
   # Combine all artifacts
   combine:
     name: 📦 Combine & Validate
-    needs: [setup, build]
+    needs: [setup, build, build-freebsd]
     if: always()
     runs-on: ubuntu-latest
     steps:

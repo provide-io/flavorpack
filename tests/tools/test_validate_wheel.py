@@ -1,41 +1,15 @@
 """Tests for validate_wheel.py helper validation logic."""
 
-import importlib.util
 from pathlib import Path
 import sys
 import tempfile
-from types import ModuleType
 import zipfile
 
+# Import from tools/ directory
+sys.path.insert(0, str(Path(__file__).parents[2] / "tools"))
+from validate_wheel import _parse_wheel_platform, validate_helpers  # type: ignore[import-not-found]
+
 from flavor.psp.format_2025.metadata.assembly import _semver_key
-
-
-def _find_repo_root(start: Path) -> Path:
-    current = start.resolve()
-    if current.is_file():
-        current = current.parent
-
-    for candidate in (current, *current.parents):
-        if (candidate / "VERSION").is_file() and (candidate / "tools" / "validate_wheel.py").is_file():
-            return candidate
-
-    raise FileNotFoundError(f"Could not locate repository root from {start}")
-
-
-def _load_validate_wheel_module() -> ModuleType:
-    repo_root = _find_repo_root(Path(__file__))
-    script_path = repo_root / "tools" / "validate_wheel.py"
-    spec = importlib.util.spec_from_file_location("validate_wheel", script_path)
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    sys.modules["validate_wheel"] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-_VALIDATE_WHEEL = _load_validate_wheel_module()
-_parse_wheel_platform = _VALIDATE_WHEEL._parse_wheel_platform
-validate_helpers = _VALIDATE_WHEEL.validate_helpers
 
 
 def make_wheel(stem: str, helpers: list[str]) -> Path:

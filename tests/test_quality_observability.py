@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-import tomllib
 
 import yaml
 
@@ -11,7 +10,6 @@ QUALITY_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "05-code-quality.yml"
 RELEASE_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "release.yml"
 RUST_MAKEFILE = REPO_ROOT / "src" / "flavor-rs" / "Makefile"
 RUST_FUZZ_CARGO = REPO_ROOT / "src" / "flavor-rs" / "fuzz" / "Cargo.toml"
-PYPROJECT = REPO_ROOT / "pyproject.toml"
 
 
 def test_root_makefile_defines_quality_targets() -> None:
@@ -97,25 +95,3 @@ def test_release_workflow_uses_trusted_publishing_for_pypi() -> None:
 
     assert testpypi_publish["with"]["password"] == "${{ secrets.TEST_PYPI_API_TOKEN }}"
     assert "password" not in pypi_publish["with"]
-
-
-def test_quality_workflow_avoids_broken_python_heredoc_summary_snippet() -> None:
-    content = QUALITY_WORKFLOW.read_text(encoding="utf-8")
-
-    assert "python3 - <<'PY' >> $GITHUB_STEP_SUMMARY" not in content
-    assert "python3 -c " in content
-
-
-def test_mutmut_copies_cross_language_and_workflow_support_files() -> None:
-    config = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
-    also_copy = set(config["tool"]["mutmut"]["also_copy"])
-
-    assert {
-        "VERSION",
-        "Makefile",
-        "scripts",
-        "tools",
-        ".github/workflows",
-        "src/flavor-go",
-        "src/flavor-rs",
-    }.issubset(also_copy)

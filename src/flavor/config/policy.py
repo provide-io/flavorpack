@@ -229,19 +229,12 @@ def enforce_policy(policy: EffectivePolicy, build_timestamp: int, has_sbom: bool
     """Enforce the effective launch policy for the current runtime environment."""
     current_platform = get_current_platform()
 
-    # 1. Platform check
     if policy.platforms and current_platform not in policy.platforms:
         raise ValueError(f"platform not permitted: {current_platform} not in {policy.platforms}")
 
-    # 2. OS keychain check
-    if policy.use_os_keychain:
-        raise ValueError("use_os_keychain is not supported by this launcher")
-
-    # 3. Root / Administrator check
     if policy.refuse_root and is_privileged_user():
         raise ValueError("refused to run as root or Administrator")
 
-    # 4. Age check
     if policy.max_age_days is not None and build_timestamp > 0:
         age_days = int((datetime.now(UTC).timestamp() - build_timestamp) / 86400)
         if age_days > policy.max_age_days:
@@ -249,16 +242,16 @@ def enforce_policy(policy: EffectivePolicy, build_timestamp: int, has_sbom: bool
                 f"package is {age_days} days old — policy requires max {policy.max_age_days} days"
             )
 
-    # 5. Environment variable check
     missing = [var for var in policy.require_env if not os.environ.get(var)]
     if missing:
         raise ValueError(f"required environment variable not set: {missing[0]}")
 
-    # 6. SBOM check
+    if policy.use_os_keychain:
+        raise ValueError("use_os_keychain is enabled, but OS keychain trust is not implemented")
+
     if policy.require_sbom and not has_sbom:
         raise ValueError("package built without attestation slot — operator policy requires SBOM")
 
-    # 7. Trusted key check
     if policy.require_trusted_key and not key_trusted:
         raise ValueError(
             "operator policy requires a trusted signing key — package key is not in the trusted store"
