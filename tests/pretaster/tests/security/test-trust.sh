@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
-# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
 # Trust store tests: untrusted/trusted key enforcement + cross-builder trust
 # Usage: ./tests/test-trust.sh  (run from the pretaster directory)
 
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib/test-setup.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/test-setup.sh"
 
 echo "🔐 Trust Store Tests"
 echo "===================="
