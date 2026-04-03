@@ -106,6 +106,7 @@ mkdir -p "$WHEEL_CACHE"
     'zstandard' \
     'setuptools==82.0.1' \
     'wheel==0.46.3' \
+    'packaging>=24.0' \
     -w "$WHEEL_CACHE" --no-deps
 
 # Repackage the pkg-compiled cryptography into a wheel so flavor pack can bundle
