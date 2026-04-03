@@ -1,13 +1,10 @@
 #!/usr/bin/env bash
-# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
-# Integrity and enforcement mode tests for Flavorpack pretaster
+# Integrity and enforcement mode tests for FlavorPack pretaster
 # Tests: tamper detection, verify subcommand, age enforcement,
 #        enforcement modes (allow, warn), forward-version compat
 # Usage: ./tests/test-integrity.sh  (run from the pretaster directory)
 
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib/test-setup.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/test-setup.sh"
 
 echo "🛡️  Integrity & Enforcement Tests"
 echo "=================================="
