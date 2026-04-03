@@ -230,9 +230,16 @@ def _check_package_key_trust(index: object) -> tuple[bool, str | None]:
 def _get_current_platform() -> str:
     import platform as _platform
 
-    os_name = (
-        "linux" if sys.platform.startswith("linux") else ("darwin" if sys.platform == "darwin" else "windows")
-    )
+    if sys.platform.startswith("linux"):
+        os_name = "linux"
+    elif sys.platform == "darwin":
+        os_name = "darwin"
+    elif sys.platform.startswith("freebsd"):
+        os_name = "freebsd"
+    elif sys.platform == "win32":
+        os_name = "windows"
+    else:
+        os_name = sys.platform
     machine = _platform.machine().lower()
     arch = "arm64" if machine in ("arm64", "aarch64") else "amd64"
     return f"{os_name}_{arch}"
