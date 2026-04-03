@@ -3,8 +3,6 @@ module github.com/provide-io/flavor/go/flavor
 go 1.26.1
 
 require (
-	github.com/BurntSushi/toml v1.6.0
-	github.com/dsnet/compress v0.0.1
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/spf13/cobra v1.10.2
 	github.com/tc-hib/winres v0.3.1
