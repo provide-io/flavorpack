@@ -11,7 +11,8 @@ set -euo pipefail
 
 DASH_VERSION="0.5.12"
 DASH_URL="https://git.kernel.org/pub/scm/utils/dash/dash.git/snapshot/dash-${DASH_VERSION}.tar.gz"
-OUTPUT_DIR="${1:-dist/bin}"
+# Resolve output dir relative to caller's CWD (before we cd anywhere)
+OUTPUT_DIR="$(cd "$(pwd)" && mkdir -p "${1:-dist/bin}" && cd "${1:-dist/bin}" && pwd)"
 
 # Detect platform
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
@@ -26,9 +27,7 @@ case "$OS" in
 esac
 PLATFORM="${OS}_${ARCH}"
 
-OUTPUT_DIR="$(cd "$(dirname "$0")/.." && pwd)/${OUTPUT_DIR}"
 OUTPUT="${OUTPUT_DIR}/flavor-tastesh-${PLATFORM}${EXT}"
-mkdir -p "$OUTPUT_DIR"
 
 echo "Building dash ${DASH_VERSION} for ${PLATFORM}..."
 
