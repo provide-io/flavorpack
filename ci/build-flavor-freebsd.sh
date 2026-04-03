@@ -27,8 +27,13 @@ fi
 
 # Create venv with access to pkg-installed system packages (avoids building
 # cryptography from source, which fails on FreeBSD due to SOABI mismatch).
+# The flavorpack wheel requires cryptography>=46.0.0 (for win_arm64 binary wheels),
+# but FreeBSD pkg only ships 45.x. Override the floor so uv accepts the pkg version.
+echo "cryptography>=45.0.0" > /tmp/crypto-override.txt
 uv venv /tmp/flavorenv --python python3.11 --system-site-packages
-uv pip install --python /tmp/flavorenv/bin/python3.11 "$WHEEL"
+uv pip install --python /tmp/flavorenv/bin/python3.11 \
+    --override /tmp/crypto-override.txt \
+    "$WHEEL"
 export PATH="/tmp/flavorenv/bin:$PATH"
 
 LAUNCHER="helpers/bin/flavor-rs-launcher-${VERSION}-${PLATFORM}"
