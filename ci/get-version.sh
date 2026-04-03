@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Get the current version from VERSION file
 # Usage: get-version.sh
 
@@ -6,7 +6,7 @@ set -euo pipefail
 
 # Find the VERSION file (look in repo root)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 VERSION_FILE="$REPO_ROOT/VERSION"
 
 if [ -f "$VERSION_FILE" ]; then

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Shared test library for pretaster tests
 
 # Colors for output
