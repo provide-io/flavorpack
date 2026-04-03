@@ -8,7 +8,7 @@
     "description": "Echo test with embedded dash shell"
   },
   "execution": {
-    "command": "{workenv}/bin/sh {workenv}/scripts/echo_test.sh",
+    "command": "{workenv}/bin/tastesh {workenv}/scripts/echo_test.sh",
     "args": [],
     "env": {},
     "primary_slot": 1
@@ -16,9 +16,9 @@
   "slots": [
     {
       "slot": 0,
-      "id": "dash-shell",
+      "id": "tastesh",
       "source": "DASH_BIN_PLACEHOLDER",
-      "target": "bin/sh",
+      "target": "bin/tastesh",
       "purpose": "tool",
       "lifecycle": "runtime",
       "operations": "raw",
