@@ -1,4 +1,8 @@
 name: 01 🥘 Helper Prep
+# ─────────────────────────────────────────────────────────────────────────────
+# Script policy: keep inline run: blocks to ≤ 3 lines.
+# Anything longer belongs in ci/ and should be called from here.
+# ─────────────────────────────────────────────────────────────────────────────
 
 on:
   workflow_dispatch:
@@ -10,55 +14,55 @@ on:
         required: false
 
 jobs:
-  # Setup job - determine version and what to build
+  # ── Setup ──────────────────────────────────────────────────────────────────
   setup:
     name: 📊 Setup
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.version.outputs.version }}
       matrix: ${{ steps.matrix.outputs.matrix }}
-      cache_key_base: ${{ steps.cache.outputs.key_base }}
+      go_cache_key_base: ${{ steps.cache.outputs.go_key_base }}
+      rust_cache_key_base: ${{ steps.cache.outputs.rust_key_base }}
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
         with:
           persist-credentials: false
           fetch-depth: 0
-      
+
       - name: 🔍 Get version
         id: version
         run: |
           VERSION=$(cat VERSION || echo "0.0.1")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "📦 Version: $VERSION"
-      
-      - name: 🔑 Calculate cache key base
+
+      - name: 🔑 Calculate cache key bases
         id: cache
         run: |
-          # Hash the src directory to detect changes
-          HELPERS_HASH=$(find src -type f -name "*.go" -o -name "*.rs" -o -name "Cargo.toml" -o -name "go.mod" | xargs sha256sum | sha256sum | cut -d' ' -f1 | head -c 16)
-          echo "key_base=helpers-$HELPERS_HASH" >> $GITHUB_OUTPUT
-          echo "🔑 Cache key base: helpers-$HELPERS_HASH"
-      
+          GO_HASH=$(find src/flavor-go -type f \( -name "*.go" -o -name "go.mod" \) | sort | xargs sha256sum | sha256sum | cut -d' ' -f1 | head -c 16)
+          RUST_HASH=$(find src/flavor-rs -type f \( -name "*.rs" -o -name "Cargo.toml" \) | sort | xargs sha256sum | sha256sum | cut -d' ' -f1 | head -c 16)
+          echo "go_key_base=go-helpers-$GO_HASH" >> $GITHUB_OUTPUT
+          echo "rust_key_base=rust-helpers-$RUST_HASH" >> $GITHUB_OUTPUT
+          echo "🔑 Go cache key:   go-helpers-$GO_HASH"
+          echo "🔑 Rust cache key: rust-helpers-$RUST_HASH"
+
       - name: 📋 Setup build matrix
         id: matrix
         run: |
           # Define all platforms as a single-line JSON.
           # In local act mode we keep this to linux_amd64 so the workflow stays executable.
+          # FreeBSD platforms have dedicated jobs below; Windows is included here.
           if [ "${ACT:-}" = "true" ]; then
-            ALL_PLATFORMS='[{"platform":"linux_amd64","os":"ubuntu-latest","rust_target":"x86_64-unknown-linux-musl","use_musl":true}]'
+            ALL_PLATFORMS='[{"platform":"linux_amd64","os":"ubuntu-24.04","rust_target":"x86_64-unknown-linux-musl","use_musl":true,"emoji":"🐧"}]'
           else
-            # Note: Linux platforms use musl for static linking to ensure compatibility with older glibc versions
-            # Windows has dedicated jobs (build-windows-amd64, build-windows-arm64) for better parallelism
-            ALL_PLATFORMS='[{"platform":"linux_amd64","os":"ubuntu-latest","rust_target":"x86_64-unknown-linux-musl","use_musl":true},{"platform":"linux_arm64","os":"ubuntu-24.04-arm","rust_target":"aarch64-unknown-linux-musl","use_musl":true},{"platform":"darwin_amd64","os":"macos-15-intel","rust_target":"x86_64-apple-darwin","use_musl":false},{"platform":"darwin_arm64","os":"macos-15","rust_target":"aarch64-apple-darwin","use_musl":false}]'
+            ALL_PLATFORMS='[{"platform":"linux_amd64","os":"ubuntu-24.04","rust_target":"x86_64-unknown-linux-musl","use_musl":true,"emoji":"🐧"},{"platform":"linux_arm64","os":"ubuntu-24.04-arm","rust_target":"aarch64-unknown-linux-musl","use_musl":true,"emoji":"🐧"},{"platform":"darwin_amd64","os":"macos-15-intel","rust_target":"x86_64-apple-darwin","use_musl":false,"emoji":"🍎"},{"platform":"darwin_arm64","os":"macos-15","rust_target":"aarch64-apple-darwin","use_musl":false,"emoji":"🍎"},{"platform":"windows_amd64","os":"windows-2022","rust_target":"x86_64-pc-windows-msvc","use_musl":false,"emoji":"🪟"},{"platform":"windows_arm64","os":"windows-11-arm","rust_target":"aarch64-pc-windows-msvc","use_musl":false,"emoji":"🪟"}]'
           fi
-          
-          # Check if specific platforms requested
+
           PLATFORMS="${{ inputs.platforms }}"
           if [ "$PLATFORMS" = "all" ] || [ -z "$PLATFORMS" ]; then
             MATRIX="{\"include\":$ALL_PLATFORMS}"
           else
-            # Filter to requested platforms
             FILTERED="[]"
             for platform in $(echo "$PLATFORMS" | tr ',' ' '); do
               PLATFORM_JSON=$(echo "$ALL_PLATFORMS" | jq -c ".[] | select(.platform == \"$platform\")")
@@ -68,243 +72,49 @@ jobs:
             done
             MATRIX="{\"include\":$FILTERED}"
           fi
-          
+
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
           echo "📋 Build matrix: $MATRIX"
 
-  # Single matrix job for all platforms
-  build:
-    name: 🔨 Build ${{ matrix.platform }}
+  # ── Native platform builds (Linux, macOS, Windows) ─────────────────────────
+  # Go and Rust fan out in parallel over the same matrix (12 jobs total).
+  build-go:
+    name: ${{ matrix.emoji }}🐹 ${{ matrix.platform }}
     needs: setup
-    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-      
-      - name: 💾 Cache helpers
-        id: cache
-        uses: actions/cache@v5
-        with:
-          path: |
-            dist/bin/*-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
-            dist/bin/*-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.exe
-            artifacts/*.zip
-          key: ${{ needs.setup.outputs.cache_key_base }}-${{ matrix.platform }}-${{ needs.setup.outputs.version }}
-          # No restore-keys - only use exact version match to prevent old binary accumulation
+    uses: ./.github/workflows/build-go.yml
+    with:
+      platform: ${{ matrix.platform }}
+      os: ${{ matrix.os }}
+      use_musl: ${{ matrix.use_musl }}
+      version: ${{ needs.setup.outputs.version }}
+      go_cache_key_base: ${{ needs.setup.outputs.go_cache_key_base }}
 
-      - name: 📦 Setup uv + Python
-        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
-        with:
-          python-version: '3.11'
-          enable-cache: false
-
-      - name: 🐹 Setup Go
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: actions/setup-go@v6
-        with:
-          go-version: "${{ vars.GO_VERSION }}"
-          cache-dependency-path: src/flavor-go/go.sum
-      
-      - name: 🦀 Setup Rust
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: "1.94.0"
-          targets: ${{ matrix.rust_target }}
-          components: rustfmt, clippy
-      
-      - name: 🔧 Setup musl toolchain (Linux)
-        if: steps.cache.outputs.cache-hit != 'true' && matrix.use_musl && runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y musl-tools
-      
-      - name: 🧹 Clean and setup
-        if: steps.cache.outputs.cache-hit != 'true'
-        shell: bash
-        run: |
-          echo "🧹 Cleaning old binaries..."
-          rm -rf dist/bin
-          mkdir -p dist/bin
-
-          # Extract platform parts
-          PLATFORM="${{ matrix.platform }}"
-          OS=$(echo $PLATFORM | cut -d_ -f1)
-          ARCH=$(echo $PLATFORM | cut -d_ -f2)
-          VERSION="${{ needs.setup.outputs.version }}"
-
-          echo "🔨 Building helpers for $PLATFORM (version $VERSION)"
-
-      - name: 🐹 Build Go helpers
-        if: steps.cache.outputs.cache-hit != 'true'
-        shell: bash
-        working-directory: src/flavor-go
-        run: |
-          # Extract platform parts
-          PLATFORM="${{ matrix.platform }}"
-          OS=$(echo $PLATFORM | cut -d_ -f1)
-          ARCH=$(echo $PLATFORM | cut -d_ -f2)
-          VERSION="${{ needs.setup.outputs.version }}"
-
-          # Map to Go env vars
-          export GOOS=$OS
-          export GOARCH=$ARCH
-          # Disable CGO for static binaries on Unix (Linux/macOS)
-          # Windows requires dynamic linking for PSP format compatibility
-          if [ "$OS" != "windows" ]; then
-            export CGO_ENABLED=0
-          fi
-
-          # Add .exe extension for Windows
-          EXE_EXT=""
-          if [ "$OS" = "windows" ]; then
-            EXE_EXT=".exe"
-          fi
-
-          echo "🐹 Building Go helpers..."
-          echo "  GOOS=$GOOS GOARCH=$GOARCH CGO_ENABLED=$CGO_ENABLED"
-
-          # Builder (with -buildvcs=false to avoid git issues in CI)
-          go build -buildvcs=false -ldflags "-X main.Version=$VERSION" \
-            -o ../../dist/bin/flavor-go-builder-$VERSION-$PLATFORM$EXE_EXT \
-            cmd/flavor-go-builder/main.go
-
-          # Launcher (with -buildvcs=false to avoid git issues in CI)
-          go build -buildvcs=false -ldflags "-X main.Version=$VERSION" \
-            -o ../../dist/bin/flavor-go-launcher-$VERSION-$PLATFORM$EXE_EXT \
-            cmd/flavor-go-launcher/main.go
-
-      - name: 🔍 Debug Rust environment
-        if: steps.cache.outputs.cache-hit != 'true'
-        shell: bash
-        working-directory: src/flavor-rs
-        run: |
-          echo "🔍 Debugging Rust build environment..."
-          echo "Working directory: $(pwd)"
-          echo "Contents of current directory:"
-          ls -la
-          echo "Contents of src/bin/:"
-          ls -la src/bin/ || echo "src/bin/ does not exist"
-          echo "Cargo.toml contents:"
-          cat Cargo.toml
-          echo "Rust toolchain:"
-          rustc --version
-          cargo --version
-
-      - name: 🦀 Build Rust helpers
-        if: steps.cache.outputs.cache-hit != 'true'
-        shell: bash
-        working-directory: src/flavor-rs
-        run: |
-          # Extract platform parts
-          PLATFORM="${{ matrix.platform }}"
-          VERSION="${{ needs.setup.outputs.version }}"
-
-          # Set version via environment variable for build.rs
-          export FLAVOR_VERSION="$VERSION"
-
-          # Add .exe extension for Windows
-          EXE_EXT=""
-          if [[ "$PLATFORM" == "windows_"* ]]; then
-            EXE_EXT=".exe"
-          fi
-
-          echo "🦀 Building Rust helpers..."
-
-          # Build with specified target (musl for Linux, native for macOS/Windows)
-          cargo build --release --target ${{ matrix.rust_target }}
-          cp target/${{ matrix.rust_target }}/release/flavor-rs-builder$EXE_EXT ../../dist/bin/flavor-rs-builder-$VERSION-$PLATFORM$EXE_EXT
-          cp target/${{ matrix.rust_target }}/release/flavor-rs-launcher$EXE_EXT ../../dist/bin/flavor-rs-launcher-$VERSION-$PLATFORM$EXE_EXT
-
-      - name: ✅ Finalize build
-        if: steps.cache.outputs.cache-hit != 'true'
-        shell: bash
-        run: |
-          PLATFORM="${{ matrix.platform }}"
-
-          # Make executable
-          chmod +x dist/bin/* 2>/dev/null || true
-
-          echo "✅ Build complete for $PLATFORM"
-          ls -la dist/bin/*-$PLATFORM*
-      
-      - name: 📦 Package artifacts (Unix)
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
-          mkdir -p artifacts
-          cd dist/bin
-          zip -r ../../artifacts/flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.zip \
-            *-${{ needs.setup.outputs.version }}-${{ matrix.platform }} || true
-          cd ../..
-          echo "📦 Packaged helpers:"
-          ls -la artifacts/
-
-      - name: 📦 Package artifacts (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force -Path artifacts | Out-Null
-          $files = Get-ChildItem -Path "dist\bin" -Filter "*-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.exe"
-          if ($files.Count -gt 0) {
-            Compress-Archive -Path $files.FullName -DestinationPath "artifacts\flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.zip" -Force
-            Write-Host "📦 Packaged helpers:"
-            Get-ChildItem artifacts
-          } else {
-            Write-Host "⚠️ No files found to package"
-          }
-      
-      - name: 🧪 Test binaries
-        continue-on-error: true
-        shell: bash
-        run: |
-          mkdir -p test-results
-          .github/scripts/test-binaries.sh \
-            "${{ matrix.platform }}" \
-            dist/bin \
-            test-results
-      
-      - name: 📊 Generate metadata
-        if: always()
-        shell: bash
-        run: |
-          export PYTHONUTF8=1
-          export PYTHONIOENCODING=utf-8
-          python3 .github/scripts/test-metadata.py platform \
-            "${{ matrix.platform }}" \
-            "${{ needs.setup.outputs.version }}" \
-            "${{ steps.cache.outputs.cache-hit }}"
-      
-      - name: 📤 Upload artifacts
-        uses: actions/upload-artifact@v7
-        with:
-          name: flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
-          path: artifacts/*.zip
-      
-      - name: 📤 Upload test results
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: test-results-${{ matrix.platform }}
-          path: test-results/
-      
-      - name: 📤 Upload metadata
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: metadata-${{ matrix.platform }}
-          path: artifacts/metadata/
-
-  # FreeBSD jobs — use QEMU VM via cross-platform-actions, Go helpers only
-  build-freebsd-amd64:
-    name: 🐡 Build freebsd_amd64
+  build-rust:
+    name: ${{ matrix.emoji }}🦀 ${{ matrix.platform }}
     needs: setup
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
+    uses: ./.github/workflows/build-rust.yml
+    with:
+      platform: ${{ matrix.platform }}
+      os: ${{ matrix.os }}
+      rust_target: ${{ matrix.rust_target }}
+      use_musl: ${{ matrix.use_musl }}
+      version: ${{ needs.setup.outputs.version }}
+      rust_cache_key_base: ${{ needs.setup.outputs.rust_cache_key_base }}
+
+  # ── FreeBSD builds (QEMU VM via cross-platform-actions) ────────────────────
+  # Separate dedicated jobs because these use a VM action rather than a native runner.
+  # cross-platform-actions ships x86-64 QEMU binaries; all jobs run on ubuntu-24.04.
+  # freebsd_arm64 is additionally run on ubuntu-24.04-arm to benchmark QEMU performance.
+  build-freebsd-amd64:
+    name: 😈 freebsd_amd64
+    needs: setup
+    runs-on: ubuntu-24.04
     continue-on-error: true
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -315,38 +125,96 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
-      - name: 🐡 Build and test inside FreeBSD VM
+      - name: 💾 Cache FreeBSD helpers
+        id: cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            dist/bin/flavor-go-*-${{ needs.setup.outputs.version }}-freebsd_amd64
+            dist/bin/flavor-rs-*-${{ needs.setup.outputs.version }}-freebsd_amd64
+            artifacts/*.zip
+          key: ${{ needs.setup.outputs.go_cache_key_base }}-${{ needs.setup.outputs.rust_cache_key_base }}-freebsd_amd64-${{ needs.setup.outputs.version }}
+
+      - name: 💾 Cache Cargo registry
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache@v5
+        with:
+          path: vm-cargo-cache
+          key: freebsd-cargo-registry-${{ hashFiles('src/flavor-rs/Cargo.lock') }}
+          restore-keys: freebsd-cargo-registry-
+
+      - name: 🏗️ Prep FreeBSD system
+        if: steps.cache.outputs.cache-hit != 'true'
         uses: cross-platform-actions/action@v0.32.0
         with:
           operating_system: freebsd
           version: '14.2'
           architecture: x86-64
           shell: bash
-          run: .github/scripts/build-freebsd.sh ${{ needs.setup.outputs.version }} amd64
+          run: ci/freebsd-prep-system.sh
+
+      - name: 🐹 Build Go helpers
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: x86-64
+          shell: bash
+          sync_files: runner-to-vm
+          run: ci/freebsd-build-go.sh ${{ needs.setup.outputs.version }} amd64
+
+      - name: 🦀 Prep Rust
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: x86-64
+          shell: bash
+          sync_files: runner-to-vm
+          run: ci/freebsd-prep-rust.sh
+
+      - name: 🔨 Build Rust helpers
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: x86-64
+          shell: bash
+          sync_files: runner-to-vm
+          run: ci/freebsd-build-rust.sh ${{ needs.setup.outputs.version }} amd64
+
+      - name: 🧪 Test Go
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: x86-64
+          shell: bash
+          sync_files: true
+          run: ci/freebsd-test-go.sh
 
       - name: 📦 Package artifacts
+        if: steps.cache.outputs.cache-hit != 'true'
         shell: bash
-        run: |
-          mkdir -p artifacts
-          cd dist/bin
-          zip -r ../../artifacts/flavor-helpers-${{ needs.setup.outputs.version }}-freebsd_amd64.zip \
-            *-${{ needs.setup.outputs.version }}-freebsd_amd64 || true
+        run: ci/package-helpers.sh freebsd_amd64 ${{ needs.setup.outputs.version }}
 
       - name: 🧪 Test binaries
         continue-on-error: true
         shell: bash
         run: |
           mkdir -p test-results
-          .github/scripts/test-binaries.sh freebsd_amd64 dist/bin test-results
+          ci/test-binaries.sh freebsd_amd64 dist/bin test-results
 
       - name: 📊 Generate metadata
         if: always()
         shell: bash
         run: |
-          export PYTHONUTF8=1
-          export PYTHONIOENCODING=utf-8
-          python3 .github/scripts/test-metadata.py platform \
-            freebsd_amd64 "${{ needs.setup.outputs.version }}" "false"
+          export PYTHONUTF8=1 PYTHONIOENCODING=utf-8
+          python3 ci/test-metadata.py platform freebsd_amd64 ${{ needs.setup.outputs.version }} ${{ steps.cache.outputs.cache-hit }}
 
       - name: 📤 Upload artifacts
         uses: actions/upload-artifact@v7
@@ -369,9 +237,9 @@ jobs:
           path: artifacts/metadata/
 
   build-freebsd-arm64:
-    name: 🐡 Build freebsd_arm64
+    name: 😈 freebsd_arm64
     needs: setup
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     continue-on-error: true
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -382,38 +250,96 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
-      - name: 🐡 Build and test inside FreeBSD VM
+      - name: 💾 Cache FreeBSD helpers
+        id: cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            dist/bin/flavor-go-*-${{ needs.setup.outputs.version }}-freebsd_arm64
+            dist/bin/flavor-rs-*-${{ needs.setup.outputs.version }}-freebsd_arm64
+            artifacts/*.zip
+          key: ${{ needs.setup.outputs.go_cache_key_base }}-${{ needs.setup.outputs.rust_cache_key_base }}-freebsd_arm64-${{ needs.setup.outputs.version }}
+
+      - name: 💾 Cache Cargo registry
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache@v5
+        with:
+          path: vm-cargo-cache
+          key: freebsd-cargo-registry-${{ hashFiles('src/flavor-rs/Cargo.lock') }}
+          restore-keys: freebsd-cargo-registry-
+
+      - name: 🏗️ Prep FreeBSD system
+        if: steps.cache.outputs.cache-hit != 'true'
         uses: cross-platform-actions/action@v0.32.0
         with:
           operating_system: freebsd
           version: '14.2'
           architecture: arm64
           shell: bash
-          run: .github/scripts/build-freebsd.sh ${{ needs.setup.outputs.version }} arm64
+          run: ci/freebsd-prep-system.sh
+
+      - name: 🐹 Build Go helpers
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: arm64
+          shell: bash
+          sync_files: runner-to-vm
+          run: ci/freebsd-build-go.sh ${{ needs.setup.outputs.version }} arm64
+
+      - name: 🦀 Prep Rust
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: arm64
+          shell: bash
+          sync_files: runner-to-vm
+          run: ci/freebsd-prep-rust.sh
+
+      - name: 🔨 Build Rust helpers
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: arm64
+          shell: bash
+          sync_files: runner-to-vm
+          run: ci/freebsd-build-rust.sh ${{ needs.setup.outputs.version }} arm64
+
+      - name: 🧪 Test Go
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: arm64
+          shell: bash
+          sync_files: true
+          run: ci/freebsd-test-go.sh
 
       - name: 📦 Package artifacts
+        if: steps.cache.outputs.cache-hit != 'true'
         shell: bash
-        run: |
-          mkdir -p artifacts
-          cd dist/bin
-          zip -r ../../artifacts/flavor-helpers-${{ needs.setup.outputs.version }}-freebsd_arm64.zip \
-            *-${{ needs.setup.outputs.version }}-freebsd_arm64 || true
+        run: ci/package-helpers.sh freebsd_arm64 ${{ needs.setup.outputs.version }}
 
       - name: 🧪 Test binaries
         continue-on-error: true
         shell: bash
         run: |
           mkdir -p test-results
-          .github/scripts/test-binaries.sh freebsd_arm64 dist/bin test-results
+          ci/test-binaries.sh freebsd_arm64 dist/bin test-results
 
       - name: 📊 Generate metadata
         if: always()
         shell: bash
         run: |
-          export PYTHONUTF8=1
-          export PYTHONIOENCODING=utf-8
-          python3 .github/scripts/test-metadata.py platform \
-            freebsd_arm64 "${{ needs.setup.outputs.version }}" "false"
+          export PYTHONUTF8=1 PYTHONIOENCODING=utf-8
+          python3 ci/test-metadata.py platform freebsd_arm64 ${{ needs.setup.outputs.version }} ${{ steps.cache.outputs.cache-hit }}
 
       - name: 📤 Upload artifacts
         uses: actions/upload-artifact@v7
@@ -435,264 +361,29 @@ jobs:
           name: metadata-freebsd_arm64
           path: artifacts/metadata/
 
-  # Windows dedicated jobs — native runners, Go + Rust helpers
-  build-windows-amd64:
-    name: 🪟 Build windows_amd64
-    needs: setup
-    runs-on: windows-2022
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-
-      - name: 💾 Cache helpers
-        id: cache
-        uses: actions/cache@v5
-        with:
-          path: |
-            dist/bin/*-${{ needs.setup.outputs.version }}-windows_amd64.exe
-            artifacts/*.zip
-          key: ${{ needs.setup.outputs.cache_key_base }}-windows_amd64-${{ needs.setup.outputs.version }}
-
-      - name: 📦 Setup uv + Python
-        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
-        with:
-          python-version: '3.11'
-          enable-cache: false
-
-      - name: 🐹 Setup Go
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: actions/setup-go@v6
-        with:
-          go-version: "${{ vars.GO_VERSION }}"
-          cache-dependency-path: src/flavor-go/go.sum
-
-      - name: 🦀 Setup Rust
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: "1.94.0"
-          targets: x86_64-pc-windows-msvc
-          components: rustfmt, clippy
-
-      - name: 🐹 Build Go helpers
-        if: steps.cache.outputs.cache-hit != 'true'
-        shell: bash
-        working-directory: src/flavor-go
-        run: |
-          VERSION="${{ needs.setup.outputs.version }}"
-          export GOOS=windows GOARCH=amd64
-          mkdir -p ../../dist/bin
-          go build -buildvcs=false -ldflags "-X main.Version=$VERSION" \
-            -o ../../dist/bin/flavor-go-builder-$VERSION-windows_amd64.exe \
-            cmd/flavor-go-builder/main.go
-          go build -buildvcs=false -ldflags "-X main.Version=$VERSION" \
-            -o ../../dist/bin/flavor-go-launcher-$VERSION-windows_amd64.exe \
-            cmd/flavor-go-launcher/main.go
-
-      - name: 🦀 Build Rust helpers
-        if: steps.cache.outputs.cache-hit != 'true'
-        shell: bash
-        working-directory: src/flavor-rs
-        run: |
-          VERSION="${{ needs.setup.outputs.version }}"
-          export FLAVOR_VERSION="$VERSION"
-          cargo build --release --target x86_64-pc-windows-msvc
-          cp target/x86_64-pc-windows-msvc/release/flavor-rs-builder.exe \
-            ../../dist/bin/flavor-rs-builder-$VERSION-windows_amd64.exe
-          cp target/x86_64-pc-windows-msvc/release/flavor-rs-launcher.exe \
-            ../../dist/bin/flavor-rs-launcher-$VERSION-windows_amd64.exe
-
-      - name: 📦 Package artifacts
-        if: steps.cache.outputs.cache-hit != 'true'
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force -Path artifacts | Out-Null
-          $files = Get-ChildItem -Path "dist\bin" -Filter "*-${{ needs.setup.outputs.version }}-windows_amd64.exe"
-          if ($files.Count -gt 0) {
-            Compress-Archive -Path $files.FullName `
-              -DestinationPath "artifacts\flavor-helpers-${{ needs.setup.outputs.version }}-windows_amd64.zip" -Force
-          }
-
-      - name: 🧪 Test binaries
-        continue-on-error: true
-        shell: bash
-        run: |
-          mkdir -p test-results
-          .github/scripts/test-binaries.sh windows_amd64 dist/bin test-results
-
-      - name: 📊 Generate metadata
-        if: always()
-        shell: bash
-        run: |
-          export PYTHONUTF8=1 PYTHONIOENCODING=utf-8
-          python3 .github/scripts/test-metadata.py platform \
-            windows_amd64 "${{ needs.setup.outputs.version }}" "${{ steps.cache.outputs.cache-hit }}"
-
-      - name: 📤 Upload artifacts
-        uses: actions/upload-artifact@v7
-        with:
-          name: flavor-helpers-${{ needs.setup.outputs.version }}-windows_amd64
-          path: artifacts/*.zip
-
-      - name: 📤 Upload test results
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: test-results-windows_amd64
-          path: test-results/
-
-      - name: 📤 Upload metadata
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: metadata-windows_amd64
-          path: artifacts/metadata/
-
-  build-windows-arm64:
-    name: 🪟 Build windows_arm64
-    needs: setup
-    runs-on: windows-11-arm
-    steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-
-      - name: 💾 Cache helpers
-        id: cache
-        uses: actions/cache@v5
-        with:
-          path: |
-            dist/bin/*-${{ needs.setup.outputs.version }}-windows_arm64.exe
-            artifacts/*.zip
-          key: ${{ needs.setup.outputs.cache_key_base }}-windows_arm64-${{ needs.setup.outputs.version }}
-
-      - name: 📦 Setup uv + Python
-        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
-        with:
-          python-version: '3.11'
-          enable-cache: false
-
-      - name: 🐹 Setup Go
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: actions/setup-go@v6
-        with:
-          go-version: "${{ vars.GO_VERSION }}"
-          cache-dependency-path: src/flavor-go/go.sum
-
-      - name: 🦀 Setup Rust
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: "1.94.0"
-          targets: aarch64-pc-windows-msvc
-          components: rustfmt, clippy
-
-      - name: 🐹 Build Go helpers
-        if: steps.cache.outputs.cache-hit != 'true'
-        shell: bash
-        working-directory: src/flavor-go
-        run: |
-          VERSION="${{ needs.setup.outputs.version }}"
-          export GOOS=windows GOARCH=arm64
-          mkdir -p ../../dist/bin
-          go build -buildvcs=false -ldflags "-X main.Version=$VERSION" \
-            -o ../../dist/bin/flavor-go-builder-$VERSION-windows_arm64.exe \
-            cmd/flavor-go-builder/main.go
-          go build -buildvcs=false -ldflags "-X main.Version=$VERSION" \
-            -o ../../dist/bin/flavor-go-launcher-$VERSION-windows_arm64.exe \
-            cmd/flavor-go-launcher/main.go
-
-      - name: 🦀 Build Rust helpers
-        if: steps.cache.outputs.cache-hit != 'true'
-        shell: bash
-        working-directory: src/flavor-rs
-        run: |
-          VERSION="${{ needs.setup.outputs.version }}"
-          export FLAVOR_VERSION="$VERSION"
-          cargo build --release --target aarch64-pc-windows-msvc
-          cp target/aarch64-pc-windows-msvc/release/flavor-rs-builder.exe \
-            ../../dist/bin/flavor-rs-builder-$VERSION-windows_arm64.exe
-          cp target/aarch64-pc-windows-msvc/release/flavor-rs-launcher.exe \
-            ../../dist/bin/flavor-rs-launcher-$VERSION-windows_arm64.exe
-
-      - name: 📦 Package artifacts
-        if: steps.cache.outputs.cache-hit != 'true'
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force -Path artifacts | Out-Null
-          $files = Get-ChildItem -Path "dist\bin" -Filter "*-${{ needs.setup.outputs.version }}-windows_arm64.exe"
-          if ($files.Count -gt 0) {
-            Compress-Archive -Path $files.FullName `
-              -DestinationPath "artifacts\flavor-helpers-${{ needs.setup.outputs.version }}-windows_arm64.zip" -Force
-          }
-
-      - name: 🧪 Test binaries
-        continue-on-error: true
-        shell: bash
-        run: |
-          mkdir -p test-results
-          .github/scripts/test-binaries.sh windows_arm64 dist/bin test-results
-
-      - name: 📊 Generate metadata
-        if: always()
-        shell: bash
-        run: |
-          export PYTHONUTF8=1 PYTHONIOENCODING=utf-8
-          python3 .github/scripts/test-metadata.py platform \
-            windows_arm64 "${{ needs.setup.outputs.version }}" "${{ steps.cache.outputs.cache-hit }}"
-
-      - name: 📤 Upload artifacts
-        uses: actions/upload-artifact@v7
-        with:
-          name: flavor-helpers-${{ needs.setup.outputs.version }}-windows_arm64
-          path: artifacts/*.zip
-
-      - name: 📤 Upload test results
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: test-results-windows_arm64
-          path: test-results/
-
-      - name: 📤 Upload metadata
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: metadata-windows_arm64
-          path: artifacts/metadata/
-
-  # Combine all artifacts
+  # ── Combine all artifacts ──────────────────────────────────────────────────
   combine:
     name: 📦 Combine & Validate
-    needs: [setup, build, build-freebsd-amd64, build-freebsd-arm64, build-windows-amd64, build-windows-arm64]
+    needs: [setup, build-go, build-rust, build-freebsd-amd64, build-freebsd-arm64]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
         with:
           persist-credentials: false
-      
+
       - name: 📥 Download all artifacts
         uses: actions/download-artifact@v8
         with:
           path: all-artifacts
-      
+
       - name: 🔀 Combine artifacts
         run: |
           mkdir -p final
-          
-          # Combine all platform zips
-          for platform_dir in all-artifacts/flavor-helpers-*; do
-            if [ -d "$platform_dir" ]; then
-              cp $platform_dir/*.zip final/ || true
-            fi
+          for platform_dir in all-artifacts/flavor-*helpers-*; do
+            [ -d "$platform_dir" ] && cp "$platform_dir"/*.zip final/ || true
           done
-          
-          # Create combined archive
           cd final
           mkdir -p all-helpers
           for zip in *.zip; do
@@ -700,39 +391,24 @@ jobs:
           done
           zip -r flavor-helpers-${{ needs.setup.outputs.version }}-all.zip all-helpers/
           cd ..
-          
           echo "📦 Combined artifacts:"
           ls -la final/
-      
+
       - name: 🧪 Combine test results
         run: |
-          # Ensure test results directory exists even if no tests ran
           mkdir -p all-artifacts/test-results
-          
-          # Create empty results if none exist
           if [ -z "$(find all-artifacts -name '*test-report.json' -type f 2>/dev/null)" ]; then
             echo '{"platforms": {}, "summary": {"platforms_tested": 0, "total_tests": 0, "passed": 0, "failed": 0}}' > final/test-report.json
           else
-            export PYTHONUTF8=1
-            export PYTHONIOENCODING=utf-8
-            python3 .github/scripts/test-metadata.py combine \
-              all-artifacts \
-              final/test-report.json
+            export PYTHONUTF8=1 PYTHONIOENCODING=utf-8
+            python3 ci/test-metadata.py combine all-artifacts final/test-report.json
           fi
-      
+
       - name: 📊 Generate summary
         run: |
-          echo "## 🔨 Helper Build Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Version:** ${{ needs.setup.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          if [ -f "final/test-report.json" ]; then
-            export PYTHONUTF8=1
-            export PYTHONIOENCODING=utf-8
-            python3 -c "import json; data = json.load(open('final/test-report.json')); s = data.get('summary', {}); print(f\"**Platforms tested:** {s.get('platforms_tested', 0)}\"); print(f\"**Passed:** {s.get('passed', 0)}\"); print(f\"**Failed:** {s.get('failed', 0)}\")" >> $GITHUB_STEP_SUMMARY
-          fi
-      
+          export PYTHONUTF8=1 PYTHONIOENCODING=utf-8
+          python3 ci/test-metadata.py summary final/test-report.json ${{ needs.setup.outputs.version }}
+
       - name: 📤 Upload combined artifacts
         uses: actions/upload-artifact@v7
         with:

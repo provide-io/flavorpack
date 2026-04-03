@@ -40,7 +40,7 @@ jobs:
   # ==================================================================================
   prepare:
     name: 🔍 Prepare Release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.version.outputs.version }}
       version_tag: ${{ steps.version.outputs.version_tag }}
@@ -54,11 +54,11 @@ jobs:
       
       - name: 📝 Validate Version
         id: version
-        run: .github/scripts/validate-release-version.sh "${{ github.event.inputs.version }}"
+        run: ci/validate-release-version.sh "${{ github.event.inputs.version }}"
       
       - name: 🔍 Find Latest Successful Runs
         id: find_runs
-        run: .github/scripts/get-release-runs.sh
+        run: ci/get-release-runs.sh
         env:
           GH_TOKEN: ${{ github.token }}
 
@@ -68,7 +68,7 @@ jobs:
   collect-wheels:
     name: 🎡 Collect Platform Wheels
     needs: prepare
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout for scripts
         uses: actions/checkout@v6
@@ -89,7 +89,7 @@ jobs:
       
       - name: 🔧 Organize and rename wheels
         run: |
-          .github/scripts/organize-release-wheels.sh \
+          ci/organize-release-wheels.sh \
             wheels \
             release-wheels \
             "${{ needs.prepare.outputs.version }}"
@@ -107,7 +107,7 @@ jobs:
   collect-packages:
     name: 📦 Collect PSP Packages
     needs: prepare
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout for scripts
         uses: actions/checkout@v6
@@ -138,7 +138,7 @@ jobs:
       
       - name: 🔧 Organize PSP packages
         run: |
-          .github/scripts/organize-release-packages.sh \
+          ci/organize-release-packages.sh \
             release-psp \
             "${{ needs.prepare.outputs.version }}" \
             flavor-psp \
@@ -157,7 +157,7 @@ jobs:
   generate-assets:
     name: 📊 Generate Release Assets
     needs: [prepare, collect-wheels, collect-packages]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
@@ -272,7 +272,7 @@ jobs:
     name: 🏷️ Create GitHub Release
     needs: [prepare, generate-assets]
     if: github.event.inputs.dry_run != 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
@@ -360,7 +360,7 @@ jobs:
     name: 🧪 Publish to TestPyPI
     needs: [prepare, generate-assets]
     if: github.event.inputs.dry_run != 'true' && github.event.inputs.publish_testpypi == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment:
       name: testpypi
       url: https://test.pypi.org/project/flavorpack
@@ -402,7 +402,7 @@ jobs:
     name: 🐍 Publish to PyPI
     needs: [prepare, create-release]
     if: github.event.inputs.dry_run != 'true' && github.event.inputs.publish_pypi == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment:
       name: pypi
       url: https://pypi.org/project/flavorpack
@@ -442,7 +442,7 @@ jobs:
     name: 📊 Release Summary
     needs: [prepare, collect-wheels, collect-packages, create-release, publish-pypi, publish-testpypi]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📊 Generate Summary
         run: |

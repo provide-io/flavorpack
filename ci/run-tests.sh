@@ -70,7 +70,7 @@ echo $TEST_EXIT_CODE > test-outputs/exit-code.txt
 
 # Collect metadata even if tests failed
 echo "📊 Collecting test metadata..."
-python3 .github/scripts/test-metadata.py collect test-metadata
+python3 ci/test-metadata.py collect test-metadata
 
 # Exit with the test exit code
 exit $TEST_EXIT_CODE
