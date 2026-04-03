@@ -14,11 +14,11 @@ on:
         description: 'Test filter (e.g., -k test_name or -m marker)'
         type: string
         required: false
-      platforms:
-        description: 'Comma-separated platforms to build/test (e.g. linux_amd64,darwin_arm64). Empty = all.'
-        type: string
+      freebsd_only:
+        description: 'Run only FreeBSD flavor builds (skip tests + other platforms)'
+        type: boolean
         required: false
-        default: ''
+        default: false
   
   workflow_run:
     workflows: ["01 🥘 Helper Prep"]
@@ -416,6 +416,7 @@ jobs:
   build-flavor:
     name: 📦 Build Flavor ${{ matrix.platform }}
     needs: [setup, test, build-wheels]  # Still waits for both to complete
+    if: ${{ !inputs.freebsd_only || contains(matrix.platform, 'freebsd') }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
     strategy:
@@ -628,6 +629,7 @@ jobs:
   test-flavor-psp:
     name: 🧪 Test Flavor PSP ${{ matrix.platform }}
     needs: [setup, build-flavor]
+    if: ${{ !inputs.freebsd_only || contains(matrix.platform, 'freebsd') }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 10
     strategy:
