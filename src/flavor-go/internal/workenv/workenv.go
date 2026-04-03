@@ -89,6 +89,10 @@ func GetConfigRoot() string {
 			return filepath.Join(home, ".config", "flavor")
 		}
 	}
+	// Last resort: use os.UserHomeDir (reads /etc/passwd on Unix, %USERPROFILE% on Windows)
+	if home, err := os.UserHomeDir(); err == nil {
+		return filepath.Join(home, ".config", "flavor")
+	}
 	return filepath.Join(os.TempDir(), "flavor", "config")
 }
 

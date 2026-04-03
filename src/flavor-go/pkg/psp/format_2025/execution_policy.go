@@ -407,10 +407,14 @@ func EnforcePolicy(policy EffectivePolicy, buildTimestamp int64, hasSBOM bool, k
 }
 
 func getCurrentPlatform() string {
-	osName := "linux"
+	osName := runtime.GOOS
 	switch runtime.GOOS {
+	case "linux":
+		osName = "linux"
 	case "darwin":
 		osName = "darwin"
+	case "freebsd":
+		osName = "freebsd"
 	case "windows":
 		osName = "windows"
 	}
