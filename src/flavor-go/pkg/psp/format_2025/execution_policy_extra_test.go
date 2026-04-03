@@ -82,6 +82,66 @@ func TestApplyOperatorPolicyJSON_EmptySections(t *testing.T) {
 	}
 }
 
+// TestApplyEnforcement_UnknownModeTreatedAsDeny covers the default switch case
+// in applyEnforcement where an unrecognised mode is treated as deny for safety.
+func TestApplyEnforcement_UnknownModeTreatedAsDeny(t *testing.T) {
+	var warnings []string
+	err := applyEnforcement(EnforcementMode("bogus"), "should be denied", &warnings)
+	if err == nil {
+		t.Fatal("expected unknown enforcement mode to be treated as deny")
+	}
+	if len(warnings) != 0 {
+		t.Errorf("expected no warnings for unknown mode, got: %v", warnings)
+	}
+}
+
+// TestLoadOperatorPolicy_SystemPolicyReadError covers the non-IsNotExist error
+// path in LoadOperatorPolicy for the *system* policy file (e.g. path is a directory).
+func TestLoadOperatorPolicy_SystemPolicyReadError(t *testing.T) {
+	dir := t.TempDir()
+	// Create a directory where a file is expected — os.ReadFile on a directory
+	// returns an error that is NOT os.IsNotExist.
+	dirAsFile := dir // the temp dir itself IS a directory
+
+	oldSystem := getSystemPolicyFileImpl
+	oldUser := getUserPolicyFileImpl
+	t.Cleanup(func() {
+		getSystemPolicyFileImpl = oldSystem
+		getUserPolicyFileImpl = oldUser
+	})
+
+	getSystemPolicyFileImpl = func() string { return dirAsFile }
+	getUserPolicyFileImpl = func() string { return "" } // skip user policy
+
+	_, err := LoadOperatorPolicy()
+	if err == nil {
+		t.Fatal("expected read error when system policy path is a directory")
+	}
+}
+
+// TestLoadOperatorPolicy_EmptyPathSkipped covers the path=="" continue branch
+// in LoadOperatorPolicy.
+func TestLoadOperatorPolicy_EmptyPathSkipped(t *testing.T) {
+	oldSystem := getSystemPolicyFileImpl
+	oldUser := getUserPolicyFileImpl
+	t.Cleanup(func() {
+		getSystemPolicyFileImpl = oldSystem
+		getUserPolicyFileImpl = oldUser
+	})
+
+	getSystemPolicyFileImpl = func() string { return "" }
+	getUserPolicyFileImpl = func() string { return "" }
+
+	policy, err := LoadOperatorPolicy()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	// Should return defaults
+	if policy.Enforcement.Default != ModeDeny {
+		t.Errorf("expected default enforcement=deny, got %s", policy.Enforcement.Default)
+	}
+}
+
 // TestEnforcementModeFor_AllChecks covers the ModeFor switch for each check name.
 func TestEnforcementModeFor_AllChecks(t *testing.T) {
 	ep := EnforcementPolicy{
