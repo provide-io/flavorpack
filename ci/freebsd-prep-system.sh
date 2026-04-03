@@ -6,5 +6,5 @@ set -eo pipefail
 
 echo "🐡 FreeBSD $(uname -r) — $(uname -m)"
 sudo env IGNORE_OSVERSION=yes pkg update -f
-sudo env IGNORE_OSVERSION=yes pkg install -y go
+sudo env IGNORE_OSVERSION=yes pkg install -y go curl
 echo "✅ System ready"
