@@ -127,8 +127,11 @@ if not dists:
 
 dist_info = dists[-1]
 version = re.search(r"cryptography-(.+?)\.dist-info", dist_info.name).group(1)
-plat = sysconfig.get_platform().replace("-", "_").replace(".", "_")
 py = f"cp{sys.version_info.major}{sys.version_info.minor}"
+# Wheel platform tags must be lowercase (PEP 425 / wheel spec).
+# sysconfig.get_platform() may return mixed-case (e.g. "freebsd-14.2-RELEASE-amd64");
+# lowercase so uv's sys_tags() comparison matches correctly.
+plat = sysconfig.get_platform().replace("-", "_").replace(".", "_").lower()
 wheel_name = f"cryptography-{version}-{py}-{py}-{plat}.whl"
 out = cache / wheel_name
 
