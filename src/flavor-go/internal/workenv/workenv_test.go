@@ -39,35 +39,33 @@ func TestGetCacheRoot(t *testing.T) {
 	}
 
 	t.Setenv(envvars.EnvCacheDir, "")
-	switch runtime.GOOS {
-	case "linux":
+	if runtime.GOOS == "linux" {
 		if got, want := GetCacheRoot(), filepath.Join("/tmp/xdg-cache", "flavor"); got != want {
 			t.Fatalf("GetCacheRoot xdg mismatch: got %q want %q", got, want)
 		}
-	case "windows":
+	} else if runtime.GOOS == "windows" {
 		// On Windows, LOCALAPPDATA may be set; clear it to test fallback to TempDir.
 		t.Setenv("LOCALAPPDATA", "")
 		if got, want := GetCacheRoot(), filepath.Join(os.TempDir(), "flavor", "cache"); got != want {
 			t.Fatalf("GetCacheRoot windows fallback mismatch: got %q want %q", got, want)
 		}
-	default:
+	} else {
 		if got, want := GetCacheRoot(), filepath.Join("/tmp/home", "Library", "Caches", "flavor"); got != want {
 			t.Fatalf("GetCacheRoot home mismatch: got %q want %q", got, want)
 		}
 	}
 
 	t.Setenv("XDG_CACHE_HOME", "")
-	switch runtime.GOOS {
-	case "linux":
+	if runtime.GOOS == "linux" {
 		if got, want := GetCacheRoot(), filepath.Join("/tmp/home", ".cache", "flavor"); got != want {
 			t.Fatalf("GetCacheRoot home mismatch: got %q want %q", got, want)
 		}
-	case "windows":
+	} else if runtime.GOOS == "windows" {
 		// LOCALAPPDATA already cleared above; fallback is TempDir.
 		if got, want := GetCacheRoot(), filepath.Join(os.TempDir(), "flavor", "cache"); got != want {
 			t.Fatalf("GetCacheRoot windows fallback mismatch: got %q want %q", got, want)
 		}
-	default:
+	} else {
 		if got, want := GetCacheRoot(), filepath.Join("/tmp/home", "Library", "Caches", "flavor"); got != want {
 			t.Fatalf("GetCacheRoot home mismatch: got %q want %q", got, want)
 		}
