@@ -50,7 +50,6 @@ jobs:
       - name: 📥 Checkout
         uses: actions/checkout@v6
         with:
-          persist-credentials: false
           fetch-depth: 0
       
       - name: 📝 Validate Version
@@ -74,11 +73,10 @@ jobs:
       - name: 📥 Checkout for scripts
         uses: actions/checkout@v6
         with:
-          persist-credentials: false
           sparse-checkout: |
             .github/scripts
           sparse-checkout-cone-mode: false
-
+      
       - name: 📥 Download wheel artifacts from Flavor Pipeline
         uses: dawidd6/action-download-artifact@v19
         with:
@@ -114,11 +112,10 @@ jobs:
       - name: 📥 Checkout for scripts
         uses: actions/checkout@v6
         with:
-          persist-credentials: false
           sparse-checkout: |
             .github/scripts
           sparse-checkout-cone-mode: false
-
+      
       - name: 📥 Download Flavor PSP artifacts
         uses: dawidd6/action-download-artifact@v19
         with:
@@ -164,9 +161,7 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-
+      
       - name: 📥 Download wheels
         uses: actions/download-artifact@v8
         with:
@@ -281,9 +276,7 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-
+      
       - name: 📥 Download all release artifacts
         uses: actions/download-artifact@v8
         with:

@@ -91,7 +91,10 @@ pub fn derive_index_key_fingerprint(index: &super::index::Index) -> Result<Optio
         .to_string();
 
     if !stored.is_empty() && stored != derived {
-        return Err("attestation key fingerprint does not match embedded public key".to_string());
+        return Err(format!(
+            "attestation_key_fp mismatch: stored={} derived={}",
+            stored, derived
+        ));
     }
 
     Ok(Some(derived))

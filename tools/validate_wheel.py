@@ -123,9 +123,6 @@ def validate_helpers(wheel_path: Path) -> tuple[bool, list[str]]:  # noqa: C901
 
     with tempfile.TemporaryDirectory() as tmpdir:
         with zipfile.ZipFile(wheel_path, "r") as whl:
-            for member in whl.namelist():
-                if member.startswith("/") or ".." in member.split("/"):
-                    raise ValueError(f"Unsafe path in wheel: {member}")
             whl.extractall(tmpdir)
 
         helpers_dir = Path(tmpdir) / "flavor" / "helpers" / "bin"

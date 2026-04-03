@@ -75,7 +75,7 @@ func MarkComplete(path string, packageName, version, checksum string) error {
 		return err
 	}
 
-	return os.WriteFile(markerPath, data, 0600)
+	return os.WriteFile(markerPath, data, 0644)
 }
 
 // MarkIncomplete marks a workenv as incomplete (failed extraction)
@@ -95,7 +95,7 @@ func MarkIncomplete(path string, reason string) error {
 	// Remove complete marker if it exists
 	_ = os.Remove(filepath.Join(path, ".extraction.complete"))
 
-	return os.WriteFile(markerPath, data, 0600)
+	return os.WriteFile(markerPath, data, 0644)
 }
 
 // Clean removes invalid or incomplete workenvs
