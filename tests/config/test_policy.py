@@ -19,7 +19,13 @@ from flavor.config.policy import (
     EnforcementPolicy,
     OperatorPolicy,
     PackagePolicy,
+    _load_policy_file,
+    _parse_enforcement_section,
+    _validate_operator_policy_file,
+    _validate_operator_policy_value,
     enforce_policy,
+    get_current_platform,
+    is_privileged_user,
     load_operator_policy,
     merge_policy,
     parse_package_policy,
@@ -494,6 +500,211 @@ def test_effective_policy_defaults() -> None:
     assert e.use_os_keychain is False
     assert e.require_sbom is False
     assert e.enforcement.default == EnforcementMode.DENY
+
+
+# ---------------------------------------------------------------------------
+# _parse_enforcement_section — unknown key and invalid mode
+# ---------------------------------------------------------------------------
+
+
+def test_parse_enforcement_unknown_key_raises() -> None:
+    """Unknown enforcement key must be rejected."""
+    with pytest.raises(ValueError, match="unknown enforcement key 'bogus'"):
+        _parse_enforcement_section({"bogus": "deny"})
+
+
+def test_parse_enforcement_invalid_mode_raises() -> None:
+    """Invalid enforcement mode value must be rejected."""
+    with pytest.raises(ValueError, match=r"enforcement\.default must be one of"):
+        _parse_enforcement_section({"default": "explode"})
+
+
+# ---------------------------------------------------------------------------
+# _validate_operator_policy_value — wrong types
+# ---------------------------------------------------------------------------
+
+
+def test_validate_value_bool_wrong_type(tmp_path: Path) -> None:
+    """Boolean field given a string must be rejected."""
+    path = tmp_path / "policy.json"
+    with pytest.raises(ValueError, match=r"must be a boolean"):
+        _validate_operator_policy_value(path, "trust", "require_trusted_key", "yes")
+
+
+def test_validate_value_int_wrong_type(tmp_path: Path) -> None:
+    """Integer field given a string must be rejected."""
+    path = tmp_path / "policy.json"
+    with pytest.raises(ValueError, match=r"must be an integer"):
+        _validate_operator_policy_value(path, "execution", "max_age_days", "thirty")
+
+
+def test_validate_value_str_wrong_type(tmp_path: Path) -> None:
+    """String field given an integer must be rejected."""
+    path = tmp_path / "policy.json"
+    with pytest.raises(ValueError, match=r"must be a string"):
+        _validate_operator_policy_value(path, "enforcement", "default", 42)
+
+
+def test_validate_value_list_wrong_type(tmp_path: Path) -> None:
+    """List field given a string must be rejected."""
+    path = tmp_path / "policy.json"
+    with pytest.raises(ValueError, match=r"must be a list of strings"):
+        _validate_operator_policy_value(path, "execution", "allow_platforms", "linux_amd64")
+
+
+def test_validate_value_list_non_string_items(tmp_path: Path) -> None:
+    """List field with non-string items must be rejected."""
+    path = tmp_path / "policy.json"
+    with pytest.raises(ValueError, match=r"must be a list of strings"):
+        _validate_operator_policy_value(path, "execution", "allow_platforms", [1, 2])
+
+
+def test_validate_value_unsupported_schema_type(tmp_path: Path) -> None:
+    """Unsupported schema type triggers the safety-check branch."""
+    from flavor.config import policy as policy_mod
+
+    path = tmp_path / "policy.json"
+    original = policy_mod._POLICY_SCHEMA["trust"]["require_trusted_key"]
+    try:
+        policy_mod._POLICY_SCHEMA["trust"]["require_trusted_key"] = float  # unsupported
+        with pytest.raises(ValueError, match=r"unsupported schema type"):
+            _validate_operator_policy_value(path, "trust", "require_trusted_key", 3.14)
+    finally:
+        policy_mod._POLICY_SCHEMA["trust"]["require_trusted_key"] = original
+
+
+# ---------------------------------------------------------------------------
+# _validate_operator_policy_file — version as string, non-dict section
+# ---------------------------------------------------------------------------
+
+
+def test_validate_policy_file_version_not_int(tmp_path: Path) -> None:
+    """version field that is a string must be rejected."""
+    path = tmp_path / "policy.json"
+    with pytest.raises(ValueError, match=r"version must be an integer"):
+        _validate_operator_policy_file(path, {"version": "one", "trust": {"require_trusted_key": True}})
+
+
+def test_validate_policy_file_non_dict_section(tmp_path: Path) -> None:
+    """Section value that is not a dict must be rejected."""
+    path = tmp_path / "policy.json"
+    with pytest.raises(ValueError, match=r"unknown top-level key"):
+        _validate_operator_policy_file(path, {"version": 1, "trust": "bad"})
+
+
+# ---------------------------------------------------------------------------
+# _load_policy_file — non-dict root, string version, future version warning
+# ---------------------------------------------------------------------------
+
+
+def test_load_policy_file_non_dict_root(tmp_path: Path) -> None:
+    """JSON root that is not an object must be rejected."""
+    path = tmp_path / "policy.json"
+    path.write_text("[1, 2, 3]", encoding="utf-8")
+    with pytest.raises(ValueError, match=r"policy file root must be an object"):
+        _load_policy_file(path)
+
+
+def test_load_policy_file_version_string(tmp_path: Path) -> None:
+    """version field as string must be rejected by _load_policy_file."""
+    path = tmp_path / "policy.json"
+    path.write_text('{"version": "one"}', encoding="utf-8")
+    with pytest.raises(ValueError, match=r"version must be an integer"):
+        _load_policy_file(path)
+
+
+def test_load_policy_file_future_version_warns(tmp_path: Path) -> None:
+    """Policy version newer than supported should log a warning but not error."""
+    path = tmp_path / "policy.json"
+    path.write_text('{"version": 999}', encoding="utf-8")
+    # Should not raise — just warn and return the raw dict
+    raw = _load_policy_file(path)
+    assert raw["version"] == 999
+
+
+# ---------------------------------------------------------------------------
+# load_operator_policy — user merge non-dict section value
+# ---------------------------------------------------------------------------
+
+
+def test_load_operator_policy_user_merge_non_dict_section(tmp_path: Path) -> None:
+    """Non-dict section value during user merge hits the else branch (L259)."""
+    from flavor.config import policy as policy_mod
+
+    system_dir = tmp_path / "system"
+    system_dir.mkdir()
+
+    user_dir = tmp_path / "user"
+    user_dir.mkdir()
+    _write_policy(user_dir / "policy.json", {"version": 1, "trust": {"require_trusted_key": True}})
+
+    # Patch _load_policy_file for the user path to return a non-dict section
+    original_load = policy_mod._load_policy_file
+
+    def patched_load(path: Path) -> dict:  # type: ignore[type-arg]
+        raw = original_load(path)
+        raw["_nondict_section"] = 42  # inject non-dict for the merge branch
+        return raw
+
+    with (
+        mock.patch("flavor.config.dirs.get_system_config_dir", return_value=system_dir),
+        mock.patch("flavor.config.dirs.get_config_dir", return_value=user_dir),
+        mock.patch("flavor.config.policy._load_policy_file", side_effect=patched_load),
+    ):
+        # Should not raise — the else branch just assigns the value
+        op = load_operator_policy(system=False, user=True)
+    assert op is not None
+
+
+# ---------------------------------------------------------------------------
+# get_current_platform — freebsd and fallback branches
+# ---------------------------------------------------------------------------
+
+
+def test_get_current_platform_linux() -> None:
+    """get_current_platform returns linux_* on Linux."""
+    with mock.patch("sys.platform", "linux"):
+        plat = get_current_platform()
+    assert plat.startswith("linux_")
+
+
+def test_get_current_platform_darwin() -> None:
+    """get_current_platform returns darwin_* on macOS."""
+    with mock.patch("sys.platform", "darwin"):
+        plat = get_current_platform()
+    assert plat.startswith("darwin_")
+
+
+def test_get_current_platform_freebsd() -> None:
+    """get_current_platform returns freebsd_* on FreeBSD."""
+    with mock.patch("sys.platform", "freebsd13"):
+        plat = get_current_platform()
+    assert plat.startswith("freebsd_")
+
+
+def test_get_current_platform_win32() -> None:
+    """get_current_platform returns windows_* on Windows."""
+    with mock.patch("sys.platform", "win32"):
+        plat = get_current_platform()
+    assert plat.startswith("windows_")
+
+
+def test_get_current_platform_unknown_os() -> None:
+    """get_current_platform uses raw sys.platform for unknown OS."""
+    with mock.patch("sys.platform", "sunos5"):
+        plat = get_current_platform()
+    assert plat.startswith("sunos5_")
+
+
+# ---------------------------------------------------------------------------
+# is_privileged_user — Windows AttributeError path
+# ---------------------------------------------------------------------------
+
+
+def test_is_privileged_user_attribute_error_returns_false() -> None:
+    """is_privileged_user returns False when os.geteuid raises AttributeError (Windows)."""
+    with mock.patch("os.geteuid", side_effect=AttributeError("no geteuid"), create=True):
+        assert is_privileged_user() is False
 
 
 # 🌶️📦🔚

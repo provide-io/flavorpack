@@ -626,4 +626,200 @@ def testis_privileged_user_false_on_windows_attribute_error() -> None:
         assert is_privileged_user() is False
 
 
+# ---------------------------------------------------------------------------
+# policy check — refuse_root via is_privileged_user in commands/policy.py
+# ---------------------------------------------------------------------------
+
+
+def test_policy_check_refuse_root_privileged_user_command_path(tmp_path: Path) -> None:
+    """policy check exits 1 when refuse_root + is_privileged_user via the command's own check (L148-150)."""
+    pkg = tmp_path / "test.psp"
+    pkg.write_bytes(b"fake")
+
+    mock_reader = _make_mock_reader(metadata={"policy": {"refuse_root": True}})
+    op = OperatorPolicy(refuse_root=True)
+
+    runner = CliRunner()
+    with (
+        mock.patch("flavor.psp.format_2025.reader.PSPFReader", return_value=mock_reader),
+        mock.patch("flavor.commands.policy.load_operator_policy", return_value=op),
+        mock.patch("flavor.commands.policy.is_privileged_user", return_value=True),
+    ):
+        result = runner.invoke(cli, ["policy", "check", str(pkg)])
+
+    assert result.exit_code == 1
+    assert "refuses to run as root" in result.output
+
+
+# ---------------------------------------------------------------------------
+# _validate_package_key_metadata — fingerprint present but no public key
+# ---------------------------------------------------------------------------
+
+
+def test_policy_check_fingerprint_present_no_public_key(tmp_path: Path) -> None:
+    """Fingerprint present but embedded public key is zeroed/missing (L199)."""
+    pkg = tmp_path / "test.psp"
+    pkg.write_bytes(b"fake")
+
+    mock_reader = _make_mock_reader(metadata={})
+    mock_reader.read_index.return_value.public_key = b"\x00" * 32
+    mock_reader.read_index.return_value.attestation_key_fp = b"sha256:abc123"
+
+    runner = CliRunner()
+    with (
+        mock.patch("flavor.psp.format_2025.reader.PSPFReader", return_value=mock_reader),
+        mock.patch("flavor.commands.policy.load_operator_policy", return_value=OperatorPolicy()),
+    ):
+        result = runner.invoke(cli, ["policy", "check", str(pkg)])
+
+    assert result.exit_code == 1
+    assert "fingerprint is present but embedded public key is missing" in result.output
+
+
+# ---------------------------------------------------------------------------
+# _validate_package_key_metadata — invalid Ed25519 key (L206-207)
+# ---------------------------------------------------------------------------
+
+
+def test_policy_check_invalid_ed25519_key(tmp_path: Path) -> None:
+    """Embedded public key that is not a valid Ed25519 key (L206-207)."""
+    pkg = tmp_path / "test.psp"
+    pkg.write_bytes(b"fake")
+
+    mock_reader = _make_mock_reader(metadata={})
+    mock_reader.read_index.return_value.public_key = _raw_public_key_bytes()
+    mock_reader.read_index.return_value.attestation_key_fp = b""
+
+    runner = CliRunner()
+    with (
+        mock.patch("flavor.psp.format_2025.reader.PSPFReader", return_value=mock_reader),
+        mock.patch("flavor.commands.policy.load_operator_policy", return_value=OperatorPolicy()),
+        mock.patch(
+            "flavor.commands.policy.Ed25519PublicKey.from_public_bytes",
+            side_effect=ValueError("invalid key"),
+        ),
+    ):
+        result = runner.invoke(cli, ["policy", "check", str(pkg)])
+
+    assert result.exit_code == 1
+    assert "not a valid Ed25519 key" in result.output
+
+
+# ---------------------------------------------------------------------------
+# _validate_package_key_metadata — non-ASCII fingerprint (L213-214)
+# ---------------------------------------------------------------------------
+
+
+def test_policy_check_non_ascii_fingerprint(tmp_path: Path) -> None:
+    """Fingerprint containing non-ASCII bytes must be rejected (L213-214)."""
+    pkg = tmp_path / "test.psp"
+    pkg.write_bytes(b"fake")
+
+    mock_reader = _make_mock_reader(metadata={})
+    mock_reader.read_index.return_value.public_key = _raw_public_key_bytes()
+    mock_reader.read_index.return_value.attestation_key_fp = b"\xc0\xc1\xfe\xff" + b"\x00" * 60
+
+    runner = CliRunner()
+    with (
+        mock.patch("flavor.psp.format_2025.reader.PSPFReader", return_value=mock_reader),
+        mock.patch("flavor.commands.policy.load_operator_policy", return_value=OperatorPolicy()),
+    ):
+        result = runner.invoke(cli, ["policy", "check", str(pkg)])
+
+    assert result.exit_code == 1
+    assert "not valid ASCII" in result.output
+
+
+# ---------------------------------------------------------------------------
+# _check_package_key_trust — metadata error (L224)
+# ---------------------------------------------------------------------------
+
+
+def test_policy_check_key_trust_metadata_error(tmp_path: Path) -> None:
+    """_check_package_key_trust returns metadata error from its own _validate call (L224)."""
+    pkg = tmp_path / "test.psp"
+    pkg.write_bytes(b"fake")
+
+    mock_reader = _make_mock_reader(metadata={})
+    mock_reader.read_index.return_value.public_key = _raw_public_key_bytes()
+    mock_reader.read_index.return_value.attestation_key_fp = b"\x00" * 64
+
+    runner = CliRunner()
+    # First call (standalone at L170) returns None (ok), second call (inside
+    # _check_package_key_trust at L222) returns an error string to hit L224.
+    with (
+        mock.patch("flavor.psp.format_2025.reader.PSPFReader", return_value=mock_reader),
+        mock.patch(
+            "flavor.commands.policy.load_operator_policy",
+            return_value=OperatorPolicy(require_trusted_key=True),
+        ),
+        mock.patch(
+            "flavor.commands.policy._validate_package_key_metadata",
+            side_effect=[None, "simulated metadata error"],
+        ),
+    ):
+        result = runner.invoke(cli, ["policy", "check", str(pkg)])
+
+    assert result.exit_code == 1
+    assert "simulated metadata error" in result.output
+
+
+# ---------------------------------------------------------------------------
+# _check_package_key_trust — key trusted returns True (L233)
+# ---------------------------------------------------------------------------
+
+
+def test_policy_check_key_trusted(tmp_path: Path) -> None:
+    """_check_package_key_trust returns True when key is in trust store (L233)."""
+    pkg = tmp_path / "test.psp"
+    pkg.write_bytes(b"fake")
+
+    mock_reader = _make_mock_reader(metadata={})
+    mock_reader.read_index.return_value.public_key = _raw_public_key_bytes()
+    mock_reader.read_index.return_value.attestation_key_fp = b"\x00" * 64
+
+    runner = CliRunner()
+    with (
+        mock.patch("flavor.psp.format_2025.reader.PSPFReader", return_value=mock_reader),
+        mock.patch(
+            "flavor.commands.policy.load_operator_policy",
+            return_value=OperatorPolicy(require_trusted_key=True),
+        ),
+        mock.patch("flavor.commands.policy.is_key_trusted", return_value=True),
+    ):
+        result = runner.invoke(cli, ["policy", "check", str(pkg)])
+
+    assert result.exit_code == 0, result.output
+    assert "Package would be allowed" in result.output
+
+
+# ---------------------------------------------------------------------------
+# _check_package_key_trust — key not in trusted store (L239)
+# ---------------------------------------------------------------------------
+
+
+def test_policy_check_key_not_trusted(tmp_path: Path) -> None:
+    """_check_package_key_trust returns False when key is not in trust store (L239)."""
+    pkg = tmp_path / "test.psp"
+    pkg.write_bytes(b"fake")
+
+    mock_reader = _make_mock_reader(metadata={})
+    mock_reader.read_index.return_value.public_key = _raw_public_key_bytes()
+    mock_reader.read_index.return_value.attestation_key_fp = b"\x00" * 64
+
+    runner = CliRunner()
+    with (
+        mock.patch("flavor.psp.format_2025.reader.PSPFReader", return_value=mock_reader),
+        mock.patch(
+            "flavor.commands.policy.load_operator_policy",
+            return_value=OperatorPolicy(require_trusted_key=True),
+        ),
+        mock.patch("flavor.commands.policy.is_key_trusted", return_value=False),
+    ):
+        result = runner.invoke(cli, ["policy", "check", str(pkg)])
+
+    assert result.exit_code == 1
+    assert "not in the trusted store" in result.output
+
+
 # 🌶️📦🔚
