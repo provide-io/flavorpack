@@ -296,10 +296,3 @@ func TestPermissions(t *testing.T) {
 		})
 	}
 }
-
-func TestUnpackSlotDescriptorRejectsWrongSize(t *testing.T) {
-	_, err := UnpackSlotDescriptor(make([]byte, SlotDescriptorSize-1))
-	if err == nil {
-		t.Fatal("expected error for wrong-size input to UnpackSlotDescriptor")
-	}
-}

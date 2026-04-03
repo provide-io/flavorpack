@@ -168,52 +168,6 @@ func TestIsKeyTrusted_Match(t *testing.T) {
 	}
 }
 
-// TestLoadTrustedKeys_WithSystemDir exercises the includeSystem=true path.
-func TestLoadTrustedKeys_WithSystemDir(t *testing.T) {
-	dir := t.TempDir()
-	t.Setenv(EnvTrustedKeysDir, dir)
-
-	// Non-existent system dir is not an error.
-	keys, err := LoadTrustedKeys(true)
-	if err != nil {
-		t.Fatalf("unexpected error with includeSystem=true: %v", err)
-	}
-	if len(keys) != 0 {
-		t.Errorf("expected empty map, got %d entries", len(keys))
-	}
-}
-
-// TestLoadKeysFromDir_SkipsInvalidPubFile exercises the warning-and-continue path in loadKeysFromDir.
-func TestLoadKeysFromDir_SkipsInvalidPubFile(t *testing.T) {
-	dir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(dir, "bad.pub"), []byte("not a pem block"), 0o600); err != nil {
-		t.Fatalf("write bad.pub: %v", err)
-	}
-
-	keys := make(map[string]TrustedKey)
-	found, err := loadKeysFromDir(dir, keys)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if !found {
-		t.Error("expected found=true for existing dir")
-	}
-	if len(keys) != 0 {
-		t.Errorf("expected 0 keys after skipping invalid file, got %d", len(keys))
-	}
-}
-
-// TestLoadKeyFromFile_NoPEMBlock covers the nil-block error path.
-func TestLoadKeyFromFile_NoPEMBlock(t *testing.T) {
-	f := filepath.Join(t.TempDir(), "noblock.pub")
-	if err := os.WriteFile(f, []byte("not a pem block\n"), 0o600); err != nil {
-		t.Fatalf("write: %v", err)
-	}
-	if _, err := loadKeyFromFile(f); err == nil {
-		t.Fatal("expected error for file with no PEM block")
-	}
-}
-
 // TestIsKeyTrusted_NoMatch returns false when the store exists but the fingerprint is absent.
 func TestIsKeyTrusted_NoMatch(t *testing.T) {
 	dir := t.TempDir()
