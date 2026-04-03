@@ -71,6 +71,15 @@ func writeValidBundle(t *testing.T) string {
 	return path
 }
 
+// TestVerifyBundleWithLoggerDirect calls VerifyBundleWithLogger directly (not via
+// subprocess) so that the success-path statements contribute to coverage.
+func TestVerifyBundleWithLoggerDirect(t *testing.T) {
+	t.Parallel()
+	bundlePath := writeValidBundle(t)
+	// Must not panic or call os.Exit for a valid bundle.
+	VerifyBundleWithLogger(bundlePath, hclog.NewNullLogger())
+}
+
 func TestVerifyBundle(t *testing.T) {
 	bundlePath := writeValidBundle(t)
 
