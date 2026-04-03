@@ -18,9 +18,7 @@ BUILD_FULL='{"include":[
   {"platform":"darwin_amd64","runner":"macos-15-intel","python_platform":"macosx_10_9_x86_64"},
   {"platform":"darwin_arm64","runner":"macos-15","python_platform":"macosx_11_0_arm64"},
   {"platform":"windows_amd64","runner":"windows-2025","python_platform":"win_amd64","continue_on_error":true},
-  {"platform":"windows_arm64","runner":"windows-11-arm","python_platform":"win_arm64"},
-  {"platform":"freebsd_amd64","runner":"ubuntu-24.04","python_platform":"freebsd_14_2_release_amd64","continue_on_error":true,"vm_arch":"x86-64"},
-  {"platform":"freebsd_arm64","runner":"ubuntu-24.04","python_platform":"freebsd_14_2_release_arm64","continue_on_error":true,"vm_arch":"arm64"}
+  {"platform":"windows_arm64","runner":"windows-11-arm","python_platform":"win_arm64"}
 ]}'
 
 PSP_FULL='{"include":[
@@ -29,9 +27,7 @@ PSP_FULL='{"include":[
   {"platform":"darwin_amd64","runner":"macos-15-intel"},
   {"platform":"darwin_arm64","runner":"macos-15"},
   {"platform":"windows_amd64","runner":"windows-2025"},
-  {"platform":"windows_arm64","runner":"windows-11-arm"},
-  {"platform":"freebsd_amd64","runner":"ubuntu-24.04","continue_on_error":true,"vm_arch":"x86-64"},
-  {"platform":"freebsd_arm64","runner":"ubuntu-24.04","continue_on_error":true,"vm_arch":"arm64"}
+  {"platform":"windows_arm64","runner":"windows-11-arm"}
 ]}'
 
 if [ -n "$PLATFORMS" ]; then
