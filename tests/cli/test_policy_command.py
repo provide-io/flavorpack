@@ -822,4 +822,39 @@ def test_policy_check_key_not_trusted(tmp_path: Path) -> None:
     assert "not in the trusted store" in result.output
 
 
+# ---------------------------------------------------------------------------
+# _validate_package_key_metadata — fingerprint matches embedded key (L215→218)
+# ---------------------------------------------------------------------------
+
+
+def test_policy_check_fingerprint_matches_public_key(tmp_path: Path) -> None:
+    """When attestation fingerprint matches the embedded public key, validation passes (L215→218)."""
+    from flavor.config.trust import compute_key_fingerprint
+
+    pkg = tmp_path / "test.psp"
+    pkg.write_bytes(b"fake")
+
+    # Generate a real key pair and compute the correct fingerprint
+    private_key = Ed25519PrivateKey.generate()
+    public_key_obj = private_key.public_key()
+    raw_pub = public_key_obj.public_bytes(Encoding.Raw, PublicFormat.Raw)
+    fingerprint = compute_key_fingerprint(public_key_obj)
+
+    mock_reader = _make_mock_reader(metadata={})
+    mock_reader.read_index.return_value.public_key = raw_pub
+    # Store the correct fingerprint (padded to 64 bytes with null)
+    fp_bytes = fingerprint.encode("ascii")
+    mock_reader.read_index.return_value.attestation_key_fp = fp_bytes + b"\x00" * (64 - len(fp_bytes))
+
+    runner = CliRunner()
+    with (
+        mock.patch("flavor.psp.format_2025.reader.PSPFReader", return_value=mock_reader),
+        mock.patch("flavor.commands.policy.load_operator_policy", return_value=OperatorPolicy()),
+    ):
+        result = runner.invoke(cli, ["policy", "check", str(pkg)])
+
+    assert result.exit_code == 0, result.output
+    assert "Package would be allowed" in result.output
+
+
 # 🌶️📦🔚

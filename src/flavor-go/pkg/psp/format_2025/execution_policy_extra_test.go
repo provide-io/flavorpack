@@ -1,6 +1,9 @@
 package format_2025
 
 import (
+	"os"
+	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -172,4 +175,98 @@ func TestEnforcementModeFor_AllChecks(t *testing.T) {
 			t.Errorf("ModeFor(%q) = %s, want %s", check, got, want)
 		}
 	}
+}
+
+// ---------------------------------------------------------------------------
+// getSystemPolicyFile — cross-platform coverage via policyGOOS override
+// ---------------------------------------------------------------------------
+
+func TestGetSystemPolicyFile_Windows(t *testing.T) {
+	old := policyGOOS
+	t.Cleanup(func() { policyGOOS = old })
+	policyGOOS = "windows"
+
+	t.Setenv("PROGRAMDATA", "/tmp/pd")
+	got := getSystemPolicyFile()
+	want := filepath.Join("/tmp/pd", "flavor", "policy.json")
+	if got != want {
+		t.Errorf("getSystemPolicyFile() windows with PROGRAMDATA = %q, want %q", got, want)
+	}
+}
+
+func TestGetSystemPolicyFile_WindowsNoPROGRAMDATA(t *testing.T) {
+	old := policyGOOS
+	t.Cleanup(func() { policyGOOS = old })
+	policyGOOS = "windows"
+
+	t.Setenv("PROGRAMDATA", "")
+	got := getSystemPolicyFile()
+	want := filepath.Join("C:\\ProgramData", "flavor", "policy.json")
+	if got != want {
+		t.Errorf("getSystemPolicyFile() windows fallback = %q, want %q", got, want)
+	}
+}
+
+func TestGetSystemPolicyFile_Unix(t *testing.T) {
+	old := policyGOOS
+	t.Cleanup(func() { policyGOOS = old })
+	policyGOOS = "linux"
+
+	got := getSystemPolicyFile()
+	if got != "/etc/flavor/policy.json" {
+		t.Errorf("getSystemPolicyFile() unix = %q, want /etc/flavor/policy.json", got)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// getCurrentPlatform — cross-platform coverage via policyGOOS/policyGOARCH
+// ---------------------------------------------------------------------------
+
+func TestGetCurrentPlatform_AllOS(t *testing.T) {
+	oldOS := policyGOOS
+	oldArch := policyGOARCH
+	t.Cleanup(func() {
+		policyGOOS = oldOS
+		policyGOARCH = oldArch
+	})
+
+	cases := []struct {
+		goos, goarch, want string
+	}{
+		{"linux", "amd64", "linux_amd64"},
+		{"linux", "arm64", "linux_arm64"},
+		{"darwin", "amd64", "darwin_amd64"},
+		{"darwin", "arm64", "darwin_arm64"},
+		{"freebsd", "amd64", "freebsd_amd64"},
+		{"freebsd", "arm64", "freebsd_arm64"},
+		{"windows", "amd64", "windows_amd64"},
+		{"windows", "arm64", "windows_arm64"},
+	}
+
+	for _, tc := range cases {
+		policyGOOS = tc.goos
+		policyGOARCH = tc.goarch
+		got := getCurrentPlatform()
+		if got != tc.want {
+			t.Errorf("getCurrentPlatform() with GOOS=%s GOARCH=%s = %q, want %q", tc.goos, tc.goarch, got, tc.want)
+		}
+	}
+}
+
+func TestGetCurrentPlatform_RealOS(t *testing.T) {
+	// Ensure policyGOOS/policyGOARCH match runtime constants
+	old := policyGOOS
+	oldArch := policyGOARCH
+	t.Cleanup(func() {
+		policyGOOS = old
+		policyGOARCH = oldArch
+	})
+	policyGOOS = runtime.GOOS
+	policyGOARCH = runtime.GOARCH
+
+	p := getCurrentPlatform()
+	if p == "" {
+		t.Fatal("getCurrentPlatform() returned empty string")
+	}
+	_ = os.Getenv // suppress unused import
 }
