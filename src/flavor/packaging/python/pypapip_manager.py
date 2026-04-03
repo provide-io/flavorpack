@@ -9,6 +9,7 @@ and manylinux2014 compatibility for maximum Linux distribution coverage.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 import sys
 
@@ -18,6 +19,7 @@ from provide.foundation.platform import get_arch_name, get_os_name
 from provide.foundation.process import run
 from provide.foundation.resilience.types import BackoffStrategy
 
+from flavor.config.defaults import ENV_WHEEL_CACHE
 from flavor.packaging.python.uv_manager import _windows_system_env
 
 # On Windows GHA runners, pip's vendored truststore fails:
@@ -186,6 +188,15 @@ class PyPaPipManager:
                 cmd.extend(["--platform", f"{self.MANYLINUX_TAG}_aarch64"])
                 logger.debug(f"Added platform constraint: {self.MANYLINUX_TAG}_aarch64")
                 logger.warning("⚠️ grpcio on CentOS 7 ARM64 may have C++ ABI issues")
+
+        # When FLAVOR_WHEEL_CACHE is set, add --find-links so pip checks the local
+        # pre-built wheel directory before falling back to PyPI.  This is the only
+        # reliable way to supply C-extension wheels for platforms that have no PyPI
+        # binary wheels (e.g. FreeBSD cffi, cryptography) while still downloading
+        # pure-Python packages from PyPI with --only-binary :all:.
+        wheel_cache = os.environ.get(ENV_WHEEL_CACHE)
+        if wheel_cache:
+            cmd.extend(["--find-links", wheel_cache])
 
         if requirements_file:
             cmd.extend(["-r", requirements_file.as_posix()])
