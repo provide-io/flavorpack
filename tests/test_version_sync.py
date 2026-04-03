@@ -24,18 +24,6 @@ if TYPE_CHECKING:
 _SCRIPT_PATH = Path(__file__).resolve().parent.parent / "scripts" / "check_version_sync.py"
 
 
-def _find_repo_root(start: Path) -> Path:
-    current = start.resolve()
-    if current.is_file():
-        current = current.parent
-
-    for candidate in (current, *current.parents):
-        if (candidate / "VERSION").is_file() and (candidate / "scripts" / "check_version_sync.py").is_file():
-            return candidate
-
-    raise FileNotFoundError(f"Could not locate repository root from {start}")
-
-
 @pytest.fixture(scope="session")
 def version_sync() -> ModuleType:
     """Import check_version_sync.py as a module."""
@@ -50,7 +38,7 @@ def version_sync() -> ModuleType:
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-_REPO_ROOT = _find_repo_root(_SCRIPT_PATH)
+_REPO_ROOT = _SCRIPT_PATH.resolve().parent.parent
 _CANONICAL_VERSION = (_REPO_ROOT / "VERSION").read_text(encoding="utf-8").strip()
 
 
@@ -81,32 +69,6 @@ class TestReadVersionFile:
         assert len(parts) == 3, f"Expected MAJOR.MINOR.PATCH, got {version}"
         for part in parts:
             assert part.isdigit(), f"Non-numeric segment in version: {version}"
-
-
-class TestFindRepoRoot:
-    """Verify repository root discovery works from nested mutation sandboxes."""
-
-    def test_walks_up_from_mutant_style_script_path(self, version_sync: ModuleType, tmp_path: Path) -> None:
-        repo_root = tmp_path / "repo"
-        mutated_root = repo_root / "mutants"
-        script_path = mutated_root / "scripts" / "check_version_sync.py"
-        script_path.parent.mkdir(parents=True)
-        script_path.write_text("# stub", encoding="utf-8")
-        (repo_root / "scripts").mkdir(parents=True)
-        (repo_root / "scripts" / "check_version_sync.py").write_text("# canonical", encoding="utf-8")
-        (repo_root / "VERSION").write_text("9.9.9\n", encoding="utf-8")
-
-        resolved = version_sync._find_repo_root(script_path)
-
-        assert resolved == repo_root
-
-    def test_raises_when_version_file_cannot_be_found(self, version_sync: ModuleType, tmp_path: Path) -> None:
-        script_path = tmp_path / "nested" / "scripts" / "check_version_sync.py"
-        script_path.parent.mkdir(parents=True)
-        script_path.write_text("# stub", encoding="utf-8")
-
-        with pytest.raises(FileNotFoundError):
-            version_sync._find_repo_root(script_path)
 
 
 # ---------------------------------------------------------------------------

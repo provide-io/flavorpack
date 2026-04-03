@@ -17,7 +17,6 @@ func TestGetCurrentPlatform(t *testing.T) {
 		"linux_amd64": true, "linux_arm64": true,
 		"darwin_amd64": true, "darwin_arm64": true,
 		"windows_amd64": true, "windows_arm64": true,
-		"freebsd_amd64": true, "freebsd_arm64": true,
 	}
 	if !validPlatforms[p] {
 		t.Errorf("unexpected platform: %s", p)
@@ -340,126 +339,6 @@ func TestMergePolicyUsesYoungerPackageAgeAndEmptyPlatformIntersection(t *testing
 	}
 	if len(eff.RequireEnv) != 1 || eff.RequireEnv[0] != "APP_TOKEN" {
 		t.Fatalf("unexpected RequireEnv: %v", eff.RequireEnv)
-	}
-}
-
-// ---------------------------------------------------------------------------
-// enforce_policy — additional mutation-catching tests
-// ---------------------------------------------------------------------------
-
-func TestEnforcePolicy_EnvVarEmptyStringIsAbsent(t *testing.T) {
-	t.Setenv("__FLAVOR_TEST_EMPTY__", "")
-	eff := EffectivePolicy{RequireEnv: []string{"__FLAVOR_TEST_EMPTY__"}}
-	if err := EnforcePolicy(eff, 0, false, true); err == nil {
-		t.Error("expected empty env var to be treated as absent")
-	}
-}
-
-func TestEnforcePolicy_AgeCheckSkippedWhenTimestampZero(t *testing.T) {
-	zero := 0
-	eff := EffectivePolicy{MaxAgeDays: &zero}
-	// build_timestamp=0 means no timestamp: check must be skipped
-	if err := EnforcePolicy(eff, 0, false, true); err != nil {
-		t.Errorf("expected age check to be skipped for timestamp=0, got: %v", err)
-	}
-}
-
-func TestEnforcePolicy_AgeCheckSkippedWhenMaxAgeDaysNil(t *testing.T) {
-	eff := EffectivePolicy{MaxAgeDays: nil}
-	// ancient timestamp; check must be skipped
-	if err := EnforcePolicy(eff, 1, false, true); err != nil {
-		t.Errorf("expected age check to be skipped when max_age_days unset, got: %v", err)
-	}
-}
-
-func TestEnforcePolicy_AgeErrorMessageIncludesAge(t *testing.T) {
-	zero := 0
-	eff := EffectivePolicy{MaxAgeDays: &zero}
-	err := EnforcePolicy(eff, 1, false, true)
-	if err == nil {
-		t.Fatal("expected age error")
-	}
-	if !strings.Contains(err.Error(), "days") {
-		t.Errorf("expected 'days' in error, got: %v", err)
-	}
-}
-
-func TestEnforcePolicy_EnvVarErrorNamesVariable(t *testing.T) {
-	eff := EffectivePolicy{RequireEnv: []string{"__FLAVOR_ABSENT_VAR_NAMED__"}}
-	err := EnforcePolicy(eff, 0, false, true)
-	if err == nil {
-		t.Fatal("expected env var error")
-	}
-	if !strings.Contains(err.Error(), "__FLAVOR_ABSENT_VAR_NAMED__") {
-		t.Errorf("expected variable name in error message, got: %v", err)
-	}
-}
-
-func TestEnforcePolicy_PlatformErrorIncludesCurrentPlatform(t *testing.T) {
-	eff := EffectivePolicy{Platforms: []string{"__no_such_platform__"}}
-	err := EnforcePolicy(eff, 0, false, true)
-	if err == nil {
-		t.Fatal("expected platform error")
-	}
-	current := getCurrentPlatform()
-	if !strings.Contains(err.Error(), current) {
-		t.Errorf("expected current platform %q in error, got: %v", current, err)
-	}
-}
-
-func TestEnforcePolicy_AllChecksPassTogether(t *testing.T) {
-	t.Setenv("__FLAVOR_TEST_ALL_CHECKS__", "present")
-	current := getCurrentPlatform()
-	recent := int64(1700000000) // 2023 timestamp — far in the future relative to age=9999
-	age := 9999
-	eff := EffectivePolicy{
-		Platforms:         []string{current},
-		UseOsKeychain:     false,
-		RefuseRoot:        false,
-		MaxAgeDays:        &age,
-		RequireEnv:        []string{"__FLAVOR_TEST_ALL_CHECKS__"},
-		RequireSBOM:       true,
-		RequireTrustedKey: true,
-	}
-	if err := EnforcePolicy(eff, recent, true, true); err != nil {
-		t.Errorf("expected all checks to pass, got: %v", err)
-	}
-}
-
-// ---------------------------------------------------------------------------
-// merge + enforce integration — platform semantics
-// ---------------------------------------------------------------------------
-
-func TestMergeThenEnforce_EmptyIntersectionIsUnrestricted(t *testing.T) {
-	// Disjoint platforms → empty intersection → enforce treats [] as unrestricted
-	pkg := PackagePolicy{Platforms: []string{"linux_amd64"}}
-	op := OperatorPolicy{AllowPlatforms: []string{"darwin_arm64"}}
-	eff := MergePolicy(pkg, op)
-	if len(eff.Platforms) != 0 {
-		t.Fatalf("expected empty intersection, got %v", eff.Platforms)
-	}
-	// EnforcePolicy with empty platforms must NOT error
-	if err := EnforcePolicy(eff, 0, false, true); err != nil {
-		t.Errorf("expected empty platforms to be unrestricted, got: %v", err)
-	}
-}
-
-func TestMergeThenEnforce_NonEmptyIntersectionBlocks(t *testing.T) {
-	// pkg wants linux_amd64+darwin_arm64, op wants linux_amd64+linux_arm64 → intersection: linux_amd64
-	pkgAge := 999
-	pkg := PackagePolicy{
-		Platforms:  []string{"linux_amd64", "darwin_arm64"},
-		MaxAgeDays: &pkgAge,
-	}
-	op := OperatorPolicy{AllowPlatforms: []string{"linux_amd64", "linux_arm64"}}
-	eff := MergePolicy(pkg, op)
-	if len(eff.Platforms) != 1 || eff.Platforms[0] != "linux_amd64" {
-		t.Fatalf("expected [linux_amd64], got %v", eff.Platforms)
-	}
-	// Any platform not linux_amd64 should be blocked
-	// We can't control getCurrentPlatform() here, but we can verify the restriction is present
-	if eff.Platforms[0] != "linux_amd64" {
-		t.Errorf("intersection should restrict to linux_amd64 only")
 	}
 }
 

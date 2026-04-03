@@ -60,7 +60,7 @@ Numbered pipeline stages, each triggering the next:
 Six target platforms: `linux_amd64`, `linux_arm64`, `darwin_amd64`, `darwin_arm64`, `windows_amd64`, `windows_arm64`.
 
 - Linux builds use musl for static linking
-- Both Go and Rust launchers work on Windows (PE32 validated, CLI mode tested in CI)
+- Windows Rust launcher has known issues (Go launcher preferred on Windows)
 - Ed25519 signatures for package integrity verification
 
 ## Important Files

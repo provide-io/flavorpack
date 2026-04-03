@@ -22,19 +22,11 @@ from provide.foundation.file.directory import ensure_dir, ensure_parent_dir, saf
 from flavor.config.defaults import DEFAULT_DISK_SPACE_MULTIPLIER
 from flavor.config.policy import enforce_policy, load_operator_policy, merge_policy, parse_package_policy
 from flavor.config.trust import compute_key_fingerprint, is_key_trusted
-from flavor.psp.format_2025.constants import DEFAULT_SLOT_DESCRIPTOR_SIZE, OP_NONE, OPERATION_CHAINS
-from flavor.psp.format_2025.operations import pack_operations
+from flavor.psp.format_2025.constants import DEFAULT_SLOT_DESCRIPTOR_SIZE
 from flavor.psp.format_2025.reader import PSPFReader
 from flavor.psp.format_2025.targets import normalize_workenv_target
 from flavor.psp.format_2025.workenv import WorkEnvManager
 from flavor.psp.security import verify_package_integrity
-
-# Pre-computed operation chain values — derived from OPERATION_CHAINS (the canonical source).
-# Operations field is a packed 64-bit integer: each byte is one operation code.
-_OP_NONE = OP_NONE  # 0x00 — raw data, no processing
-_OP_TAR = pack_operations(OPERATION_CHAINS["tar"])
-_OP_GZIP = pack_operations(OPERATION_CHAINS["gzip"])
-_OP_TAR_GZ = pack_operations(OPERATION_CHAINS["tar.gz"])
 
 
 class PSPFLauncher(PSPFReader):
@@ -205,16 +197,16 @@ class PSPFLauncher(PSPFReader):
 
         # NOTE: Decoding logic must match Go/Rust implementations
         # Decode if needed
-        if slot_entry["operations"] == _OP_NONE:
+        if slot_entry["operations"] == 0:  # raw/none
             data = slot_data
-        elif slot_entry["operations"] == _OP_TAR:
+        elif slot_entry["operations"] == 0x01:  # tar
             data = slot_data  # Tar archives are extracted later
-        elif slot_entry["operations"] == _OP_GZIP:
+        elif slot_entry["operations"] == 0x10:  # gzip
             logger.debug(f"🗜️ Decompressing slot {slot_index} with gzip")
             import gzip
 
             data = gzip.decompress(slot_data)
-        elif slot_entry["operations"] == _OP_TAR_GZ:
+        elif slot_entry["operations"] == 0x1001:  # tar.gz
             data = slot_data  # Will be decompressed and extracted later
         else:
             logger.error(f"❌ Unsupported operations: {slot_entry['operations']}")
@@ -247,16 +239,8 @@ class PSPFLauncher(PSPFReader):
             logger.debug(f"📤 Extracting tarball {slot_name} to {workenv_dir}")
             try:
                 with tarfile.open(fileobj=io.BytesIO(data), mode="r:*") as tar:
-                    # "data" rejects absolute paths and .. but still allows symlinks;
-                    # we additionally strip symlinks to prevent link-based traversal.
-                    def _safe_filter(member: tarfile.TarInfo, path: str) -> tarfile.TarInfo | None:
-                        result = tarfile.data_filter(member, path)
-                        if result is not None and (result.issym() or result.islnk()):
-                            logger.warning(f"⚠️ Skipping symlink/hardlink in tarball: {result.name}")
-                            return None
-                        return result
-
-                    tar.extractall(path=workenv_dir, filter=_safe_filter)  # nosec B202
+                    # Use the filter parameter to avoid Python 3.14 deprecation warning
+                    tar.extractall(path=workenv_dir, filter="data")
 
                 if slot_name in {".", "{workenv}"}:
                     return workenv_dir
@@ -284,8 +268,7 @@ class PSPFLauncher(PSPFReader):
             return
 
         try:
-            mode = int(str(permissions), 8) & 0o777  # Strip setuid/setgid/sticky bits
-            output_path.chmod(mode)
+            output_path.chmod(int(str(permissions), 8))
         except (OSError, ValueError) as e:
             logger.warning(f"⚠️ Failed to apply slot permissions to {output_path}: {e}")
 
