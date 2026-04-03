@@ -9,6 +9,7 @@ import (
 )
 
 var executablePathFn = os.Executable
+var launchFn = format_2025.LaunchWithLogLevel
 
 func main() {
 	// Set up panic recovery to return specific exit code
@@ -29,5 +30,5 @@ func main() {
 	// Launch with error handling
 	// Note: LaunchWithLogLevel calls os.Exit directly on error
 	// All arguments are passed through - launcher only intercepts args when FLAVOR_LAUNCHER_CLI=1
-	format_2025.LaunchWithLogLevel(exePath, os.Args[1:], "", "")
+	launchFn(exePath, os.Args[1:], "", "")
 }
