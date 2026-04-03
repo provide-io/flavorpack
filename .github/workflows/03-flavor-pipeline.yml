@@ -401,7 +401,6 @@ jobs:
   build-flavor:
     name: 📦 Build Flavor ${{ matrix.platform }}
     needs: [setup, test, build-wheels]  # Still waits for both to complete
-    if: ${{ !inputs.freebsd_only || contains(matrix.platform, 'freebsd') }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
     strategy:
@@ -614,7 +613,6 @@ jobs:
   test-flavor-psp:
     name: 🧪 Test Flavor PSP ${{ matrix.platform }}
     needs: [setup, build-flavor]
-    if: ${{ !inputs.freebsd_only || contains(matrix.platform, 'freebsd') }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 10
     strategy:
