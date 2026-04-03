@@ -491,6 +491,16 @@ class PythonEnvironmentBuilder:
                 pyvenv_info.mode = 0o644
                 pyvenv_info.size = len(pyvenv_cfg)
                 tar.addfile(pyvenv_info, _io.BytesIO(pyvenv_cfg))
+                # Placeholder file to guarantee the site-packages directory is
+                # created by tar extractors that only create parent directories
+                # when extracting regular files (not from DIRTYPE entries alone).
+                sp_placeholder = tarfile.TarInfo(
+                    name=f"lib/python{self.python_version}/site-packages/.flavor_placeholder"
+                )
+                sp_placeholder.type = tarfile.REGTYPE
+                sp_placeholder.mode = 0o644
+                sp_placeholder.size = 0
+                tar.addfile(sp_placeholder, _io.BytesIO(b""))
             return
         logger.warning(
             "Creating placeholder Python tarball (non-Linux build only)",
