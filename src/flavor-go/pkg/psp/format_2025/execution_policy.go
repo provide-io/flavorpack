@@ -16,6 +16,9 @@ import (
 // PolicyVersion is the current supported policy file version.
 const PolicyVersion = 1
 
+var policyGOOS = runtime.GOOS
+var policyGOARCH = runtime.GOARCH
+
 var (
 	getSystemPolicyFileImpl = getSystemPolicyFile
 	getUserPolicyFileImpl   = getUserPolicyFile
@@ -169,7 +172,7 @@ func LoadOperatorPolicy() (OperatorPolicy, error) {
 }
 
 func getSystemPolicyFile() string {
-	if runtime.GOOS == "windows" {
+	if policyGOOS == "windows" {
 		if pd := os.Getenv("PROGRAMDATA"); pd != "" {
 			return filepath.Join(pd, "flavor", "policy.json")
 		}
@@ -440,8 +443,8 @@ func EnforcePolicy(policy EffectivePolicy, buildTimestamp int64, hasSBOM bool, k
 }
 
 func getCurrentPlatform() string {
-	osName := runtime.GOOS
-	switch runtime.GOOS {
+	osName := policyGOOS
+	switch policyGOOS {
 	case "linux":
 		osName = "linux"
 	case "darwin":
@@ -452,7 +455,7 @@ func getCurrentPlatform() string {
 		osName = "windows"
 	}
 	arch := "amd64"
-	if runtime.GOARCH == "arm64" {
+	if policyGOARCH == "arm64" {
 		arch = "arm64"
 	}
 	return osName + "_" + arch
