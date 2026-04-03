@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from unittest import mock
 
@@ -14,6 +15,8 @@ import pytest
 
 from flavor.config.policy import (
     EffectivePolicy,
+    EnforcementMode,
+    EnforcementPolicy,
     OperatorPolicy,
     PackagePolicy,
     enforce_policy,
@@ -182,6 +185,23 @@ def test_merge_returns_effective_policy_type() -> None:
     assert isinstance(result, EffectivePolicy)
 
 
+def test_merge_enforcement_propagated() -> None:
+    enf = EnforcementPolicy(default=EnforcementMode.WARN)
+    pkg = PackagePolicy()
+    op = OperatorPolicy(enforcement=enf)
+    result = merge_policy(pkg, op)
+    assert result.enforcement.default == EnforcementMode.WARN
+
+
+# ---------------------------------------------------------------------------
+# Helpers to write JSON policy files
+# ---------------------------------------------------------------------------
+
+
+def _write_policy(path: Path, data: dict) -> None:  # type: ignore[type-arg]
+    path.write_text(json.dumps(data), encoding="utf-8")
+
+
 # ---------------------------------------------------------------------------
 # load_operator_policy
 # ---------------------------------------------------------------------------
@@ -190,8 +210,8 @@ def test_merge_returns_effective_policy_type() -> None:
 def test_load_operator_policy_missing_file_returns_defaults(tmp_path: Path) -> None:
     """When no policy files exist, all fields should be at their permissive defaults."""
     with (
-        mock.patch("flavor.config.policy.get_system_config_dir", return_value=tmp_path / "system"),
-        mock.patch("flavor.config.policy.get_policy_file", return_value=tmp_path / "user" / "policy.toml"),
+        mock.patch("flavor.config.dirs.get_system_config_dir", return_value=tmp_path / "system"),
+        mock.patch("flavor.config.dirs.get_config_dir", return_value=tmp_path / "user"),
     ):
         op = load_operator_policy()
     assert op.require_trusted_key is False
@@ -203,16 +223,20 @@ def test_load_operator_policy_missing_file_returns_defaults(tmp_path: Path) -> N
 
 
 def test_load_operator_policy_system_only(tmp_path: Path) -> None:
-    """Load a real system policy.toml file."""
+    """Load a real system policy.json file."""
     system_dir = tmp_path / "system"
     system_dir.mkdir()
-    system_policy = system_dir / "policy.toml"
-    system_policy.write_text(
-        "[trust]\nrequire_trusted_key = true\n[execution]\nrefuse_root = true\nmax_age_days = 90\n"
+    _write_policy(
+        system_dir / "policy.json",
+        {
+            "version": 1,
+            "trust": {"require_trusted_key": True},
+            "execution": {"refuse_root": True, "max_age_days": 90},
+        },
     )
     with (
-        mock.patch("flavor.config.policy.get_system_config_dir", return_value=system_dir),
-        mock.patch("flavor.config.policy.get_policy_file", return_value=tmp_path / "no-user-policy.toml"),
+        mock.patch("flavor.config.dirs.get_system_config_dir", return_value=system_dir),
+        mock.patch("flavor.config.dirs.get_config_dir", return_value=tmp_path / "no-user"),
     ):
         op = load_operator_policy(system=True, user=False)
     assert op.require_trusted_key is True
@@ -221,14 +245,20 @@ def test_load_operator_policy_system_only(tmp_path: Path) -> None:
 
 
 def test_load_operator_policy_user_only(tmp_path: Path) -> None:
-    """Load a real user policy.toml file."""
-    user_policy = tmp_path / "policy.toml"
-    user_policy.write_text(
-        '[attestation]\nrequire_sbom = true\n[execution]\nallow_platforms = ["linux_amd64"]\n'
+    """Load a real user policy.json file."""
+    user_dir = tmp_path / "user"
+    user_dir.mkdir()
+    _write_policy(
+        user_dir / "policy.json",
+        {
+            "version": 1,
+            "attestation": {"require_sbom": True},
+            "execution": {"allow_platforms": ["linux_amd64"]},
+        },
     )
     with (
-        mock.patch("flavor.config.policy.get_system_config_dir", return_value=tmp_path / "no-system"),
-        mock.patch("flavor.config.policy.get_policy_file", return_value=user_policy),
+        mock.patch("flavor.config.dirs.get_system_config_dir", return_value=tmp_path / "no-system"),
+        mock.patch("flavor.config.dirs.get_config_dir", return_value=user_dir),
     ):
         op = load_operator_policy(system=False, user=True)
     assert op.require_sbom is True
@@ -239,15 +269,27 @@ def test_load_operator_policy_user_overrides_system(tmp_path: Path) -> None:
     """User policy keys override system policy keys in the same section."""
     system_dir = tmp_path / "system"
     system_dir.mkdir()
-    system_policy = system_dir / "policy.toml"
-    system_policy.write_text("[execution]\nrefuse_root = false\nmax_age_days = 180\n")
+    _write_policy(
+        system_dir / "policy.json",
+        {
+            "version": 1,
+            "execution": {"refuse_root": False, "max_age_days": 180},
+        },
+    )
 
-    user_policy = tmp_path / "policy.toml"
-    user_policy.write_text("[execution]\nrefuse_root = true\n")
+    user_dir = tmp_path / "user"
+    user_dir.mkdir()
+    _write_policy(
+        user_dir / "policy.json",
+        {
+            "version": 1,
+            "execution": {"refuse_root": True},
+        },
+    )
 
     with (
-        mock.patch("flavor.config.policy.get_system_config_dir", return_value=system_dir),
-        mock.patch("flavor.config.policy.get_policy_file", return_value=user_policy),
+        mock.patch("flavor.config.dirs.get_system_config_dir", return_value=system_dir),
+        mock.patch("flavor.config.dirs.get_config_dir", return_value=user_dir),
     ):
         op = load_operator_policy(system=True, user=True)
     # User overrides refuse_root; system max_age_days is retained
@@ -259,66 +301,65 @@ def test_load_operator_policy_system_false_skips_system(tmp_path: Path) -> None:
     """system=False should not read system policy even if the file exists."""
     system_dir = tmp_path / "system"
     system_dir.mkdir()
-    system_policy = system_dir / "policy.toml"
-    system_policy.write_text("[trust]\nrequire_trusted_key = true\n")
+    _write_policy(
+        system_dir / "policy.json",
+        {
+            "version": 1,
+            "trust": {"require_trusted_key": True},
+        },
+    )
 
     with (
-        mock.patch("flavor.config.policy.get_system_config_dir", return_value=system_dir),
-        mock.patch("flavor.config.policy.get_policy_file", return_value=tmp_path / "no-policy.toml"),
+        mock.patch("flavor.config.dirs.get_system_config_dir", return_value=system_dir),
+        mock.patch("flavor.config.dirs.get_config_dir", return_value=tmp_path / "no-user"),
     ):
         op = load_operator_policy(system=False, user=True)
     assert op.require_trusted_key is False
 
 
-def test_load_operator_policy_malformed_system_toml(tmp_path: Path) -> None:
-    """Malformed system TOML is a hard failure when the file exists."""
+def test_load_operator_policy_malformed_json(tmp_path: Path) -> None:
+    """Malformed JSON is a hard failure when the file exists."""
     system_dir = tmp_path / "system"
     system_dir.mkdir()
-    bad_system = system_dir / "policy.toml"
-    bad_system.write_bytes(b"[broken toml\nnot valid ===\n")
+    (system_dir / "policy.json").write_bytes(b"{broken json\nnot valid\n")
 
     with (
-        mock.patch("flavor.config.policy.get_system_config_dir", return_value=system_dir),
-        mock.patch("flavor.config.policy.get_policy_file", return_value=tmp_path / "no-policy.toml"),
-        pytest.raises(ValueError, match=r"policy\.toml"),
+        mock.patch("flavor.config.dirs.get_system_config_dir", return_value=system_dir),
+        mock.patch("flavor.config.dirs.get_config_dir", return_value=tmp_path / "no-user"),
+        pytest.raises(ValueError, match=r"policy\.json"),
     ):
         load_operator_policy(system=True, user=False)
 
 
-def test_load_operator_policy_malformed_user_toml(tmp_path: Path) -> None:
-    """Malformed user TOML is a hard failure when the file exists."""
-    bad_user = tmp_path / "policy.toml"
-    bad_user.write_bytes(b"[broken\nnot = valid ===\n")
+def test_load_operator_policy_missing_version(tmp_path: Path) -> None:
+    """Policy file without version field is rejected."""
+    user_dir = tmp_path / "user"
+    user_dir.mkdir()
+    (user_dir / "policy.json").write_text('{"trust": {"require_trusted_key": true}}')
 
     with (
-        mock.patch("flavor.config.policy.get_system_config_dir", return_value=tmp_path / "no-system"),
-        mock.patch("flavor.config.policy.get_policy_file", return_value=bad_user),
-        pytest.raises(ValueError, match=r"policy\.toml"),
-    ):
-        load_operator_policy(system=False, user=True)
-
-
-def test_load_operator_policy_user_non_dict_section(tmp_path: Path) -> None:
-    """Unexpected top-level scalars are rejected instead of being silently merged."""
-    user_policy = tmp_path / "policy.toml"
-    user_policy.write_text("version = 1\n[trust]\nrequire_trusted_key = true\n")
-
-    with (
-        mock.patch("flavor.config.policy.get_system_config_dir", return_value=tmp_path / "no-system"),
-        mock.patch("flavor.config.policy.get_policy_file", return_value=user_policy),
-        pytest.raises(ValueError, match=r"unknown policy section|unknown top-level key"),
+        mock.patch("flavor.config.dirs.get_system_config_dir", return_value=tmp_path / "no-system"),
+        mock.patch("flavor.config.dirs.get_config_dir", return_value=user_dir),
+        pytest.raises(ValueError, match=r"version"),
     ):
         load_operator_policy(system=False, user=True)
 
 
 def test_load_operator_policy_unknown_section_raises(tmp_path: Path) -> None:
     """Unknown sections are rejected to prevent silent policy drift."""
-    user_policy = tmp_path / "policy.toml"
-    user_policy.write_text("[mystery]\nflag = true\n")
+    user_dir = tmp_path / "user"
+    user_dir.mkdir()
+    _write_policy(
+        user_dir / "policy.json",
+        {
+            "version": 1,
+            "mystery": {"flag": True},
+        },
+    )
 
     with (
-        mock.patch("flavor.config.policy.get_system_config_dir", return_value=tmp_path / "no-system"),
-        mock.patch("flavor.config.policy.get_policy_file", return_value=user_policy),
+        mock.patch("flavor.config.dirs.get_system_config_dir", return_value=tmp_path / "no-system"),
+        mock.patch("flavor.config.dirs.get_config_dir", return_value=user_dir),
         pytest.raises(ValueError, match=r"unknown policy section"),
     ):
         load_operator_policy(system=False, user=True)
@@ -326,15 +367,48 @@ def test_load_operator_policy_unknown_section_raises(tmp_path: Path) -> None:
 
 def test_load_operator_policy_unknown_key_raises(tmp_path: Path) -> None:
     """Unknown keys in known sections are rejected to keep runtimes aligned."""
-    user_policy = tmp_path / "policy.toml"
-    user_policy.write_text("[trust]\nrequire_trusted_key = true\nsurprise = true\n")
+    user_dir = tmp_path / "user"
+    user_dir.mkdir()
+    _write_policy(
+        user_dir / "policy.json",
+        {
+            "version": 1,
+            "trust": {"require_trusted_key": True, "surprise": True},
+        },
+    )
 
     with (
-        mock.patch("flavor.config.policy.get_system_config_dir", return_value=tmp_path / "no-system"),
-        mock.patch("flavor.config.policy.get_policy_file", return_value=user_policy),
+        mock.patch("flavor.config.dirs.get_system_config_dir", return_value=tmp_path / "no-system"),
+        mock.patch("flavor.config.dirs.get_config_dir", return_value=user_dir),
         pytest.raises(ValueError, match=r"unknown policy key"),
     ):
         load_operator_policy(system=False, user=True)
+
+
+def test_load_operator_policy_with_enforcement(tmp_path: Path) -> None:
+    """Enforcement section is correctly parsed."""
+    user_dir = tmp_path / "user"
+    user_dir.mkdir()
+    _write_policy(
+        user_dir / "policy.json",
+        {
+            "version": 1,
+            "enforcement": {"default": "warn", "untrusted_key": "deny"},
+        },
+    )
+
+    with (
+        mock.patch("flavor.config.dirs.get_system_config_dir", return_value=tmp_path / "no-system"),
+        mock.patch("flavor.config.dirs.get_config_dir", return_value=user_dir),
+    ):
+        op = load_operator_policy(system=False, user=True)
+    assert op.enforcement.default == EnforcementMode.WARN
+    assert op.enforcement.untrusted_key == EnforcementMode.DENY
+
+
+# ---------------------------------------------------------------------------
+# enforce_policy with enforcement modes
+# ---------------------------------------------------------------------------
 
 
 def test_enforce_policy_rejects_unsupported_os_keychain() -> None:
@@ -343,6 +417,47 @@ def test_enforce_policy_rejects_unsupported_os_keychain() -> None:
 
     with pytest.raises(ValueError, match="use_os_keychain"):
         enforce_policy(policy, 0, False, True)
+
+
+def test_enforce_policy_warn_mode_returns_warnings() -> None:
+    """Warn mode adds to warnings list instead of raising."""
+    enf = EnforcementPolicy(default=EnforcementMode.WARN)
+    policy = EffectivePolicy(
+        platforms=["__nonexistent__"],
+        use_os_keychain=True,
+        require_sbom=True,
+        enforcement=enf,
+    )
+    warnings = enforce_policy(policy, 0, False, True)
+    assert len(warnings) >= 2
+    assert any("platform" in w for w in warnings)
+    assert any("keychain" in w for w in warnings)
+
+
+def test_enforce_policy_allow_mode_silent() -> None:
+    """Allow mode produces no warnings and no errors."""
+    enf = EnforcementPolicy(default=EnforcementMode.ALLOW)
+    policy = EffectivePolicy(
+        platforms=["__nonexistent__"],
+        use_os_keychain=True,
+        require_sbom=True,
+        require_trusted_key=True,
+        enforcement=enf,
+    )
+    warnings = enforce_policy(policy, 0, False, False)
+    assert warnings == []
+
+
+def test_enforce_policy_per_check_override() -> None:
+    """Per-check mode overrides default."""
+    enf = EnforcementPolicy(
+        default=EnforcementMode.DENY,
+        missing_sbom=EnforcementMode.WARN,
+    )
+    policy = EffectivePolicy(require_sbom=True, enforcement=enf)
+    warnings = enforce_policy(policy, 0, False, True)
+    assert len(warnings) == 1
+    assert "SBOM" in warnings[0]
 
 
 # ---------------------------------------------------------------------------
@@ -366,6 +481,7 @@ def test_operator_policy_defaults() -> None:
     assert o.max_age_days is None
     assert o.allow_platforms == []
     assert o.require_sbom is False
+    assert o.enforcement.default == EnforcementMode.DENY
 
 
 def test_effective_policy_defaults() -> None:
@@ -377,6 +493,7 @@ def test_effective_policy_defaults() -> None:
     assert e.require_trusted_key is False
     assert e.use_os_keychain is False
     assert e.require_sbom is False
+    assert e.enforcement.default == EnforcementMode.DENY
 
 
 # 🌶️📦🔚
