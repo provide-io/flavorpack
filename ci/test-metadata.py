@@ -9,7 +9,8 @@ Consolidates test metadata collection, results combining, and platform metadata 
 Usage:
     test-metadata.py collect [output_dir]  - Collect test metadata
     test-metadata.py combine <input_dir> [output_file]  - Combine test results
-    test-metadata.py platform <platform> <version> [cache_hit]  - Generate platform metadata"""
+    test-metadata.py platform <platform> <version> [cache_hit]  - Generate platform metadata
+    test-metadata.py summary <report_file> <version>  - Write build summary to GITHUB_STEP_SUMMARY"""
 
 from datetime import UTC, datetime
 import json
@@ -275,6 +276,25 @@ def generate_platform_metadata(platform_name: str, version: str, cache_hit: bool
     print(f"   Output: {output_file}")
 
 
+def write_build_summary(report_file: Path, version: str) -> None:
+    """Write a build summary to GITHUB_STEP_SUMMARY (or stdout if not set)."""
+    lines = ["## 🔨 Helper Build Summary", "", f"**Version:** {version}", ""]
+    if report_file.exists():
+        data = json.loads(report_file.read_text())
+        s = data.get("summary", {})
+        lines += [
+            f"**Platforms tested:** {s.get('platforms_tested', 0)}",
+            f"**Passed:** {s.get('passed', 0)}",
+            f"**Failed:** {s.get('failed', 0)}",
+        ]
+    step_summary = os.environ.get("GITHUB_STEP_SUMMARY", "")
+    if step_summary:
+        with Path(step_summary).open("a") as f:
+            f.write("\n".join(lines) + "\n")
+    else:
+        print("\n".join(lines))
+
+
 def main() -> None:
     """Main entry point."""
     if len(sys.argv) < 2:
@@ -303,6 +323,12 @@ def main() -> None:
         version = sys.argv[3]
         cache_hit = sys.argv[4].lower() == "true" if len(sys.argv) > 4 else False
         generate_platform_metadata(platform_name, version, cache_hit)
+
+    elif command == "summary":
+        if len(sys.argv) < 4:
+            print("Usage: test-metadata.py summary <report_file> <version>")
+            sys.exit(1)
+        write_build_summary(Path(sys.argv[2]), sys.argv[3])
 
     else:
         print(f"Unknown command: {command}")
