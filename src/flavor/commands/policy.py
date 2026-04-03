@@ -7,9 +7,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC
 import json
-import os
 from pathlib import Path
 import sys
 
@@ -22,7 +20,6 @@ from flavor.config.policy import (
     POLICY_VERSION,
     enforce_policy,
     get_current_platform,
-    is_privileged_user,
     load_operator_policy,
     merge_policy,
     parse_package_policy,
@@ -123,9 +120,8 @@ def policy_show() -> None:
 
 @policy_group.command("check")
 @click.argument("package_file", type=click.Path(exists=True, dir_okay=False, resolve_path=True))
-def policy_check(package_file: str) -> None:  # noqa: C901
+def policy_check(package_file: str) -> None:
     """Dry-run: would this package be allowed to run on this host?"""
-    from datetime import datetime
 
     from flavor.psp.format_2025.reader import PSPFReader
 
@@ -140,54 +136,36 @@ def policy_check(package_file: str) -> None:  # noqa: C901
     effective = merge_policy(pkg_policy, op_policy)
     has_sbom = any(slot.get("lifecycle") == "attestation" for slot in metadata.get("slots", []))
 
-    current_platform = get_current_platform()
-    if effective.platforms and current_platform not in effective.platforms:
-        perr(f"❌ Platform not permitted: {current_platform} not in {effective.platforms}")
-        sys.exit(1)
-
-    if effective.refuse_root and is_privileged_user():
-        perr("❌ Package refuses to run as root")
-        sys.exit(1)
-
-    if effective.max_age_days is not None:
-        build_ts = index.build_timestamp
-        if build_ts > 0:
-            age_days = (datetime.now(UTC).timestamp() - build_ts) / 86400
-            if age_days > effective.max_age_days:
-                perr(f"❌ Package is {int(age_days)} days old; policy requires max {effective.max_age_days}")
-                sys.exit(1)
-
-    missing = [var for var in effective.require_env if not os.environ.get(var)]
-    if missing:
-        for var in missing:
-            perr(f"❌ Required environment variable not set: {var}")
-        sys.exit(1)
-
-    if effective.require_sbom and not has_sbom:
-        perr("❌ Package built without attestation slot — operator policy requires SBOM")
-        sys.exit(1)
-
+    # Validate key metadata (independent of enforcement modes)
     metadata_error = _validate_package_key_metadata(index)
     if metadata_error:
         perr(f"❌ {metadata_error}")
         sys.exit(1)
 
+    # Determine key trust for enforcement
+    key_trusted = True
     if effective.require_trusted_key:
-        trusted, error = _check_package_key_trust(index)
+        trusted, _error = _check_package_key_trust(index)
         if not trusted:
-            perr(f"❌ {error}")
-            sys.exit(1)
+            key_trusted = False
 
+    # Run enforcement (respects deny/warn/allow modes)
     try:
-        enforce_policy(effective, int(index.build_timestamp), has_sbom, True)
+        warnings = enforce_policy(effective, int(index.build_timestamp), has_sbom, key_trusted)
     except ValueError as exc:
         perr(f"❌ {exc}")
         sys.exit(1)
 
+    for warning in warnings:
+        perr(f"⚠️  {warning}")
+
+    current_platform = get_current_platform()
     pout("✓ Package would be allowed on this host.")
     pout(f"  Platform: {current_platform}")
     pout(f"  refuse_root: {effective.refuse_root}")
     pout(f"  max_age_days: {effective.max_age_days or '(no limit)'}")
+    if warnings:
+        pout(f"  warnings: {len(warnings)}")
 
 
 def _validate_package_key_metadata(index: object) -> str | None:
