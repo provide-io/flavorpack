@@ -94,6 +94,33 @@ func TestIsValid(t *testing.T) {
 		}
 	})
 
+	t.Run("rejects name mismatch", func(t *testing.T) {
+		dir := prepareValidWorkenv(t)
+		if IsValid(dir, "other-name", "1.0.0", "abc123") {
+			t.Fatal("expected name mismatch to invalidate workenv")
+		}
+	})
+
+	t.Run("rejects file where directory expected", func(t *testing.T) {
+		dir := t.TempDir()
+		// Write "bin" as a FILE instead of a directory.
+		if err := os.WriteFile(filepath.Join(dir, "bin"), []byte("not a dir"), 0o600); err != nil {
+			t.Fatalf("WriteFile(bin) error = %v", err)
+		}
+		if err := os.Mkdir(filepath.Join(dir, "lib"), 0o755); err != nil {
+			t.Fatalf("Mkdir(lib) error = %v", err)
+		}
+		writeCompleteMarker(t, dir, ValidationMarker{
+			Timestamp:   time.Now(),
+			PackageName: "flavorpack",
+			Version:     "1.0.0",
+			Checksum:    "abc123",
+		})
+		if IsValid(dir, "flavorpack", "1.0.0", "abc123") {
+			t.Fatal("expected file-as-directory to invalidate workenv")
+		}
+	})
+
 	t.Run("rejects missing directory", func(t *testing.T) {
 		dir := t.TempDir()
 		writeCompleteMarker(t, dir, ValidationMarker{

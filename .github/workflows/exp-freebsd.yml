@@ -46,7 +46,8 @@ jobs:
 
             # ── Install Go ──────────────────────────────────────────────
             echo "🐹 Installing Go..."
-            pkg install -y go
+            sudo env IGNORE_OSVERSION=yes pkg update -f
+            sudo env IGNORE_OSVERSION=yes pkg install -y go
 
             GO_VERSION=$(go version)
             echo "✅ $GO_VERSION"

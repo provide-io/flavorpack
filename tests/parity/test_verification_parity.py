@@ -7,6 +7,7 @@ consistent across Python, Go and Rust launchers/readers.
 from __future__ import annotations
 
 import hashlib
+from pathlib import Path
 import struct
 import zlib
 
@@ -160,15 +161,14 @@ def test_package_size_validation() -> None:
 @pytest.mark.parity_rust("PASS")
 def test_fail_closed_on_error() -> None:
     """verify_integrity returns valid=False (fail-closed) on any exception."""
-    from unittest.mock import MagicMock
+    from unittest.mock import Mock
 
     from flavor.psp.format_2025.reader import PSPFReader
 
-    reader = MagicMock(spec=PSPFReader)
+    reader = PSPFReader(Path("/nonexistent.psp"))
     # Make verify_magic_trailer raise so verify_integrity hits the except path
-    reader.verify_magic_trailer.side_effect = RuntimeError("forced error")
-    # Call the *real* verify_integrity with the broken mock as self
-    result = PSPFReader.verify_integrity(reader)
+    reader.verify_magic_trailer = Mock(side_effect=RuntimeError("forced error"))  # type: ignore[method-assign]
+    result = reader.verify_integrity()
 
     assert result["valid"] is False
     assert result["tamper_detected"] is True

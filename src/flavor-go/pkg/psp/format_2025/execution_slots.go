@@ -74,7 +74,7 @@ func extractAndMergeSlotsToWorkenv(
 		_ = os.RemoveAll(tempExtractDir)
 		return nil, fmt.Errorf("failed to marshal metadata: %w", err)
 	}
-	if err := os.WriteFile(metadataFile, metadataJSON, 0644); err != nil {
+	if err := os.WriteFile(metadataFile, metadataJSON, FilePerms); err != nil {
 		logger.Error("❌ Failed to write metadata", "error", err)
 		_ = os.RemoveAll(tempExtractDir)
 		return nil, fmt.Errorf("failed to write metadata: %w", err)
@@ -99,7 +99,7 @@ func extractAndMergeSlotsToWorkenv(
 		nameJ := entries[j].Name()
 
 		// Extract slot numbers for slot_N_* directories
-		var slotI, slotJ int = -1, -1
+		slotI, slotJ := -1, -1
 		if _, err := fmt.Sscanf(nameI, "slot_%d_", &slotI); err == nil && entries[i].IsDir() {
 			// nameI is a slot directory
 		} else {
