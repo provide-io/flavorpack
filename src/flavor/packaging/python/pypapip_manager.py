@@ -9,6 +9,7 @@ and manylinux2014 compatibility for maximum Linux distribution coverage.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 import sys
 
@@ -204,12 +205,14 @@ class PyPaPipManager:
                 logger.debug(f"Added platform constraint: {self.MANYLINUX_TAG}_aarch64")
                 logger.warning("⚠️ grpcio on CentOS 7 ARM64 may have C++ ABI issues")
 
-        # When a local wheel directory is provided, check it before hitting PyPI.
-        # This supplies C-extension wheels for platforms with no PyPI binary wheels
-        # (e.g. FreeBSD cffi, cryptography) while still downloading pure-Python
-        # packages from PyPI with --only-binary :all:.
-        if find_links:
-            cmd.extend(["--find-links", find_links])
+        # When FLAVOR_WHEEL_CACHE is set, add --find-links so pip checks the local
+        # pre-built wheel directory before falling back to PyPI.  This is the only
+        # reliable way to supply C-extension wheels for platforms that have no PyPI
+        # binary wheels (e.g. FreeBSD cffi, cryptography) while still downloading
+        # pure-Python packages from PyPI with --only-binary :all:.
+        wheel_cache = os.environ.get(ENV_WHEEL_CACHE)
+        if wheel_cache:
+            cmd.extend(["--find-links", wheel_cache])
 
         if requirements_file:
             cmd.extend(["-r", requirements_file.as_posix()])
