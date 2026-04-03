@@ -12,7 +12,7 @@ on:
 jobs:
   build-and-test:
     name: 🐡 FreeBSD ${{ inputs.freebsd_version || '14.2' }} amd64
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: 📥 Checkout
@@ -29,7 +29,7 @@ jobs:
           echo "📦 Version: $VERSION"
 
       - name: 🐡 Build and test inside FreeBSD VM
-        uses: cross-platform-actions/action@v0.27.0
+        uses: cross-platform-actions/action@v0.32.0
         with:
           operating_system: freebsd
           version: ${{ inputs.freebsd_version || '14.2' }}

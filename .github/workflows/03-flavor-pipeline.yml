@@ -11,6 +11,11 @@ on:
         description: 'Test filter (e.g., -k test_name or -m marker)'
         type: string
         required: false
+      platforms:
+        description: 'Comma-separated platforms to build/test (e.g. freebsd_amd64,freebsd_arm64). Empty = all.'
+        type: string
+        required: false
+        default: ''
   
   workflow_run:
     workflows: ["01 🥘 Helper Prep"]
@@ -21,11 +26,13 @@ jobs:
   # Setup and download helper artifacts
   setup:
     name: 🔧 Setup & Get Helpers
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       helper_version: ${{ steps.helpers.outputs.version }}
       helper_run_id: ${{ steps.helpers.outputs.run_id }}
       test_matrix: ${{ steps.matrix.outputs.matrix }}
+      build_matrix: ${{ steps.build_matrix.outputs.matrix }}
+      psp_test_matrix: ${{ steps.build_matrix.outputs.psp_test_matrix }}
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
@@ -39,7 +46,7 @@ jobs:
         id: helpers
         run: |
           # Source the script to get RUN_ID and VERSION
-          source .github/scripts/get-helper-run.sh "${{ inputs.helper_run_id }}"
+          source ci/get-helper-run.sh "${{ inputs.helper_run_id }}"
           
           echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
@@ -68,13 +75,13 @@ jobs:
           cat > matrix.json << 'EOF'
           {
             "include": [
-              {"name": "unit", "runner": "ubuntu-latest", "marker": "unit", "timeout": 10},
-              {"name": "integration", "runner": "ubuntu-latest", "marker": "integration", "timeout": 20},
-              {"name": "security", "runner": "ubuntu-latest", "marker": "security", "timeout": 15},
-              {"name": "format-2025", "runner": "ubuntu-latest", "path": "tests/format_2025", "timeout": 30},
-              {"name": "packaging", "runner": "ubuntu-latest", "path": "tests/packaging", "timeout": 25},
-              {"name": "cross-language", "runner": "ubuntu-latest", "marker": "cross_language", "timeout": 30},
-              {"name": "parity", "runner": "ubuntu-latest", "marker": "parity", "timeout": 10, "parity_report": true}
+              {"name": "unit", "runner": "ubuntu-24.04", "marker": "unit", "timeout": 10},
+              {"name": "integration", "runner": "ubuntu-24.04", "marker": "integration", "timeout": 20},
+              {"name": "security", "runner": "ubuntu-24.04", "marker": "security", "timeout": 15},
+              {"name": "format-2025", "runner": "ubuntu-24.04", "path": "tests/format_2025", "timeout": 30},
+              {"name": "packaging", "runner": "ubuntu-24.04", "path": "tests/packaging", "timeout": 25},
+              {"name": "cross-language", "runner": "ubuntu-24.04", "marker": "cross_language", "timeout": 30},
+              {"name": "parity", "runner": "ubuntu-24.04", "marker": "parity", "timeout": 10, "parity_report": true}
             ]
           }
           EOF
@@ -82,6 +89,10 @@ jobs:
           MATRIX=$(cat matrix.json | jq -c .)
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
           echo "Test matrix: $MATRIX"
+
+      - name: 📦 Define build matrix
+        id: build_matrix
+        run: ci/build-flavor-matrix.sh "${{ inputs.platforms }}"
 
   # Run tests in parallel
   test:
@@ -106,7 +117,7 @@ jobs:
       
       - name: 🔧 Extract helpers
         run: |
-          .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_arm64"
+          ci/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_arm64 freebsd_amd64 freebsd_arm64"
 
           # List available helpers
           ls -la helpers/bin/
@@ -139,7 +150,7 @@ jobs:
           if [ "${{ matrix.parity_report }}" = "true" ]; then
             EXTRA_ARGS="--parity-report"
           fi
-          .github/scripts/run-tests.sh "${{ matrix.marker }}" "${{ matrix.path }}" "${{ inputs.test_filter }}" "$EXTRA_ARGS"
+          ci/run-tests.sh "${{ matrix.marker }}" "${{ matrix.path }}" "${{ inputs.test_filter }}" "$EXTRA_ARGS"
         env:
           FLAVOR_REQUIRE_HELPERS: "1"
 
@@ -154,7 +165,7 @@ jobs:
       - name: 📊 Collect Test Metadata
         if: always()
         run: |
-          python3 .github/scripts/test-metadata.py collect test-metadata
+          python3 ci/test-metadata.py collect test-metadata
         continue-on-error: true
       
       - name: 📊 Test Summary
@@ -202,7 +213,7 @@ jobs:
       matrix:
         include:
           - platform: linux_amd64
-            runner: ubuntu-latest
+            runner: ubuntu-24.04
             python_platform: manylinux2014_x86_64
           - platform: linux_arm64
             runner: ubuntu-24.04-arm
@@ -220,6 +231,20 @@ jobs:
           - platform: windows_arm64
             runner: windows-11-arm
             python_platform: win_arm64
+          - platform: freebsd_amd64
+            runner: ubuntu-24.04
+            # PEP 425 has no backward-compat expansion for FreeBSD (unlike macOS).
+            # The tag must exactly match sysconfig.get_platform() on the target VM.
+            # cross-platform-actions version:'14.2' → freebsd_14_2_release_amd64.
+            python_platform: freebsd_14_2_release_amd64
+            continue_on_error: true
+          - platform: freebsd_arm64
+            runner: ubuntu-24.04
+            # FreeBSD arm64 sysconfig.get_platform() returns freebsd_14_2_release_arm64
+            # (not aarch64 — FreeBSD uses 'arm64' in its platform string, unlike Linux).
+            python_platform: freebsd_14_2_release_arm64
+            continue_on_error: true
+    continue-on-error: ${{ matrix.continue_on_error == true }}
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
@@ -243,14 +268,34 @@ jobs:
         with:
           enable-cache: true
 
-      - name: 📥 Download platform-specific helpers
+      - name: 📥 Download Go helpers
         uses: dawidd6/action-download-artifact@v19
+        continue-on-error: true
+        with:
+          workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
+          name: flavor-go-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
+          path: ./helpers-dist
+
+      - name: 📥 Download Rust helpers
+        uses: dawidd6/action-download-artifact@v19
+        continue-on-error: true
+        with:
+          workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
+          name: flavor-rust-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
+          path: ./helpers-dist
+
+      - name: 📥 Download combined helpers (FreeBSD only)
+        if: ${{ startsWith(matrix.platform, 'freebsd') }}
+        uses: dawidd6/action-download-artifact@v19
+        continue-on-error: true
         with:
           workflow: 01-helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
           path: ./helpers-dist
-      
+
       - name: 🔧 Extract and organize helpers
         shell: bash
         run: |
@@ -258,7 +303,7 @@ jobs:
           mkdir -p src/flavor/helpers/bin
           
           # Extract platform-specific helpers
-          .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "${{ matrix.platform }}"
+          ci/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "${{ matrix.platform }}"
           
           # Copy ONLY the versioned platform-specific helpers to the package location
           echo "Copying ONLY versioned ${{ matrix.platform }} helpers to src/flavor/helpers/bin..."
@@ -326,7 +371,7 @@ jobs:
         shell: bash
         run: |
           source .venv/bin/activate 2>/dev/null || source .venv/Scripts/activate 2>/dev/null
-          .github/scripts/build-platform-wheel.sh "${{ matrix.python_platform }}"
+          ci/build-platform-wheel.sh "${{ matrix.python_platform }}"
       
       - name: 🔍 Validate wheel structure
         shell: bash
@@ -367,36 +412,14 @@ jobs:
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - platform: linux_amd64
-            runner: ubuntu-latest
-            python_platform: manylinux2014_x86_64
-          - platform: linux_arm64
-            runner: ubuntu-24.04-arm
-            python_platform: manylinux2014_aarch64
-          - platform: darwin_amd64
-            runner: macos-15-intel  # Intel Mac
-            python_platform: macosx_10_9_x86_64
-          - platform: darwin_arm64
-            runner: macos-15  # M1 Mac
-            python_platform: macosx_11_0_arm64
-          # Windows re-enabled (continue-on-error: DNS failures are common on Windows runners)
-          - platform: windows_amd64
-            runner: windows-2025
-            python_platform: win_amd64
-            continue_on_error: true
-          - platform: windows_arm64
-            runner: windows-11-arm
-            python_platform: win_arm64
-
+      matrix: ${{ fromJson(needs.setup.outputs.build_matrix) }}
     continue-on-error: ${{ matrix.continue_on_error == true }}
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
         with:
           persist-credentials: false
-      
+
       # setup-python MUST come before setup-uv here.
       # uv's python-build-standalone has no Python 3.11 ARM64 Windows build —
       # it only added Windows ARM64 support starting with Python 3.13.
@@ -421,27 +444,86 @@ jobs:
           name: flavor-wheel-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
           path: ./wheel-dist
       
-      - name: 📥 Download helper artifacts
+      - name: 📥 Download Go helpers
         uses: dawidd6/action-download-artifact@v19
+        continue-on-error: true
         with:
           workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
+          name: flavor-go-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
+          path: ./helpers-dist
+
+      - name: 📥 Download Rust helpers
+        uses: dawidd6/action-download-artifact@v19
+        continue-on-error: true
+        with:
+          workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
+          name: flavor-rust-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
+          path: ./helpers-dist
+
+      - name: 📥 Download combined helpers (FreeBSD only)
+        if: ${{ matrix.vm_arch != '' }}
+        uses: dawidd6/action-download-artifact@v19
+        continue-on-error: true
+        with:
+          workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
           path: ./helpers-dist
-      
+
       - name: 🔧 Extract helpers
         shell: bash
         run: |
-          .github/scripts/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "${{ matrix.platform }}"
+          ci/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "${{ matrix.platform }}"
           ls -la helpers/bin/
       
+      - name: 🔧 Stage wheel for FreeBSD VM
+        if: ${{ matrix.vm_arch != '' }}
+        shell: bash
+        run: |
+          mkdir -p _stage
+          WHEEL=$(find wheel-dist -name "flavorpack-*.whl" | head -1)
+          if [ -n "$WHEEL" ]; then
+            cp "$WHEEL" _stage/
+            echo "Staged: $(basename "$WHEEL")"
+          else
+            echo "❌ No wheel found in wheel-dist/"
+            ls wheel-dist/ || true
+            exit 1
+          fi
+
+      - name: 📦 Build Flavor PSP (FreeBSD VM)
+        if: ${{ matrix.vm_arch != '' }}
+        uses: cross-platform-actions/action@v0.32.0
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: ${{ matrix.vm_arch }}
+          shell: bash
+          sync_files: true
+          run: |
+            ci/build-flavor-freebsd.sh "${{ matrix.platform }}" "${{ needs.setup.outputs.helper_version }}"
+
+      - name: 📤 Upload Flavor package (FreeBSD)
+        if: ${{ matrix.vm_arch != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: flavor-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
+          path: _stage/artifacts/flavor-*.psp
+
       - name: 📦 Install Flavor from wheel
+        if: ${{ matrix.vm_arch == '' }}
         shell: bash
         run: |
           export PATH="$HOME/.local/bin:$PATH"
-          bash .github/scripts/install-flavor-wheel.sh wheel-dist "${{ matrix.platform }}"
-      
+          bash ci/install-flavor-wheel.sh wheel-dist "${{ matrix.platform }}"
+
       - name: 🔧 Prepare Flavor build
         id: prepare
+        if: ${{ matrix.vm_arch == '' }}
         shell: bash
         run: |
           # Determine binary extension for Windows
@@ -475,13 +557,15 @@ jobs:
           echo "wheel=$WHEEL" >> $GITHUB_OUTPUT
 
       - name: 📦 Pre-warm wheel cache for offline PSPF build
+        if: ${{ matrix.vm_arch == '' }}
         shell: bash
         run: |
           export PATH="$HOME/.local/bin:$PATH"
-          bash .github/scripts/prewarm-wheel-cache.sh "$GITHUB_WORKSPACE/.flavor-wheel-cache"
+          bash ci/prewarm-wheel-cache.sh "$GITHUB_WORKSPACE/.flavor-wheel-cache"
         continue-on-error: true
 
       - name: 🔨 Build Flavor PSP using itself
+        if: ${{ matrix.vm_arch == '' }}
         shell: bash
         run: |
           export PATH="$HOME/.local/bin:$PATH"
@@ -490,9 +574,10 @@ jobs:
           export PYTHONIOENCODING=utf-8
           export PYTHONUTF8=1
           export FLAVOR_LOG_LEVEL=trace
-          .github/scripts/build-flavor-self.sh "${{ matrix.platform }}" "${{ needs.setup.outputs.helper_version }}" "${{ steps.prepare.outputs.wheel }}" "${{ steps.prepare.outputs.launcher }}"
-      
+          ci/build-flavor-self.sh "${{ matrix.platform }}" "${{ needs.setup.outputs.helper_version }}" "${{ steps.prepare.outputs.wheel }}" "${{ steps.prepare.outputs.launcher }}"
+
       - name: 📤 Upload Flavor package
+        if: ${{ matrix.vm_arch == '' }}
         uses: actions/upload-artifact@v7
         with:
           name: flavor-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
@@ -508,43 +593,60 @@ jobs:
     timeout-minutes: 10
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - platform: linux_amd64
-            runner: ubuntu-latest
-          - platform: linux_arm64
-            runner: ubuntu-24.04-arm
-          - platform: darwin_amd64
-            runner: macos-15-intel
-          - platform: darwin_arm64
-            runner: macos-15
-          # Windows re-enabled
-          - platform: windows_amd64
-            runner: windows-2025
-          - platform: windows_arm64
-            runner: windows-11-arm
-
+      matrix: ${{ fromJson(needs.setup.outputs.psp_test_matrix) }}
+    continue-on-error: ${{ matrix.continue_on_error == true }}
     steps:
       - name: 📥 Checkout scripts
         uses: actions/checkout@v6
         with:
           persist-credentials: false
           sparse-checkout: |
-            .github/scripts
+            ci/
           sparse-checkout-cone-mode: false
-      
+
       - name: 📥 Download Flavor package
         uses: actions/download-artifact@v8
         with:
           name: flavor-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
           path: ./
-      
+
+      - name: 🔧 Stage PSP for FreeBSD VM
+        if: ${{ matrix.vm_arch != '' }}
+        shell: bash
+        run: |
+          mkdir -p _stage
+          PSP=$(find . -maxdepth 3 -name "flavor-*.psp" | head -1)
+          if [ -n "$PSP" ]; then
+            cp "$PSP" _stage/
+            echo "Staged: $(basename "$PSP")"
+          else
+            echo "❌ No PSP found to stage"
+            find . -type f | head -20
+            exit 1
+          fi
+
+      - name: 🧪 Test Flavor PSP self-contained (FreeBSD VM)
+        if: ${{ matrix.vm_arch != '' }}
+        uses: cross-platform-actions/action@v0.32.0
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+          FLAVOR_LOG_LEVEL: trace
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: ${{ matrix.vm_arch }}
+          shell: bash
+          sync_files: runner-to-vm
+          run: |
+            ci/test-flavor-psp-freebsd.sh "${{ matrix.platform }}"
+
       - name: 🧪 Test Flavor PSP self-contained
+        if: ${{ matrix.vm_arch == '' }}
         shell: bash
         env:
           FLAVOR_LOG_LEVEL: trace
         run: |
-          .github/scripts/test-flavor-self-contained.sh "${{ matrix.platform }}"
+          ci/test-flavor-self-contained.sh "${{ matrix.platform }}"
       
       - name: 📤 Upload results
         if: always()
@@ -559,7 +661,7 @@ jobs:
     name: ✅ Validate & Summary
     needs: [setup, test, build-wheels, build-flavor, test-flavor-psp]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6

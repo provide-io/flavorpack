@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 echo "ℹ️ System Info Utility"
 echo "  Kernel: $(uname -r)"
 echo "  Load: $(uptime | awk -F'load average:' '{print $2}')"

@@ -9,6 +9,10 @@ import (
 	"github.com/hashicorp/go-hclog"
 )
 
+var ioCopyFn = io.Copy
+var osStatSrcFn = os.Stat
+var osReadFileFn = os.ReadFile
+
 // copyFile copies a single file from src to dst
 func copyFile(src, dst string) error {
 	sourceFile, err := os.Open(src)
@@ -23,12 +27,12 @@ func copyFile(src, dst string) error {
 	}
 	defer func() { _ = destFile.Close() }()
 
-	if _, err := io.Copy(destFile, sourceFile); err != nil {
+	if _, err := ioCopyFn(destFile, sourceFile); err != nil {
 		return err
 	}
 
 	// Copy file permissions
-	sourceInfo, err := os.Stat(src)
+	sourceInfo, err := osStatSrcFn(src)
 	if err != nil {
 		return err
 	}
@@ -104,7 +108,7 @@ func fixShebangs(binDir, oldPrefix, newPrefix string, logger hclog.Logger) error
 		}
 
 		// Read entire file
-		content, err := os.ReadFile(scriptPath)
+		content, err := osReadFileFn(scriptPath)
 		if err != nil {
 			continue
 		}

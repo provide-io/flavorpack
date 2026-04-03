@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Test all builder/launcher combinations with pretaster
 
 # NOTE: DO NOT use 'set -e' here - we want to test ALL combinations

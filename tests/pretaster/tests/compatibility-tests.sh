@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # compatibility-tests.sh - Test binary compatibility across Linux distributions
 # This tests that our static binaries work on various Linux distributions

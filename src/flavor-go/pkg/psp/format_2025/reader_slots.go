@@ -15,6 +15,11 @@ import (
 	"github.com/hashicorp/go-hclog"
 )
 
+var tarMkdirAllFn = os.MkdirAll
+var tarIoCopyFn = io.Copy
+var tarOutCloseFn = func(f *os.File) error { return f.Close() }
+var tarChmodFn = os.Chmod
+
 // ReadSlot reads and decompresses a slot by index
 func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 	index, err := r.ReadIndex()
@@ -28,13 +33,13 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 
 	// Read slot table entry (64 bytes per entry)
 	slotTableEntryOffset := int64(index.SlotTableOffset) + int64(slotIndex*64)
-	if _, err := r.file.Seek(slotTableEntryOffset, io.SeekStart); err != nil {
+	if _, err := fileSeekFn(r.file, slotTableEntryOffset, io.SeekStart); err != nil {
 		return nil, err
 	}
 
 	// Read slot descriptor (64 bytes total)
 	var entryData [64]byte
-	if _, err := r.file.Read(entryData[:]); err != nil {
+	if _, err := fileReadFn(r.file, entryData[:]); err != nil {
 		return nil, err
 	}
 
@@ -45,13 +50,13 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 	}
 
 	// Read slot data
-	if _, err := r.file.Seek(int64(entry.Offset), io.SeekStart); err != nil {
+	if _, err := fileSeekFn(r.file, int64(entry.Offset), io.SeekStart); err != nil {
 		return nil, err
 	}
 
 	// Read compressed data
 	slotData := make([]byte, entry.Size)
-	if _, err := r.file.Read(slotData); err != nil {
+	if _, err := fileReadFn(r.file, slotData); err != nil {
 		return nil, err
 	}
 
@@ -176,12 +181,12 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 
 	// Read slot table entry (64 bytes per entry) to get permissions
 	slotTableEntryOffset := int64(index.SlotTableOffset) + int64(slotIndex*64)
-	if _, err := r.file.Seek(slotTableEntryOffset, io.SeekStart); err != nil {
+	if _, err := fileSeekFn(r.file, slotTableEntryOffset, io.SeekStart); err != nil {
 		return "", err
 	}
 
 	var entryData [64]byte
-	if _, err := r.file.Read(entryData[:]); err != nil {
+	if _, err := fileReadFn(r.file, entryData[:]); err != nil {
 		return "", err
 	}
 
@@ -227,7 +232,7 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 	if isTar {
 
 		// Ensure extraction directory exists
-		if err := os.MkdirAll(extractDir, os.FileMode(DirPerms)); err != nil {
+		if err := tarMkdirAllFn(extractDir, os.FileMode(DirPerms)); err != nil {
 			return "", fmt.Errorf("%w: failed to create extraction directory for slot %d: %v", ErrSlotExtractionFailed, slotIndex, err)
 		}
 
@@ -250,12 +255,12 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 
 			switch hdr.Typeflag {
 			case tar.TypeDir:
-				if err := os.MkdirAll(target, os.FileMode(hdr.Mode)); err != nil {
+				if err := tarMkdirAllFn(target, os.FileMode(hdr.Mode)); err != nil {
 					return "", fmt.Errorf("%w: failed to create directory during extraction: %v", ErrSlotExtractionFailed, err)
 				}
 			case tar.TypeReg:
 				// Ensure parent directory exists
-				if err := os.MkdirAll(filepath.Dir(target), os.FileMode(DirPerms)); err != nil {
+				if err := tarMkdirAllFn(filepath.Dir(target), os.FileMode(DirPerms)); err != nil {
 					return "", err
 				}
 
@@ -264,20 +269,20 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 					return "", err
 				}
 
-				if _, err := io.Copy(out, tr); err != nil {
-					if closeErr := out.Close(); closeErr != nil {
+				if _, err := tarIoCopyFn(out, tr); err != nil {
+					if closeErr := tarOutCloseFn(out); closeErr != nil {
 						// Log but don't mask the original error
 						_ = closeErr
 					}
 					return "", err
 				}
-				if err := out.Close(); err != nil {
+				if err := tarOutCloseFn(out); err != nil {
 					return "", fmt.Errorf("failed to close output file: %w", err)
 				}
 
 				// Set executable bit if needed
 				if hdr.Mode&0111 != 0 {
-					if err := os.Chmod(target, os.FileMode(hdr.Mode)); err != nil {
+					if err := tarChmodFn(target, os.FileMode(hdr.Mode)); err != nil {
 						// Best effort - log but don't fail
 						_ = err
 					}
