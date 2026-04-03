@@ -26,11 +26,17 @@ if [ -z "$WHEEL" ]; then
 fi
 
 # Create venv with access to pkg-installed system packages (avoids building
-# cryptography from source, which fails on FreeBSD due to SOABI mismatch).
-# The >=46.0.0 floor in flavorpack's constraint-dependencies is excluded on
-# FreeBSD via a platform marker in pyproject.toml, so uv accepts pkg's 45.x.
+# cryptography from source, which fails on FreeBSD: maturin rejects the SOABI).
+# Run pip install from /tmp so uv doesn't read the repo's pyproject.toml and
+# apply its constraint-dependencies (which pin cryptography>=46.0.0 for win_arm64).
+# The explicit --constraint caps cryptography below 46 so uv resolves to 45.x,
+# which is already in system-site-packages and requires no build.
+WHEEL_ABS=$(realpath "$WHEEL")
+echo "cryptography<46.0.0" > /tmp/crypto-constraints.txt
 uv venv /tmp/flavorenv --python python3.11 --system-site-packages
-uv pip install --python /tmp/flavorenv/bin/python3.11 "$WHEEL"
+(cd /tmp && uv pip install --python /tmp/flavorenv/bin/python3.11 \
+    --constraint /tmp/crypto-constraints.txt \
+    "$WHEEL_ABS")
 export PATH="/tmp/flavorenv/bin:$PATH"
 
 LAUNCHER="helpers/bin/flavor-rs-launcher-${VERSION}-${PLATFORM}"
