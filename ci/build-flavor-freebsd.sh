@@ -99,6 +99,7 @@ mkdir -p "$WHEEL_CACHE"
 # Use --no-deps so we only build the wheel we're requesting, not its subtree.
 /tmp/flavorenv/bin/pip wheel \
     'cffi>=1.14,<2.0.0' \
+    'cryptography<46.0.0' \
     'psutil' \
     'setproctitle' \
     'zstandard' \
@@ -115,7 +116,7 @@ sed -i '' 's/provide-foundation\[all\]/provide-foundation[cli,compression,crypto
 rm -f uv.lock
 
 mkdir -p _stage/artifacts
-PIP_ONLY_BINARY=:all: FLAVOR_WHEEL_CACHE="$WHEEL_CACHE" flavor pack \
+FLAVOR_WHEEL_CACHE="$WHEEL_CACHE" flavor pack \
     --manifest pyproject.toml \
     --output "_stage/artifacts/flavor-${VERSION}-${PLATFORM}.psp" \
     --launcher-bin "$LAUNCHER" \
