@@ -205,7 +205,7 @@ func TestVerifyAttestationSbomDigest_DigestPresentNoSlot(t *testing.T) {
 	if _, err := f.Write(slotContent); err != nil {
 		t.Fatalf("write slot data: %v", err)
 	}
-	offset := uint64(len(slotContent))
+	var offset uint64 = uint64(len(slotContent))
 
 	slotTableOffset := offset
 	if _, err := f.Write(desc.Pack()); err != nil {
