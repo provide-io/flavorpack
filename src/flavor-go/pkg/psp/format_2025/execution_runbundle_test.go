@@ -44,16 +44,16 @@ func TestRunBundleWithCwdMetadataExecutionNil(t *testing.T) {
 
 // TestRunBundleWithCwdLoadOperatorPolicyError covers lines 288-290:
 // when LoadOperatorPolicy returns an error, runBundleWithCwd returns that error.
-// We inject getSystemPolicyFileImpl to point to a file with invalid TOML.
+// We inject getSystemPolicyFileImpl to point to a file with invalid JSON.
 func TestRunBundleWithCwdLoadOperatorPolicyError(t *testing.T) {
 	cacheRoot := t.TempDir()
 	t.Setenv(EnvCacheDir, cacheRoot)
 	t.Setenv(EnvValidation, "none")
 	t.Setenv(EnvWorkenvCache, "false")
 
-	// Create an invalid policy file (invalid TOML).
-	policyFile := t.TempDir() + "/policy.toml"
-	if err := os.WriteFile(policyFile, []byte(`[invalid toml`), 0o600); err != nil {
+	// Create an invalid policy file (invalid JSON).
+	policyFile := t.TempDir() + "/policy.json"
+	if err := os.WriteFile(policyFile, []byte(`{invalid json`), 0o600); err != nil {
 		t.Fatalf("WriteFile(policy): %v", err)
 	}
 
@@ -70,7 +70,7 @@ func TestRunBundleWithCwdLoadOperatorPolicyError(t *testing.T) {
 	logger := hclog.NewNullLogger()
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {
-		t.Fatal("expected error when LoadOperatorPolicy fails due to invalid TOML")
+		t.Fatal("expected error when LoadOperatorPolicy fails due to invalid JSON")
 	}
 }
 

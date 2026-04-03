@@ -64,9 +64,9 @@ def test_trusted_keys_dir_system(tmp_path: Path) -> None:
 
 def test_policy_file_user(tmp_path: Path) -> None:
     with mock.patch.dict(os.environ, {"FLAVOR_CONFIG_DIR": str(tmp_path), "FLAVOR_TRUSTED_KEYS_DIR": ""}):
-        assert get_policy_file() == tmp_path / "policy.toml"
+        assert get_policy_file() == tmp_path / "policy.json"
 
 
 def test_policy_file_system(tmp_path: Path) -> None:
     with mock.patch("flavor.config.dirs.get_system_config_dir", return_value=tmp_path):
-        assert get_policy_file(system=True) == tmp_path / "policy.toml"
+        assert get_policy_file(system=True) == tmp_path / "policy.json"
