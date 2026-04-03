@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
-# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
-# Security test suite orchestrator for Flavorpack pretaster.
+# Security test suite orchestrator for FlavorPack pretaster.
 # Runs all security sub-suites and reports a combined summary.
 #
 # Sub-suites:

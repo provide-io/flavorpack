@@ -11,22 +11,9 @@ echo "🧪 Testing Exit Code Preservation"
 echo "=================================="
 echo ""
 
+# Test directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR/../.."
-
-# Platform detection
-OS=$(uname -s | tr '[:upper:]' '[:lower:]')
-ARCH=$(uname -m)
-if [[ "$OS" == mingw* ]] || [[ "$OS" == msys* ]] || [[ "$OS" == cygwin* ]]; then
-    OS="windows"
-    if [[ "$(uname -s)" == *"-ARM64"* ]] || [[ "$(uname -s)" == *"-arm64"* ]]; then
-        ARCH="arm64"
-    fi
-fi
-[ "$ARCH" = "x86_64" ] && ARCH="amd64"
-[ "$ARCH" = "aarch64" ] && ARCH="arm64"
-PLATFORM="${OS}_${ARCH}"
-EXT=""
-[[ "$OS" == "windows" ]] && EXT=".exe"
 
 # Clean cache to ensure fresh tests
 rm -rf ~/.cache/flavor/workenv 2>/dev/null || true
