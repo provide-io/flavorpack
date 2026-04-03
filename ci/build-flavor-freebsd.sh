@@ -8,8 +8,9 @@
 #
 # cryptography has no pre-built FreeBSD wheel on PyPI and fails to build from
 # source via maturin (FreeBSD SOABI is "cpython-311" which maturin rejects).
-# Install it via pkg (pre-compiled), then create a --system-site-packages venv
-# so uv sees cryptography as already satisfied and skips the source build.
+# Install it via pkg (pre-compiled), then use pip (not uv pip) to install into
+# a --system-site-packages venv: pip honors system-site-packages when checking
+# what is already installed and skips rebuilding cryptography.
 
 set -euo pipefail
 
@@ -25,18 +26,16 @@ if [ -z "$WHEEL" ]; then
     exit 1
 fi
 
-# Create venv with access to pkg-installed system packages (avoids building
-# cryptography from source, which fails on FreeBSD: maturin rejects the SOABI).
-# Run pip install from /tmp so uv doesn't read the repo's pyproject.toml and
-# apply its constraint-dependencies (which pin cryptography>=46.0.0 for win_arm64).
-# The explicit --constraint caps cryptography below 46 so uv resolves to 45.x,
-# which is already in system-site-packages and requires no build.
+# Create a --system-site-packages venv with pip seeded (--seed).
+# Use pip (not uv pip): pip checks system-site-packages when deciding whether
+# a package is already installed, so it finds cryptography 45.x from pkg and
+# skips the source build entirely.  uv pip does not honour system-site-packages
+# for that check and would attempt to rebuild cryptography from source.
 WHEEL_ABS=$(realpath "$WHEEL")
-echo "cryptography<46.0.0" > /tmp/crypto-constraints.txt
-uv venv /tmp/flavorenv --python python3.11 --system-site-packages
-(cd /tmp && uv pip install --python /tmp/flavorenv/bin/python3.11 \
-    --constraint /tmp/crypto-constraints.txt \
-    "$WHEEL_ABS")
+uv venv /tmp/flavorenv --python python3.11 --system-site-packages --seed
+/tmp/flavorenv/bin/pip install --no-build-isolation \
+    'cryptography<46.0.0' \
+    "$WHEEL_ABS"
 export PATH="/tmp/flavorenv/bin:$PATH"
 
 LAUNCHER="helpers/bin/flavor-rs-launcher-${VERSION}-${PLATFORM}"
