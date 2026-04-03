@@ -234,6 +234,111 @@ fi
 echo ""
 
 # ---------------------------------------------------------------------------
+# Test 1d — Trusted key enforcement: untrusted key rejected
+#
+# Create an empty trust store (directory exists but no keys) and set
+# require_trusted_key=true.  The package was signed with seed
+# "pretaster-security-test", but the store has no matching key.
+# ---------------------------------------------------------------------------
+if [ "$POLICY_TEST_SKIPPED" = false ] && [ -f "$POLICY_PSP" ]; then
+    echo "  1d. Testing trusted key enforcement: untrusted key rejected..."
+
+    TRUST_DIR=$(mktemp -d)
+    POLICY_DIR=$(mktemp -d)
+    # Empty trust store (directory exists, no keys)
+    mkdir -p "$TRUST_DIR"
+    # Allow platform mismatch so the trust check is reached
+    cat > "$POLICY_DIR/policy.json" <<'ENDJSON'
+{
+  "version": 1,
+  "trust": {
+    "require_trusted_key": true
+  },
+  "enforcement": {
+    "platform_mismatch": "allow"
+  }
+}
+ENDJSON
+
+    set +e
+    UNTRUST_OUTPUT=$(FLAVOR_CONFIG_DIR="$POLICY_DIR" FLAVOR_TRUSTED_KEYS_DIR="$TRUST_DIR" "$FLAVOR_BIN" policy check "$POLICY_PSP" 2>&1)
+    UNTRUST_EXIT=$?
+    set -e
+    rm -rf "$TRUST_DIR" "$POLICY_DIR"
+
+    if [ $UNTRUST_EXIT -ne 0 ] && echo "$UNTRUST_OUTPUT" | grep -qiE 'trusted.*key|not.*trusted'; then
+        print_color "$GREEN" "  ✅ Untrusted key correctly rejected (exit $UNTRUST_EXIT)"
+    else
+        print_color "$RED" "  ❌ FAIL: Untrusted key should have been rejected (exit $UNTRUST_EXIT)"
+        echo "     Output: $UNTRUST_OUTPUT"
+        TEST_FAILURES=$((TEST_FAILURES + 1))
+        FAILED_TESTS="$FAILED_TESTS\n  - Trusted key enforcement: untrusted rejected"
+    fi
+fi
+
+echo ""
+
+# ---------------------------------------------------------------------------
+# Test 1e — Trusted key enforcement: trusted key accepted
+#
+# Install the public key derived from seed "pretaster-security-test" into
+# a temp trust store, set require_trusted_key=true, and verify the package
+# passes policy check.
+# ---------------------------------------------------------------------------
+SETUP_TRUST_HELPER="$PRETASTER_DIR/scripts/setup_trust_store.py"
+
+if [ "$POLICY_TEST_SKIPPED" = false ] && [ -f "$POLICY_PSP" ] && [ -f "$SETUP_TRUST_HELPER" ]; then
+    echo "  1e. Testing trusted key enforcement: trusted key accepted..."
+
+    TRUST_DIR=$(mktemp -d)
+    POLICY_DIR=$(mktemp -d)
+
+    set +e
+    FINGERPRINT=$("$PYTHON_BIN" "$SETUP_TRUST_HELPER" "pretaster-security-test" "$TRUST_DIR" 2>&1)
+    SETUP_EXIT=$?
+    set -e
+
+    if [ $SETUP_EXIT -ne 0 ]; then
+        print_color "$RED" "  ❌ Failed to set up trust store: $FINGERPRINT"
+        TEST_FAILURES=$((TEST_FAILURES + 1))
+        FAILED_TESTS="$FAILED_TESTS\n  - Trusted key enforcement: setup failed"
+    else
+        # Allow platform mismatch so the trust check is reached
+        cat > "$POLICY_DIR/policy.json" <<'ENDJSON'
+{
+  "version": 1,
+  "trust": {
+    "require_trusted_key": true
+  },
+  "enforcement": {
+    "platform_mismatch": "allow"
+  }
+}
+ENDJSON
+
+        set +e
+        TRUST_OUTPUT=$(FLAVOR_CONFIG_DIR="$POLICY_DIR" FLAVOR_TRUSTED_KEYS_DIR="$TRUST_DIR" "$FLAVOR_BIN" policy check "$POLICY_PSP" 2>&1)
+        TRUST_EXIT=$?
+        set -e
+
+        if [ $TRUST_EXIT -eq 0 ]; then
+            print_color "$GREEN" "  ✅ Trusted key correctly accepted (exit 0, fingerprint: ${FINGERPRINT:0:16}...)"
+        else
+            print_color "$RED" "  ❌ FAIL: Trusted key should have been accepted (exit $TRUST_EXIT)"
+            echo "     Output: $TRUST_OUTPUT"
+            echo "     Trust store contents:"
+            ls -la "$TRUST_DIR"
+            TEST_FAILURES=$((TEST_FAILURES + 1))
+            FAILED_TESTS="$FAILED_TESTS\n  - Trusted key enforcement: trusted accepted"
+        fi
+    fi
+
+    rm -rf "$TRUST_DIR" "$POLICY_DIR"
+fi
+
+echo ""
+
+# ---------------------------------------------------------------------------
 # Test 2 — SBOM inspection via `flavor inspect --sbom`
 # ---------------------------------------------------------------------------
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
