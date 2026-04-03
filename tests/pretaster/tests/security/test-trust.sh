@@ -2,7 +2,7 @@
 # Trust store tests: untrusted/trusted key enforcement + cross-builder trust
 # Usage: ./tests/test-trust.sh  (run from the pretaster directory)
 
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/test-setup.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib/test-setup.sh"
 
 echo "🔐 Trust Store Tests"
 echo "===================="

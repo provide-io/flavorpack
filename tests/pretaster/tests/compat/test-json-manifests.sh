@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
 # Test JSON manifest handling across all builder/launcher combinations.
 #
 # Validates that the fix for _build_with_json_manifest() is correct:
@@ -73,14 +70,6 @@ test_json_manifest_combination() {
     local config="configs/test-combination.json"
     if [[ "$OS" == "windows" ]]; then
         config="configs/test-combination-windows.json"
-    fi
-
-    # Resolve TASTESH_BIN placeholder in config
-    local tastesh_bin="$HELPERS_DIR/bin/flavor-tastesh-${PLATFORM}${EXT}"
-    if [[ -f "$tastesh_bin" ]]; then
-        mkdir -p "resolved"
-        sed -e "s|TASTESH_BIN|${tastesh_bin}|g" "$config" > "resolved/$(basename "$config")"
-        config="resolved/$(basename "$config")"
     fi
 
     # Clear cache so rebuilt PSPs don't hit checksum mismatches
@@ -185,11 +174,9 @@ test_json_manifest_combination() {
         set -e
 
         if [ $inspect_exit -ne 0 ]; then
-            # flavor install may fail on some platforms (e.g. grpcio/cryptography build failures
-            # on FreeBSD). Treat as a warning — functional tests in step 2 already validate
-            # the package works. Only fail if we can confirm metadata is empty/wrong.
-            echo "$emoji   flavor inspect failed (exit $inspect_exit) — skipping metadata check" | tee -a "$log_file"
+            echo "$emoji   flavor inspect failed (exit $inspect_exit)" | tee -a "$log_file"
             echo "$inspect_output" | head -5 | sed "s/^/$emoji      /" | tee -a "$log_file"
+            step_failed=1
         else
             echo "$inspect_output" | sed "s/^/$emoji      /" | tee -a "$log_file"
 
