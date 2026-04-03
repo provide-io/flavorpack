@@ -196,6 +196,44 @@ fi
 echo ""
 
 # ---------------------------------------------------------------------------
+# Test 1c — Enforcement mode: warn allows execution
+#
+# Create a temporary policy.json with enforcement.default = "warn", then
+# verify that `flavor policy check` PASSES (exit 0) for the same package
+# that was blocked above in deny mode.
+# ---------------------------------------------------------------------------
+if [ "$POLICY_TEST_SKIPPED" = false ] && [ -f "$POLICY_PSP" ]; then
+    echo "  1c. Testing enforcement mode: warn (should allow with warnings)..."
+
+    POLICY_JSON_DIR=$(mktemp -d)
+    cat > "$POLICY_JSON_DIR/policy.json" <<'ENDJSON'
+{
+  "version": 1,
+  "enforcement": {
+    "default": "warn"
+  }
+}
+ENDJSON
+
+    set +e
+    WARN_OUTPUT=$(FLAVOR_CONFIG_DIR="$POLICY_JSON_DIR" "$FLAVOR_BIN" policy check "$POLICY_PSP" 2>&1)
+    WARN_EXIT=$?
+    set -e
+    rm -rf "$POLICY_JSON_DIR"
+
+    if [ $WARN_EXIT -eq 0 ]; then
+        print_color "$GREEN" "  ✅ Warn enforcement mode correctly allowed the package (exit 0)"
+    else
+        print_color "$RED" "  ❌ FAIL: Warn enforcement mode should have allowed the package (exit $WARN_EXIT)"
+        echo "     Output: $WARN_OUTPUT"
+        TEST_FAILURES=$((TEST_FAILURES + 1))
+        FAILED_TESTS="$FAILED_TESTS\n  - Enforcement mode: warn (policy check)"
+    fi
+fi
+
+echo ""
+
+# ---------------------------------------------------------------------------
 # Test 2 — SBOM inspection via `flavor inspect --sbom`
 # ---------------------------------------------------------------------------
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
