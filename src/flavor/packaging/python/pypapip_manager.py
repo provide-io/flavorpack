@@ -138,6 +138,7 @@ class PyPaPipManager:
         packages: list[str] | None = None,
         binary_only: bool = True,
         platform_tag: str | None = None,
+        find_links: str | None = None,
     ) -> list[str]:
         """
         Get real pip download command.
@@ -152,6 +153,7 @@ class PyPaPipManager:
             packages: Optional list of packages to download
             binary_only: Whether to download only binary wheels
             platform_tag: Optional platform tag to use (e.g., "manylinux2014_x86_64")
+            find_links: Optional local wheel directory to check before PyPI
         """
         cmd = [*_pip_base_cmd(python_exe), "download", "--dest", dest_dir.as_posix()]
         if binary_only:
@@ -189,14 +191,12 @@ class PyPaPipManager:
                 logger.debug(f"Added platform constraint: {self.MANYLINUX_TAG}_aarch64")
                 logger.warning("⚠️ grpcio on CentOS 7 ARM64 may have C++ ABI issues")
 
-        # When FLAVOR_WHEEL_CACHE is set, add --find-links so pip checks the local
-        # pre-built wheel directory before falling back to PyPI.  This is the only
-        # reliable way to supply C-extension wheels for platforms that have no PyPI
-        # binary wheels (e.g. FreeBSD cffi, cryptography) while still downloading
-        # pure-Python packages from PyPI with --only-binary :all:.
-        wheel_cache = os.environ.get(ENV_WHEEL_CACHE)
-        if wheel_cache:
-            cmd.extend(["--find-links", wheel_cache])
+        # When a local wheel directory is provided, check it before hitting PyPI.
+        # This supplies C-extension wheels for platforms with no PyPI binary wheels
+        # (e.g. FreeBSD cffi, cryptography) while still downloading pure-Python
+        # packages from PyPI with --only-binary :all:.
+        if find_links:
+            cmd.extend(["--find-links", find_links])
 
         if requirements_file:
             cmd.extend(["-r", requirements_file.as_posix()])
@@ -238,6 +238,7 @@ class PyPaPipManager:
             dest_dir=dest_dir,
             requirements_file=requirements_file,
             binary_only=True,
+            find_links=os.environ.get(ENV_WHEEL_CACHE),
         )
 
         logger.debug("💻 Downloading requirements", command=" ".join(download_cmd))
@@ -282,6 +283,7 @@ class PyPaPipManager:
             dest_dir=dest_dir,
             packages=packages,
             binary_only=True,
+            find_links=os.environ.get(ENV_WHEEL_CACHE),
         )
 
         logger.debug("💻 Downloading packages", command=" ".join(download_cmd))
