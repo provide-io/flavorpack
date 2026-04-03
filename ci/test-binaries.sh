@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Unified binary testing script
 # Consolidates test-platform-binaries.sh and test-binary-execution.sh
 #

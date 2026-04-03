@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Test exit code preservation for all builder/launcher combinations
 
 set -euo pipefail

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Run tests with comprehensive output and metadata collection
 set -e
 

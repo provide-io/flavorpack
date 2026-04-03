@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Test that Flavor PSP is self-contained and can verify itself
 # Usage: test-flavor-self-contained.sh <platform>
 

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 # Pre-warm a local wheel cache directory for offline PSPF builds.
