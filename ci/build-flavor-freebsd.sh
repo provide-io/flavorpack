@@ -115,7 +115,7 @@ sed -i '' 's/provide-foundation\[all\]/provide-foundation[cli,compression,crypto
 rm -f uv.lock
 
 mkdir -p _stage/artifacts
-FLAVOR_WHEEL_CACHE="$WHEEL_CACHE" flavor pack \
+PIP_ONLY_BINARY=:all: FLAVOR_WHEEL_CACHE="$WHEEL_CACHE" flavor pack \
     --manifest pyproject.toml \
     --output "_stage/artifacts/flavor-${VERSION}-${PLATFORM}.psp" \
     --launcher-bin "$LAUNCHER" \
