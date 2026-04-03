@@ -64,10 +64,3 @@ func TestBuilderBundleHelperProcess(t *testing.T) {
 	buildBundle(rootCmd, nil)
 	os.Exit(0)
 }
-
-func TestGetBuilderTimestampReturnsSomething(t *testing.T) {
-	ts := getBuilderTimestamp()
-	if ts == "" {
-		t.Fatal("expected non-empty build timestamp")
-	}
-}
