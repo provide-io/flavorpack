@@ -621,15 +621,29 @@ mod tests {
     }
 
     #[test]
-    fn test_enforce_policy_refuse_root_current_platform() {
-        // On Unix, we test the geteuid path. We cannot easily test the Windows path.
-        // This test documents the expected behavior.
+    fn test_enforce_policy_env_var_empty_string_is_absent() {
+        unsafe { env::set_var("__FLAVOR_POLICY_EMPTY__", "") };
         let eff = EffectivePolicy {
-            refuse_root: true,
+            require_env: vec!["__FLAVOR_POLICY_EMPTY__".to_string()],
             ..Default::default()
         };
-        // On non-root Unix: should pass. On root Unix: would fail.
-        // We cannot control UID in tests, so just verify the function runs without panic.
-        let _ = enforce_policy(&eff, 0, false, true);
+        assert!(enforce_policy(&eff, 0, false, true).is_err());
+        unsafe { env::remove_var("__FLAVOR_POLICY_EMPTY__") };
+    }
+
+    #[test]
+    fn test_merge_then_enforce_empty_intersection_unrestricted() {
+        // Disjoint platform sets → intersection=[] → enforce_policy treats [] as unrestricted
+        let pkg = PackagePolicy {
+            platforms: vec!["linux_amd64".to_string()],
+            ..Default::default()
+        };
+        let op = OperatorPolicy {
+            allow_platforms: vec!["darwin_arm64".to_string()],
+            ..Default::default()
+        };
+        let eff = merge_policy(pkg, op);
+        assert!(eff.platforms.is_empty());
+        assert!(enforce_policy(&eff, 0, false, true).is_ok());
     }
 }
