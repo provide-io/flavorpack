@@ -39,7 +39,11 @@ tar xzf "$TMPDIR/dash.tar.gz" -C "$TMPDIR"
 cd "$TMPDIR/dash-${DASH_VERSION}"
 
 # Generate configure script
-autoreconf -fi 2>/dev/null
+if ! command -v autoreconf >/dev/null 2>&1; then
+    echo "ERROR: autoreconf not found. Install autotools (autoconf, automake, libtool)." >&2
+    exit 1
+fi
+autoreconf -fi
 
 # Platform-specific build
 case "$OS" in
@@ -53,7 +57,8 @@ case "$OS" in
         ;;
     darwin)
         # macOS: dynamic (Apple linker doesn't support -static for executables)
-        ./configure --quiet
+        # Suppress K&R prototype errors in dash 0.5.12 with newer Xcode clang
+        CFLAGS="-Wno-error=deprecated-non-prototype" ./configure --quiet
         ;;
     freebsd)
         # FreeBSD: static if possible
