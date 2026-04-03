@@ -18,6 +18,7 @@ import (
 
 var syscallExecFn = syscall.Exec
 var osExitFn = os.Exit
+var osGetWdFn = os.Getwd
 
 // LaunchWithLogLevel launches with explicit log level control
 func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource string) {
@@ -102,7 +103,7 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 		}
 	}
 
-	userCwd, err := os.Getwd()
+	userCwd, err := osGetWdFn()
 	if err != nil {
 		logger.Error("❌ Failed to get current directory", "error", err)
 		osExitFn(ExitIOError)

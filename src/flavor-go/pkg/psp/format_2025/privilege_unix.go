@@ -7,7 +7,9 @@ package format_2025
 
 import "os"
 
+var getuidFn = os.Getuid
+
 // isPrivilegedUser returns true when the process is running as root (UID 0).
 func isPrivilegedUser() bool {
-	return os.Getuid() == 0
+	return getuidFn() == 0
 }

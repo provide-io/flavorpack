@@ -14,6 +14,8 @@ import (
 	toml "github.com/BurntSushi/toml"
 )
 
+var maxIntVal = int(^uint(0) >> 1)
+
 var (
 	getSystemPolicyFileImpl = getSystemPolicyFile
 	getUserPolicyFileImpl   = getUserPolicyFile
@@ -245,7 +247,7 @@ func mustBool(fieldName string, raw any) (bool, error) {
 }
 
 func mustInt(fieldName string, raw any) (int, error) {
-	maxInt := int(^uint(0) >> 1)
+	maxInt := maxIntVal
 	switch value := raw.(type) {
 	case int:
 		return value, nil

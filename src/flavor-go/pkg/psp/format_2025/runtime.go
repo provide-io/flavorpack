@@ -3,7 +3,6 @@ package format_2025
 import (
 	"fmt"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
@@ -20,7 +19,7 @@ func processRuntimeEnv(env []string, runtimeEnv map[string]interface{}, logger h
 
 	// On Windows, automatically add critical system variables to pass list
 	// These are required for Python and other programs to initialize properly
-	if runtime.GOOS == "windows" {
+	if currentGOOS == "windows" {
 		windowsCriticalVars := []string{"SYSTEMROOT", "WINDIR", "TEMP", "TMP", "PATHEXT", "COMSPEC"}
 
 		if passList, ok := runtimeEnv["pass"].([]interface{}); ok {
