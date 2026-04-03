@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Test script that uses actual taster.psp for testing
 
 set -e

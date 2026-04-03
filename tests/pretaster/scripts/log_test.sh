@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Test logging at different levels
 
 echo "📊 Logging Level Test Script"
