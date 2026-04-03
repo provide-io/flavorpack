@@ -286,7 +286,8 @@ jobs:
           name: flavor-rust-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
           path: ./helpers-dist
 
-      - name: 📥 Download combined helpers (FreeBSD)
+      - name: 📥 Download combined helpers (FreeBSD only)
+        if: ${{ startsWith(matrix.platform, 'freebsd') }}
         uses: dawidd6/action-download-artifact@v19
         continue-on-error: true
         with:
@@ -461,7 +462,8 @@ jobs:
           name: flavor-rust-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
           path: ./helpers-dist
 
-      - name: 📥 Download combined helpers (FreeBSD)
+      - name: 📥 Download combined helpers (FreeBSD only)
+        if: ${{ matrix.vm_arch != '' }}
         uses: dawidd6/action-download-artifact@v19
         continue-on-error: true
         with:
