@@ -230,7 +230,7 @@ EOF
         verify_file "$LAUNCHER"
         
         # Setup workenv
-        ../../.github/scripts/setup-pretaster-workenv.sh
+        ../../ci/setup-pretaster-workenv.sh
         
         # Build using Flavor PSP
         "$FLAVOR_PSP" package \
