@@ -18,21 +18,27 @@ echo "Launcher: ${LAUNCHER_PATH}"
 # Create artifacts directory
 mkdir -p artifacts
 
+# Determine output extension: Windows uses .exe so the binary is directly runnable
+EXT=".psp"
+if [[ "${PLATFORM}" == "windows_"* ]]; then
+  EXT=".exe"
+fi
+
 # Build Flavor PSP using the installed wheel version
 echo "Building Flavor PSP with launcher: ${LAUNCHER_PATH}"
 
 flavor pack \
   --manifest pyproject.toml \
-  --output "artifacts/flavor-${VERSION}-${PLATFORM}.psp" \
+  --output "artifacts/flavor-${VERSION}-${PLATFORM}${EXT}" \
   --launcher-bin "${LAUNCHER_PATH}" \
   --key-seed "flavor-${VERSION}"
 
-# Make it executable
-chmod +x artifacts/flavor-*.psp
+# Make it executable on Unix
+chmod +x "artifacts/flavor-${VERSION}-${PLATFORM}${EXT}" 2>/dev/null || true
 
 # Test that it works
 echo "Testing self-packaged Flavor..."
-./artifacts/flavor-*.psp --version
-./artifacts/flavor-*.psp --help
+"./artifacts/flavor-${VERSION}-${PLATFORM}${EXT}" --version
+"./artifacts/flavor-${VERSION}-${PLATFORM}${EXT}" --help
 
 echo "✅ Successfully built and tested Flavor PSP"
