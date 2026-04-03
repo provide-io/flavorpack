@@ -220,9 +220,9 @@ def _load_policy_file(path: Path) -> dict[str, Any]:
 
     version = raw.get("version")
     if version is None:
-        _raise_invalid_policy(path, "missing required 'version' field")
-    if type(version) is not int:
-        _raise_invalid_policy(path, "version must be an integer")
+        raise ValueError(f"{path}: missing required 'version' field")
+    if not isinstance(version, int):
+        raise ValueError(f"{path}: version must be an integer")
     if version > POLICY_VERSION:
         log.warning(
             f"⚠️  {path}: policy version {version} is newer than supported version {POLICY_VERSION} "
