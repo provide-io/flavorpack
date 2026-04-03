@@ -155,6 +155,10 @@ PYEOF
 #      grpcio is not a resolved dependency (no FreeBSD wheel, 20+ min build).
 #   3. Delete uv.lock so uv re-resolves from the patched pyproject.toml.
 sed -i '' 's/"cffi>=2\.0\.0"/"cffi>=1.14,<2.0.0"/g' pyproject.toml
+# Remove the non-FreeBSD cryptography floor (>=46.0.0) — uv 0.9.24 ignores
+# sys_platform markers in constraint-dependencies so it applies >=46.0.0
+# unconditionally, conflicting with our <46.0.0 FreeBSD cap.
+sed -i '' '/"cryptography>=46\.0\.0/d' pyproject.toml
 sed -i '' 's/provide-foundation\[all\]/provide-foundation[cli,compression,crypto,transport,platform]/g' pyproject.toml
 rm -f uv.lock
 
