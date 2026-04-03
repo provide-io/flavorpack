@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Simple shell script test
 
 echo "🐚 Simple Shell Script Test"

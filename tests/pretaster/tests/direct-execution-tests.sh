@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 echo "🎯 Direct PSP Execution Tests"
 echo "================================"

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Exit on first build failure, but continue testing
 set -euo pipefail
 

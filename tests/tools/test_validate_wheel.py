@@ -44,6 +44,18 @@ def test_parse_windows_amd64() -> None:
     assert _parse_wheel_platform(p) == "windows_amd64"
 
 
+def test_parse_freebsd_amd64() -> None:
+    # FreeBSD 14.x RELEASE: uv reports freebsd_14_2_release_amd64; wheel uses
+    # freebsd_14_2_release_amd64 so the minor-version compatibility expansion works.
+    p = Path("flavorpack-0.3.21-py3-none-freebsd_14_2_release_amd64.whl")
+    assert _parse_wheel_platform(p) == "freebsd_amd64"
+
+
+def test_parse_freebsd_arm64() -> None:
+    p = Path("flavorpack-0.3.21-py3-none-freebsd_14_2_release_aarch64.whl")
+    assert _parse_wheel_platform(p) == "freebsd_arm64"
+
+
 def test_universal_wheel_no_helpers_passes() -> None:
     whl = make_wheel("flavorpack-0.3.21-py3-none-any", [])
     try:

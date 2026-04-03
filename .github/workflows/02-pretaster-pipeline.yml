@@ -115,6 +115,7 @@ jobs:
           ls -la helpers/bin/
       
       - name: 🔨 Build Pretaster packages
+        if: ${{ matrix.vm_arch == '' }}
         working-directory: tests/pretaster
         shell: bash
         run: |
@@ -158,6 +159,39 @@ jobs:
           fi
 
           ls -la dist/
+
+      - name: 🔨 Build Pretaster packages (FreeBSD VM)
+        if: ${{ matrix.vm_arch != '' }}
+        uses: cross-platform-actions/action@v0.32.0
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: ${{ matrix.vm_arch }}
+          shell: bash
+          sync_files: true
+          run: |
+            chmod +x helpers/bin/* 2>/dev/null || true
+
+            cd tests/pretaster
+            mkdir -p dist
+
+            COMBO_LAUNCHER="../../helpers/bin/flavor-rs-launcher-${{ matrix.platform }}"
+
+            ../../helpers/bin/flavor-go-builder-${{ matrix.platform }} \
+              --manifest configs/test-echo.json \
+              --launcher-bin "$COMBO_LAUNCHER" \
+              --output dist/pretaster-echo.psp \
+              --key-seed pretaster-test
+
+            ../../helpers/bin/flavor-rs-builder-${{ matrix.platform }} \
+              --manifest configs/test-shell.json \
+              --launcher-bin ../../helpers/bin/flavor-go-launcher-${{ matrix.platform }} \
+              --output dist/pretaster-shell.psp \
+              --key-seed pretaster-test
+
+            ls -la dist/
       
       - name: 📤 Upload Pretaster packages
         uses: actions/upload-artifact@v7
@@ -236,6 +270,7 @@ jobs:
           fi
 
       - name: 🧪 Run cross-language tests
+        if: ${{ matrix.vm_arch == '' }}
         shell: bash
         run: |
           # Determine PSP extension for Windows
@@ -267,6 +302,51 @@ jobs:
             "${{ needs.setup.outputs.version }}" \
             "$TEST_SUITE" \
             "$PRETASTER_PSP"
+
+      - name: 🔧 Stage PSP for FreeBSD VM
+        if: ${{ matrix.vm_arch != '' }}
+        shell: bash
+        run: |
+          mkdir -p _psp_stage
+          PSP="build/pretaster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.psp"
+          if [ -f "$PSP" ]; then
+            cp "$PSP" _psp_stage/
+            echo "✅ Staged: $(ls -lh _psp_stage/)"
+          else
+            echo "⚠️ PSP not found at: $PSP (will fall back to make-only tests)"
+            ls -la build/ 2>/dev/null || true
+          fi
+
+      - name: 🧪 Run cross-language tests (FreeBSD VM)
+        if: ${{ matrix.vm_arch != '' }}
+        uses: cross-platform-actions/action@v0.32.0
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: ${{ matrix.vm_arch }}
+          shell: bash
+          sync_files: true
+          run: |
+            sudo env IGNORE_OSVERSION=yes pkg install -y gmake
+
+            PRETASTER_PSP="_psp_stage/pretaster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.psp"
+            if [ ! -f "$PRETASTER_PSP" ]; then
+              echo "⚠️ Staged PSP not found, running without PSP verification"
+              PRETASTER_PSP=""
+            else
+              chmod +x "$PRETASTER_PSP"
+            fi
+
+            TEST_SUITE="${{ inputs.test_suite }}"
+            TEST_SUITE="${TEST_SUITE:-all}"
+
+            ci/run-pretaster-tests.sh \
+              "${{ matrix.platform }}" \
+              "${{ needs.setup.outputs.version }}" \
+              "$TEST_SUITE" \
+              "$PRETASTER_PSP"
       
       - name: 📤 Upload test logs
         if: always()
@@ -331,25 +411,59 @@ jobs:
           name: flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
 
-      - name: 🔧 Build pretaster PSP
+      - name: 📥 Download all-platform helpers (fallback)
+        if: ${{ matrix.vm_arch != '' }}
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v19
+        with:
+          workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
+          name: flavor-helpers-${{ needs.setup.outputs.version }}-all
+          path: ./helpers-dist
+
+      - name: 🔧 Extract helpers
         shell: bash
         run: |
           # The dawidd6 action downloads the artifact contents (zip files) to helpers-dist/
           echo "Contents of helpers-dist:"
           ls -la helpers-dist/ || true
-          
+
           # Extract the helper binaries
           ci/download-helpers.sh helpers-dist \
             "${{ needs.setup.outputs.version }}" \
             "${{ matrix.platform }}"
-          
-          # Build pretaster PSP using the consolidated script
+          chmod +x helpers/bin/* 2>/dev/null || true
+
+      - name: 🔧 Build pretaster PSP
+        if: ${{ matrix.vm_arch == '' }}
+        shell: bash
+        run: |
           mkdir -p build
           ci/build-pretaster.sh \
             "${{ matrix.platform }}" \
             "${{ needs.setup.outputs.version }}" \
             "simple" \
             "build"
+
+      - name: 🔧 Build pretaster PSP (FreeBSD VM)
+        if: ${{ matrix.vm_arch != '' }}
+        uses: cross-platform-actions/action@v0.32.0
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: ${{ matrix.vm_arch }}
+          shell: bash
+          sync_files: true
+          run: |
+            chmod +x helpers/bin/* 2>/dev/null || true
+            mkdir -p build
+            ci/build-pretaster.sh \
+              "${{ matrix.platform }}" \
+              "${{ needs.setup.outputs.version }}" \
+              "simple" \
+              "build"
       
       - name: 📤 Upload pretaster PSP
         uses: actions/upload-artifact@v7
