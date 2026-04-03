@@ -41,9 +41,11 @@ fn get_config_root() -> PathBuf {
     if let Ok(d) = env::var("APPDATA") {
         return PathBuf::from(d).join("flavor");
     }
-    // Fall back to ~/.config/flavor using HOME env var
-    if let Some(home) = env::var_os("HOME") {
-        return PathBuf::from(home).join(".config").join("flavor");
+    // Fall back to ~/.config/flavor using HOME or USERPROFILE env vars
+    for var in &["HOME", "USERPROFILE"] {
+        if let Some(home) = env::var_os(var) {
+            return PathBuf::from(home).join(".config").join("flavor");
+        }
     }
     PathBuf::from("/tmp/flavor/config")
 }
