@@ -51,9 +51,7 @@ jobs:
 
       - name: 🔧 Install autotools (macOS)
         if: steps.cache.outputs.cache-hit != 'true' && runner.os == 'macOS'
-        run: |
-          # autotools may already be present; install only if missing
-          command -v autoreconf || brew install autoconf automake libtool
+        run: brew install autoconf automake libtool || true
 
       - name: 🐚 Build tastesh (dash)
         if: steps.cache.outputs.cache-hit != 'true' && runner.os != 'Windows'
