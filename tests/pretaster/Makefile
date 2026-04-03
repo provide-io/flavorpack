@@ -253,14 +253,20 @@ $(COMBO_GO_GO): $(DIST_DIR)
 #################
 
 .PHONY: test
-test: test-core test-combo ## Run all tests
+test: test-core test-combo test-security ## Run all tests
+
+.PHONY: test-security
+test-security: ## Run security test suite (policy, trust, integrity)
+	$(call print,"🔒 Running security tests...",$(PURPLE))
+	@$(TESTS_DIR)/security/run-all.sh || (echo "❌ Security tests failed"; exit 1)
+	$(call print,"✅ Security tests completed",$(GREEN))
 
 .PHONY: test-core
 test-core: $(SIMPLE_PACKAGES) $(LOGS_DIR) ## Run core test suite (without orchestration)
 	@# Strip extended attributes from built packages (macOS security)
 	@xattr -cr $(DIST_DIR) 2>/dev/null || true
 	$(call print,"🧪 Running core tests...",$(PURPLE))
-	FLAVOR_LOG_LEVEL=$(LOG_LEVEL) $(TESTS_DIR)/test-pretaster.sh || (echo "❌ Core tests failed with exit code $$?"; exit 1)
+	FLAVOR_LOG_LEVEL=$(LOG_LEVEL) $(TESTS_DIR)/core/test-pretaster.sh || (echo "❌ Core tests failed with exit code $$?"; exit 1)
 	$(call print,"✅ Core tests completed",$(GREEN))
 
 .PHONY: test-combo
@@ -270,14 +276,14 @@ test-combo: combo-test ## Alias for combo-test
 combo-test: build-helpers ## Test all builder/launcher combinations
 	@mkdir -p $(LOGS_DIR)
 	$(call print,"🎯 Testing all builder/launcher combinations...",$(PURPLE))
-	@$(TESTS_DIR)/combination-tests.sh || (echo "❌ Combination tests failed with exit code $$?"; exit 1)
+	@$(TESTS_DIR)/combo/test-combinations.sh || (echo "❌ Combination tests failed with exit code $$?"; exit 1)
 	$(call print,"✅ Combination tests completed",$(GREEN))
 	$(call print,"📁 Logs saved in $(LOGS_DIR)/",$(CYAN))
 
 .PHONY: test-direct
 test-direct: build-helpers ## Test direct PSP execution
 	$(call print,"🎯 Testing direct PSP execution...",$(PURPLE))
-	@$(TESTS_DIR)/direct-execution-tests.sh || (echo "❌ Direct execution tests failed with exit code $$?"; exit 1)
+	@$(TESTS_DIR)/combo/test-direct.sh || (echo "❌ Direct execution tests failed with exit code $$?"; exit 1)
 	$(call print,"✅ Direct execution tests completed",$(GREEN))
 
 .PHONY: test-echo

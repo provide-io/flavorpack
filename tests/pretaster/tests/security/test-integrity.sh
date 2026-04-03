@@ -4,7 +4,7 @@
 #        enforcement modes (allow, warn), forward-version compat
 # Usage: ./tests/test-integrity.sh  (run from the pretaster directory)
 
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/test-setup.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib/test-setup.sh"
 
 echo "🛡️  Integrity & Enforcement Tests"
 echo "=================================="

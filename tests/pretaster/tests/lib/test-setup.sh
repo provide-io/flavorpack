@@ -5,7 +5,7 @@
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PRETASTER_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+PRETASTER_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 HELPERS_DIR="$(cd "$PRETASTER_DIR/../../dist" && pwd)"
 PROJECT_ROOT="$(cd "$PRETASTER_DIR/../.." && pwd)"
 

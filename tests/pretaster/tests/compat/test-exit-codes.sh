@@ -15,7 +15,7 @@ echo ""
 
 # Test directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR/.."
+cd "$SCRIPT_DIR/../.."
 
 # Clean cache to ensure fresh tests
 rm -rf ~/.cache/flavor/workenv 2>/dev/null || true

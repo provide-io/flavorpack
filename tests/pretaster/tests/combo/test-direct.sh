@@ -6,7 +6,7 @@ echo ""
 
 # Get directories
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PRETASTER_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+PRETASTER_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 HELPERS_DIR="$(cd "$PRETASTER_DIR/../../helpers" && pwd)"
 
 cd "$PRETASTER_DIR"
