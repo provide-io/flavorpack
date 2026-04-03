@@ -28,6 +28,25 @@ var (
 	atomicReplaceImpl       = atomicReplace
 )
 
+var buildExitFn = func(code int) { os.Exit(code) }
+var processLauncherFn = ProcessLauncherForPSPF
+var ed25519GenerateKeyFn = ed25519.GenerateKey
+var hostnameFunc = os.Hostname
+var shouldUseResourceEmbeddingFn = shouldUseResourceEmbedding
+var writeMetadataFn = writeMetadata
+var openOutputFileFn = func(path string, flag int, perm os.FileMode) (*os.File, error) {
+	return openFileValidated(path, flag, perm)
+}
+var osChmodFn = os.Chmod
+var outCloseFn = func(f *os.File) error { return f.Close() }
+var convertTempWriteFn = func(f *os.File, p []byte) (int, error) { return f.Write(p) }
+var convertTempCloseFn = func(f *os.File) error { return f.Close() }
+var convertRemovePathFn = removePath
+var outWriteFn = func(f *os.File, p []byte) (int, error) { return f.Write(p) }
+var outBinaryWriteFn = func(f *os.File, v interface{}) error {
+	return binary.Write(f, binary.LittleEndian, v)
+}
+
 // BuildWithLogLevel builds a PSPF package with explicit log level control
 func BuildWithLogLevel(manifestPath, outputPath, launcherBin, privateKeyPath, publicKeyPath, keySeed, cliLogLevel string) {
 	// Determine log level and source
@@ -111,13 +130,15 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	manifestData, err := readFileValidated(manifestPath)
 	if err != nil {
 		logger.Error("❌ Failed to read manifest", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
+		return
 	}
 
 	var config BuildOptions
 	if err := json.Unmarshal(manifestData, &config); err != nil {
 		logger.Error("❌ Failed to parse manifest", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
+		return
 	}
 
 	// 🚀 Get launcher binary path
@@ -128,7 +149,7 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	}
 	if launcherPath == "" {
 		logger.Error("❌ Launcher binary path must be specified via --launcher-bin or FLAVOR_LAUNCHER_BIN environment variable")
-		os.Exit(1)
+		buildExitFn(1)
 	}
 	logger.Info("🚀 Loading launcher", "path", launcherPath)
 
@@ -146,15 +167,15 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	launcherData, err := readFileValidated(launcherPath)
 	if err != nil {
 		logger.Error("❌ Failed to read launcher", "error", err, "path", launcherPath)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 	logger.Debug("✅ Launcher loaded", "size", len(launcherData))
 
 	// Process launcher for Windows PE compatibility if needed
-	launcherData, err = ProcessLauncherForPSPF(launcherData, logger)
+	launcherData, err = processLauncherFn(launcherData, logger)
 	if err != nil {
 		logger.Error("❌ Failed to process launcher for PSPF", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 	logger.Debug("✅ Launcher processed for PSPF", "size", len(launcherData))
 
@@ -163,15 +184,15 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	logger.Debug("📁 Ensuring output directory exists", "dir", outputDir)
 	if err := os.MkdirAll(outputDir, os.FileMode(DirPerms)); err != nil {
 		logger.Error("❌ Failed to create output directory", "error", err, "dir", outputDir)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 
 	// 💾 Create output file with executable permissions
 	logger.Debug("💾 Creating output file", "path", outputPath)
-	out, err := openFileValidated(outputPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.FileMode(ExecutablePerms))
+	out, err := openOutputFileFn(outputPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, os.FileMode(ExecutablePerms))
 	if err != nil {
 		logger.Error("❌ Failed to create output file", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 	// Note: NOT using defer - we close explicitly before PE resource embedding
 	// to avoid file locking issues on Windows ARM64
@@ -180,7 +201,7 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	logger.Debug("✍️ Writing launcher to output", "size", len(launcherData))
 	if _, err := out.Write(launcherData); err != nil {
 		logger.Error("❌ Failed to write launcher", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 	launcherSize := int64(len(launcherData))
 
@@ -202,7 +223,7 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		privateKey, publicKey, err = loadKeysFromFiles(privateKeyPath, publicKeyPath)
 		if err != nil {
 			logger.Error("❌ Failed to load keys", "error", err)
-			os.Exit(1)
+			buildExitFn(1)
 		}
 		logger.Info("🔑 Using provided keys")
 	} else if keySeed != "" {
@@ -215,7 +236,7 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 			actualSeed = os.Getenv(EnvKeySeed)
 			if actualSeed == "" {
 				logger.Error("❌ FLAVOR_KEY_SEED environment variable not set")
-				os.Exit(1)
+				buildExitFn(1)
 			}
 		}
 
@@ -226,17 +247,17 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	} else {
 		// Priority 3: Generate random ephemeral keys
 		logger.Debug("🔐 Generating random ephemeral key pair")
-		publicKey, privateKey, err = ed25519.GenerateKey(cryptorand.Reader)
+		publicKey, privateKey, err = ed25519GenerateKeyFn(cryptorand.Reader)
 		if err != nil {
 			logger.Error("❌ Failed to generate ephemeral keys", "error", err)
-			os.Exit(1)
+			buildExitFn(1)
 		}
 		logger.Debug("🎲 Using random key generation")
 	}
 	copy(index.PublicKey[:], publicKey[:32])
 	if fingerprint, err := ComputeKeyFingerprint(publicKey); err != nil {
 		logger.Error("❌ Failed to compute signing key fingerprint", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	} else {
 		copy(index.AttestationKeyFp[:], fingerprint)
 	}
@@ -254,7 +275,7 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		}
 		buildHost = fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)
 	} else {
-		hostname, err := os.Hostname()
+		hostname, err := hostnameFunc()
 		buildTimestamp = time.Now().UTC().Format(time.RFC3339)
 		if err != nil {
 			logger.Warn("⚠️ Failed to resolve hostname, using platform-only build host", "error", err)
@@ -320,7 +341,7 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	slotProcessor := NewSlotProcessor(config.Slots, logger)
 	if err := slotProcessor.ProcessSlots(); err != nil {
 		logger.Error("❌ Failed to process slots", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 
 	// Get processed data from SlotProcessor
@@ -335,69 +356,69 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	metadataPos, err := out.Seek(0, io.SeekCurrent)
 	if err != nil {
 		logger.Error("❌ Failed to get file position", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 	logger.Debug("📜 Writing metadata (gzipped JSON)", "position", metadataPos)
-	metadataSize, signature, err := writeMetadata(out, metadata, privateKey, publicKey)
+	metadataSize, signature, err := writeMetadataFn(out, metadata, privateKey, publicKey)
 	if err != nil {
 		logger.Error("❌ Failed to write metadata", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 	logger.Debug("✅ Metadata written", "size", metadataSize)
 
 	index.MetadataOffset, err = int64ToUint64Checked(metadataPos, "metadata offset")
 	if err != nil {
 		logger.Error("❌ Failed to convert metadata offset", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 	index.MetadataSize, err = intToUint64Checked(metadataSize, "metadata size")
 	if err != nil {
 		logger.Error("❌ Failed to convert metadata size", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 
 	// Write slot table
 	currentPos, err := out.Seek(0, io.SeekCurrent)
 	if err != nil {
 		logger.Error("❌ Failed to get file position", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 	slotTableOffset := AlignOffset(currentPos, SlotAlignment)
 	if _, err := out.Seek(slotTableOffset, 0); err != nil {
 		logger.Error("Failed to seek to slot table", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 
 	index.SlotTableOffset, err = int64ToUint64Checked(slotTableOffset, "slot table offset")
 	if err != nil {
 		logger.Error("❌ Failed to convert slot table offset", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 	index.SlotCount, err = intToUint32Checked(len(slotDescriptors), "slot count")
 	if err != nil {
 		logger.Error("❌ Failed to convert slot count", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 	slotCount64, err := intToUint64Checked(len(slotDescriptors), "slot count")
 	if err != nil {
 		logger.Error("❌ Failed to convert slot count", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 	index.SlotTableSize, err = multiplyUint64Checked(slotCount64, SlotDescriptorSize, "slot table size")
 	if err != nil {
 		logger.Error("❌ Failed to calculate slot table size", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 
 	// Reserve space for slot table (we'll write it after calculating slot offsets)
 	slotTableSizeInt64, err := uint64ToInt64Checked(index.SlotTableSize, "slot table size")
 	if err != nil {
 		logger.Error("❌ Failed to convert slot table size", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 	if _, err := out.Seek(slotTableOffset+slotTableSizeInt64, 0); err != nil {
 		logger.Error("Failed to seek past slot table", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 
 	// Now write the actual slot data and update descriptors with correct offsets
@@ -413,14 +434,14 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		currentPos, err := out.Seek(0, io.SeekCurrent)
 		if err != nil {
 			logger.Error("❌ Failed to get file position", "error", err)
-			os.Exit(1)
+			buildExitFn(1)
 		}
 		alignedPos := AlignOffset(currentPos, SlotAlignment)
 		if alignedPos > currentPos {
 			padding := make([]byte, alignedPos-currentPos)
-			if _, err := out.Write(padding); err != nil {
+			if _, err := outWriteFn(out, padding); err != nil {
 				logger.Error("Failed to write padding", "error", err)
-				os.Exit(1)
+				buildExitFn(1)
 			}
 		}
 
@@ -429,13 +450,13 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		slotOffsetUint64, err := int64ToUint64Checked(slotOffset, "slot offset")
 		if err != nil {
 			logger.Error("❌ Failed to convert slot offset", "error", err)
-			os.Exit(1)
+			buildExitFn(1)
 		}
 		slotDescriptors[i].Offset = slotOffsetUint64
 		logger.Debug("✍️ Writing slot", "id", i, "offset", slotOffset, "size", len(compressed))
-		if _, err := out.Write(compressed); err != nil {
+		if _, err := outWriteFn(out, compressed); err != nil {
 			logger.Error("❌ Failed to write slot", "error", err)
-			os.Exit(1)
+			buildExitFn(1)
 		}
 	}
 
@@ -443,25 +464,25 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	endOfSlots, err := out.Seek(0, io.SeekCurrent)
 	if err != nil {
 		logger.Error("❌ Failed to get file position", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 	if _, err := out.Seek(slotTableOffset, 0); err != nil {
 		logger.Error("Failed to seek to slot table for writing", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 
 	// Write 64-byte slot descriptors
 	for _, desc := range slotDescriptors {
-		if err := binary.Write(out, binary.LittleEndian, desc); err != nil {
+		if err := outBinaryWriteFn(out, desc); err != nil {
 			logger.Error("Failed to write slot descriptor", "error", err)
-			os.Exit(1)
+			buildExitFn(1)
 		}
 	}
 
 	// Return to end of file
 	if _, err := out.Seek(endOfSlots, 0); err != nil {
 		logger.Error("Failed to seek to end", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 
 	// Store signature in index (first 64 bytes of 512-byte field)
@@ -472,20 +493,20 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	savedPos, err := out.Seek(0, io.SeekCurrent)
 	if err != nil {
 		logger.Error("❌ Failed to get file position", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 	if _, err := out.Seek(int64(metadataPos), 0); err != nil {
 		logger.Error("❌ Failed to seek to metadata position", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 	compressedData := make([]byte, metadataSize)
 	if _, err := out.Read(compressedData); err != nil {
 		logger.Error("❌ Failed to read compressed metadata", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 	if _, err := out.Seek(savedPos, 0); err != nil {
 		logger.Error("❌ Failed to restore seek position", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 
 	// Compute full SHA-256 checksum (32 bytes)
@@ -497,17 +518,17 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	currentPos, err = out.Seek(0, io.SeekCurrent)
 	if err != nil {
 		logger.Error("❌ Failed to get file position", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 	currentPosUint64, err := int64ToUint64Checked(currentPos, "package size")
 	if err != nil {
 		logger.Error("❌ Failed to convert package size", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 	index.PackageSize, err = addUint64Checked(currentPosUint64, MagicTrailerSize, "package size")
 	if err != nil {
 		logger.Error("❌ Failed to calculate package size", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 
 	// 🔐 Calculate index checksum (with checksum field as 0)
@@ -522,21 +543,21 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 	logger.Debug("🪄 Writing MagicTrailer")
 
 	// Write package emoji (4 bytes)
-	if _, err := out.Write(PackageEmojiBytes); err != nil {
+	if _, err := outWriteFn(out, PackageEmojiBytes); err != nil {
 		logger.Error("❌ Failed to write package emoji", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 
 	// Write index (8192 bytes)
-	if _, err := out.Write(index.Pack()); err != nil {
+	if _, err := outWriteFn(out, index.Pack()); err != nil {
 		logger.Error("❌ Failed to write index", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 
 	// Write magic wand emoji (4 bytes)
-	if _, err := out.Write(MagicWandEmojiBytes); err != nil {
+	if _, err := outWriteFn(out, MagicWandEmojiBytes); err != nil {
 		logger.Error("❌ Failed to write magic wand emoji", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 
 	logger.Info("✅ Successfully built PSPF bundle",
@@ -552,30 +573,30 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 		"slot_table_size", index.SlotTableSize)
 
 	// 🔧 Make the output file executable
-	if err := os.Chmod(outputPath, os.FileMode(ExecutablePerms)); err != nil { // #nosec G302 -- the builder output must remain executable.
+	if err := osChmodFn(outputPath, os.FileMode(ExecutablePerms)); err != nil { // #nosec G302 -- the builder output must remain executable.
 		logger.Error("❌ Failed to make output executable", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 	logger.Debug("🔧 Set executable permissions on output file")
 
 	// ⚠️ CRITICAL: Close the file BEFORE PE resource embedding on Windows
 	// On Windows ARM64, file locks prevent atomic replacement if file is still open
 	// This prevents "Access is denied" errors during PE resource embedding
-	if err := out.Close(); err != nil {
+	if err := outCloseFn(out); err != nil {
 		logger.Error("Failed to close output file before PE embedding", "error", err)
-		os.Exit(1)
+		buildExitFn(1)
 	}
 	logger.Debug("Closed output file before PE embedding")
 
 	// 🪟 Windows + Go Launcher: Convert append to resource embedding
 	// For Windows Go launchers, we need to embed PSPF as a PE resource instead of appending
 	// This is because Windows rejects modified Go binaries (with appended data)
-	if shouldUseResourceEmbedding(launcherData, logger) {
+	if shouldUseResourceEmbeddingFn(launcherData, logger) {
 		logger.Info("🪟 Converting to PE resource embedding (Windows Go launcher)")
 
 		if err := convertToResourceEmbedding(outputPath, launcherSize, logger); err != nil {
 			logger.Error("❌ Failed to convert to resource embedding", "error", err)
-			os.Exit(1)
+			buildExitFn(1)
 		}
 
 		logger.Info("✅ Successfully embedded PSPF as PE resource")
@@ -744,13 +765,13 @@ func convertToResourceEmbedding(filePath string, launcherSize int64, logger hclo
 	if err != nil {
 		return fmt.Errorf("failed to write temp file: %w", err)
 	}
-	if _, err := tempFile.Write(data[:launcherSize]); err != nil {
-		if closeErr := tempFile.Close(); closeErr != nil {
+	if _, err := convertTempWriteFn(tempFile, data[:launcherSize]); err != nil {
+		if closeErr := convertTempCloseFn(tempFile); closeErr != nil {
 			logger.Debug("Failed to close temp file after write error", "error", closeErr)
 		}
 		return fmt.Errorf("failed to write temp file: %w", err)
 	}
-	if err := tempFile.Close(); err != nil {
+	if err := convertTempCloseFn(tempFile); err != nil {
 		return fmt.Errorf("failed to close temp file: %w", err)
 	}
 
@@ -758,7 +779,7 @@ func convertToResourceEmbedding(filePath string, launcherSize int64, logger hclo
 	var embedErr error
 	defer func() {
 		if embedErr != nil {
-			if err := removePath(tempPath); err != nil {
+			if err := convertRemovePathFn(tempPath); err != nil {
 				logger.Warn("Failed to clean up temp file after error", "temp_path", tempPath, "error", err)
 			} else {
 				logger.Debug("Cleaned up temp file after error", "temp_path", tempPath)

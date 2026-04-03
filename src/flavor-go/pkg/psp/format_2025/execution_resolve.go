@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
@@ -48,7 +47,7 @@ func resolveExecutable(executable string, logger hclog.Logger) string {
 	}
 
 	// On Windows, try common Unix command fallbacks
-	if runtime.GOOS == "windows" {
+	if currentGOOS == "windows" {
 		var fallback string
 		switch execName {
 		case "python3", "python3.exe":
