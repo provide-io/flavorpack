@@ -2,7 +2,7 @@
 # Policy enforcement tests: platform deny, warn mode, allow mode, SBOM
 # Usage: ./tests/security/test-policy.sh  (run from the pretaster directory)
 
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/test-setup.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib/test-setup.sh"
 
 echo "📋 Policy Enforcement Tests"
 echo "==========================="

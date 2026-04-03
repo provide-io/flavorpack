@@ -8,14 +8,14 @@ set -eo pipefail
 
 # Source common test functions
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/test-lib.sh"
+source "$SCRIPT_DIR/../lib/test-lib.sh"
 
 echo "🐳 Testing Binary Compatibility Across Linux Distributions"
 echo "=========================================================="
 echo ""
 
 # Get helpers directory
-HELPERS_DIR="$(cd "$SCRIPT_DIR/../../../helpers" && pwd)"
+HELPERS_DIR="$(cd "$SCRIPT_DIR/../../../../helpers" && pwd)"
 BIN_DIR="$HELPERS_DIR/bin"
 
 # Test function

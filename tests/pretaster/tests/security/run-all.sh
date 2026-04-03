@@ -12,14 +12,14 @@
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PRETASTER_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+PRETASTER_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 cd "$PRETASTER_DIR"
 
 TOTAL_FAILURES=0
 
-for suite in "$SCRIPT_DIR/security/test-policy.sh" \
-             "$SCRIPT_DIR/security/test-trust.sh" \
-             "$SCRIPT_DIR/security/test-integrity.sh"; do
+for suite in "$SCRIPT_DIR/test-policy.sh" \
+             "$SCRIPT_DIR/test-trust.sh" \
+             "$SCRIPT_DIR/test-integrity.sh"; do
     if [ -f "$suite" ]; then
         echo ""
         set +e
