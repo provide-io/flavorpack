@@ -26,9 +26,12 @@ var (
 	versionFlag    bool
 )
 
+var osExecutableFn = os.Executable
+var readBuildInfoFn = debug.ReadBuildInfo
+
 func getBuilderTimestamp() string {
 	// Try to get vcs.time from build info
-	if info, ok := debug.ReadBuildInfo(); ok {
+	if info, ok := readBuildInfoFn(); ok {
 		for _, setting := range info.Settings {
 			if setting.Key == "vcs.time" {
 				if t, err := time.Parse(time.RFC3339, setting.Value); err == nil {
@@ -38,7 +41,7 @@ func getBuilderTimestamp() string {
 		}
 	}
 	// Fallback to binary modification time
-	if exePath, err := os.Executable(); err == nil {
+	if exePath, err := osExecutableFn(); err == nil {
 		if stat, err := os.Stat(exePath); err == nil {
 			return stat.ModTime().UTC().Format(time.RFC3339)
 		}

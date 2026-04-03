@@ -12,6 +12,9 @@ import (
 	"io"
 )
 
+var ioReadAllFn = io.ReadAll
+var jsonUnmarshalFn = json.Unmarshal
+
 // VerifyMagicTrailer verifies the MagicTrailer emoji bookends
 func (r *Reader) VerifyMagicTrailer() (bool, error) {
 	if err := r.Open(); err != nil {
@@ -66,12 +69,12 @@ func (r *Reader) VerifyIntegritySeal() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if _, err := r.file.Seek(metadataOffset, io.SeekStart); err != nil {
+	if _, err := fileSeekFn(r.file, metadataOffset, io.SeekStart); err != nil {
 		return false, err
 	}
 
 	archiveData := make([]byte, index.MetadataSize)
-	if _, err := r.file.Read(archiveData); err != nil {
+	if _, err := fileReadFn(r.file, archiveData); err != nil {
 		return false, err
 	}
 
@@ -89,7 +92,7 @@ func (r *Reader) VerifyIntegritySeal() (bool, error) {
 	}()
 
 	// Read the JSON metadata
-	jsonData, err := io.ReadAll(gr)
+	jsonData, err := ioReadAllFn(gr)
 	if err != nil {
 		return false, err
 	}
@@ -160,11 +163,11 @@ func (r *Reader) VerifyAttestationSbomDigest() error {
 			return fmt.Errorf("seeking slot descriptor %d: %w", i, err)
 		}
 		entryOffset := slotTableOffset + entryDeltaOffset
-		if _, err := r.file.Seek(entryOffset, io.SeekStart); err != nil {
+		if _, err := fileSeekFn(r.file, entryOffset, io.SeekStart); err != nil {
 			return fmt.Errorf("seeking slot descriptor %d: %w", i, err)
 		}
 		var entryData [SlotDescriptorSize]byte
-		if _, err := r.file.Read(entryData[:]); err != nil {
+		if _, err := fileReadFn(r.file, entryData[:]); err != nil {
 			return fmt.Errorf("reading slot descriptor %d: %w", i, err)
 		}
 		desc, err := UnpackSlotDescriptor(entryData[:])
@@ -192,11 +195,11 @@ func (r *Reader) VerifyAttestationSbomDigest() error {
 	if err != nil {
 		return fmt.Errorf("seeking attestation slot data: %w", err)
 	}
-	if _, err := r.file.Seek(attestationOffset, io.SeekStart); err != nil {
+	if _, err := fileSeekFn(r.file, attestationOffset, io.SeekStart); err != nil {
 		return fmt.Errorf("seeking attestation slot data: %w", err)
 	}
 	slotBytes := make([]byte, attestationDesc.Size)
-	if _, err := r.file.Read(slotBytes); err != nil {
+	if _, err := fileReadFn(r.file, slotBytes); err != nil {
 		return fmt.Errorf("reading attestation slot data: %w", err)
 	}
 
@@ -254,7 +257,7 @@ func (r *Reader) VerifyAttestationPolicyHash() error {
 	// Unmarshal raw bytes to map[string]interface{}, then re-marshal.
 	// encoding/json sorts map keys alphabetically, matching Python's sort_keys=True.
 	var policyMap map[string]interface{}
-	if err := json.Unmarshal(metadata.PolicyRaw, &policyMap); err != nil {
+	if err := jsonUnmarshalFn(metadata.PolicyRaw, &policyMap); err != nil {
 		return fmt.Errorf("parsing raw policy JSON: %w", err)
 	}
 	canonical, err := json.Marshal(policyMap)

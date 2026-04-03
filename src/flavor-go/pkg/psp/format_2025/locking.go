@@ -15,6 +15,12 @@ import (
 // Global flag for lock acquisition status
 var lockAcquired int32
 
+var isProcessRunningFn = IsProcessRunning
+var lockFprintfFn = fmt.Fprintf
+var openLockFileFn = func(path string, flag int, perm os.FileMode) (*os.File, error) {
+	return os.OpenFile(path, flag, perm)
+}
+
 // LockInfo represents lock file information
 type LockInfo struct {
 	PID int `json:"pid"`
@@ -40,7 +46,7 @@ func TryAcquireLock(paths *WorkenvPaths, logger hclog.Logger) (bool, error) {
 		if data, err := os.ReadFile(lockPath); err == nil {
 			contents := strings.TrimSpace(string(data))
 			if oldPid, err := strconv.Atoi(contents); err == nil {
-				if !IsProcessRunning(oldPid) {
+				if !isProcessRunningFn(oldPid) {
 					logger.Info("🧹 Removing stale lock from dead process", "pid", oldPid)
 					_ = os.Remove(lockPath)
 				} else {
@@ -60,7 +66,7 @@ func TryAcquireLock(paths *WorkenvPaths, logger hclog.Logger) (bool, error) {
 	}
 
 	// Try to create lock file exclusively
-	file, err := os.OpenFile(lockPath, os.O_CREATE|os.O_EXCL|os.O_WRONLY, FilePerms)
+	file, err := openLockFileFn(lockPath, os.O_CREATE|os.O_EXCL|os.O_WRONLY, FilePerms)
 	if err != nil {
 		if os.IsExist(err) {
 			logger.Debug("🔒 Lock file exists, another process is extracting")
@@ -71,7 +77,7 @@ func TryAcquireLock(paths *WorkenvPaths, logger hclog.Logger) (bool, error) {
 	defer func() { _ = file.Close() }()
 
 	// Write our PID to the lock file
-	if _, err := fmt.Fprintf(file, "%d\n", pid); err != nil {
+	if _, err := lockFprintfFn(file, "%d\n", pid); err != nil {
 		_ = os.Remove(lockPath)
 		return false, err
 	}
@@ -129,7 +135,7 @@ func MarkExtractionComplete(paths *WorkenvPaths, logger hclog.Logger) error {
 	}
 	defer func() { _ = file.Close() }()
 
-	if _, err := fmt.Fprintf(file, "%d\n", os.Getpid()); err != nil {
+	if _, err := lockFprintfFn(file, "%d\n", os.Getpid()); err != nil {
 		return err
 	}
 	logger.Debug("✅ Marked extraction as complete")
@@ -178,7 +184,7 @@ func CleanupStaleExtractions(paths *WorkenvPaths, logger hclog.Logger) error {
 			// Try to parse PID from directory name
 			if pid, err := strconv.Atoi(entry.Name()); err == nil {
 				// Check if process is still running
-				if !IsProcessRunning(pid) {
+				if !isProcessRunningFn(pid) {
 					staleDir := filepath.Join(tmpDir, entry.Name())
 					logger.Info("🧹 Cleaning up stale extraction directory from dead process", "pid", pid)
 					if err := os.RemoveAll(staleDir); err != nil {

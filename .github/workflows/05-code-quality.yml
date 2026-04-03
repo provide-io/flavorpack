@@ -42,7 +42,7 @@ jobs:
   # Python Code Quality
   python-quality:
     name: 🐍 Python Quality
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       issues: write
@@ -420,7 +420,7 @@ jobs:
   # Go Code Quality
   go-quality:
     name: 🐹 Go Quality
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
@@ -514,7 +514,7 @@ jobs:
   # Rust Code Quality
   rust-quality:
     name: 🦀 Rust Quality
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
@@ -610,7 +610,7 @@ jobs:
     name: 📊 Quality Report
     needs: [python-quality, go-quality, rust-quality]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📥 Download all reports
         uses: actions/download-artifact@v8
@@ -667,7 +667,7 @@ jobs:
 
   python-quality-observability:
     name: 🐍 Python Intent Observability
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     continue-on-error: true
     steps:
@@ -721,7 +721,7 @@ jobs:
 
   go-quality-observability:
     name: 🐹 Go Intent Observability
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     continue-on-error: true
     steps:
@@ -770,7 +770,7 @@ jobs:
 
   rust-quality-observability:
     name: 🦀 Rust Intent Observability
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     continue-on-error: true
     steps:
@@ -827,7 +827,7 @@ jobs:
     name: 📈 Intent Observability Report
     needs: [python-quality-observability, go-quality-observability, rust-quality-observability]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: 📊 Summarize observability jobs
         run: |

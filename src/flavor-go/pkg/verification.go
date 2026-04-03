@@ -9,6 +9,8 @@ import (
 	"github.com/provide-io/flavor/go/flavor/pkg/psp/format_2025"
 )
 
+var verifyReaderCloseFn = (*format_2025.Reader).Close
+
 // VerifyBundleWithLogger verifies a bundle with a provided logger
 func VerifyBundleWithLogger(exePath string, logger hclog.Logger) {
 	reader, err := format_2025.NewReader(exePath)
@@ -17,7 +19,7 @@ func VerifyBundleWithLogger(exePath string, logger hclog.Logger) {
 		os.Exit(1)
 	}
 	defer func() {
-		if err := reader.Close(); err != nil {
+		if err := verifyReaderCloseFn(reader); err != nil {
 			logger.Debug("Failed to close reader", "error", err)
 		}
 	}()

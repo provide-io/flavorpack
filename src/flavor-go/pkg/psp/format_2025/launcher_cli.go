@@ -11,6 +11,9 @@ import (
 	"github.com/hashicorp/go-hclog"
 )
 
+var readerCloseFn = (*Reader).Close
+var verifyMagicTrailerFn = (*Reader).VerifyMagicTrailer
+
 // showBundleInfo displays bundle information in human-readable format
 func showBundleInfo(exePath string, logger hclog.Logger) {
 	// Prepare bundle path (may extract from PE resources on Windows)
@@ -29,7 +32,7 @@ func showBundleInfo(exePath string, logger hclog.Logger) {
 		osExitFn(1)
 	}
 	defer func() {
-		if err := reader.Close(); err != nil {
+		if err := readerCloseFn(reader); err != nil {
 			logger.Error("Failed to close reader", "error", err)
 		}
 	}()
@@ -69,7 +72,7 @@ func showBundleInfo(exePath string, logger hclog.Logger) {
 	}
 
 	verifyStatus := "✓"
-	_, err = reader.VerifyMagicTrailer()
+	_, err = verifyMagicTrailerFn(reader)
 	if err != nil {
 		verifyStatus = "✗"
 	}
@@ -117,7 +120,7 @@ func extractSlot(exePath, slotStr, outputDir string, logger hclog.Logger) {
 		osExitFn(1)
 	}
 	defer func() {
-		if err := reader.Close(); err != nil {
+		if err := readerCloseFn(reader); err != nil {
 			logger.Error("Failed to close reader", "error", err)
 		}
 	}()
@@ -207,7 +210,7 @@ func showMetadata(exePath string, logger hclog.Logger) {
 		osExitFn(1)
 	}
 	defer func() {
-		if err := reader.Close(); err != nil {
+		if err := readerCloseFn(reader); err != nil {
 			logger.Debug("Failed to close reader", "error", err)
 		}
 	}()
@@ -245,7 +248,7 @@ func verifyBundle(exePath string, logger hclog.Logger) {
 		osExitFn(1)
 	}
 	defer func() {
-		if err := reader.Close(); err != nil {
+		if err := readerCloseFn(reader); err != nil {
 			logger.Error("Failed to close reader", "error", err)
 		}
 	}()
@@ -254,7 +257,7 @@ func verifyBundle(exePath string, logger hclog.Logger) {
 
 	errors := []string{}
 
-	_, err = reader.VerifyMagicTrailer()
+	_, err = verifyMagicTrailerFn(reader)
 	if err != nil {
 		errors = append(errors, fmt.Sprintf("Magic verification failed: %v", err))
 	} else {

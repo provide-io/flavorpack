@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 WORKENV="${FLAVOR_WORKENV:?FLAVOR_WORKENV is required}"
