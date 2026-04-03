@@ -61,8 +61,8 @@ case "$OS" in
         CFLAGS="-std=gnu11 -Wno-deprecated-non-prototype" ./configure --quiet
         ;;
     freebsd)
-        # FreeBSD: static if possible
-        CFLAGS="-static" LDFLAGS="-static" ./configure --quiet
+        # FreeBSD: static build; use gnu11 to avoid K&R errors with newer clang
+        CFLAGS="-static -std=gnu11" LDFLAGS="-static" ./configure --quiet
         ;;
     windows)
         # Cross-compile with mingw
