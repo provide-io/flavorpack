@@ -163,6 +163,20 @@ func TestFixShebangsSkipsMissingBinDir(t *testing.T) {
 	}
 }
 
+func TestFixShebangsSkipsSubdirectories(t *testing.T) {
+	t.Parallel()
+
+	binDir := t.TempDir()
+	// Create a subdirectory inside binDir — covers the entry.IsDir() continue branch.
+	if err := os.Mkdir(filepath.Join(binDir, "subdir"), 0o755); err != nil {
+		t.Fatalf("Mkdir() error = %v", err)
+	}
+	logger := hclog.NewNullLogger()
+	if err := fixShebangs(binDir, "/old", "/new", logger); err != nil {
+		t.Fatalf("fixShebangs() error = %v", err)
+	}
+}
+
 func TestCopyHelpersRejectBadDestinationTargets(t *testing.T) {
 	t.Parallel()
 

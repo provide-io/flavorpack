@@ -1337,12 +1337,13 @@ class TestSlotsEdgeCases:
             SlotMetadata.from_dict(data)
 
     def test_slot_view_content_gzip(self) -> None:
-        """Lines 357-360: SlotView content with GZIP operations uses zlib."""
+        """Lines 357-360: SlotView content with GZIP operations uses gzip (RFC 1952)."""
+        import gzip as gzip_mod
+
         from flavor.psp.format_2025.operations import OP_GZIP, pack_operations
 
         raw_data = b"hello gzip"
-        # zlib compressed (not gzip)
-        compressed = zlib.compress(raw_data)
+        compressed = gzip_mod.compress(raw_data)
 
         ops = pack_operations([OP_GZIP])
         descriptor = SlotDescriptor(id=0, offset=0, size=len(compressed), checksum=0, operations=ops)
