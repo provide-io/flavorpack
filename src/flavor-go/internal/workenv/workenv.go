@@ -62,7 +62,10 @@ func GetCacheRoot() string {
 		}
 	}
 
-	// Fallback to temp directory
+	// Last resort: use os.UserHomeDir before falling back to temp
+	if home, err := os.UserHomeDir(); err == nil {
+		return filepath.Join(home, ".cache", "flavor")
+	}
 	return filepath.Join(os.TempDir(), "flavor", "cache")
 }
 
@@ -85,6 +88,10 @@ func GetConfigRoot() string {
 		if home := os.Getenv("HOME"); home != "" {
 			return filepath.Join(home, ".config", "flavor")
 		}
+	}
+	// Last resort: use os.UserHomeDir (reads /etc/passwd on Unix, %USERPROFILE% on Windows)
+	if home, err := os.UserHomeDir(); err == nil {
+		return filepath.Join(home, ".config", "flavor")
 	}
 	return filepath.Join(os.TempDir(), "flavor", "config")
 }
