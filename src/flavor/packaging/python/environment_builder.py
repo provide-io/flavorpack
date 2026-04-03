@@ -440,27 +440,34 @@ class PythonEnvironmentBuilder:
                 "A placeholder tarball would cause silent runtime failures."
             )
         # On platforms where uv has no prebuilt Python (e.g. FreeBSD), find the
-        # system Python and create a tarball with bin/python3 symlinks so the PSP
-        # setup command ({workenv}/bin/uv pip install --python {workenv}/bin/python3)
-        # can function at runtime on a matching system.
+        # system Python and create a tarball with shell-script wrappers in bin/
+        # so the PSP setup command
+        # ({workenv}/bin/uv pip install --python {workenv}/bin/python3)
+        # resolves correctly at runtime.  Shell scripts are used instead of
+        # symlinks because the Rust tar extractor does not support SYMTYPE entries.
+        import io as _io
         import shutil as _shutil
 
         system_python = _shutil.which(f"python{self.python_version}") or _shutil.which("python3")
         if system_python:
+            real_python = os.path.realpath(system_python)
             logger.warning(
-                f"Creating system-python-symlink tarball ({os_name}): {system_python}",
+                f"Creating system-python-wrapper tarball ({os_name}): {real_python}",
                 python_version=self.python_version,
             )
+            script = f'#!/bin/sh\nexec {real_python} "$@"\n'
+            script_bytes = script.encode()
             with tarfile.open(python_tgz, "w:gz", compresslevel=9) as tar:
                 dir_info = tarfile.TarInfo(name="bin")
                 dir_info.type = tarfile.DIRTYPE
                 dir_info.mode = 0o755
                 tar.addfile(dir_info)
                 for name in (f"python{self.python_version}", "python3"):
-                    sym = tarfile.TarInfo(name=f"bin/{name}")
-                    sym.type = tarfile.SYMTYPE
-                    sym.linkname = system_python
-                    tar.addfile(sym)
+                    info = tarfile.TarInfo(name=f"bin/{name}")
+                    info.type = tarfile.REGTYPE
+                    info.mode = 0o755
+                    info.size = len(script_bytes)
+                    tar.addfile(info, _io.BytesIO(script_bytes))
             return
         logger.warning(
             "Creating placeholder Python tarball (non-Linux build only)",
