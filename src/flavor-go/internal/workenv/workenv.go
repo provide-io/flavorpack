@@ -12,6 +12,8 @@ import (
 	"github.com/provide-io/flavor/go/flavor/pkg/envvars"
 )
 
+var currentGOOS = runtime.GOOS
+
 // GetWorkenvPath returns the workenv path for a package
 func GetWorkenvPath(packageName, version, checksum string) string {
 	// Use checksum for uniqueness if available
@@ -42,12 +44,12 @@ func GetCacheRoot() string {
 	}
 
 	// Use platform-specific defaults
-	switch runtime.GOOS {
+	switch currentGOOS {
 	case "darwin":
 		if home := os.Getenv("HOME"); home != "" {
 			return filepath.Join(home, "Library", "Caches", "flavor")
 		}
-	case "linux":
+	case "linux", "freebsd":
 		if xdgCache := os.Getenv("XDG_CACHE_HOME"); xdgCache != "" {
 			return filepath.Join(xdgCache, "flavor")
 		}
@@ -74,7 +76,7 @@ func GetConfigRoot() string {
 	if xdgConfig := os.Getenv("XDG_CONFIG_HOME"); xdgConfig != "" {
 		return filepath.Join(xdgConfig, "flavor")
 	}
-	switch runtime.GOOS {
+	switch currentGOOS {
 	case "windows":
 		if appData := os.Getenv("APPDATA"); appData != "" {
 			return filepath.Join(appData, "flavor")
@@ -91,7 +93,7 @@ func GetConfigRoot() string {
 // Linux/macOS: /etc/flavor
 // Windows:     %PROGRAMDATA%\flavor
 func GetSystemConfigRoot() string {
-	if runtime.GOOS == "windows" {
+	if currentGOOS == "windows" {
 		if programData := os.Getenv("PROGRAMDATA"); programData != "" {
 			return filepath.Join(programData, "flavor")
 		}

@@ -49,7 +49,8 @@ jobs:
             ALL_PLATFORMS='[{"platform":"linux_amd64","os":"ubuntu-latest","rust_target":"x86_64-unknown-linux-musl","use_musl":true}]'
           else
             # Note: Linux platforms use musl for static linking to ensure compatibility with older glibc versions
-            ALL_PLATFORMS='[{"platform":"linux_amd64","os":"ubuntu-latest","rust_target":"x86_64-unknown-linux-musl","use_musl":true},{"platform":"linux_arm64","os":"ubuntu-24.04-arm","rust_target":"aarch64-unknown-linux-musl","use_musl":true},{"platform":"darwin_amd64","os":"macos-15-intel","rust_target":"x86_64-apple-darwin","use_musl":false},{"platform":"darwin_arm64","os":"macos-15","rust_target":"aarch64-apple-darwin","use_musl":false},{"platform":"windows_amd64","os":"windows-2022","rust_target":"x86_64-pc-windows-msvc","use_musl":false},{"platform":"windows_arm64","os":"windows-11-arm","rust_target":"aarch64-pc-windows-msvc","use_musl":false}]'
+            # Windows has dedicated jobs (build-windows-amd64, build-windows-arm64) for better parallelism
+            ALL_PLATFORMS='[{"platform":"linux_amd64","os":"ubuntu-latest","rust_target":"x86_64-unknown-linux-musl","use_musl":true},{"platform":"linux_arm64","os":"ubuntu-24.04-arm","rust_target":"aarch64-unknown-linux-musl","use_musl":true},{"platform":"darwin_amd64","os":"macos-15-intel","rust_target":"x86_64-apple-darwin","use_musl":false},{"platform":"darwin_arm64","os":"macos-15","rust_target":"aarch64-apple-darwin","use_musl":false}]'
           fi
           
           # Check if specific platforms requested
@@ -299,12 +300,14 @@ jobs:
           name: metadata-${{ matrix.platform }}
           path: artifacts/metadata/
 
-  # FreeBSD job — uses QEMU VM, Go helpers only, experimental
-  build-freebsd:
+  # FreeBSD jobs — use QEMU VM via cross-platform-actions, Go helpers only
+  build-freebsd-amd64:
     name: 🐡 Build freebsd_amd64
     needs: setup
     runs-on: ubuntu-latest
     continue-on-error: true
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
@@ -313,13 +316,13 @@ jobs:
           fetch-depth: 0
 
       - name: 🐡 Build and test inside FreeBSD VM
-        uses: cross-platform-actions/action@v0.27.0
+        uses: cross-platform-actions/action@v0.32.0
         with:
           operating_system: freebsd
           version: '14.2'
           architecture: x86-64
           shell: bash
-          run: .github/scripts/build-freebsd.sh ${{ needs.setup.outputs.version }}
+          run: .github/scripts/build-freebsd.sh ${{ needs.setup.outputs.version }} amd64
 
       - name: 📦 Package artifacts
         shell: bash
@@ -334,10 +337,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p test-results
-          .github/scripts/test-binaries.sh \
-            freebsd_amd64 \
-            dist/bin \
-            test-results
+          .github/scripts/test-binaries.sh freebsd_amd64 dist/bin test-results
 
       - name: 📊 Generate metadata
         if: always()
@@ -346,9 +346,7 @@ jobs:
           export PYTHONUTF8=1
           export PYTHONIOENCODING=utf-8
           python3 .github/scripts/test-metadata.py platform \
-            freebsd_amd64 \
-            "${{ needs.setup.outputs.version }}" \
-            "false"
+            freebsd_amd64 "${{ needs.setup.outputs.version }}" "false"
 
       - name: 📤 Upload artifacts
         uses: actions/upload-artifact@v7
@@ -370,10 +368,306 @@ jobs:
           name: metadata-freebsd_amd64
           path: artifacts/metadata/
 
+  build-freebsd-arm64:
+    name: 🐡 Build freebsd_arm64
+    needs: setup
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: 🐡 Build and test inside FreeBSD VM
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: arm64
+          shell: bash
+          run: .github/scripts/build-freebsd.sh ${{ needs.setup.outputs.version }} arm64
+
+      - name: 📦 Package artifacts
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          cd dist/bin
+          zip -r ../../artifacts/flavor-helpers-${{ needs.setup.outputs.version }}-freebsd_arm64.zip \
+            *-${{ needs.setup.outputs.version }}-freebsd_arm64 || true
+
+      - name: 🧪 Test binaries
+        continue-on-error: true
+        shell: bash
+        run: |
+          mkdir -p test-results
+          .github/scripts/test-binaries.sh freebsd_arm64 dist/bin test-results
+
+      - name: 📊 Generate metadata
+        if: always()
+        shell: bash
+        run: |
+          export PYTHONUTF8=1
+          export PYTHONIOENCODING=utf-8
+          python3 .github/scripts/test-metadata.py platform \
+            freebsd_arm64 "${{ needs.setup.outputs.version }}" "false"
+
+      - name: 📤 Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: flavor-helpers-${{ needs.setup.outputs.version }}-freebsd_arm64
+          path: artifacts/*.zip
+
+      - name: 📤 Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results-freebsd_arm64
+          path: test-results/
+
+      - name: 📤 Upload metadata
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: metadata-freebsd_arm64
+          path: artifacts/metadata/
+
+  # Windows dedicated jobs — native runners, Go + Rust helpers
+  build-windows-amd64:
+    name: 🪟 Build windows_amd64
+    needs: setup
+    runs-on: windows-2022
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: 💾 Cache helpers
+        id: cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            dist/bin/*-${{ needs.setup.outputs.version }}-windows_amd64.exe
+            artifacts/*.zip
+          key: ${{ needs.setup.outputs.cache_key_base }}-windows_amd64-${{ needs.setup.outputs.version }}
+
+      - name: 📦 Setup uv + Python
+        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
+        with:
+          python-version: '3.11'
+          enable-cache: false
+
+      - name: 🐹 Setup Go
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/setup-go@v6
+        with:
+          go-version: "${{ vars.GO_VERSION }}"
+          cache-dependency-path: src/flavor-go/go.sum
+
+      - name: 🦀 Setup Rust
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.94.0"
+          targets: x86_64-pc-windows-msvc
+          components: rustfmt, clippy
+
+      - name: 🐹 Build Go helpers
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: bash
+        working-directory: src/flavor-go
+        run: |
+          VERSION="${{ needs.setup.outputs.version }}"
+          export GOOS=windows GOARCH=amd64
+          mkdir -p ../../dist/bin
+          go build -buildvcs=false -ldflags "-X main.Version=$VERSION" \
+            -o ../../dist/bin/flavor-go-builder-$VERSION-windows_amd64.exe \
+            cmd/flavor-go-builder/main.go
+          go build -buildvcs=false -ldflags "-X main.Version=$VERSION" \
+            -o ../../dist/bin/flavor-go-launcher-$VERSION-windows_amd64.exe \
+            cmd/flavor-go-launcher/main.go
+
+      - name: 🦀 Build Rust helpers
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: bash
+        working-directory: src/flavor-rs
+        run: |
+          VERSION="${{ needs.setup.outputs.version }}"
+          export FLAVOR_VERSION="$VERSION"
+          cargo build --release --target x86_64-pc-windows-msvc
+          cp target/x86_64-pc-windows-msvc/release/flavor-rs-builder.exe \
+            ../../dist/bin/flavor-rs-builder-$VERSION-windows_amd64.exe
+          cp target/x86_64-pc-windows-msvc/release/flavor-rs-launcher.exe \
+            ../../dist/bin/flavor-rs-launcher-$VERSION-windows_amd64.exe
+
+      - name: 📦 Package artifacts
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts | Out-Null
+          $files = Get-ChildItem -Path "dist\bin" -Filter "*-${{ needs.setup.outputs.version }}-windows_amd64.exe"
+          if ($files.Count -gt 0) {
+            Compress-Archive -Path $files.FullName `
+              -DestinationPath "artifacts\flavor-helpers-${{ needs.setup.outputs.version }}-windows_amd64.zip" -Force
+          }
+
+      - name: 🧪 Test binaries
+        continue-on-error: true
+        shell: bash
+        run: |
+          mkdir -p test-results
+          .github/scripts/test-binaries.sh windows_amd64 dist/bin test-results
+
+      - name: 📊 Generate metadata
+        if: always()
+        shell: bash
+        run: |
+          export PYTHONUTF8=1 PYTHONIOENCODING=utf-8
+          python3 .github/scripts/test-metadata.py platform \
+            windows_amd64 "${{ needs.setup.outputs.version }}" "${{ steps.cache.outputs.cache-hit }}"
+
+      - name: 📤 Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: flavor-helpers-${{ needs.setup.outputs.version }}-windows_amd64
+          path: artifacts/*.zip
+
+      - name: 📤 Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results-windows_amd64
+          path: test-results/
+
+      - name: 📤 Upload metadata
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: metadata-windows_amd64
+          path: artifacts/metadata/
+
+  build-windows-arm64:
+    name: 🪟 Build windows_arm64
+    needs: setup
+    runs-on: windows-11-arm
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: 💾 Cache helpers
+        id: cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            dist/bin/*-${{ needs.setup.outputs.version }}-windows_arm64.exe
+            artifacts/*.zip
+          key: ${{ needs.setup.outputs.cache_key_base }}-windows_arm64-${{ needs.setup.outputs.version }}
+
+      - name: 📦 Setup uv + Python
+        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
+        with:
+          python-version: '3.11'
+          enable-cache: false
+
+      - name: 🐹 Setup Go
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/setup-go@v6
+        with:
+          go-version: "${{ vars.GO_VERSION }}"
+          cache-dependency-path: src/flavor-go/go.sum
+
+      - name: 🦀 Setup Rust
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.94.0"
+          targets: aarch64-pc-windows-msvc
+          components: rustfmt, clippy
+
+      - name: 🐹 Build Go helpers
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: bash
+        working-directory: src/flavor-go
+        run: |
+          VERSION="${{ needs.setup.outputs.version }}"
+          export GOOS=windows GOARCH=arm64
+          mkdir -p ../../dist/bin
+          go build -buildvcs=false -ldflags "-X main.Version=$VERSION" \
+            -o ../../dist/bin/flavor-go-builder-$VERSION-windows_arm64.exe \
+            cmd/flavor-go-builder/main.go
+          go build -buildvcs=false -ldflags "-X main.Version=$VERSION" \
+            -o ../../dist/bin/flavor-go-launcher-$VERSION-windows_arm64.exe \
+            cmd/flavor-go-launcher/main.go
+
+      - name: 🦀 Build Rust helpers
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: bash
+        working-directory: src/flavor-rs
+        run: |
+          VERSION="${{ needs.setup.outputs.version }}"
+          export FLAVOR_VERSION="$VERSION"
+          cargo build --release --target aarch64-pc-windows-msvc
+          cp target/aarch64-pc-windows-msvc/release/flavor-rs-builder.exe \
+            ../../dist/bin/flavor-rs-builder-$VERSION-windows_arm64.exe
+          cp target/aarch64-pc-windows-msvc/release/flavor-rs-launcher.exe \
+            ../../dist/bin/flavor-rs-launcher-$VERSION-windows_arm64.exe
+
+      - name: 📦 Package artifacts
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts | Out-Null
+          $files = Get-ChildItem -Path "dist\bin" -Filter "*-${{ needs.setup.outputs.version }}-windows_arm64.exe"
+          if ($files.Count -gt 0) {
+            Compress-Archive -Path $files.FullName `
+              -DestinationPath "artifacts\flavor-helpers-${{ needs.setup.outputs.version }}-windows_arm64.zip" -Force
+          }
+
+      - name: 🧪 Test binaries
+        continue-on-error: true
+        shell: bash
+        run: |
+          mkdir -p test-results
+          .github/scripts/test-binaries.sh windows_arm64 dist/bin test-results
+
+      - name: 📊 Generate metadata
+        if: always()
+        shell: bash
+        run: |
+          export PYTHONUTF8=1 PYTHONIOENCODING=utf-8
+          python3 .github/scripts/test-metadata.py platform \
+            windows_arm64 "${{ needs.setup.outputs.version }}" "${{ steps.cache.outputs.cache-hit }}"
+
+      - name: 📤 Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: flavor-helpers-${{ needs.setup.outputs.version }}-windows_arm64
+          path: artifacts/*.zip
+
+      - name: 📤 Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results-windows_arm64
+          path: test-results/
+
+      - name: 📤 Upload metadata
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: metadata-windows_arm64
+          path: artifacts/metadata/
+
   # Combine all artifacts
   combine:
     name: 📦 Combine & Validate
-    needs: [setup, build, build-freebsd]
+    needs: [setup, build, build-freebsd-amd64, build-freebsd-arm64, build-windows-amd64, build-windows-arm64]
     if: always()
     runs-on: ubuntu-latest
     steps:

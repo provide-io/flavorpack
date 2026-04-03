@@ -30,6 +30,12 @@ func TestGetWorkenvPath(t *testing.T) {
 }
 
 func TestGetCacheRoot(t *testing.T) {
+	// Pin currentGOOS to the real OS so platform tests running concurrently
+	// cannot interfere with this test's expectations.
+	oldGOOS := currentGOOS
+	currentGOOS = runtime.GOOS
+	t.Cleanup(func() { currentGOOS = oldGOOS })
+
 	t.Setenv(envvars.EnvCacheDir, "/tmp/flavor-cache")
 	t.Setenv("XDG_CACHE_HOME", "/tmp/xdg-cache")
 	t.Setenv("HOME", "/tmp/home")
@@ -39,7 +45,7 @@ func TestGetCacheRoot(t *testing.T) {
 	}
 
 	t.Setenv(envvars.EnvCacheDir, "")
-	if runtime.GOOS == "linux" {
+	if runtime.GOOS == "linux" || runtime.GOOS == "freebsd" {
 		if got, want := GetCacheRoot(), filepath.Join("/tmp/xdg-cache", "flavor"); got != want {
 			t.Fatalf("GetCacheRoot xdg mismatch: got %q want %q", got, want)
 		}
@@ -56,7 +62,7 @@ func TestGetCacheRoot(t *testing.T) {
 	}
 
 	t.Setenv("XDG_CACHE_HOME", "")
-	if runtime.GOOS == "linux" {
+	if runtime.GOOS == "linux" || runtime.GOOS == "freebsd" {
 		if got, want := GetCacheRoot(), filepath.Join("/tmp/home", ".cache", "flavor"); got != want {
 			t.Fatalf("GetCacheRoot home mismatch: got %q want %q", got, want)
 		}
@@ -78,6 +84,10 @@ func TestGetCacheRoot(t *testing.T) {
 }
 
 func TestGetConfigAndSystemRoots(t *testing.T) {
+	oldGOOS := currentGOOS
+	currentGOOS = runtime.GOOS
+	t.Cleanup(func() { currentGOOS = oldGOOS })
+
 	t.Setenv(envvars.EnvConfigDir, "/tmp/flavor-config")
 	t.Setenv("XDG_CONFIG_HOME", "/tmp/xdg-config")
 	t.Setenv("HOME", "/tmp/home")
