@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
-# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
-# Generate build-flavor and test-flavor-psp matrices for flavor-pipeline.yml.
+# Generate build-flavor and test-flavor-psp matrices for 03-flavor-pipeline.yml.
 # Usage: build-flavor-matrix.sh [platforms]
 #   platforms: optional comma-separated list (e.g. freebsd_amd64,freebsd_arm64)
 #              empty/absent = all platforms
@@ -21,7 +18,9 @@ BUILD_FULL='{"include":[
   {"platform":"darwin_amd64","runner":"macos-15-intel","python_platform":"macosx_10_9_x86_64"},
   {"platform":"darwin_arm64","runner":"macos-15","python_platform":"macosx_11_0_arm64"},
   {"platform":"windows_amd64","runner":"windows-2025","python_platform":"win_amd64","continue_on_error":true},
-  {"platform":"windows_arm64","runner":"windows-11-arm","python_platform":"win_arm64"}
+  {"platform":"windows_arm64","runner":"windows-11-arm","python_platform":"win_arm64"},
+  {"platform":"freebsd_amd64","runner":"ubuntu-24.04","python_platform":"freebsd_14_2_release_amd64","continue_on_error":true,"vm_arch":"x86-64"},
+  {"platform":"freebsd_arm64","runner":"ubuntu-24.04","python_platform":"freebsd_14_2_release_arm64","continue_on_error":true,"vm_arch":"arm64"}
 ]}'
 
 PSP_FULL='{"include":[
@@ -30,7 +29,9 @@ PSP_FULL='{"include":[
   {"platform":"darwin_amd64","runner":"macos-15-intel"},
   {"platform":"darwin_arm64","runner":"macos-15"},
   {"platform":"windows_amd64","runner":"windows-2025"},
-  {"platform":"windows_arm64","runner":"windows-11-arm"}
+  {"platform":"windows_arm64","runner":"windows-11-arm"},
+  {"platform":"freebsd_amd64","runner":"ubuntu-24.04","continue_on_error":true,"vm_arch":"x86-64"},
+  {"platform":"freebsd_arm64","runner":"ubuntu-24.04","continue_on_error":true,"vm_arch":"arm64"}
 ]}'
 
 if [ -n "$PLATFORMS" ]; then
