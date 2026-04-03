@@ -97,13 +97,56 @@ mkdir -p "$WHEEL_CACHE"
 
 # Build C-extension wheels from source for packages with no PyPI FreeBSD wheel.
 # Use --no-deps so we only build the wheel we're requesting, not its subtree.
+# cryptography 45.x uses Rust (maturin); skip pip wheel — repackage the
+# pkg-compiled binary directly (see below).
 /tmp/flavorenv/bin/pip wheel \
     'cffi>=1.14,<2.0.0' \
-    'cryptography<46.0.0' \
     'psutil' \
     'setproctitle' \
     'zstandard' \
     -w "$WHEEL_CACHE" --no-deps
+
+# Repackage the pkg-compiled cryptography into a wheel so flavor pack can bundle
+# it.  cryptography 45.x requires Rust to build from source (maturin), but
+# `pkg install py311-cryptography` gives us a pre-compiled binary.  We zip the
+# installed package directory + dist-info into a correctly named .whl archive.
+python3.11 - <<'PYEOF'
+import zipfile, re, sys, sysconfig
+from pathlib import Path
+
+site = Path("/usr/local/lib/python3.11/site-packages")
+cache = Path("/tmp/freebsd-wheel-cache")
+
+dists = sorted(site.glob("cryptography-*.dist-info"))
+if not dists:
+    print("ERROR: cryptography dist-info not found in system site-packages", file=sys.stderr)
+    sys.exit(1)
+
+dist_info = dists[-1]
+version = re.search(r"cryptography-(.+?)\.dist-info", dist_info.name).group(1)
+plat = sysconfig.get_platform().replace("-", "_").replace(".", "_")
+py = f"cp{sys.version_info.major}{sys.version_info.minor}"
+wheel_name = f"cryptography-{version}-{py}-{py}-{plat}.whl"
+out = cache / wheel_name
+
+print(f"Packaging pkg cryptography {version} → {wheel_name}")
+with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as whl:
+    pkg_dir = site / "cryptography"
+    for p in pkg_dir.rglob("*"):
+        if p.is_file() and "__pycache__" not in p.parts:
+            whl.write(p, str(p.relative_to(site)))
+    for p in dist_info.rglob("*"):
+        if p.is_file() and p.name not in ("RECORD", "INSTALLER", "direct_url.json"):
+            whl.write(p, str(p.relative_to(site)))
+    # Ensure a WHEEL metadata file exists
+    wheel_file = dist_info / "WHEEL"
+    if not wheel_file.exists():
+        whl.writestr(
+            f"cryptography-{version}.dist-info/WHEEL",
+            f"Wheel-Version: 1.0\nGenerator: repackage\nRoot-Is-Purelib: false\nTag: {py}-{py}-{plat}\n",
+        )
+print(f"Created {out}")
+PYEOF
 
 # Patch pyproject.toml + remove lock file before flavor pack.
 #   1. Relax cffi constraint (>=2.0.0 → >=1.14,<2.0.0): uv 0.9.24 ignores
