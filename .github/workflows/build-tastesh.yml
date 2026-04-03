@@ -1,7 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
-name: "~ Build tastesh (reusable)"
+name: Build tastesh (reusable)
 
 on:
   workflow_call:
@@ -54,16 +51,15 @@ jobs:
 
       - name: 🔧 Install autotools (macOS)
         if: steps.cache.outputs.cache-hit != 'true' && runner.os == 'macOS'
-        run: brew install autoconf automake libtool || true
+        run: brew install autoconf automake libtool
 
-      - name: 🔧 Setup Go (Windows — builds tastesh-win Go interpreter)
+      - name: 🔧 Install autotools + mingw (Windows)
         if: steps.cache.outputs.cache-hit != 'true' && runner.os == 'Windows'
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: ci/tastesh-win/go.mod
-          cache-dependency-path: ci/tastesh-win/go.sum
+        shell: bash
+        run: |
+          pacman -S --noconfirm autoconf automake-wrapper libtool mingw-w64-x86_64-gcc
 
-      - name: 🐚 Build tastesh (dash / Go sh)
+      - name: 🐚 Build tastesh (dash)
         if: steps.cache.outputs.cache-hit != 'true'
         shell: bash
         run: ci/build-dash.sh dist/bin
