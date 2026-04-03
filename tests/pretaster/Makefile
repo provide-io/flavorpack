@@ -63,6 +63,10 @@ RS_BUILDER := $(BIN_DIR)/flavor-rs-builder-$(PLATFORM)$(EXE)
 GO_BUILDER := $(BIN_DIR)/flavor-go-builder-$(PLATFORM)$(EXE)
 RS_LAUNCHER := $(BIN_DIR)/flavor-rs-launcher-$(PLATFORM)$(EXE)
 GO_LAUNCHER := $(BIN_DIR)/flavor-go-launcher-$(PLATFORM)$(EXE)
+TASTESH := $(BIN_DIR)/flavor-tastesh-$(PLATFORM)$(EXE)
+
+# Resolved configs directory (TASTESH_BIN substituted)
+RESOLVED_DIR := $(DIST_DIR)/.configs
 
 # Test packages
 ECHO_PSP := $(DIST_DIR)/echo-test.psp
@@ -178,27 +182,34 @@ $(DIST_DIR):
 $(LOGS_DIR):
 	@mkdir -p $(LOGS_DIR)
 
-# Individual test packages
-$(ECHO_PSP): $(DIST_DIR)
+# Resolve config templates (substitute TASTESH_BIN placeholder)
+$(RESOLVED_DIR):
+	@mkdir -p $(RESOLVED_DIR)
+
+$(RESOLVED_DIR)/%.json: $(CONFIGS_DIR)/%.json $(RESOLVED_DIR)
+	@sed 's|TASTESH_BIN|$(TASTESH)|g' $< > $@
+
+# Individual test packages (use resolved configs for tastesh substitution)
+$(ECHO_PSP): $(DIST_DIR) $(RESOLVED_DIR)/test-echo.json
 	$(call print,"📦 Building echo test package...",$(CYAN))
 	@$(GO_BUILDER) \
-		--manifest $(CONFIGS_DIR)/test-echo.json \
+		--manifest $(RESOLVED_DIR)/test-echo.json \
 		--launcher-bin $(RS_LAUNCHER) \
 		--output $@ \
 		--key-seed $(KEY_SEED)
 
-$(SHELL_PSP): $(DIST_DIR)
+$(SHELL_PSP): $(DIST_DIR) $(RESOLVED_DIR)/test-shell.json
 	$(call print,"📦 Building shell test package...",$(CYAN))
 	@$(RS_BUILDER) \
-		--manifest $(CONFIGS_DIR)/test-shell.json \
+		--manifest $(RESOLVED_DIR)/test-shell.json \
 		--launcher-bin $(GO_LAUNCHER) \
 		--output $@ \
 		--key-seed $(KEY_SEED)
 
-$(ENV_PSP): $(DIST_DIR)
+$(ENV_PSP): $(DIST_DIR) $(RESOLVED_DIR)/test-env.json
 	$(call print,"📦 Building environment test package...",$(CYAN))
 	@$(GO_BUILDER) \
-		--manifest $(CONFIGS_DIR)/test-env.json \
+		--manifest $(RESOLVED_DIR)/test-env.json \
 		--launcher-bin $(RS_LAUNCHER) \
 		--output $@ \
 		--key-seed $(KEY_SEED)
