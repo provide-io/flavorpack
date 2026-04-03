@@ -211,7 +211,7 @@ def _validate_operator_policy_file(path: Path, raw: dict[str, Any]) -> None:
 def _load_policy_file(path: Path) -> dict[str, Any]:
     try:
         with path.open("r") as f:
-            raw = json.load(f)
+            raw: dict[str, Any] = json.load(f)
     except Exception as exc:
         raise ValueError(f"{path}: invalid policy file ({exc})") from exc
 
