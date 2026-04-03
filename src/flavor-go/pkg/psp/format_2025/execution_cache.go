@@ -103,7 +103,7 @@ func savePackageChecksum(paths *WorkenvPaths, checksum uint32, logger hclog.Logg
 	checksumStr := fmt.Sprintf("%08x", checksum)
 
 	// Open file with explicit sync to ensure write is flushed before exec
-	file, err := os.OpenFile(checksumPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, FilePerms)
+	file, err := os.OpenFile(checksumPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		logger.Debug("⚠️ Failed to open checksum file", "error", err)
 		return err
@@ -176,7 +176,7 @@ func saveIndexMetadata(paths *WorkenvPaths, index *PSPFIndex, logger hclog.Logge
 		return fmt.Errorf("failed to marshal index metadata: %w", err)
 	}
 
-	if err := os.WriteFile(indexPath, jsonData, FilePerms); err != nil {
+	if err := os.WriteFile(indexPath, jsonData, 0644); err != nil {
 		logger.Debug("⚠️ Failed to save index metadata", "error", err)
 		return err
 	}
