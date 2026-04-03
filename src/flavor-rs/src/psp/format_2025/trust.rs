@@ -47,7 +47,9 @@ fn get_config_root() -> PathBuf {
             return PathBuf::from(home).join(".config").join("flavor");
         }
     }
-    PathBuf::from("/tmp/flavor/config")
+    // Return a non-existent path rather than a world-writable temp directory.
+    // A temp-backed trust store would allow trusted-key injection.
+    PathBuf::from("/nonexistent/flavor/config")
 }
 
 fn get_system_trusted_keys_dir() -> PathBuf {
