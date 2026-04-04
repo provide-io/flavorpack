@@ -88,7 +88,7 @@ chmod +x "$LAUNCHER"
 #   1. Relax the constraint in pyproject.toml (>=2.0.0 → >=1.14)
 #   2. Delete uv.lock so uv re-resolves and picks cffi 1.17.x (the latest
 #      version with FreeBSD wheels) instead of the locked cffi 2.0.0.
-sed -i '' 's/"cffi>=2\.0\.0"/"cffi>=1.14"/g' pyproject.toml
+sed -i '' 's/"cffi>=2\.0\.0"/"cffi>=1.14,<2.0.0"/g' pyproject.toml
 rm -f uv.lock
 
 mkdir -p _stage/artifacts
