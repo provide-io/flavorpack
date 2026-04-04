@@ -44,8 +44,8 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
       version_tag: ${{ steps.version.outputs.version_tag }}
-      helper_run_id: ${{ steps.helper.outputs.run_id }}
-      flavor_run_id: ${{ steps.flavor.outputs.run_id }}
+      helper_run_id: ${{ steps.find_runs.outputs.helper_run_id }}
+      flavor_run_id: ${{ steps.find_runs.outputs.flavor_run_id }}
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
@@ -76,7 +76,7 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: |
-            .github/scripts
+            ci/
           sparse-checkout-cone-mode: false
 
       - name: 📥 Download wheel artifacts from Flavor Pipeline
@@ -116,7 +116,7 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout: |
-            .github/scripts
+            ci/
           sparse-checkout-cone-mode: false
 
       - name: 📥 Download Flavor PSP artifacts
@@ -366,7 +366,7 @@ jobs:
   publish-testpypi:
     name: 🧪 Publish to TestPyPI
     needs: [prepare, generate-assets]
-    if: github.event.inputs.dry_run != 'true' && github.event.inputs.publish_testpypi == 'true'
+    if: github.ref == 'refs/heads/main' && github.event.inputs.dry_run != 'true' && github.event.inputs.publish_testpypi == 'true'
     runs-on: ubuntu-24.04
     environment:
       name: testpypi
@@ -408,7 +408,7 @@ jobs:
   publish-pypi:
     name: 🐍 Publish to PyPI
     needs: [prepare, create-release]
-    if: github.event.inputs.dry_run != 'true' && github.event.inputs.publish_pypi == 'true'
+    if: github.ref == 'refs/heads/main' && github.event.inputs.dry_run != 'true' && github.event.inputs.publish_pypi == 'true'
     runs-on: ubuntu-24.04
     environment:
       name: pypi
