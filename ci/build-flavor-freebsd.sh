@@ -18,6 +18,9 @@ PLATFORM="${1}"
 VERSION="${2}"
 
 sudo env IGNORE_OSVERSION=yes pkg install -y python311 uv py311-cryptography
+# Optional pkg packages — fast C-extension builds if absent, but save time
+# inside the slow QEMU VM by using pre-compiled binaries where available.
+sudo env IGNORE_OSVERSION=yes pkg install -y py311-psutil py311-setproctitle py311-zstandard || true
 
 WHEEL=$(find _stage -name "flavorpack-*.whl" | head -1)
 if [ -z "$WHEEL" ]; then
@@ -46,6 +49,18 @@ mkdir -p "$UV_DIST"
 printf "Metadata-Version: 2.1\nName: uv\nVersion: %s\n" "$UV_PKG_VER" > "${UV_DIST}/METADATA"
 printf "uv-${UV_PKG_VER}.dist-info/METADATA,,\n" > "${UV_DIST}/RECORD"
 ln -sf /usr/local/bin/uv /tmp/flavorenv/bin/uv
+
+# Stub out grpcio — no pre-built FreeBSD wheel on PyPI; building the 13 MB
+# gRPC C++ source from scratch inside a QEMU VM exceeds the 30-min job
+# timeout.  grpcio is only used for OTLP gRPC telemetry export; all
+# provide-foundation imports are wrapped in lazy try/except, so a stub that
+# satisfies the dependency resolver but has no .so files is safe for
+# `flavor pack` which never opens a gRPC channel.
+GRPCIO_STUB_VER="1.80.0"
+GRPCIO_DIST="${VENV_SP}/grpcio-${GRPCIO_STUB_VER}.dist-info"
+mkdir -p "$GRPCIO_DIST"
+printf "Metadata-Version: 2.1\nName: grpcio\nVersion: %s\n" "$GRPCIO_STUB_VER" > "${GRPCIO_DIST}/METADATA"
+printf "grpcio-${GRPCIO_STUB_VER}.dist-info/METADATA,,\n" > "${GRPCIO_DIST}/RECORD"
 
 /tmp/flavorenv/bin/pip install --no-build-isolation \
     'cryptography<46.0.0' \
