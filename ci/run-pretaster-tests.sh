@@ -251,41 +251,47 @@ if [[ "$PLATFORM" == *"windows"* ]]; then
   IS_WINDOWS=true
 fi
 
+# Pass HELPERS_DIR to make if helpers/bin/ exists (CI downloads helpers there)
+MAKE_HELPERS=""
+if [ -d "../../helpers/bin" ]; then
+  MAKE_HELPERS="HELPERS_DIR=../../helpers"
+fi
+
 case "$TEST_SUITE" in
   all)
     if [[ "$IS_WINDOWS" == "true" ]]; then
       echo "🚀 Running COMBO-ONLY tests on Windows (Rust not supported in core tests)..."
       echo "════════════════════════════════════════════════════════════════"
-      ${MAKE_CMD} ${MAKE_SHELL:+SHELL="$MAKE_SHELL"} test-combo
+      ${MAKE_CMD} ${MAKE_SHELL:+SHELL="$MAKE_SHELL"} ${MAKE_HELPERS} test-combo
     else
       echo "🚀 Running ALL test suites via Make..."
       echo "════════════════════════════════════════════════════════════════"
-      ${MAKE_CMD} ${MAKE_SHELL:+SHELL="$MAKE_SHELL"} test
+      ${MAKE_CMD} ${MAKE_SHELL:+SHELL="$MAKE_SHELL"} ${MAKE_HELPERS} test
     fi
     EXIT_CODE=$?
     ;;
   combo)
     echo "🚀 Running COMBO tests via Make..."
     echo "════════════════════════════════════════════════════════════════"
-    ${MAKE_CMD} ${MAKE_SHELL:+SHELL="$MAKE_SHELL"} test-combo
+    ${MAKE_CMD} ${MAKE_SHELL:+SHELL="$MAKE_SHELL"} ${MAKE_HELPERS} test-combo
     EXIT_CODE=$?
     ;;
   core)
     if [[ "$IS_WINDOWS" == "true" ]]; then
       echo "⚠️ Skipping CORE tests on Windows (Rust not supported) — running COMBO instead..."
       echo "════════════════════════════════════════════════════════════════"
-      ${MAKE_CMD} ${MAKE_SHELL:+SHELL="$MAKE_SHELL"} test-combo
+      ${MAKE_CMD} ${MAKE_SHELL:+SHELL="$MAKE_SHELL"} ${MAKE_HELPERS} test-combo
     else
       echo "🚀 Running CORE tests via Make..."
       echo "════════════════════════════════════════════════════════════════"
-      ${MAKE_CMD} ${MAKE_SHELL:+SHELL="$MAKE_SHELL"} test-core
+      ${MAKE_CMD} ${MAKE_SHELL:+SHELL="$MAKE_SHELL"} ${MAKE_HELPERS} test-core
     fi
     EXIT_CODE=$?
     ;;
   direct)
     echo "🚀 Running DIRECT tests via Make..."
     echo "════════════════════════════════════════════════════════════════"
-    ${MAKE_CMD} ${MAKE_SHELL:+SHELL="$MAKE_SHELL"} test-direct
+    ${MAKE_CMD} ${MAKE_SHELL:+SHELL="$MAKE_SHELL"} ${MAKE_HELPERS} test-direct
     EXIT_CODE=$?
     ;;
   *)
