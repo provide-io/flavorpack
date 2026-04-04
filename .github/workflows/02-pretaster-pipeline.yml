@@ -143,7 +143,9 @@ jobs:
           architecture: ${{ matrix.vm_arch }}
           shell: bash
           sync_files: true
-          run: cd tests/pretaster && gmake HELPERS_DIR=../../helpers dist/echo-test.psp dist/shell-test.psp dist/env-test.psp
+          run: |
+            sudo env IGNORE_OSVERSION=yes pkg install -y gmake
+            cd tests/pretaster && gmake HELPERS_DIR=../../helpers dist/echo-test.psp dist/shell-test.psp dist/env-test.psp
       
       - name: 📤 Upload Pretaster packages
         uses: actions/upload-artifact@v7
