@@ -198,6 +198,11 @@ if [ -d "../../helpers-dist" ]; then
         fi
     done
 
+    # Copy tastesh binaries from helpers/bin/ (extracted by download-helpers.sh)
+    for tastesh in ../../helpers/bin/flavor-tastesh-*; do
+        [ -f "$tastesh" ] && cp "$tastesh" ../../dist/bin/ && echo "   Copied $(basename "$tastesh")"
+    done
+
     echo "✅ Helpers extracted and symlinked to dist/bin/"
 fi
 
