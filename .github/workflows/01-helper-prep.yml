@@ -150,8 +150,9 @@ jobs:
           path: |
             dist/bin/flavor-go-*-${{ needs.setup.outputs.version }}-freebsd_amd64
             dist/bin/flavor-rs-*-${{ needs.setup.outputs.version }}-freebsd_amd64
+            dist/bin/flavor-tastesh-freebsd_amd64
             artifacts/*.zip
-          key: ${{ needs.setup.outputs.go_cache_key_base }}-${{ needs.setup.outputs.rust_cache_key_base }}-freebsd_amd64-${{ needs.setup.outputs.version }}
+          key: ${{ needs.setup.outputs.go_cache_key_base }}-${{ needs.setup.outputs.rust_cache_key_base }}-${{ needs.setup.outputs.tastesh_cache_key_base }}-freebsd_amd64-${{ needs.setup.outputs.version }}
 
       - name: 💾 Cache Rust toolchain + registry
         if: steps.cache.outputs.cache-hit != 'true'
@@ -215,6 +216,17 @@ jobs:
           sync_files: true
           run: ci/freebsd-test-go.sh
 
+      - name: 🐚 Build tastesh
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: x86-64
+          shell: bash
+          sync_files: runner-to-vm
+          run: ci/freebsd-build-tastesh.sh amd64
+
       - name: 📦 Package artifacts
         shell: bash
         run: ci/package-helpers.sh freebsd_amd64 ${{ needs.setup.outputs.version }}
@@ -274,8 +286,9 @@ jobs:
           path: |
             dist/bin/flavor-go-*-${{ needs.setup.outputs.version }}-freebsd_arm64
             dist/bin/flavor-rs-*-${{ needs.setup.outputs.version }}-freebsd_arm64
+            dist/bin/flavor-tastesh-freebsd_arm64
             artifacts/*.zip
-          key: ${{ needs.setup.outputs.go_cache_key_base }}-${{ needs.setup.outputs.rust_cache_key_base }}-freebsd_arm64-${{ needs.setup.outputs.version }}
+          key: ${{ needs.setup.outputs.go_cache_key_base }}-${{ needs.setup.outputs.rust_cache_key_base }}-${{ needs.setup.outputs.tastesh_cache_key_base }}-freebsd_arm64-${{ needs.setup.outputs.version }}
 
       - name: 💾 Cache Rust toolchain + registry
         if: steps.cache.outputs.cache-hit != 'true'
@@ -338,6 +351,17 @@ jobs:
           shell: bash
           sync_files: true
           run: ci/freebsd-test-go.sh
+
+      - name: 🐚 Build tastesh
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: arm64
+          shell: bash
+          sync_files: runner-to-vm
+          run: ci/freebsd-build-tastesh.sh arm64
 
       - name: 📦 Package artifacts
         shell: bash
