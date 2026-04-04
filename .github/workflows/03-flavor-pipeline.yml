@@ -12,7 +12,7 @@ on:
         type: string
         required: false
       platforms:
-        description: 'Comma-separated platforms to build/test (e.g. freebsd_amd64,freebsd_arm64). Empty = all.'
+        description: 'Comma-separated platforms to build/test (e.g. linux_amd64,darwin_arm64). Empty = all.'
         type: string
         required: false
         default: ''
@@ -117,7 +117,7 @@ jobs:
       
       - name: 🔧 Extract helpers
         run: |
-          ci/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_arm64 freebsd_amd64 freebsd_arm64"
+          ci/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_arm64"
 
           # List available helpers
           ls -la helpers/bin/
@@ -231,19 +231,6 @@ jobs:
           - platform: windows_arm64
             runner: windows-11-arm
             python_platform: win_arm64
-          - platform: freebsd_amd64
-            runner: ubuntu-24.04
-            # PEP 425 has no backward-compat expansion for FreeBSD (unlike macOS).
-            # The tag must exactly match sysconfig.get_platform() on the target VM.
-            # cross-platform-actions version:'14.2' → freebsd_14_2_release_amd64.
-            python_platform: freebsd_14_2_release_amd64
-            continue_on_error: true
-          - platform: freebsd_arm64
-            runner: ubuntu-24.04
-            # FreeBSD arm64 sysconfig.get_platform() returns freebsd_14_2_release_arm64
-            # (not aarch64 — FreeBSD uses 'arm64' in its platform string, unlike Linux).
-            python_platform: freebsd_14_2_release_arm64
-            continue_on_error: true
     continue-on-error: ${{ matrix.continue_on_error == true }}
     steps:
       - name: 📥 Checkout
@@ -286,15 +273,6 @@ jobs:
           name: flavor-rust-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
           path: ./helpers-dist
 
-      - name: 📥 Download combined helpers (FreeBSD only)
-        if: ${{ startsWith(matrix.platform, 'freebsd') }}
-        uses: dawidd6/action-download-artifact@v19
-        continue-on-error: true
-        with:
-          workflow: 01-helper-prep.yml
-          run_id: ${{ needs.setup.outputs.helper_run_id }}
-          name: flavor-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
-          path: ./helpers-dist
 
       - name: 🔧 Extract and organize helpers
         shell: bash
@@ -462,60 +440,13 @@ jobs:
           name: flavor-rust-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
           path: ./helpers-dist
 
-      - name: 📥 Download combined helpers (FreeBSD only)
-        if: ${{ matrix.vm_arch != '' }}
-        uses: dawidd6/action-download-artifact@v19
-        continue-on-error: true
-        with:
-          workflow: 01-helper-prep.yml
-          run_id: ${{ needs.setup.outputs.helper_run_id }}
-          name: flavor-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
-          path: ./helpers-dist
-
       - name: 🔧 Extract helpers
         shell: bash
         run: |
           ci/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}" "${{ matrix.platform }}"
           ls -la helpers/bin/
       
-      - name: 🔧 Stage wheel for FreeBSD VM
-        if: ${{ matrix.vm_arch != '' }}
-        shell: bash
-        run: |
-          mkdir -p _stage
-          WHEEL=$(find wheel-dist -name "flavorpack-*.whl" | head -1)
-          if [ -n "$WHEEL" ]; then
-            cp "$WHEEL" _stage/
-            echo "Staged: $(basename "$WHEEL")"
-          else
-            echo "❌ No wheel found in wheel-dist/"
-            ls wheel-dist/ || true
-            exit 1
-          fi
-
-      - name: 📦 Build Flavor PSP (FreeBSD VM)
-        if: ${{ matrix.vm_arch != '' }}
-        uses: cross-platform-actions/action@v0.32.0
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-        with:
-          operating_system: freebsd
-          version: '14.2'
-          architecture: ${{ matrix.vm_arch }}
-          shell: bash
-          sync_files: true
-          run: |
-            ci/build-flavor-freebsd.sh "${{ matrix.platform }}" "${{ needs.setup.outputs.helper_version }}"
-
-      - name: 📤 Upload Flavor package (FreeBSD)
-        if: ${{ matrix.vm_arch != '' }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: flavor-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
-          path: _stage/artifacts/flavor-*.psp
-
       - name: 📦 Install Flavor from wheel
-        if: ${{ matrix.vm_arch == '' }}
         shell: bash
         run: |
           export PATH="$HOME/.local/bin:$PATH"
@@ -523,7 +454,6 @@ jobs:
 
       - name: 🔧 Prepare Flavor build
         id: prepare
-        if: ${{ matrix.vm_arch == '' }}
         shell: bash
         run: |
           # Determine binary extension for Windows
@@ -557,7 +487,6 @@ jobs:
           echo "wheel=$WHEEL" >> $GITHUB_OUTPUT
 
       - name: 📦 Pre-warm wheel cache for offline PSPF build
-        if: ${{ matrix.vm_arch == '' }}
         shell: bash
         run: |
           export PATH="$HOME/.local/bin:$PATH"
@@ -565,7 +494,6 @@ jobs:
         continue-on-error: true
 
       - name: 🔨 Build Flavor PSP using itself
-        if: ${{ matrix.vm_arch == '' }}
         shell: bash
         run: |
           export PATH="$HOME/.local/bin:$PATH"
@@ -577,7 +505,6 @@ jobs:
           ci/build-flavor-self.sh "${{ matrix.platform }}" "${{ needs.setup.outputs.helper_version }}" "${{ steps.prepare.outputs.wheel }}" "${{ steps.prepare.outputs.launcher }}"
 
       - name: 📤 Upload Flavor package
-        if: ${{ matrix.vm_arch == '' }}
         uses: actions/upload-artifact@v7
         with:
           name: flavor-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
@@ -610,38 +537,7 @@ jobs:
           name: flavor-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
           path: ./
 
-      - name: 🔧 Stage PSP for FreeBSD VM
-        if: ${{ matrix.vm_arch != '' }}
-        shell: bash
-        run: |
-          mkdir -p _stage
-          PSP=$(find . -maxdepth 3 -name "flavor-*.psp" | head -1)
-          if [ -n "$PSP" ]; then
-            cp "$PSP" _stage/
-            echo "Staged: $(basename "$PSP")"
-          else
-            echo "❌ No PSP found to stage"
-            find . -type f | head -20
-            exit 1
-          fi
-
-      - name: 🧪 Test Flavor PSP self-contained (FreeBSD VM)
-        if: ${{ matrix.vm_arch != '' }}
-        uses: cross-platform-actions/action@v0.32.0
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-          FLAVOR_LOG_LEVEL: trace
-        with:
-          operating_system: freebsd
-          version: '14.2'
-          architecture: ${{ matrix.vm_arch }}
-          shell: bash
-          sync_files: runner-to-vm
-          run: |
-            ci/test-flavor-psp-freebsd.sh "${{ matrix.platform }}"
-
       - name: 🧪 Test Flavor PSP self-contained
-        if: ${{ matrix.vm_arch == '' }}
         shell: bash
         env:
           FLAVOR_LOG_LEVEL: trace
