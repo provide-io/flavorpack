@@ -262,5 +262,8 @@ public_key_path = "keys/flavor-public.key"
 # so uv uses the pre-built system package instead of failing to build from source.
 constraint-dependencies = [
     "cryptography>=46.0.0,<=46.0.3; sys_platform != 'freebsd'",
+    # FreeBSD pkg ships 45.x only; maturin can't build 46.x (SOABI mismatch).
+    # Cap below 46 so uv resolves to the pre-built system package.
+    "cryptography<46.0.0; sys_platform == 'freebsd'",
     "cffi>=2.0.0",
 ]
