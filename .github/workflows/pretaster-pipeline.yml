@@ -75,8 +75,9 @@ jobs:
         with:
           persist-credentials: false
 
+      # Native platforms use separate Go/Rust helper artifacts
       - name: 📥 Download Go helpers
-        continue-on-error: true
+        if: ${{ matrix.vm_arch == '' }}
         uses: dawidd6/action-download-artifact@v19
         with:
           workflow: helper-prep.yml
@@ -85,7 +86,7 @@ jobs:
           path: ./helpers-dist
 
       - name: 📥 Download Rust helpers
-        continue-on-error: true
+        if: ${{ matrix.vm_arch == '' }}
         uses: dawidd6/action-download-artifact@v19
         with:
           workflow: helper-prep.yml
@@ -93,8 +94,9 @@ jobs:
           name: flavor-rust-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
 
+      # FreeBSD uses a single combined helpers artifact
       - name: 📥 Download combined helpers (FreeBSD)
-        continue-on-error: true
+        if: ${{ matrix.vm_arch != '' }}
         uses: dawidd6/action-download-artifact@v19
         with:
           workflow: helper-prep.yml
@@ -104,7 +106,6 @@ jobs:
 
       # Download tastesh (embedded shell for self-contained PSPs)
       - name: 📥 Download tastesh
-        continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
           workflow: helper-prep.yml
@@ -174,8 +175,9 @@ jobs:
           name: pretaster-psp-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./build
       
+      # Native platforms use separate Go/Rust helper artifacts
       - name: 📥 Download Go helpers
-        continue-on-error: true
+        if: ${{ matrix.vm_arch == '' }}
         uses: dawidd6/action-download-artifact@v19
         with:
           workflow: helper-prep.yml
@@ -184,7 +186,7 @@ jobs:
           path: ./helpers-dist
 
       - name: 📥 Download Rust helpers
-        continue-on-error: true
+        if: ${{ matrix.vm_arch == '' }}
         uses: dawidd6/action-download-artifact@v19
         with:
           workflow: helper-prep.yml
@@ -192,8 +194,9 @@ jobs:
           name: flavor-rust-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
 
+      # FreeBSD uses a single combined helpers artifact
       - name: 📥 Download combined helpers (FreeBSD)
-        continue-on-error: true
+        if: ${{ matrix.vm_arch != '' }}
         uses: dawidd6/action-download-artifact@v19
         with:
           workflow: helper-prep.yml
@@ -201,9 +204,8 @@ jobs:
           name: flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
 
-      # Download tastesh for self-contained PSP test packages
+      # Download tastesh (embedded shell for self-contained PSPs)
       - name: 📥 Download tastesh
-        continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
           workflow: helper-prep.yml
@@ -328,7 +330,7 @@ jobs:
         with:
           name: crosslang-logs-${{ matrix.platform }}-${{ github.run_id }}
           path: tests/pretaster/logs/
-          if-no-files-found: warn
+          if-no-files-found: ignore
 
       - name: 📤 Upload crosslang PSP files
         if: failure()
@@ -336,7 +338,7 @@ jobs:
         with:
           name: crosslang-psp-${{ matrix.platform }}-${{ github.run_id }}
           path: tests/pretaster/dist/*.psp
-          if-no-files-found: warn
+          if-no-files-found: ignore
 
       - name: 📤 Upload failure diagnostics
         if: failure()
@@ -344,7 +346,7 @@ jobs:
         with:
           name: crosslang-diagnostics-${{ matrix.platform }}-${{ github.run_id }}
           path: tests/pretaster/failure-diagnostics/
-          if-no-files-found: warn
+          if-no-files-found: ignore
 
   test-pretaster:
     name: 🧪 Build Pretaster ${{ matrix.name }}
@@ -361,8 +363,9 @@ jobs:
         with:
           persist-credentials: false
 
+      # Native platforms use separate Go/Rust helper artifacts
       - name: 📥 Download Go helpers
-        continue-on-error: true
+        if: ${{ matrix.vm_arch == '' }}
         uses: dawidd6/action-download-artifact@v19
         with:
           workflow: helper-prep.yml
@@ -371,7 +374,7 @@ jobs:
           path: ./helpers-dist
 
       - name: 📥 Download Rust helpers
-        continue-on-error: true
+        if: ${{ matrix.vm_arch == '' }}
         uses: dawidd6/action-download-artifact@v19
         with:
           workflow: helper-prep.yml
@@ -379,23 +382,14 @@ jobs:
           name: flavor-rust-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
 
+      # FreeBSD uses a single combined helpers artifact
       - name: 📥 Download combined helpers (FreeBSD)
-        continue-on-error: true
+        if: ${{ matrix.vm_arch != '' }}
         uses: dawidd6/action-download-artifact@v19
         with:
           workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
-          path: ./helpers-dist
-
-      - name: 📥 Download all-platform helpers (fallback)
-        if: ${{ matrix.vm_arch != '' }}
-        continue-on-error: true
-        uses: dawidd6/action-download-artifact@v19
-        with:
-          workflow: helper-prep.yml
-          run_id: ${{ needs.setup.outputs.helper_run_id }}
-          name: flavor-helpers-${{ needs.setup.outputs.version }}-all
           path: ./helpers-dist
 
       - name: 🔧 Extract helpers
@@ -454,7 +448,7 @@ jobs:
         with:
           name: pretaster-logs-${{ matrix.platform }}-${{ github.run_id }}
           path: tests/pretaster/logs/
-          if-no-files-found: warn
+          if-no-files-found: ignore
 
       - name: 📤 Upload failure diagnostics
         if: failure()
@@ -462,7 +456,7 @@ jobs:
         with:
           name: failure-diagnostics-${{ matrix.platform }}-${{ github.run_id }}
           path: tests/pretaster/failure-diagnostics/
-          if-no-files-found: warn
+          if-no-files-found: ignore
 
   validate:
     name: ✅ Validate PSPF Compatibility
