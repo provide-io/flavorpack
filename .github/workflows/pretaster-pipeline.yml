@@ -298,7 +298,7 @@ jobs:
           shell: bash
           sync_files: true
           run: |
-            sudo env IGNORE_OSVERSION=yes pkg install -y gmake python311 uv
+            sudo env IGNORE_OSVERSION=yes pkg install -y gmake bash python311 uv
             # The PSP launcher resolves "/usr/bin/python3" by extracting the basename
             # and calling which("python3"). A uv venv puts python3 in PATH so the
             # launcher finds it without any symlink hacks.
@@ -328,6 +328,7 @@ jobs:
         with:
           name: crosslang-logs-${{ matrix.platform }}-${{ github.run_id }}
           path: tests/pretaster/logs/
+          if-no-files-found: ignore
 
       - name: 📤 Upload crosslang PSP files
         if: failure()
@@ -335,6 +336,7 @@ jobs:
         with:
           name: crosslang-psp-${{ matrix.platform }}-${{ github.run_id }}
           path: tests/pretaster/dist/*.psp
+          if-no-files-found: ignore
 
       - name: 📤 Upload failure diagnostics
         if: failure()
@@ -342,6 +344,7 @@ jobs:
         with:
           name: crosslang-diagnostics-${{ matrix.platform }}-${{ github.run_id }}
           path: tests/pretaster/failure-diagnostics/
+          if-no-files-found: ignore
 
   test-pretaster:
     name: 🧪 Build Pretaster ${{ matrix.name }}
@@ -451,6 +454,7 @@ jobs:
         with:
           name: pretaster-logs-${{ matrix.platform }}-${{ github.run_id }}
           path: tests/pretaster/logs/
+          if-no-files-found: ignore
 
       - name: 📤 Upload failure diagnostics
         if: failure()
@@ -458,6 +462,7 @@ jobs:
         with:
           name: failure-diagnostics-${{ matrix.platform }}-${{ github.run_id }}
           path: tests/pretaster/failure-diagnostics/
+          if-no-files-found: ignore
 
   validate:
     name: ✅ Validate PSPF Compatibility
