@@ -275,7 +275,7 @@ jobs:
           path: artifacts/metadata/
 
   build-freebsd-arm64:
-    name: 😈 freebsd_arm64
+    name: 😈🔨 freebsd_arm64
     needs: setup
     runs-on: ubuntu-24.04
     env:
