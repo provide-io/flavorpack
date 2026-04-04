@@ -328,7 +328,7 @@ jobs:
         with:
           name: crosslang-logs-${{ matrix.platform }}-${{ github.run_id }}
           path: tests/pretaster/logs/
-          if-no-files-found: ignore
+          if-no-files-found: warn
 
       - name: 📤 Upload crosslang PSP files
         if: failure()
@@ -336,7 +336,7 @@ jobs:
         with:
           name: crosslang-psp-${{ matrix.platform }}-${{ github.run_id }}
           path: tests/pretaster/dist/*.psp
-          if-no-files-found: ignore
+          if-no-files-found: warn
 
       - name: 📤 Upload failure diagnostics
         if: failure()
@@ -344,7 +344,7 @@ jobs:
         with:
           name: crosslang-diagnostics-${{ matrix.platform }}-${{ github.run_id }}
           path: tests/pretaster/failure-diagnostics/
-          if-no-files-found: ignore
+          if-no-files-found: warn
 
   test-pretaster:
     name: 🧪 Build Pretaster ${{ matrix.name }}
@@ -454,7 +454,7 @@ jobs:
         with:
           name: pretaster-logs-${{ matrix.platform }}-${{ github.run_id }}
           path: tests/pretaster/logs/
-          if-no-files-found: ignore
+          if-no-files-found: warn
 
       - name: 📤 Upload failure diagnostics
         if: failure()
@@ -462,7 +462,7 @@ jobs:
         with:
           name: failure-diagnostics-${{ matrix.platform }}-${{ github.run_id }}
           path: tests/pretaster/failure-diagnostics/
-          if-no-files-found: ignore
+          if-no-files-found: warn
 
   validate:
     name: ✅ Validate PSPF Compatibility
