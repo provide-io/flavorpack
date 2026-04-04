@@ -97,7 +97,9 @@ func (r *Reader) VerifyIntegritySeal() (bool, error) {
 		return false, err
 	}
 
-	// Get signature from index (first 64 bytes of IntegritySignature field)
+	// IntegritySignature is a fixed [512]byte array; only the first 64 bytes carry
+	// the Ed25519 signature (the rest are zero-padded). Slicing a fixed array is
+	// always in-bounds, so this cannot panic.
 	signature := index.IntegritySignature[:64]
 
 	// Check if signature is present (not all zeros)

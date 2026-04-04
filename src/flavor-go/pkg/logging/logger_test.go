@@ -40,6 +40,15 @@ func TestNewLoggerSupportsJSONMode(t *testing.T) {
 	}
 }
 
+func TestNewLoggerNilOutputUsesStderr(t *testing.T) {
+	t.Setenv(envvars.EnvJSONLog, "0")
+	// Passing nil output must not panic — it falls back to os.Stderr.
+	logger := NewLogger("nil-test", "warn", nil)
+	if logger == nil {
+		t.Fatal("expected non-nil logger")
+	}
+}
+
 func TestGetLogLevelDefaultsAndOverrides(t *testing.T) {
 	t.Setenv(envvars.EnvLogLevel, "")
 	if got := GetLogLevel(); got != "warn" {
