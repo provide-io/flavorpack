@@ -154,7 +154,7 @@ jobs:
         shell: bash
         run: |
           # Find the appropriate Flavor PSP for this platform
-          FLAVOR_PSP=$(find flavor-psp -name "flavor-*-${{ matrix.platform }}.psp" | head -1)
+          FLAVOR_PSP=$(find flavor-psp \( -name "flavor-*-${{ matrix.platform }}.psp" -o -name "flavor-*-${{ matrix.platform }}.exe" \) | head -1)
 
           if [ -z "$FLAVOR_PSP" ]; then
             echo "❌ Flavor PSP not found for ${{ matrix.platform }}"
