@@ -6,6 +6,6 @@ set -euo pipefail
 ARCH="${1:?arch required (amd64 or arm64)}"
 
 echo "🐚 Building tastesh for freebsd_${ARCH}..."
-sudo env IGNORE_OSVERSION=yes pkg install -y autoconf automake libtool
+sudo env IGNORE_OSVERSION=yes pkg install -y autoconf automake libtool gmake
 ci/build-dash.sh dist/bin
 ls -la "dist/bin/flavor-tastesh-freebsd_${ARCH}"
