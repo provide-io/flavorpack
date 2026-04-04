@@ -114,7 +114,7 @@ mkdir -p "$WHEEL_CACHE"
 # `pkg install py311-cryptography` gives us a pre-compiled binary.  We zip the
 # installed package directory + dist-info into a correctly named .whl archive.
 python3.11 - <<'PYEOF'
-import zipfile, re, sys, sysconfig
+import base64, hashlib, re, sys, sysconfig, zipfile
 from pathlib import Path
 
 site = Path("/usr/local/lib/python3.11/site-packages")
@@ -127,27 +127,49 @@ if not dists:
 
 dist_info = dists[-1]
 version = re.search(r"cryptography-(.+?)\.dist-info", dist_info.name).group(1)
-plat = sysconfig.get_platform().replace("-", "_").replace(".", "_")
 py = f"cp{sys.version_info.major}{sys.version_info.minor}"
+# Wheel platform tags must be lowercase (PEP 425 / wheel spec).
+# sysconfig.get_platform() may return mixed-case (e.g. "freebsd-14.2-RELEASE-amd64");
+# lowercase so uv's sys_tags() comparison matches correctly.
+plat = sysconfig.get_platform().replace("-", "_").replace(".", "_").lower()
 wheel_name = f"cryptography-{version}-{py}-{py}-{plat}.whl"
 out = cache / wheel_name
 
+def sha256_hash(data: bytes) -> str:
+    digest = hashlib.sha256(data).digest()
+    return "sha256=" + base64.urlsafe_b64encode(digest).rstrip(b"=").decode()
+
 print(f"Packaging pkg cryptography {version} → {wheel_name}")
+record_entries: list[str] = []
 with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as whl:
     pkg_dir = site / "cryptography"
     for p in pkg_dir.rglob("*"):
         if p.is_file() and "__pycache__" not in p.parts:
-            whl.write(p, str(p.relative_to(site)))
+            arcname = str(p.relative_to(site))
+            data = p.read_bytes()
+            whl.writestr(arcname, data)
+            record_entries.append(f"{arcname},{sha256_hash(data)},{len(data)}")
     for p in dist_info.rglob("*"):
         if p.is_file() and p.name not in ("RECORD", "INSTALLER", "direct_url.json"):
-            whl.write(p, str(p.relative_to(site)))
+            arcname = str(p.relative_to(site))
+            data = p.read_bytes()
+            whl.writestr(arcname, data)
+            record_entries.append(f"{arcname},{sha256_hash(data)},{len(data)}")
     # Ensure a WHEEL metadata file exists
     wheel_file = dist_info / "WHEEL"
     if not wheel_file.exists():
-        whl.writestr(
-            f"cryptography-{version}.dist-info/WHEEL",
-            f"Wheel-Version: 1.0\nGenerator: repackage\nRoot-Is-Purelib: false\nTag: {py}-{py}-{plat}\n",
-        )
+        arcname = f"cryptography-{version}.dist-info/WHEEL"
+        data = (
+            f"Wheel-Version: 1.0\nGenerator: repackage\n"
+            f"Root-Is-Purelib: false\nTag: {py}-{py}-{plat}\n"
+        ).encode()
+        whl.writestr(arcname, data)
+        record_entries.append(f"{arcname},{sha256_hash(data)},{len(data)}")
+    # uv requires a RECORD file; generate one with sha256 hashes.
+    # The RECORD entry for RECORD itself has no hash/size per PEP 376.
+    record_arcname = f"cryptography-{version}.dist-info/RECORD"
+    record_content = "\n".join(record_entries) + f"\n{record_arcname},,\n"
+    whl.writestr(record_arcname, record_content)
 print(f"Created {out}")
 PYEOF
 
