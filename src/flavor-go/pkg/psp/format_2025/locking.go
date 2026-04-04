@@ -66,7 +66,7 @@ func TryAcquireLock(paths *WorkenvPaths, logger hclog.Logger) (bool, error) {
 	}
 
 	// Try to create lock file exclusively
-	file, err := openLockFileFn(lockPath, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
+	file, err := openLockFileFn(lockPath, os.O_CREATE|os.O_EXCL|os.O_WRONLY, FilePerms)
 	if err != nil {
 		if os.IsExist(err) {
 			logger.Debug("🔒 Lock file exists, another process is extracting")

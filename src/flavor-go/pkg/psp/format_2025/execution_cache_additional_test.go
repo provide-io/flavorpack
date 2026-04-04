@@ -174,6 +174,39 @@ func TestSavePackageChecksumFailsWhenInstancePathIsFile(t *testing.T) {
 	}
 }
 
+func TestSavePackageChecksumSucceeds(t *testing.T) {
+	logger := hclog.NewNullLogger()
+	paths := NewWorkenvPaths(t.TempDir(), "/tmp/demo.pspf")
+
+	if err := savePackageChecksum(paths, 0xdeadbeef, logger); err != nil {
+		t.Fatalf("savePackageChecksum() error = %v", err)
+	}
+
+	data, err := os.ReadFile(paths.ChecksumFile())
+	if err != nil {
+		t.Fatalf("ReadFile(checksum) error = %v", err)
+	}
+	if string(data) != "deadbeef" {
+		t.Fatalf("unexpected checksum file content: %q", string(data))
+	}
+}
+
+func TestSaveIndexMetadataFailsWhenInstanceIsFile(t *testing.T) {
+	logger := hclog.NewNullLogger()
+	paths := NewWorkenvPaths(t.TempDir(), "/tmp/demo.pspf")
+
+	if err := os.MkdirAll(filepath.Dir(paths.Instance()), 0o755); err != nil {
+		t.Fatalf("MkdirAll(instance parent) error = %v", err)
+	}
+	if err := os.WriteFile(paths.Instance(), []byte("occupied"), 0o600); err != nil {
+		t.Fatalf("WriteFile(instance path) error = %v", err)
+	}
+
+	if err := saveIndexMetadata(paths, &PSPFIndex{FormatVersion: PSPFVersion}, logger); err == nil {
+		t.Fatal("expected saveIndexMetadata() to fail when instance path is a file")
+	}
+}
+
 func TestSaveIndexMetadataFailsWhenTargetPathIsDirectory(t *testing.T) {
 	logger := hclog.NewNullLogger()
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/demo.pspf")

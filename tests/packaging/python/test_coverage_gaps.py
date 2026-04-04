@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -24,6 +25,31 @@ import pytest
 
 def _completed(returncode: int = 0, stdout: str = "", stderr: str = "") -> subprocess.CompletedProcess[str]:
     return subprocess.CompletedProcess(args=["cmd"], returncode=returncode, stdout=stdout, stderr=stderr)
+
+
+def _cleared_env_preserving_mutmut() -> dict[str, str]:
+    """Return an empty env patch without breaking mutmut trampoline dispatch."""
+    env: dict[str, str] = {}
+    mutant_under_test = os.environ.get("MUTANT_UNDER_TEST")
+    if mutant_under_test is not None:
+        env["MUTANT_UNDER_TEST"] = mutant_under_test
+    return env
+
+
+class TestMutationSafeEnvPatches:
+    """Regression tests for mutation-safe environment clearing helpers."""
+
+    def test_cleared_env_preserving_mutmut_keeps_mutant_marker(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("MUTANT_UNDER_TEST", "stats")
+
+        assert _cleared_env_preserving_mutmut() == {"MUTANT_UNDER_TEST": "stats"}
+
+    def test_cleared_env_preserving_mutmut_returns_empty_when_unset(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.delenv("MUTANT_UNDER_TEST", raising=False)
+
+        assert _cleared_env_preserving_mutmut() == {}
 
 
 # ===========================================================================
@@ -772,7 +798,7 @@ class TestUVManagerDownloadWheelsOffline:
         req_file = tmp_path / "requirements.txt"
         req_file.write_text("requests==2.31.0\n")
 
-        with patch.dict("os.environ", {}, clear=True):
+        with patch.dict("os.environ", _cleared_env_preserving_mutmut(), clear=True):
             result = mgr.download_wheels_offline(req_file, tmp_path)
         assert result is False
 
@@ -2251,7 +2277,7 @@ class TestSlotBuilderBundleBuildBackends:
         (tmp_path / "uv.lock").write_text("# lock")
 
         with (
-            patch.dict("os.environ", {}, clear=True),
+            patch.dict("os.environ", _cleared_env_preserving_mutmut(), clear=True),
             patch.object(builder.uv_manager, "get_uv_executable", return_value=Path("/usr/bin/uv")),
             patch("flavor.packaging.python.slot_builder.run", return_value=_completed(0)),
         ):

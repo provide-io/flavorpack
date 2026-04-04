@@ -188,6 +188,15 @@ markers = [
 [tool.mutmut]
 paths_to_mutate = ["src/flavor"]
 tests_dir = ["tests"]
+also_copy = [
+    "VERSION",
+    "Makefile",
+    "scripts",
+    "tools",
+    ".github/workflows",
+    "src/flavor-go",
+    "src/flavor-rs",
+]
 runner = "pytest"
 exclude = ["*/generated/*", "*_pb2.py", "*_pb2.pyi", "*/tests/*", "*/test_*"]
 dict_synonyms = ["dict", "OrderedDict", "defaultdict"]
