@@ -11,6 +11,8 @@ import sys
 
 import click
 
+from flavor.config.defaults import ENV_WORKENV
+
 
 @click.group("file")
 def file_command() -> None:
@@ -50,7 +52,7 @@ def check_exists(path: str) -> None:
 @file_command.command("workenv-test")
 def test_workenv() -> None:
     """Test workenv persistence by writing/reading files"""
-    workenv = os.environ.get("FLAVOR_WORKENV", "/tmp")
+    workenv = os.environ.get(ENV_WORKENV, "/tmp")
     test_file = Path(workenv) / "test_persistence.txt"
 
     if test_file.exists():
