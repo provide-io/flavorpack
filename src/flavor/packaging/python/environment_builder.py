@@ -439,6 +439,69 @@ class PythonEnvironmentBuilder:
                 "uv python install and uv python find both failed. "
                 "A placeholder tarball would cause silent runtime failures."
             )
+        # On platforms where uv has no prebuilt Python (e.g. FreeBSD), locate the
+        # system Python and bundle its binary directly into the tarball together
+        # with a pyvenv.cfg.  This is the only approach that reliably works:
+        #
+        # * Symlinks (SYMTYPE) — rejected by the Rust tar extractor.
+        # * Shell script wrappers — exec /usr/local/bin/python3.11, so Python's
+        #   venv-detection resolves pyvenv.cfg relative to /usr/local/bin/, not
+        #   the workenv; uv pip install targets system site-packages → Permission denied.
+        # * Copying the binary — the binary's argv[0] IS {workenv}/bin/python3.x,
+        #   Python looks for pyvenv.cfg in {workenv}/bin/ then {workenv}/, finds it,
+        #   sets sys.prefix = {workenv}; uv installs into {workenv}/lib/pythonX.Y/
+        #   site-packages/ where the PSP has write permission.
+        import io as _io
+        import shutil as _shutil
+
+        system_python = _shutil.which(f"python{self.python_version}") or _shutil.which("python3")
+        if system_python:
+            real_python = os.path.realpath(system_python)
+            python_home = str(Path(real_python).parent)
+            logger.warning(
+                f"Creating system-python-venv tarball ({os_name}): {real_python}",
+                python_version=self.python_version,
+            )
+            # pyvenv.cfg placed at the tarball root (→ {workenv}/pyvenv.cfg).
+            # CPython looks one directory above the executable for pyvenv.cfg;
+            # with the binary at {workenv}/bin/pythonX.Y it finds {workenv}/pyvenv.cfg
+            # and treats {workenv} as the venv prefix.
+            pyvenv_cfg = (
+                f"home = {python_home}\n"
+                f"include-system-site-packages = false\n"
+                f"version = {self.python_version}\n"
+            ).encode()
+            with tarfile.open(python_tgz, "w:gz", compresslevel=9) as tar:
+                for dirpath in (
+                    "bin",
+                    "lib",
+                    f"lib/python{self.python_version}",
+                    f"lib/python{self.python_version}/site-packages",
+                ):
+                    d = tarfile.TarInfo(name=dirpath)
+                    d.type = tarfile.DIRTYPE
+                    d.mode = 0o755
+                    tar.addfile(d)
+                # Copy the real Python binary (not a symlink/script) so that
+                # Python's executable-based venv lookup works correctly.
+                tar.add(real_python, arcname=f"bin/python{self.python_version}")
+                tar.add(real_python, arcname="bin/python3")
+                pyvenv_info = tarfile.TarInfo(name="pyvenv.cfg")
+                pyvenv_info.type = tarfile.REGTYPE
+                pyvenv_info.mode = 0o644
+                pyvenv_info.size = len(pyvenv_cfg)
+                tar.addfile(pyvenv_info, _io.BytesIO(pyvenv_cfg))
+                # Placeholder file to guarantee the site-packages directory is
+                # created by tar extractors that only create parent directories
+                # when extracting regular files (not from DIRTYPE entries alone).
+                sp_placeholder = tarfile.TarInfo(
+                    name=f"lib/python{self.python_version}/site-packages/.flavor_placeholder"
+                )
+                sp_placeholder.type = tarfile.REGTYPE
+                sp_placeholder.mode = 0o644
+                sp_placeholder.size = 0
+                tar.addfile(sp_placeholder, _io.BytesIO(b""))
+            return
         logger.warning(
             "Creating placeholder Python tarball (non-Linux build only)",
             python_version=self.python_version,
