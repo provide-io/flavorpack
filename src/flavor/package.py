@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import sys
 import tomllib
 from typing import Any
 
@@ -329,7 +330,10 @@ def _get_build_config_from_toml(flavor_config: dict[str, Any], manifest_path: Pa
 
 def _determine_output_path(output_path: Path | None, manifest_dir: Path, package_name: str) -> Path:
     """Determine the output path for the package."""
-    return output_path if output_path else manifest_dir / "dist" / f"{package_name}.psp"
+    if output_path:
+        return output_path
+    ext = ".exe" if sys.platform == "win32" else ".psp"
+    return manifest_dir / "dist" / f"{package_name}{ext}"
 
 
 def _setup_key_paths(
