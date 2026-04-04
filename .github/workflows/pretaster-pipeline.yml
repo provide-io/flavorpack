@@ -82,7 +82,7 @@ jobs:
         continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-go-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
@@ -91,32 +91,13 @@ jobs:
         continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-rust-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
 
       - name: 📥 Download combined helpers (FreeBSD)
         continue-on-error: true
-        uses: dawidd6/action-download-artifact@v19
-        with:
-          workflow: helper-prep.yml
-          run_id: ${{ needs.setup.outputs.helper_run_id }}
-          name: flavor-go-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
-          path: ./helpers-dist
-
-      - name: 📥 Download Rust helpers
-        if: ${{ matrix.vm_arch == '' }}
-        uses: dawidd6/action-download-artifact@v19
-        with:
-          workflow: helper-prep.yml
-          run_id: ${{ needs.setup.outputs.helper_run_id }}
-          name: flavor-rust-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
-          path: ./helpers-dist
-
-      # FreeBSD uses a single combined helpers artifact
-      - name: 📥 Download combined helpers (FreeBSD)
-        if: ${{ matrix.vm_arch != '' }}
         uses: dawidd6/action-download-artifact@v19
         with:
           workflow: helper-prep.yml
@@ -129,7 +110,7 @@ jobs:
         continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-tastesh-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
@@ -200,7 +181,7 @@ jobs:
         continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-go-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
@@ -209,7 +190,7 @@ jobs:
         continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-rust-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
@@ -218,7 +199,7 @@ jobs:
         continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
@@ -228,7 +209,7 @@ jobs:
         continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-tastesh-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
@@ -387,7 +368,7 @@ jobs:
         continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-go-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
@@ -396,7 +377,7 @@ jobs:
         continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-rust-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
@@ -405,7 +386,7 @@ jobs:
         continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
@@ -415,7 +396,7 @@ jobs:
         continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-helpers-${{ needs.setup.outputs.version }}-all
           path: ./helpers-dist
