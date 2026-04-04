@@ -78,6 +78,15 @@ if [ ! -f "$LAUNCHER" ]; then
 fi
 chmod +x "$LAUNCHER"
 
+# Patch the cffi constraint in pyproject.toml before running flavor pack.
+# cffi>=2.0.0 is required to get a wheels on windows_arm64, but cffi 2.x has
+# NO FreeBSD wheel on PyPI.  uv 0.9.24 (pkg) ignores sys_platform markers in
+# constraint-dependencies, so the constraint always applies even on FreeBSD.
+# Relax it to >=1.14 here so uv resolves to cffi 1.17.x which has FreeBSD
+# wheels.  This only affects what gets bundled inside the PSP; cffi 1.17.x is
+# what FreeBSD ships and it satisfies all runtime requirements.
+sed -i '' 's/"cffi>=2\.0\.0"/"cffi>=1.14"/g' pyproject.toml
+
 mkdir -p _stage/artifacts
 flavor pack \
     --manifest pyproject.toml \
