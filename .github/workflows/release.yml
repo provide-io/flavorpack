@@ -82,7 +82,7 @@ jobs:
       - name: 📥 Download wheel artifacts from Flavor Pipeline
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 03-flavor-pipeline.yml
+          workflow: flavor-pipeline.yml
           run_id: ${{ needs.prepare.outputs.flavor_run_id }}
           name_is_regexp: true
           name: ^flavor-wheel-
@@ -122,7 +122,7 @@ jobs:
       - name: 📥 Download Flavor PSP artifacts
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 03-flavor-pipeline.yml
+          workflow: flavor-pipeline.yml
           run_id: ${{ needs.prepare.outputs.flavor_run_id }}
           name_is_regexp: true
           name: ^flavor-${{ needs.prepare.outputs.version }}-
@@ -133,7 +133,7 @@ jobs:
       - name: 📥 Download Taster artifacts
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 04-taster-pipeline.yml
+          workflow: taster-pipeline.yml
           name_is_regexp: true
           name: ^taster-
           path: ./taster-psp
