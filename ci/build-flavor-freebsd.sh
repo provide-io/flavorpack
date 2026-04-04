@@ -104,6 +104,8 @@ mkdir -p "$WHEEL_CACHE"
     'psutil' \
     'setproctitle' \
     'zstandard' \
+    'setuptools==82.0.1' \
+    'wheel==0.46.3' \
     -w "$WHEEL_CACHE" --no-deps
 
 # Repackage the pkg-compiled cryptography into a wheel so flavor pack can bundle
@@ -148,19 +150,22 @@ with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as whl:
 print(f"Created {out}")
 PYEOF
 
-# Patch pyproject.toml + remove lock file before flavor pack.
+# Patch pyproject.toml + regenerate lock file before flavor pack.
 #   1. Relax cffi constraint (>=2.0.0 → >=1.14,<2.0.0): uv 0.9.24 ignores
 #      sys_platform markers, so without this it still resolves to cffi 2.0.0.
-#   2. Replace provide-foundation[all] with the non-gRPC extras subset so
+#   2. Delete the non-FreeBSD cryptography floor (>=46.0.0): prevents conflict
+#      with the FreeBSD cap below.
+#   3. Make cryptography<46.0.0 unconditional: uv 0.9.24 ignores sys_platform
+#      markers in constraint-dependencies, so strip the marker so uv applies it.
+#   4. Replace provide-foundation[all] with the non-gRPC extras subset so
 #      grpcio is not a resolved dependency (no FreeBSD wheel, 20+ min build).
-#   3. Delete uv.lock so uv re-resolves from the patched pyproject.toml.
+#   5. Regenerate uv.lock from the patched pyproject.toml so uv export --frozen
+#      reads the correct FreeBSD-compatible pins (cryptography==45.x, no grpcio).
 sed -i '' 's/"cffi>=2\.0\.0"/"cffi>=1.14,<2.0.0"/g' pyproject.toml
-# Remove the non-FreeBSD cryptography floor (>=46.0.0) — uv 0.9.24 ignores
-# sys_platform markers in constraint-dependencies so it applies >=46.0.0
-# unconditionally, conflicting with our <46.0.0 FreeBSD cap.
 sed -i '' '/"cryptography>=46\.0\.0/d' pyproject.toml
+sed -i '' "s/\"cryptography<46\.0\.0; sys_platform == 'freebsd'\"/\"cryptography<46.0.0\"/" pyproject.toml
 sed -i '' 's/provide-foundation\[all\]/provide-foundation[cli,compression,crypto,transport,platform]/g' pyproject.toml
-rm -f uv.lock
+uv lock
 
 mkdir -p _stage/artifacts
 FLAVOR_WHEEL_CACHE="$WHEEL_CACHE" flavor pack \
