@@ -1,23 +1,35 @@
 {
   "name": "pretaster-env",
   "version": "1.0.0",
-  "description": "Environment variable filtering test",
+  "description": "Environment variable filtering test with embedded tastesh",
   "package": {
     "name": "pretaster-env",
     "version": "1.0.0",
-    "description": "Environment variable filtering test"
+    "description": "Environment variable filtering test with embedded tastesh"
   },
   "format": "PSPF/2025",
   "slots": [
     {
       "slot": 0,
+      "id": "tastesh",
+      "source": "TASTESH_BIN",
+      "target": "bin/tastesh",
+      "purpose": "tool",
+      "lifecycle": "runtime",
+      "operations": "raw",
+      "permissions": "0755",
+      "resolution": "build"
+    },
+    {
+      "slot": 1,
       "id": "env-test-script",
-      "source": "{workenv}/scripts/env_test.py",
-      "target": "scripts/env_test.py",
+      "source": "scripts/env_test.sh",
+      "target": "scripts/env_test.sh",
       "purpose": "payload",
       "lifecycle": "cached",
-      "operations": "none",
-      "permissions": "0755"
+      "operations": "raw",
+      "permissions": "0755",
+      "resolution": "build"
     }
   ],
   "runtime": {
@@ -29,12 +41,10 @@
       }
     }
   },
-  "command": "/usr/bin/python3 {workenv}/scripts/env_test.py",
-  "environment": {},
   "execution": {
-    "command": "/usr/bin/python3 {workenv}/scripts/env_test.py",
+    "command": "{workenv}/bin/tastesh {workenv}/scripts/env_test.sh",
     "args": [],
     "env": {},
-    "primary_slot": 0
+    "primary_slot": 1
   }
 }

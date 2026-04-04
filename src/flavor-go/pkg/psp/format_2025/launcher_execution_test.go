@@ -1241,7 +1241,7 @@ func TestRunBundleWithCwdRejectsUnsignedBundleWhenTrustedKeyRequired(t *testing.
 	t.Setenv(EnvTrustedKeysDir, filepath.Join(t.TempDir(), "missing-trusted-keys"))
 
 	policyDir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(policyDir, "policy.toml"), []byte("[trust]\nrequire_trusted_key = true\n"), 0o600); err != nil {
+	if err := os.WriteFile(filepath.Join(policyDir, "policy.json"), []byte(`{"version":1,"trust":{"require_trusted_key":true}}`), 0o600); err != nil {
 		t.Fatalf("WriteFile(policy) error = %v", err)
 	}
 	t.Setenv(EnvConfigDir, policyDir)
@@ -1276,7 +1276,7 @@ func TestRunBundleWithCwdRejectsSignedBundleWhenTrustedKeyStoreMissing(t *testin
 	t.Setenv(EnvTrustedKeysDir, filepath.Join(t.TempDir(), "missing-trusted-keys"))
 
 	policyDir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(policyDir, "policy.toml"), []byte("[trust]\nrequire_trusted_key = true\n"), 0o600); err != nil {
+	if err := os.WriteFile(filepath.Join(policyDir, "policy.json"), []byte(`{"version":1,"trust":{"require_trusted_key":true}}`), 0o600); err != nil {
 		t.Fatalf("WriteFile(policy) error = %v", err)
 	}
 	t.Setenv(EnvConfigDir, policyDir)
@@ -1297,7 +1297,7 @@ func TestRunBundleWithCwdRejectsUnsupportedOsKeychainPolicy(t *testing.T) {
 	t.Setenv(EnvWorkenvCache, "false")
 
 	policyDir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(policyDir, "policy.toml"), []byte("[trust]\nuse_os_keychain = true\n"), 0o600); err != nil {
+	if err := os.WriteFile(filepath.Join(policyDir, "policy.json"), []byte(`{"version":1,"trust":{"use_os_keychain":true}}`), 0o600); err != nil {
 		t.Fatalf("WriteFile(policy) error = %v", err)
 	}
 	t.Setenv(EnvConfigDir, policyDir)
@@ -1331,7 +1331,7 @@ func TestRunBundleWithCwdRejectsInvalidOperatorPolicyFile(t *testing.T) {
 	t.Setenv(EnvWorkenvCache, "false")
 
 	policyDir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(policyDir, "policy.toml"), []byte("[trust\nrequire_trusted_key = true\n"), 0o600); err != nil {
+	if err := os.WriteFile(filepath.Join(policyDir, "policy.json"), []byte(`{"version":1,"trust":{"require_trusted_key":INVALID}}`), 0o600); err != nil {
 		t.Fatalf("WriteFile(policy) error = %v", err)
 	}
 	t.Setenv(EnvConfigDir, policyDir)

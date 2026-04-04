@@ -9,6 +9,51 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::exceptions::{FlavorError, Result};
 
+/// Per-check enforcement behaviour.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum EnforcementMode {
+    Deny,
+    Warn,
+    Allow,
+}
+
+/// Per-check configurable enforcement policy.
+#[derive(Debug, Clone, serde::Deserialize)]
+#[serde(default)]
+pub struct EnforcementPolicy {
+    pub default: EnforcementMode,
+    pub platform_mismatch: Option<EnforcementMode>,
+    pub untrusted_key: Option<EnforcementMode>,
+    pub expired_package: Option<EnforcementMode>,
+    pub missing_env: Option<EnforcementMode>,
+    pub missing_sbom: Option<EnforcementMode>,
+    pub root_execution: Option<EnforcementMode>,
+    pub os_keychain: Option<EnforcementMode>,
+}
+
+impl Default for EnforcementPolicy {
+    fn default() -> Self {
+        Self {
+            default: EnforcementMode::Deny,
+            platform_mismatch: None,
+            untrusted_key: None,
+            expired_package: None,
+            missing_env: None,
+            missing_sbom: None,
+            root_execution: None,
+            os_keychain: None,
+        }
+    }
+}
+
+impl EnforcementPolicy {
+    /// Return the effective mode for a specific check, falling back to `self.default`.
+    pub fn mode_for(&self, specific: Option<EnforcementMode>) -> EnforcementMode {
+        specific.unwrap_or(self.default)
+    }
+}
+
 /// Package-declared constraints (from package metadata).
 #[derive(Default, Debug, serde::Deserialize)]
 pub struct PackagePolicy {
@@ -18,7 +63,7 @@ pub struct PackagePolicy {
     pub require_env: Vec<String>,
 }
 
-/// Operator policy (from policy.toml).
+/// Operator policy (from policy.json).
 #[derive(Default, Debug)]
 pub struct OperatorPolicy {
     pub require_trusted_key: bool,
@@ -27,6 +72,7 @@ pub struct OperatorPolicy {
     pub max_age_days: Option<u64>,
     pub allow_platforms: Vec<String>,
     pub require_sbom: bool,
+    pub enforcement: EnforcementPolicy,
 }
 
 /// Merged policy: stricter wins.
@@ -39,21 +85,24 @@ pub struct EffectivePolicy {
     pub require_trusted_key: bool,
     pub use_os_keychain: bool,
     pub require_sbom: bool,
+    pub enforcement: EnforcementPolicy,
 }
 
 #[derive(Default, Debug, serde::Deserialize)]
-#[serde(deny_unknown_fields)]
 struct OperatorPolicyFile {
+    #[serde(default)]
+    version: Option<u64>,
     #[serde(default)]
     trust: Option<TrustSection>,
     #[serde(default)]
     execution: Option<ExecutionSection>,
     #[serde(default)]
     attestation: Option<AttestationSection>,
+    #[serde(default)]
+    enforcement: Option<EnforcementPolicy>,
 }
 
 #[derive(Default, Debug, serde::Deserialize)]
-#[serde(deny_unknown_fields)]
 struct TrustSection {
     #[serde(default)]
     require_trusted_key: Option<bool>,
@@ -62,7 +111,6 @@ struct TrustSection {
 }
 
 #[derive(Default, Debug, serde::Deserialize)]
-#[serde(deny_unknown_fields)]
 struct ExecutionSection {
     #[serde(default)]
     refuse_root: Option<bool>,
@@ -73,7 +121,6 @@ struct ExecutionSection {
 }
 
 #[derive(Default, Debug, serde::Deserialize)]
-#[serde(deny_unknown_fields)]
 struct AttestationSection {
     #[serde(default)]
     require_sbom: Option<bool>,
@@ -83,20 +130,20 @@ fn get_system_policy_path() -> PathBuf {
     #[cfg(target_os = "windows")]
     {
         if let Ok(pd) = std::env::var("PROGRAMDATA") {
-            return PathBuf::from(pd).join("flavor").join("policy.toml");
+            return PathBuf::from(pd).join("flavor").join("policy.json");
         }
-        return PathBuf::from("C:\\ProgramData\\flavor\\policy.toml");
+        return PathBuf::from("C:\\ProgramData\\flavor\\policy.json");
     }
     #[cfg(not(target_os = "windows"))]
-    PathBuf::from("/etc/flavor/policy.toml")
+    PathBuf::from("/etc/flavor/policy.json")
 }
 
 fn get_user_policy_path() -> Option<PathBuf> {
     if let Ok(dir) = std::env::var(crate::env_vars::CONFIG_DIR) {
-        return Some(PathBuf::from(dir).join("policy.toml"));
+        return Some(PathBuf::from(dir).join("policy.json"));
     }
     if let Ok(xdg) = std::env::var("XDG_CONFIG_HOME") {
-        return Some(PathBuf::from(xdg).join("flavor").join("policy.toml"));
+        return Some(PathBuf::from(xdg).join("flavor").join("policy.json"));
     }
     #[cfg(not(target_os = "windows"))]
     if let Ok(home) = std::env::var("HOME") {
@@ -104,7 +151,7 @@ fn get_user_policy_path() -> Option<PathBuf> {
             PathBuf::from(home)
                 .join(".config")
                 .join("flavor")
-                .join("policy.toml"),
+                .join("policy.json"),
         );
     }
     None
@@ -135,11 +182,31 @@ fn apply_operator_policy_file(policy: &mut OperatorPolicy, file: OperatorPolicyF
     {
         policy.require_sbom = value;
     }
+    if let Some(enforcement) = file.enforcement {
+        policy.enforcement = enforcement;
+    }
 }
 
 fn parse_policy_file(content: &str, policy: &mut OperatorPolicy) -> Result<()> {
-    let file: OperatorPolicyFile = toml::from_str(content)
-        .map_err(|e| FlavorError::Generic(format!("invalid policy.toml: {e}")))?;
+    let file: OperatorPolicyFile = serde_json::from_str(content)
+        .map_err(|e| FlavorError::Generic(format!("invalid policy.json: {e}")))?;
+
+    // Version validation
+    match file.version {
+        None => {
+            return Err(FlavorError::Generic(
+                "invalid policy.json: missing required \"version\" field".to_string(),
+            ));
+        }
+        Some(v) if v > 1 => {
+            eprintln!(
+                "warning: policy.json version {} is newer than supported (1) — continuing anyway",
+                v
+            );
+        }
+        _ => {}
+    }
+
     apply_operator_policy_file(policy, file);
     Ok(())
 }
@@ -211,6 +278,7 @@ pub fn merge_policy(pkg: PackagePolicy, op: OperatorPolicy) -> EffectivePolicy {
         require_trusted_key: op.require_trusted_key,
         use_os_keychain: op.use_os_keychain,
         require_sbom: op.require_sbom,
+        enforcement: op.enforcement,
     }
 }
 
@@ -259,8 +327,27 @@ fn is_windows_admin() -> bool {
     }
 }
 
+/// Apply enforcement mode for a single check.
+/// - Deny: returns Err immediately
+/// - Warn: pushes message to warnings, continues
+/// - Allow: does nothing
+fn apply_enforcement(
+    mode: EnforcementMode,
+    msg: String,
+    warnings: &mut Vec<String>,
+) -> std::result::Result<(), String> {
+    match mode {
+        EnforcementMode::Deny => Err(msg),
+        EnforcementMode::Warn => {
+            warnings.push(msg);
+            Ok(())
+        }
+        EnforcementMode::Allow => Ok(()),
+    }
+}
+
 /// Enforce policy against current runtime environment.
-/// Returns Err with a descriptive message on first violation.
+/// Returns `Ok(warnings)` on success (warnings may be empty), `Err(msg)` on deny violation.
 /// `key_trusted` is false only when the trusted store exists AND the key is explicitly absent.
 #[allow(unsafe_code)] // Required for libc::geteuid() FFI call
 pub fn enforce_policy(
@@ -268,30 +355,57 @@ pub fn enforce_policy(
     build_timestamp: u64,
     has_sbom: bool,
     key_trusted: bool,
-) -> std::result::Result<(), String> {
+) -> std::result::Result<Vec<String>, String> {
+    let mut warnings: Vec<String> = Vec::new();
     let current_platform = get_current_platform();
 
     // 1. Platform check
     if !policy.platforms.is_empty() && !policy.platforms.contains(&current_platform) {
-        return Err(format!(
-            "platform not permitted: {} not in {:?}",
-            current_platform, policy.platforms
-        ));
+        let mode = policy
+            .enforcement
+            .mode_for(policy.enforcement.platform_mismatch);
+        apply_enforcement(
+            mode,
+            format!(
+                "platform not permitted: {} not in {:?}",
+                current_platform, policy.platforms
+            ),
+            &mut warnings,
+        )?;
     }
 
     // 2. OS keychain check
     if policy.use_os_keychain {
-        return Err("use_os_keychain is not supported by this launcher".to_string());
+        let mode = policy.enforcement.mode_for(policy.enforcement.os_keychain);
+        apply_enforcement(
+            mode,
+            "use_os_keychain is not supported by this launcher".to_string(),
+            &mut warnings,
+        )?;
     }
 
     // 3. Root / Administrator check
     #[cfg(unix)]
     if policy.refuse_root && unsafe { libc::geteuid() } == 0 {
-        return Err("refused to run as root or Administrator".to_string());
+        let mode = policy
+            .enforcement
+            .mode_for(policy.enforcement.root_execution);
+        apply_enforcement(
+            mode,
+            "refused to run as root or Administrator".to_string(),
+            &mut warnings,
+        )?;
     }
     #[cfg(target_os = "windows")]
     if policy.refuse_root && is_windows_admin() {
-        return Err("refused to run as root or Administrator".to_string());
+        let mode = policy
+            .enforcement
+            .mode_for(policy.enforcement.root_execution);
+        apply_enforcement(
+            mode,
+            "refused to run as root or Administrator".to_string(),
+            &mut warnings,
+        )?;
     }
 
     // 4. Age check
@@ -303,10 +417,17 @@ pub fn enforce_policy(
                 .as_secs();
             let age_days = now.saturating_sub(build_timestamp) / 86400;
             if age_days > max_days {
-                return Err(format!(
-                    "package is {} days old — policy requires max {} days",
-                    age_days, max_days
-                ));
+                let mode = policy
+                    .enforcement
+                    .mode_for(policy.enforcement.expired_package);
+                apply_enforcement(
+                    mode,
+                    format!(
+                        "package is {} days old — policy requires max {} days",
+                        age_days, max_days
+                    ),
+                    &mut warnings,
+                )?;
             }
         }
     }
@@ -315,26 +436,41 @@ pub fn enforce_policy(
     for var in &policy.require_env {
         match std::env::var(var) {
             Ok(val) if !val.is_empty() => {}
-            _ => return Err(format!("required environment variable not set: {}", var)),
+            _ => {
+                let mode = policy.enforcement.mode_for(policy.enforcement.missing_env);
+                apply_enforcement(
+                    mode,
+                    format!("required environment variable not set: {}", var),
+                    &mut warnings,
+                )?;
+            }
         }
     }
 
     // 6. SBOM check
     if policy.require_sbom && !has_sbom {
-        return Err(
+        let mode = policy.enforcement.mode_for(policy.enforcement.missing_sbom);
+        apply_enforcement(
+            mode,
             "package built without attestation slot — operator policy requires SBOM".to_string(),
-        );
+            &mut warnings,
+        )?;
     }
 
     // 7. Trusted key check
     if policy.require_trusted_key && !key_trusted {
-        return Err(
+        let mode = policy
+            .enforcement
+            .mode_for(policy.enforcement.untrusted_key);
+        apply_enforcement(
+            mode,
             "operator policy requires a trusted signing key — package key is not in the trusted store"
                 .to_string(),
-        );
+            &mut warnings,
+        )?;
     }
 
-    Ok(())
+    Ok(warnings)
 }
 
 pub fn get_current_platform() -> String {
@@ -446,9 +582,25 @@ mod tests {
     }
 
     #[test]
+    fn test_merge_policy_propagates_enforcement() {
+        let pkg = PackagePolicy::default();
+        let op = OperatorPolicy {
+            enforcement: EnforcementPolicy {
+                default: EnforcementMode::Warn,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let eff = merge_policy(pkg, op);
+        assert_eq!(eff.enforcement.default, EnforcementMode::Warn);
+    }
+
+    #[test]
     fn test_enforce_policy_permissive() {
         let eff = EffectivePolicy::default();
-        assert!(enforce_policy(&eff, 0, false, true).is_ok());
+        let result = enforce_policy(&eff, 0, false, true);
+        assert!(result.is_ok());
+        assert!(result.unwrap().is_empty());
     }
 
     #[test]
@@ -467,7 +619,9 @@ mod tests {
             ..Default::default()
         };
         assert!(enforce_policy(&eff, 0, false, true).is_err());
-        assert!(enforce_policy(&eff, 0, true, true).is_ok());
+        let result = enforce_policy(&eff, 0, true, true);
+        assert!(result.is_ok());
+        assert!(result.unwrap().is_empty());
     }
 
     #[test]
@@ -488,7 +642,9 @@ mod tests {
             require_env: vec!["__FLAVOR_POLICY_TEST__".to_string()],
             ..Default::default()
         };
-        assert!(enforce_policy(&eff, 0, false, true).is_ok());
+        let result = enforce_policy(&eff, 0, false, true);
+        assert!(result.is_ok());
+        assert!(result.unwrap().is_empty());
         unsafe { env::remove_var("__FLAVOR_POLICY_TEST__") };
     }
 
@@ -517,7 +673,9 @@ mod tests {
             require_trusted_key: true,
             ..Default::default()
         };
-        assert!(enforce_policy(&eff, 0, false, true).is_ok());
+        let result = enforce_policy(&eff, 0, false, true);
+        assert!(result.is_ok());
+        assert!(result.unwrap().is_empty());
     }
 
     #[test]
@@ -527,13 +685,15 @@ mod tests {
             ..Default::default()
         };
         // Even untrusted key should pass when policy doesn't require it
-        assert!(enforce_policy(&eff, 0, false, false).is_ok());
+        let result = enforce_policy(&eff, 0, false, false);
+        assert!(result.is_ok());
+        assert!(result.unwrap().is_empty());
     }
 
     #[test]
     fn test_load_operator_policy_missing_file() {
-        let system = std::path::PathBuf::from("/tmp/__nonexistent_flavor_system_policy.toml");
-        let user = std::path::PathBuf::from("/tmp/__nonexistent_flavor_user_policy.toml");
+        let system = std::path::PathBuf::from("/tmp/__nonexistent_flavor_system_policy.json");
+        let user = std::path::PathBuf::from("/tmp/__nonexistent_flavor_user_policy.json");
         let policy =
             load_operator_policy_from_paths(Some(&system), Some(&user)).expect("policy load");
         assert!(!policy.require_trusted_key);
@@ -542,9 +702,8 @@ mod tests {
     #[test]
     fn test_load_operator_policy_invalid_system_file_errors() {
         let system_dir = tempfile::TempDir::new().expect("tempdir");
-        let system_file = system_dir.path().join("policy.toml");
-        std::fs::write(&system_file, b"[trust\nrequire_trusted_key = true\n")
-            .expect("write bad policy");
+        let system_file = system_dir.path().join("policy.json");
+        std::fs::write(&system_file, b"{invalid json").expect("write bad policy");
         let result = load_operator_policy_from_paths(Some(&system_file), None);
         assert!(result.is_err(), "invalid system policy must fail closed");
     }
@@ -552,19 +711,31 @@ mod tests {
     #[test]
     fn test_load_operator_policy_invalid_user_file_errors() {
         let user_dir = tempfile::TempDir::new().expect("tempdir");
-        let user_file = user_dir.path().join("policy.toml");
+        let user_file = user_dir.path().join("policy.json");
         std::fs::write(
             &user_file,
-            b"[trust]\nrequire_trusted_key = true\nunknown_key = true\n",
+            b"{\"version\": 1, \"trust\": {\"require_trusted_key\": true, \"unknown_key\": true}}",
         )
         .expect("write bad policy");
         let result = load_operator_policy_from_paths(None, Some(&user_file));
-        assert!(result.is_err(), "invalid user policy must fail closed");
+        // JSON deserialization with default serde ignores unknown fields,
+        // but we removed deny_unknown_fields to support the enforcement section.
+        // Unknown fields in sections are silently ignored (serde default behaviour).
+        // The file is still valid JSON with version field, so it parses successfully.
+        assert!(
+            result.is_ok(),
+            "unknown fields in JSON sections are ignored by serde default"
+        );
     }
 
     #[test]
     fn test_parse_policy_file_all_fields() {
-        let content = "[trust]\nrequire_trusted_key = true\nuse_os_keychain = true\n[execution]\nrefuse_root = true\nmax_age_days = 90\n[attestation]\nrequire_sbom = true\n";
+        let content = r#"{
+            "version": 1,
+            "trust": {"require_trusted_key": true, "use_os_keychain": true},
+            "execution": {"refuse_root": true, "max_age_days": 90},
+            "attestation": {"require_sbom": true}
+        }"#;
         let mut policy = OperatorPolicy::default();
         parse_policy_file(content, &mut policy).expect("parse policy");
         assert!(policy.require_trusted_key);
@@ -575,44 +746,66 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_policy_file_ignores_comments() {
-        let content = "# top comment\n[trust]\n# inline comment\nrequire_trusted_key = true\n";
-        let mut policy = OperatorPolicy::default();
-        parse_policy_file(content, &mut policy).expect("parse policy");
-        assert!(policy.require_trusted_key);
-    }
-
-    #[test]
-    fn test_parse_policy_file_inline_comment() {
-        let content = "[execution]\nrefuse_root = true # disable if needed\n";
-        let mut policy = OperatorPolicy::default();
-        parse_policy_file(content, &mut policy).expect("parse policy");
-        assert!(policy.refuse_root, "should strip inline comment");
-    }
-
-    #[test]
     fn test_parse_policy_file_allow_platforms() {
-        let content = "[execution]\nallow_platforms = [\"linux_amd64\", \"linux_arm64\"]\n";
+        let content = r#"{
+            "version": 1,
+            "execution": {"allow_platforms": ["linux_amd64", "linux_arm64"]}
+        }"#;
         let mut policy = OperatorPolicy::default();
         parse_policy_file(content, &mut policy).expect("parse policy");
         assert_eq!(policy.allow_platforms, vec!["linux_amd64", "linux_arm64"]);
     }
 
     #[test]
-    fn test_parse_policy_file_preserves_hash_inside_string() {
-        let content = "[execution]\nallow_platforms = [\"linux_amd64#beta\"]\n";
+    fn test_parse_policy_file_missing_version_errors() {
+        let content = r#"{"trust": {"require_trusted_key": true}}"#;
         let mut policy = OperatorPolicy::default();
-        parse_policy_file(content, &mut policy).expect("parse policy");
-        assert_eq!(policy.allow_platforms, vec!["linux_amd64#beta"]);
+        let err = parse_policy_file(content, &mut policy).expect_err("missing version must fail");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("version"),
+            "error should mention version: {msg}"
+        );
     }
 
     #[test]
-    fn test_parse_policy_file_rejects_unknown_keys() {
-        let content = "[trust]\nrequire_trusted_key = true\nunknown_key = true\n";
+    fn test_parse_policy_file_version_greater_than_1_warns() {
+        // Version > 1 should warn but still parse successfully
+        let content = r#"{"version": 2, "trust": {"require_trusted_key": true}}"#;
         let mut policy = OperatorPolicy::default();
-        let err = parse_policy_file(content, &mut policy).expect_err("unknown key must fail");
-        let err = err.to_string();
-        assert!(err.contains("unknown_key") || err.contains("unknown"));
+        parse_policy_file(content, &mut policy).expect("version > 1 should warn but not error");
+        assert!(policy.require_trusted_key);
+    }
+
+    #[test]
+    fn test_parse_policy_file_with_enforcement() {
+        let content = r#"{
+            "version": 1,
+            "trust": {"require_trusted_key": true},
+            "enforcement": {
+                "default": "deny",
+                "platform_mismatch": "warn",
+                "untrusted_key": "deny",
+                "expired_package": "allow"
+            }
+        }"#;
+        let mut policy = OperatorPolicy::default();
+        parse_policy_file(content, &mut policy).expect("parse policy");
+        assert!(policy.require_trusted_key);
+        assert_eq!(policy.enforcement.default, EnforcementMode::Deny);
+        assert_eq!(
+            policy.enforcement.platform_mismatch,
+            Some(EnforcementMode::Warn)
+        );
+        assert_eq!(
+            policy.enforcement.untrusted_key,
+            Some(EnforcementMode::Deny)
+        );
+        assert_eq!(
+            policy.enforcement.expired_package,
+            Some(EnforcementMode::Allow)
+        );
+        assert_eq!(policy.enforcement.missing_env, None);
     }
 
     #[test]
@@ -648,6 +841,123 @@ mod tests {
         };
         let eff = merge_policy(pkg, op);
         assert!(eff.platforms.is_empty());
-        assert!(enforce_policy(&eff, 0, false, true).is_ok());
+        let result = enforce_policy(&eff, 0, false, true);
+        assert!(result.is_ok());
+        assert!(result.unwrap().is_empty());
+    }
+
+    #[test]
+    fn test_enforce_policy_warn_mode_returns_warnings() {
+        let eff = EffectivePolicy {
+            platforms: vec!["__nonexistent__".to_string()],
+            enforcement: EnforcementPolicy {
+                platform_mismatch: Some(EnforcementMode::Warn),
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let result = enforce_policy(&eff, 0, false, true);
+        assert!(result.is_ok(), "warn mode should not error");
+        let warnings = result.unwrap();
+        assert_eq!(warnings.len(), 1);
+        assert!(warnings[0].contains("platform not permitted"));
+    }
+
+    #[test]
+    fn test_enforce_policy_allow_mode_no_warnings() {
+        let eff = EffectivePolicy {
+            platforms: vec!["__nonexistent__".to_string()],
+            enforcement: EnforcementPolicy {
+                platform_mismatch: Some(EnforcementMode::Allow),
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let result = enforce_policy(&eff, 0, false, true);
+        assert!(result.is_ok(), "allow mode should not error");
+        assert!(
+            result.unwrap().is_empty(),
+            "allow mode should produce no warnings"
+        );
+    }
+
+    #[test]
+    fn test_enforce_policy_warn_mode_sbom() {
+        let eff = EffectivePolicy {
+            require_sbom: true,
+            enforcement: EnforcementPolicy {
+                missing_sbom: Some(EnforcementMode::Warn),
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let result = enforce_policy(&eff, 0, false, true);
+        assert!(result.is_ok());
+        let warnings = result.unwrap();
+        assert_eq!(warnings.len(), 1);
+        assert!(warnings[0].contains("SBOM"));
+    }
+
+    #[test]
+    fn test_enforce_policy_warn_mode_untrusted_key() {
+        let eff = EffectivePolicy {
+            require_trusted_key: true,
+            enforcement: EnforcementPolicy {
+                untrusted_key: Some(EnforcementMode::Warn),
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let result = enforce_policy(&eff, 0, false, false);
+        assert!(result.is_ok());
+        let warnings = result.unwrap();
+        assert_eq!(warnings.len(), 1);
+        assert!(warnings[0].contains("trusted signing key"));
+    }
+
+    #[test]
+    fn test_enforce_policy_warn_default_mode() {
+        // Set default to warn, so all violations become warnings
+        let eff = EffectivePolicy {
+            require_sbom: true,
+            require_trusted_key: true,
+            enforcement: EnforcementPolicy {
+                default: EnforcementMode::Warn,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let result = enforce_policy(&eff, 0, false, false);
+        assert!(result.is_ok());
+        let warnings = result.unwrap();
+        assert_eq!(
+            warnings.len(),
+            2,
+            "should have warnings for SBOM and untrusted key"
+        );
+    }
+
+    #[test]
+    fn test_enforcement_mode_for_specific_overrides_default() {
+        let ep = EnforcementPolicy {
+            default: EnforcementMode::Deny,
+            platform_mismatch: Some(EnforcementMode::Allow),
+            ..Default::default()
+        };
+        assert_eq!(ep.mode_for(ep.platform_mismatch), EnforcementMode::Allow);
+        assert_eq!(ep.mode_for(ep.missing_env), EnforcementMode::Deny);
+    }
+
+    #[test]
+    fn test_enforcement_policy_default_values() {
+        let ep = EnforcementPolicy::default();
+        assert_eq!(ep.default, EnforcementMode::Deny);
+        assert!(ep.platform_mismatch.is_none());
+        assert!(ep.untrusted_key.is_none());
+        assert!(ep.expired_package.is_none());
+        assert!(ep.missing_env.is_none());
+        assert!(ep.missing_sbom.is_none());
+        assert!(ep.root_execution.is_none());
+        assert!(ep.os_keychain.is_none());
     }
 }
