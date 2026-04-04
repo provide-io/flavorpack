@@ -83,7 +83,9 @@ case "$OS" in
         ;;
 esac
 
-make -j"$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)"
+MAKE_CMD="make"
+command -v gmake >/dev/null 2>&1 && MAKE_CMD="gmake"
+$MAKE_CMD -j"$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)"
 
 # Strip and install
 if [ "$OS" = "darwin" ]; then
