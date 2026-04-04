@@ -8,6 +8,11 @@ set -euo pipefail
 
 PLATFORM="${1}"
 
+# The FreeBSD PSP uses the system CPython (no portable uv-managed Python
+# exists for FreeBSD).  Install Python 3.11 so libpython3.11.so.1.0 and
+# the standard library are present at the paths the PSP expects.
+sudo env IGNORE_OSVERSION=yes pkg install -y python311
+
 PSP=$(find _stage -name "flavor-*.psp" | head -1)
 if [ -z "$PSP" ]; then
     echo "❌ Staged PSP not found in _stage/ for $PLATFORM"
