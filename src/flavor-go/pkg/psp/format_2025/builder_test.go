@@ -611,6 +611,15 @@ func TestBuilderGetFileSize(t *testing.T) {
 	}
 }
 
+func TestBuilderGetFileSizeReturnsErrorForMissingFile(t *testing.T) {
+	t.Parallel()
+
+	_, err := getFileSize(filepath.Join(t.TempDir(), "nonexistent.txt"))
+	if err == nil {
+		t.Fatal("expected error for nonexistent file")
+	}
+}
+
 func TestBuilderCheckedArithmeticHelpers(t *testing.T) {
 	t.Parallel()
 

@@ -23,7 +23,9 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
-      
+        with:
+          persist-credentials: false
+
       - name: 🐹 Setup Go
         uses: actions/setup-go@v6
         with:
@@ -138,7 +140,9 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
-      
+        with:
+          persist-credentials: false
+
       - name: 📦 Download binaries
         uses: actions/download-artifact@v8
         with:
@@ -232,7 +236,9 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
-      
+        with:
+          persist-credentials: false
+
       - name: 📦 Download binaries
         uses: actions/download-artifact@v8
         with:
@@ -283,7 +289,9 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
-      
+        with:
+          persist-credentials: false
+
       - name: 🔧 Set up QEMU
         uses: docker/setup-qemu-action@v4
         with:
@@ -343,7 +351,9 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
-      
+        with:
+          persist-credentials: false
+
       - name: 📦 Download binaries
         uses: actions/download-artifact@v8
         with:
@@ -382,7 +392,9 @@ jobs:
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
-      
+        with:
+          persist-credentials: false
+
       - name: 📊 Generate report
         run: |
           cat << EOF > compatibility-report.md

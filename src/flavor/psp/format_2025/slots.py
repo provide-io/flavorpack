@@ -355,9 +355,11 @@ class SlotView:
 
                 # For now, handle simple cases
                 if ops == [OP_GZIP]:
-                    import zlib
+                    import gzip
 
-                    self._decompressed = zlib.decompress(self.data)
+                    self._decompressed = gzip.decompress(
+                        bytes(self.data) if isinstance(self.data, memoryview) else self.data
+                    )
                 elif ops == [OP_TAR, OP_GZIP]:
                     # For tar.gz, return as-is (launcher handles extraction)
                     self._decompressed = bytes(self.data) if isinstance(self.data, memoryview) else self.data
