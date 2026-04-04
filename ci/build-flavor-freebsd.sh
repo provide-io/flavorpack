@@ -78,21 +78,44 @@ if [ ! -f "$LAUNCHER" ]; then
 fi
 chmod +x "$LAUNCHER"
 
-# Patch cffi constraint + remove lock file before flavor pack.
+# Pre-build C-extension wheels that have no pre-built FreeBSD wheel on PyPI.
+# flavor pack uses pip download internally; without pre-built wheels it fails.
+# Build them here and pass the output dir via FLAVOR_WHEEL_CACHE so
+# flavor pack finds them via --find-links (offline fallback path).
 #
-# cffi>=2.0.0 is required for windows_arm64 wheels, but cffi 2.x has NO
-# FreeBSD wheel on PyPI.  uv 0.9.24 (pkg) ignores sys_platform markers in
-# constraint-dependencies, so the >=2.0.0 constraint applies even on FreeBSD.
-# flavor pack reads uv.lock (which pins cffi==2.0.0) before re-resolving, so
-# we must:
-#   1. Relax the constraint in pyproject.toml (>=2.0.0 → >=1.14)
-#   2. Delete uv.lock so uv re-resolves and picks cffi 1.17.x (the latest
-#      version with FreeBSD wheels) instead of the locked cffi 2.0.0.
+# Packages without FreeBSD wheels on PyPI (known):
+#   cffi          — required by cryptography; no FreeBSD wheel on PyPI (1.x or 2.x)
+#   psutil        — process/platform info used by provide-foundation
+#   setproctitle  — process title; small C build
+#   zstandard     — PSP compression; medium C build
+#
+# grpcio has no FreeBSD wheel either and takes 20+ min to build.
+# Remove it entirely by switching provide-foundation[all] to the non-gRPC
+# extras subset — gRPC telemetry is never used in the FreeBSD PSP anyway.
+WHEEL_CACHE=/tmp/freebsd-wheel-cache
+mkdir -p "$WHEEL_CACHE"
+
+# Build C-extension wheels from source for packages with no PyPI FreeBSD wheel.
+# Use --no-deps so we only build the wheel we're requesting, not its subtree.
+/tmp/flavorenv/bin/pip wheel \
+    'cffi>=1.14,<2.0.0' \
+    'psutil' \
+    'setproctitle' \
+    'zstandard' \
+    -w "$WHEEL_CACHE" --no-deps
+
+# Patch pyproject.toml + remove lock file before flavor pack.
+#   1. Relax cffi constraint (>=2.0.0 → >=1.14,<2.0.0): uv 0.9.24 ignores
+#      sys_platform markers, so without this it still resolves to cffi 2.0.0.
+#   2. Replace provide-foundation[all] with the non-gRPC extras subset so
+#      grpcio is not a resolved dependency (no FreeBSD wheel, 20+ min build).
+#   3. Delete uv.lock so uv re-resolves from the patched pyproject.toml.
 sed -i '' 's/"cffi>=2\.0\.0"/"cffi>=1.14,<2.0.0"/g' pyproject.toml
+sed -i '' 's/provide-foundation\[all\]/provide-foundation[cli,compression,crypto,transport,platform]/g' pyproject.toml
 rm -f uv.lock
 
 mkdir -p _stage/artifacts
-flavor pack \
+FLAVOR_WHEEL_CACHE="$WHEEL_CACHE" flavor pack \
     --manifest pyproject.toml \
     --output "_stage/artifacts/flavor-${VERSION}-${PLATFORM}.psp" \
     --launcher-bin "$LAUNCHER" \
