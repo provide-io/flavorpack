@@ -43,6 +43,11 @@ for platform in $PLATFORMS; do
     [ "$found" -eq 0 ] && echo "   ⚠️  No artifact found for $platform"
 done
 
+# Copy tastesh binaries (raw files, not zipped)
+for tastesh in "$ARTIFACT_DIR"/flavor-tastesh-*; do
+    [ -f "$tastesh" ] && cp "$tastesh" helpers/bin/ && echo "   Copied $(basename "$tastesh")"
+done
+
 # Make Unix binaries executable
 echo "🔐 Setting executable permissions..."
 chmod +x helpers/bin/*-linux_* 2>/dev/null || true
