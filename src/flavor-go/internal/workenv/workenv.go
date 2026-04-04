@@ -62,7 +62,10 @@ func GetCacheRoot() string {
 		}
 	}
 
-	// Fallback to temp directory
+	// Last resort: use os.UserHomeDir before falling back to temp
+	if home, err := os.UserHomeDir(); err == nil {
+		return filepath.Join(home, ".cache", "flavor")
+	}
 	return filepath.Join(os.TempDir(), "flavor", "cache")
 }
 
@@ -86,7 +89,15 @@ func GetConfigRoot() string {
 			return filepath.Join(home, ".config", "flavor")
 		}
 	}
-	return filepath.Join(os.TempDir(), "flavor", "config")
+	// Last resort: use os.UserHomeDir (reads /etc/passwd on Unix, %USERPROFILE% on Windows).
+	// Never fall back to a temp directory — a world-writable config root would allow
+	// trusted-key injection.
+	if home, err := os.UserHomeDir(); err == nil {
+		return filepath.Join(home, ".config", "flavor")
+	}
+	// Return a non-existent path that will cause trust-store lookups to find no keys
+	// rather than silently using a world-writable temp directory.
+	return filepath.Join(string(os.PathSeparator), "nonexistent", "flavor", "config")
 }
 
 // GetSystemConfigRoot returns the system-wide config root directory.
