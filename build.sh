@@ -61,6 +61,14 @@ if [ "$OS" = "linux" ]; then
   log_info "Note: Linux builds are static by default (Go: CGO_ENABLED=0, Rust: musl)"
 fi
 
+# --- Build tastesh (dash shell for pretaster) ---
+if command -v autoreconf >/dev/null 2>&1; then
+  log_info "Building tastesh (dash) for $PLATFORM..."
+  bash "$SCRIPT_DIR/ci/build-dash.sh" "$BIN_DIR" 2>&1 | tail -1
+else
+  log_warn "autoreconf not found — skipping tastesh build (install autotools to enable)"
+fi
+
 # --- List Built Binaries ---
 log_info "Setting executable permissions..."
 chmod +x "$BIN_DIR"/flavor-* 2>/dev/null || true

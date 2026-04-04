@@ -63,6 +63,10 @@ RS_BUILDER := $(BIN_DIR)/flavor-rs-builder-$(PLATFORM)$(EXE)
 GO_BUILDER := $(BIN_DIR)/flavor-go-builder-$(PLATFORM)$(EXE)
 RS_LAUNCHER := $(BIN_DIR)/flavor-rs-launcher-$(PLATFORM)$(EXE)
 GO_LAUNCHER := $(BIN_DIR)/flavor-go-launcher-$(PLATFORM)$(EXE)
+TASTESH := $(BIN_DIR)/flavor-tastesh-$(PLATFORM)$(EXE)
+
+# Resolved configs directory (TASTESH_BIN substituted)
+RESOLVED_DIR := $(DIST_DIR)/.configs
 
 # Test packages
 ECHO_PSP := $(DIST_DIR)/echo-test.psp
@@ -178,27 +182,34 @@ $(DIST_DIR):
 $(LOGS_DIR):
 	@mkdir -p $(LOGS_DIR)
 
-# Individual test packages
-$(ECHO_PSP): $(DIST_DIR)
+# Resolve config templates (substitute TASTESH_BIN placeholder)
+$(RESOLVED_DIR):
+	@mkdir -p $(RESOLVED_DIR)
+
+$(RESOLVED_DIR)/%.json: $(CONFIGS_DIR)/%.json $(RESOLVED_DIR)
+	@sed 's|TASTESH_BIN|$(TASTESH)|g' $< > $@
+
+# Individual test packages (use resolved configs for tastesh substitution)
+$(ECHO_PSP): $(DIST_DIR) $(RESOLVED_DIR)/test-echo.json
 	$(call print,"📦 Building echo test package...",$(CYAN))
 	@$(GO_BUILDER) \
-		--manifest $(CONFIGS_DIR)/test-echo.json \
+		--manifest $(RESOLVED_DIR)/test-echo.json \
 		--launcher-bin $(RS_LAUNCHER) \
 		--output $@ \
 		--key-seed $(KEY_SEED)
 
-$(SHELL_PSP): $(DIST_DIR)
+$(SHELL_PSP): $(DIST_DIR) $(RESOLVED_DIR)/test-shell.json
 	$(call print,"📦 Building shell test package...",$(CYAN))
 	@$(RS_BUILDER) \
-		--manifest $(CONFIGS_DIR)/test-shell.json \
+		--manifest $(RESOLVED_DIR)/test-shell.json \
 		--launcher-bin $(GO_LAUNCHER) \
 		--output $@ \
 		--key-seed $(KEY_SEED)
 
-$(ENV_PSP): $(DIST_DIR)
+$(ENV_PSP): $(DIST_DIR) $(RESOLVED_DIR)/test-env.json
 	$(call print,"📦 Building environment test package...",$(CYAN))
 	@$(GO_BUILDER) \
-		--manifest $(CONFIGS_DIR)/test-env.json \
+		--manifest $(RESOLVED_DIR)/test-env.json \
 		--launcher-bin $(RS_LAUNCHER) \
 		--output $@ \
 		--key-seed $(KEY_SEED)
@@ -253,14 +264,20 @@ $(COMBO_GO_GO): $(DIST_DIR)
 #################
 
 .PHONY: test
-test: test-core test-combo ## Run all tests
+test: test-core test-combo test-security ## Run all tests
+
+.PHONY: test-security
+test-security: ## Run security test suite (policy, trust, integrity)
+	$(call print,"🔒 Running security tests...",$(PURPLE))
+	@$(TESTS_DIR)/security/run-all.sh || (echo "❌ Security tests failed"; exit 1)
+	$(call print,"✅ Security tests completed",$(GREEN))
 
 .PHONY: test-core
 test-core: $(SIMPLE_PACKAGES) $(LOGS_DIR) ## Run core test suite (without orchestration)
 	@# Strip extended attributes from built packages (macOS security)
 	@xattr -cr $(DIST_DIR) 2>/dev/null || true
 	$(call print,"🧪 Running core tests...",$(PURPLE))
-	FLAVOR_LOG_LEVEL=$(LOG_LEVEL) $(TESTS_DIR)/test-pretaster.sh || (echo "❌ Core tests failed with exit code $$?"; exit 1)
+	FLAVOR_LOG_LEVEL=$(LOG_LEVEL) $(TESTS_DIR)/core/test-pretaster.sh || (echo "❌ Core tests failed with exit code $$?"; exit 1)
 	$(call print,"✅ Core tests completed",$(GREEN))
 
 .PHONY: test-combo
@@ -270,14 +287,14 @@ test-combo: combo-test ## Alias for combo-test
 combo-test: build-helpers ## Test all builder/launcher combinations
 	@mkdir -p $(LOGS_DIR)
 	$(call print,"🎯 Testing all builder/launcher combinations...",$(PURPLE))
-	@$(TESTS_DIR)/combination-tests.sh || (echo "❌ Combination tests failed with exit code $$?"; exit 1)
+	@$(TESTS_DIR)/combo/test-combinations.sh || (echo "❌ Combination tests failed with exit code $$?"; exit 1)
 	$(call print,"✅ Combination tests completed",$(GREEN))
 	$(call print,"📁 Logs saved in $(LOGS_DIR)/",$(CYAN))
 
 .PHONY: test-direct
 test-direct: build-helpers ## Test direct PSP execution
 	$(call print,"🎯 Testing direct PSP execution...",$(PURPLE))
-	@$(TESTS_DIR)/direct-execution-tests.sh || (echo "❌ Direct execution tests failed with exit code $$?"; exit 1)
+	@$(TESTS_DIR)/combo/test-direct.sh || (echo "❌ Direct execution tests failed with exit code $$?"; exit 1)
 	$(call print,"✅ Direct execution tests completed",$(GREEN))
 
 .PHONY: test-echo

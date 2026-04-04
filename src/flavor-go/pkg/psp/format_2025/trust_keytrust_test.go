@@ -73,8 +73,9 @@ func TestEnforcePolicyUseOsKeychain(t *testing.T) {
 
 	eff := EffectivePolicy{
 		UseOsKeychain: true,
+		Enforcement:   NewDefaultEnforcementPolicy(),
 	}
-	err := EnforcePolicy(eff, 0, false, false)
+	_, err := EnforcePolicy(eff, 0, false, false)
 	if err == nil {
 		t.Fatal("expected error for UseOsKeychain=true, got nil")
 	}
