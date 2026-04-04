@@ -28,7 +28,7 @@ on:
       - 'src/flavor-go/go.mod'
       - 'src/flavor-rs/Cargo.toml'
       - 'src/flavor-rs/fuzz/Cargo.toml'
-      - '.github/workflows/05-code-quality.yml'
+      - '.github/workflows/code-quality.yml'
   
   schedule:
     # Run daily at 2 AM UTC
