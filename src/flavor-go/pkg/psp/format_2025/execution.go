@@ -320,7 +320,11 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 		logger.Error("❌ Invalid build timestamp", "error", tsErr)
 		return nil, fmt.Errorf("invalid build timestamp: %w", tsErr)
 	}
-	if enforceErr := EnforcePolicy(effective, buildTimestamp, hasSBOM, keyTrusted); enforceErr != nil {
+	policyWarnings, enforceErr := EnforcePolicy(effective, buildTimestamp, hasSBOM, keyTrusted)
+	for _, w := range policyWarnings {
+		logger.Warn("⚠️  Policy warning", "message", w)
+	}
+	if enforceErr != nil {
 		logger.Error("❌ Policy violation", "error", enforceErr)
 		return nil, fmt.Errorf("policy violation: %w", enforceErr)
 	}

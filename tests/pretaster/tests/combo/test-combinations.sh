@@ -7,14 +7,14 @@ set -uo pipefail
 
 # Load test library
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/test-lib.sh"
+source "$SCRIPT_DIR/../lib/test-lib.sh"
 
 echo "🎯 Testing All Builder/Launcher Combinations with Pretaster"
 echo "=============================================================="
 echo ""
 
 # Get the pretaster directory (parent of tests directory)
-PRETASTER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PRETASTER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$PRETASTER_DIR"
 
 # Get helpers directory (where helpers are built)

@@ -8,19 +8,22 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from enum import StrEnum
+import json
 import os
 from pathlib import Path
 import platform
 import sys
-import tomllib
 from typing import Any
 
 from attrs import define, field
 
-from flavor.config.dirs import get_policy_file, get_system_config_dir
+from flavor.config.dirs import get_policy_file
 from flavor.console import get_command_logger
 
 log = get_command_logger("config.policy")
+
+POLICY_VERSION = 1
 
 _POLICY_SCHEMA: dict[str, dict[str, object]] = {
     "trust": {
@@ -35,7 +38,46 @@ _POLICY_SCHEMA: dict[str, dict[str, object]] = {
     "attestation": {
         "require_sbom": bool,
     },
+    "enforcement": {
+        "default": str,
+        "platform_mismatch": str,
+        "untrusted_key": str,
+        "expired_package": str,
+        "missing_env": str,
+        "missing_sbom": str,
+        "root_execution": str,
+        "os_keychain": str,
+    },
 }
+
+_VALID_ENFORCEMENT_MODES = {"deny", "warn", "allow"}
+
+
+class EnforcementMode(StrEnum):
+    """How a policy check violation is handled."""
+
+    DENY = "deny"
+    WARN = "warn"
+    ALLOW = "allow"
+
+
+@define
+class EnforcementPolicy:
+    """Per-check enforcement modes. Omitted checks inherit from default."""
+
+    default: EnforcementMode = field(default=EnforcementMode.DENY)
+    platform_mismatch: EnforcementMode | None = field(default=None)
+    root_execution: EnforcementMode | None = field(default=None)
+    expired_package: EnforcementMode | None = field(default=None)
+    missing_env: EnforcementMode | None = field(default=None)
+    missing_sbom: EnforcementMode | None = field(default=None)
+    untrusted_key: EnforcementMode | None = field(default=None)
+    os_keychain: EnforcementMode | None = field(default=None)
+
+    def mode_for(self, check: str) -> EnforcementMode:
+        """Return the enforcement mode for a given check name."""
+        val = getattr(self, check, None)
+        return val if val is not None else self.default
 
 
 @define
@@ -50,7 +92,7 @@ class PackagePolicy:
 
 @define
 class OperatorPolicy:
-    """Operator overlay from /etc/flavor/policy.toml or user policy.toml."""
+    """Operator overlay from policy.json."""
 
     require_trusted_key: bool = field(default=False)
     use_os_keychain: bool = field(default=False)
@@ -58,6 +100,7 @@ class OperatorPolicy:
     max_age_days: int | None = field(default=None)
     allow_platforms: list[str] = field(factory=list)
     require_sbom: bool = field(default=False)
+    enforcement: EnforcementPolicy = field(factory=EnforcementPolicy)
 
 
 @define
@@ -71,6 +114,7 @@ class EffectivePolicy:
     require_trusted_key: bool = field(default=False)
     use_os_keychain: bool = field(default=False)
     require_sbom: bool = field(default=False)
+    enforcement: EnforcementPolicy = field(factory=EnforcementPolicy)
 
 
 def parse_package_policy(raw: dict[str, Any]) -> PackagePolicy:
@@ -83,11 +127,27 @@ def parse_package_policy(raw: dict[str, Any]) -> PackagePolicy:
     )
 
 
+def _parse_enforcement_section(raw: dict[str, Any]) -> EnforcementPolicy:
+    """Parse the enforcement section of a policy file."""
+    kwargs: dict[str, Any] = {}
+    for key, value in raw.items():
+        if key not in _POLICY_SCHEMA["enforcement"]:
+            raise ValueError(f"unknown enforcement key {key!r}")
+        if value not in _VALID_ENFORCEMENT_MODES:
+            raise ValueError(f"enforcement.{key} must be one of {_VALID_ENFORCEMENT_MODES}, got {value!r}")
+        kwargs[key] = EnforcementMode(value)
+    return EnforcementPolicy(**kwargs)
+
+
 def _parse_operator_policy(raw: dict[str, Any]) -> OperatorPolicy:
-    """Parse policy.toml content into an OperatorPolicy."""
+    """Parse policy file content into an OperatorPolicy."""
     trust = raw.get("trust", {})
     execution = raw.get("execution", {})
     attestation = raw.get("attestation", {})
+    enforcement_raw = raw.get("enforcement", {})
+
+    enforcement = _parse_enforcement_section(enforcement_raw) if enforcement_raw else EnforcementPolicy()
+
     return OperatorPolicy(
         require_trusted_key=bool(trust.get("require_trusted_key", False)),
         use_os_keychain=bool(trust.get("use_os_keychain", False)),
@@ -95,6 +155,7 @@ def _parse_operator_policy(raw: dict[str, Any]) -> OperatorPolicy:
         max_age_days=execution.get("max_age_days"),
         allow_platforms=execution.get("allow_platforms", []),
         require_sbom=bool(attestation.get("require_sbom", False)),
+        enforcement=enforcement,
     )
 
 
@@ -116,6 +177,11 @@ def _validate_operator_policy_value(path: Path, section: str, key: str, value: A
             _raise_invalid_policy(path, f"{label} must be an integer")
         return
 
+    if expected is str:
+        if type(value) is not str:
+            _raise_invalid_policy(path, f"{label} must be a string")
+        return
+
     if expected is list:
         if not isinstance(value, list) or any(type(item) is not str for item in value):
             _raise_invalid_policy(path, f"{label} must be a list of strings")
@@ -126,6 +192,10 @@ def _validate_operator_policy_value(path: Path, section: str, key: str, value: A
 
 def _validate_operator_policy_file(path: Path, raw: dict[str, Any]) -> None:
     for section, values in raw.items():
+        if section == "version":
+            if type(values) is not int:
+                _raise_invalid_policy(path, "version must be an integer")
+            continue
         if section not in _POLICY_SCHEMA:
             _raise_invalid_policy(path, f"unknown policy section [{section}]")
         if not isinstance(values, dict):
@@ -140,13 +210,24 @@ def _validate_operator_policy_file(path: Path, raw: dict[str, Any]) -> None:
 
 def _load_policy_file(path: Path) -> dict[str, Any]:
     try:
-        with path.open("rb") as f:
-            raw = tomllib.load(f)
+        with path.open("r") as f:
+            raw: dict[str, Any] = json.load(f)
     except Exception as exc:
-        raise ValueError(f"{path}: invalid policy.toml ({exc})") from exc
+        raise ValueError(f"{path}: invalid policy file ({exc})") from exc
 
     if not isinstance(raw, dict):
-        _raise_invalid_policy(path, "policy.toml root must be a table")
+        _raise_invalid_policy(path, "policy file root must be an object")
+
+    version = raw.get("version")
+    if version is None:
+        raise ValueError(f"{path}: missing required 'version' field")
+    if not isinstance(version, int):
+        raise ValueError(f"{path}: version must be an integer")
+    if version > POLICY_VERSION:
+        log.warning(
+            f"⚠️  {path}: policy version {version} is newer than supported version {POLICY_VERSION} "
+            "— unknown fields will be ignored"
+        )
 
     _validate_operator_policy_file(path, raw)
     return raw
@@ -155,13 +236,13 @@ def _load_policy_file(path: Path) -> dict[str, Any]:
 def load_operator_policy(*, system: bool = True, user: bool = True) -> OperatorPolicy:
     """Load the operator policy file(s).
 
-    System policy (/etc/flavor/policy.toml) is loaded first, then user policy
-    overrides it. If neither file exists, returns a permissive default.
+    System policy is loaded first, then user policy overrides it.
+    If neither file exists, returns a permissive default.
     """
     merged: dict[str, Any] = {}
 
     if system:
-        system_file = get_system_config_dir() / "policy.toml"
+        system_file = get_policy_file(system=True)
         if system_file.exists():
             merged.update(_load_policy_file(system_file))
 
@@ -170,7 +251,12 @@ def load_operator_policy(*, system: bool = True, user: bool = True) -> OperatorP
         if user_file.exists():
             user_raw = _load_policy_file(user_file)
             for section, values in user_raw.items():
-                merged.setdefault(section, {}).update(values)
+                if section == "version":
+                    continue
+                if isinstance(values, dict):
+                    merged.setdefault(section, {}).update(values)
+                else:
+                    merged[section] = values
 
     return _parse_operator_policy(merged)
 
@@ -204,6 +290,7 @@ def merge_policy(pkg: PackagePolicy, op: OperatorPolicy) -> EffectivePolicy:
         require_trusted_key=op.require_trusted_key,
         use_os_keychain=op.use_os_keychain,
         require_sbom=op.require_sbom,
+        enforcement=op.enforcement,
     )
 
 
@@ -232,44 +319,95 @@ def is_privileged_user() -> bool:
         return False
 
 
-def enforce_policy(policy: EffectivePolicy, build_timestamp: int, has_sbom: bool, key_trusted: bool) -> None:
-    """Enforce the effective launch policy for the current runtime environment."""
+def _apply_enforcement(
+    mode: EnforcementMode,
+    message: str,
+    warnings: list[str],
+) -> None:
+    """Apply enforcement mode: deny raises, warn appends, allow is silent."""
+    if mode == EnforcementMode.DENY:
+        raise ValueError(message)
+    if mode == EnforcementMode.WARN:
+        log.warning(f"⚠️  policy warning: {message}")
+        warnings.append(message)
+
+
+def enforce_policy(
+    policy: EffectivePolicy,
+    build_timestamp: int,
+    has_sbom: bool,
+    key_trusted: bool,
+) -> list[str]:
+    """Enforce the effective launch policy for the current runtime environment.
+
+    Returns a list of warning messages for checks in 'warn' mode.
+    Raises ValueError for checks in 'deny' mode.
+    Checks in 'allow' mode are silently skipped.
+    """
+    warnings: list[str] = []
+    enf = policy.enforcement
     current_platform = get_current_platform()
 
     # 1. Platform check
     if policy.platforms and current_platform not in policy.platforms:
-        raise ValueError(f"platform not permitted: {current_platform} not in {policy.platforms}")
+        _apply_enforcement(
+            enf.mode_for("platform_mismatch"),
+            f"platform not permitted: {current_platform} not in {policy.platforms}",
+            warnings,
+        )
 
     # 2. OS keychain check
     if policy.use_os_keychain:
-        raise ValueError("use_os_keychain is not supported by this launcher")
+        _apply_enforcement(
+            enf.mode_for("os_keychain"),
+            "use_os_keychain is not supported by this launcher",
+            warnings,
+        )
 
     # 3. Root / Administrator check
     if policy.refuse_root and is_privileged_user():
-        raise ValueError("refused to run as root or Administrator")
+        _apply_enforcement(
+            enf.mode_for("root_execution"),
+            "refused to run as root or Administrator",
+            warnings,
+        )
 
     # 4. Age check
     if policy.max_age_days is not None and build_timestamp > 0:
         age_days = int((datetime.now(UTC).timestamp() - build_timestamp) / 86400)
         if age_days > policy.max_age_days:
-            raise ValueError(
-                f"package is {age_days} days old — policy requires max {policy.max_age_days} days"
+            _apply_enforcement(
+                enf.mode_for("expired_package"),
+                f"package is {age_days} days old — policy requires max {policy.max_age_days} days",
+                warnings,
             )
 
     # 5. Environment variable check
     missing = [var for var in policy.require_env if not os.environ.get(var)]
     if missing:
-        raise ValueError(f"required environment variable not set: {missing[0]}")
+        _apply_enforcement(
+            enf.mode_for("missing_env"),
+            f"required environment variable not set: {missing[0]}",
+            warnings,
+        )
 
     # 6. SBOM check
     if policy.require_sbom and not has_sbom:
-        raise ValueError("package built without attestation slot — operator policy requires SBOM")
+        _apply_enforcement(
+            enf.mode_for("missing_sbom"),
+            "package built without attestation slot — operator policy requires SBOM",
+            warnings,
+        )
 
     # 7. Trusted key check
     if policy.require_trusted_key and not key_trusted:
-        raise ValueError(
-            "operator policy requires a trusted signing key — package key is not in the trusted store"
+        _apply_enforcement(
+            enf.mode_for("untrusted_key"),
+            "operator policy requires a trusted signing key — package key is not in the trusted store",
+            warnings,
         )
+
+    return warnings
 
 
 # 🌶️📦🔚

@@ -5,14 +5,14 @@ set -e
 
 # Load test library
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/test-lib.sh"
+source "$SCRIPT_DIR/../lib/test-lib.sh"
 
 echo "🧪 Testing All Taster Commands"
 echo "=============================="
 echo ""
 
 # Get directories
-PRETASTER_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+PRETASTER_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 HELPERS_DIR="$(cd "$PRETASTER_DIR/../../helpers" && pwd)"
 TASTER_DIR="$(cd "$PRETASTER_DIR/../taster" && pwd)"
 

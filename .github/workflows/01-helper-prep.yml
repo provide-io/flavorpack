@@ -23,6 +23,7 @@ jobs:
       matrix: ${{ steps.matrix.outputs.matrix }}
       go_cache_key_base: ${{ steps.cache.outputs.go_key_base }}
       rust_cache_key_base: ${{ steps.cache.outputs.rust_key_base }}
+      tastesh_cache_key_base: ${{ steps.cache.outputs.tastesh_key_base }}
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
@@ -42,10 +43,13 @@ jobs:
         run: |
           GO_HASH=$(find src/flavor-go -type f \( -name "*.go" -o -name "go.mod" \) | sort | xargs sha256sum | sha256sum | cut -d' ' -f1 | head -c 16)
           RUST_HASH=$(find src/flavor-rs -type f \( -name "*.rs" -o -name "Cargo.toml" \) | sort | xargs sha256sum | sha256sum | cut -d' ' -f1 | head -c 16)
+          TASTESH_HASH=$(sha256sum ci/build-dash.sh | cut -d' ' -f1 | head -c 16)
           echo "go_key_base=go-helpers-$GO_HASH" >> $GITHUB_OUTPUT
           echo "rust_key_base=rust-helpers-$RUST_HASH" >> $GITHUB_OUTPUT
+          echo "tastesh_key_base=tastesh-$TASTESH_HASH" >> $GITHUB_OUTPUT
           echo "🔑 Go cache key:   go-helpers-$GO_HASH"
           echo "🔑 Rust cache key: rust-helpers-$RUST_HASH"
+          echo "🔑 tastesh cache:  tastesh-$TASTESH_HASH"
 
       - name: 📋 Setup build matrix
         id: matrix
@@ -106,6 +110,20 @@ jobs:
       use_musl: ${{ matrix.use_musl }}
       version: ${{ needs.setup.outputs.version }}
       rust_cache_key_base: ${{ needs.setup.outputs.rust_cache_key_base }}
+
+  build-tastesh:
+    name: ${{ matrix.emoji }}🐚 ${{ matrix.platform }}
+    needs: setup
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
+    uses: ./.github/workflows/build-tastesh.yml
+    with:
+      platform: ${{ matrix.platform }}
+      os: ${{ matrix.os }}
+      use_musl: ${{ matrix.use_musl }}
+      version: ${{ needs.setup.outputs.version }}
+      tastesh_cache_key_base: ${{ needs.setup.outputs.tastesh_cache_key_base }}
 
   # ── FreeBSD builds (QEMU VM via cross-platform-actions) ────────────────────
   # Separate dedicated jobs because these use a VM action rather than a native runner.
@@ -362,7 +380,7 @@ jobs:
   # ── Combine all artifacts ──────────────────────────────────────────────────
   combine:
     name: 📦 Combine & Validate
-    needs: [setup, build-go, build-rust, build-freebsd-amd64, build-freebsd-arm64]
+    needs: [setup, build-go, build-rust, build-tastesh, build-freebsd-amd64, build-freebsd-arm64]
     if: always()
     runs-on: ubuntu-24.04
     steps:
@@ -377,30 +395,10 @@ jobs:
           path: all-artifacts
 
       - name: 🔀 Combine artifacts
-        run: |
-          mkdir -p final
-          for platform_dir in all-artifacts/flavor-*helpers-*; do
-            [ -d "$platform_dir" ] && cp "$platform_dir"/*.zip final/ || true
-          done
-          cd final
-          mkdir -p all-helpers
-          for zip in *.zip; do
-            [ -f "$zip" ] && unzip -o "$zip" -d all-helpers/
-          done
-          zip -r flavor-helpers-${{ needs.setup.outputs.version }}-all.zip all-helpers/
-          cd ..
-          echo "📦 Combined artifacts:"
-          ls -la final/
+        run: ci/combine-helpers.sh all-artifacts final ${{ needs.setup.outputs.version }}
 
       - name: 🧪 Combine test results
-        run: |
-          mkdir -p all-artifacts/test-results
-          if [ -z "$(find all-artifacts -name '*test-report.json' -type f 2>/dev/null)" ]; then
-            echo '{"platforms": {}, "summary": {"platforms_tested": 0, "total_tests": 0, "passed": 0, "failed": 0}}' > final/test-report.json
-          else
-            export PYTHONUTF8=1 PYTHONIOENCODING=utf-8
-            python3 ci/test-metadata.py combine all-artifacts final/test-report.json
-          fi
+        run: ci/combine-test-results.sh all-artifacts final/test-report.json
 
       - name: 📊 Generate summary
         run: |

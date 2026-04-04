@@ -1,21 +1,30 @@
 {
   "name": "pretaster-echo",
   "version": "1.0.0",
-  "description": "Simple echo test for PSPF",
-  "command": "/usr/bin/python3 {workenv}/scripts/echo_test.py",
-  "environment": {},
+  "description": "Simple echo test with embedded tastesh — no host dependencies",
   "package": {
     "name": "pretaster-echo",
     "version": "1.0.0",
-    "description": "Simple echo test for PSPF"
+    "description": "Simple echo test with embedded tastesh"
   },
   "format": "PSPF/2025",
   "slots": [
     {
       "slot": 0,
+      "id": "tastesh",
+      "source": "TASTESH_BIN",
+      "target": "bin/tastesh",
+      "purpose": "tool",
+      "lifecycle": "runtime",
+      "operations": "raw",
+      "permissions": "0755",
+      "resolution": "build"
+    },
+    {
+      "slot": 1,
       "id": "echo-test-script",
-      "source": "scripts/echo_test.py",
-      "target": "scripts/echo_test.py",
+      "source": "scripts/echo_test.sh",
+      "target": "scripts/echo_test.sh",
       "purpose": "payload",
       "lifecycle": "cached",
       "operations": "raw",
@@ -24,9 +33,9 @@
     }
   ],
   "execution": {
-    "command": "/usr/bin/python3 {workenv}/scripts/echo_test.py",
+    "command": "{workenv}/bin/tastesh {workenv}/scripts/echo_test.sh",
     "args": [],
     "env": {},
-    "primary_slot": 0
+    "primary_slot": 1
   }
 }
