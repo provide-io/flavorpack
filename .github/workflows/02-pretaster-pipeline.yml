@@ -102,6 +102,16 @@ jobs:
           name: flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
 
+      # Download tastesh (embedded shell for self-contained PSPs)
+      - name: 📥 Download tastesh
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v19
+        with:
+          workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
+          name: flavor-tastesh-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
+          path: ./helpers-dist
+
       - name: 🔧 Setup helpers
         shell: bash
         run: |
