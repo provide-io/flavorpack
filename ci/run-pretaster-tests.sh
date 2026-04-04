@@ -198,17 +198,17 @@ if [ -d "../../helpers-dist" ]; then
         fi
     done
 
-    # Copy tastesh binaries from wherever they were extracted
-    for dir in ../../helpers/bin ../../helpers-dist; do
-        for tastesh in "$dir"/flavor-tastesh-*; do
-            [ -f "$tastesh" ] && cp "$tastesh" ../../dist/bin/ && echo "   Copied $(basename "$tastesh") from $dir"
-        done
-    done
-    # Debug: verify tastesh is in dist/bin
-    ls ../../dist/bin/flavor-tastesh-* 2>/dev/null || echo "   ⚠️ No tastesh binary found in dist/bin/"
-
     echo "✅ Helpers extracted and symlinked to dist/bin/"
 fi
+
+# Copy tastesh binaries to dist/bin/ (may be in helpers/bin/ or helpers-dist/)
+mkdir -p ../../dist/bin
+for dir in ../../helpers/bin ../../helpers-dist; do
+    for tastesh in "$dir"/flavor-tastesh-*; do
+        [ -f "$tastesh" ] && cp "$tastesh" ../../dist/bin/ && chmod +x "../../dist/bin/$(basename "$tastesh")" && echo "📋 Copied $(basename "$tastesh") from $dir"
+    done
+done
+ls ../../dist/bin/flavor-tastesh-* 2>/dev/null || echo "⚠️ No tastesh binary found in dist/bin/"
 
 # Add .exe extension for Windows binaries
 EXT=""
