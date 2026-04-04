@@ -136,8 +136,17 @@ def _run_bootstrap_cache_test(helper_manager: HelperManager, verbose: bool) -> b
 
             import os
 
-            flavor_cache = os.environ.get("FLAVOR_CACHE") or str(Path.home() / ".cache" / "flavor")
-            workenv_dir = Path(flavor_cache) / "workenv" / "bootstrap-test_1.0.0"
+            # FLAVOR_CACHE (set by Go launcher) already includes /workenv suffix.
+            # When unset (Rust launcher or bare shell), fall back to ~/.cache/flavor/workenv.
+            flavor_cache = os.environ.get("FLAVOR_CACHE")
+            if flavor_cache:
+                workenv_base = Path(flavor_cache)
+            else:
+                workenv_base = Path.home() / ".cache" / "flavor" / "workenv"
+            # Workenv name is derived from PSP filename (not package_name+version).
+            # build_package_from_manifest outputs bootstrap-test.psp so the launcher
+            # creates {workenv_base}/bootstrap-test/.
+            workenv_dir = workenv_base / "bootstrap-test"
             if workenv_dir.exists():
                 shutil.rmtree(workenv_dir, ignore_errors=True)
 
