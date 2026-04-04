@@ -78,14 +78,18 @@ if [ ! -f "$LAUNCHER" ]; then
 fi
 chmod +x "$LAUNCHER"
 
-# Patch the cffi constraint in pyproject.toml before running flavor pack.
-# cffi>=2.0.0 is required to get a wheels on windows_arm64, but cffi 2.x has
-# NO FreeBSD wheel on PyPI.  uv 0.9.24 (pkg) ignores sys_platform markers in
-# constraint-dependencies, so the constraint always applies even on FreeBSD.
-# Relax it to >=1.14 here so uv resolves to cffi 1.17.x which has FreeBSD
-# wheels.  This only affects what gets bundled inside the PSP; cffi 1.17.x is
-# what FreeBSD ships and it satisfies all runtime requirements.
+# Patch cffi constraint + remove lock file before flavor pack.
+#
+# cffi>=2.0.0 is required for windows_arm64 wheels, but cffi 2.x has NO
+# FreeBSD wheel on PyPI.  uv 0.9.24 (pkg) ignores sys_platform markers in
+# constraint-dependencies, so the >=2.0.0 constraint applies even on FreeBSD.
+# flavor pack reads uv.lock (which pins cffi==2.0.0) before re-resolving, so
+# we must:
+#   1. Relax the constraint in pyproject.toml (>=2.0.0 → >=1.14)
+#   2. Delete uv.lock so uv re-resolves and picks cffi 1.17.x (the latest
+#      version with FreeBSD wheels) instead of the locked cffi 2.0.0.
 sed -i '' 's/"cffi>=2\.0\.0"/"cffi>=1.14"/g' pyproject.toml
+rm -f uv.lock
 
 mkdir -p _stage/artifacts
 flavor pack \
