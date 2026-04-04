@@ -168,6 +168,30 @@ sed -i '' "s/\"cryptography<46\.0\.0; sys_platform == 'freebsd'\"/\"cryptography
 sed -i '' 's/provide-foundation\[all\]/provide-foundation[cli,compression,crypto,transport,platform]/g' pyproject.toml
 uv lock
 
+# Create a stub uv wheel in the cache at the exact version locked by uv.lock.
+# uv has no FreeBSD wheel on PyPI; flavor pack's pip download --only-binary :all:
+# would fail otherwise.  The PSP uses uv via shutil.which() (system /usr/local/bin/uv),
+# not as a Python import, so an empty stub wheel satisfies the dependency resolver.
+UV_LOCK_VER=$(python3.11 -c "
+import re
+m = re.search(r'\[\[package\]\]\nname = \"uv\"\nversion = \"([^\"]+)\"', open('uv.lock').read())
+print(m.group(1) if m else '0.11.1')
+")
+export UV_LOCK_VER
+python3.11 - <<'PYEOF'
+import zipfile, os
+from pathlib import Path
+ver = os.environ['UV_LOCK_VER']
+cache = Path('/tmp/freebsd-wheel-cache')
+out = cache / f'uv-{ver}-py3-none-any.whl'
+with zipfile.ZipFile(out, 'w') as whl:
+    whl.writestr(f'uv-{ver}.dist-info/METADATA', f'Metadata-Version: 2.1\nName: uv\nVersion: {ver}\n')
+    whl.writestr(f'uv-{ver}.dist-info/WHEEL', 'Wheel-Version: 1.0\nGenerator: stub\nRoot-Is-Purelib: true\nTag: py3-none-any\n')
+    whl.writestr(f'uv-{ver}.dist-info/RECORD', '')
+print(f'Created stub uv wheel: {out}')
+PYEOF
+echo "✅ Stub uv-${UV_LOCK_VER} wheel created"
+
 mkdir -p _stage/artifacts
 FLAVOR_WHEEL_CACHE="$WHEEL_CACHE" flavor pack \
     --manifest pyproject.toml \
