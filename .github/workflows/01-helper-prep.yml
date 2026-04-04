@@ -183,6 +183,17 @@ jobs:
           sync_files: runner-to-vm
           run: ci/freebsd-build-go.sh ${{ needs.setup.outputs.version }} amd64
 
+      - name: 🐚 Build tastesh
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: x86-64
+          shell: bash
+          sync_files: runner-to-vm
+          run: ci/freebsd-build-tastesh.sh amd64
+
       - name: 🦀 Prep Rust
         if: steps.cache.outputs.cache-hit != 'true'
         uses: cross-platform-actions/action@v0.32.0
@@ -215,17 +226,6 @@ jobs:
           shell: bash
           sync_files: true
           run: ci/freebsd-test-go.sh
-
-      - name: 🐚 Build tastesh
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: cross-platform-actions/action@v0.32.0
-        with:
-          operating_system: freebsd
-          version: '14.2'
-          architecture: x86-64
-          shell: bash
-          sync_files: runner-to-vm
-          run: ci/freebsd-build-tastesh.sh amd64
 
       - name: 📦 Package artifacts
         shell: bash
@@ -319,6 +319,17 @@ jobs:
           sync_files: runner-to-vm
           run: ci/freebsd-build-go.sh ${{ needs.setup.outputs.version }} arm64
 
+      - name: 🐚 Build tastesh
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: freebsd
+          version: '14.2'
+          architecture: arm64
+          shell: bash
+          sync_files: runner-to-vm
+          run: ci/freebsd-build-tastesh.sh arm64
+
       - name: 🦀 Prep Rust
         if: steps.cache.outputs.cache-hit != 'true'
         uses: cross-platform-actions/action@v0.32.0
@@ -351,17 +362,6 @@ jobs:
           shell: bash
           sync_files: true
           run: ci/freebsd-test-go.sh
-
-      - name: 🐚 Build tastesh
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: cross-platform-actions/action@v0.32.0
-        with:
-          operating_system: freebsd
-          version: '14.2'
-          architecture: arm64
-          shell: bash
-          sync_files: runner-to-vm
-          run: ci/freebsd-build-tastesh.sh arm64
 
       - name: 📦 Package artifacts
         shell: bash
