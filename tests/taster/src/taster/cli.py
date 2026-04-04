@@ -31,7 +31,7 @@ if sys.platform == "win32":
         os.environ["PYTHONIOENCODING"] = "utf-8"
     if not os.environ.get("PYTHONUTF8"):
         os.environ["PYTHONUTF8"] = "1"
-    # Reconfigure stdout/stderr to UTF-8 — PYTHONIOENCODING only takes effect
+    # Reconfigure stdout/stderr to UTF-8 - PYTHONIOENCODING only takes effect
     # at process startup; reconfigure() fixes encoding for the current process.
     try:
         if hasattr(sys.stdout, "reconfigure"):
@@ -49,9 +49,12 @@ if sys.platform == "win32":
     except Exception:
         pass  # Ignore if we can't enable ANSI
 
+# Import env var constants (after cpuinfo stub but before click)
+from flavor.config.defaults import ENV_COMMAND_NAME
+
 # Override sys.argv[0] if FLAVOR_COMMAND_NAME is set
-if "FLAVOR_COMMAND_NAME" in os.environ:
-    sys.argv[0] = os.environ["FLAVOR_COMMAND_NAME"]
+if ENV_COMMAND_NAME in os.environ:
+    sys.argv[0] = os.environ[ENV_COMMAND_NAME]
 
 import click
 
@@ -82,8 +85,8 @@ from taster.commands.slot_test import slot_test_command
 
 def get_program_name() -> str:
     """Get the program name from environment or sys.argv"""
-    if "FLAVOR_COMMAND_NAME" in os.environ:
-        return os.environ["FLAVOR_COMMAND_NAME"]
+    if ENV_COMMAND_NAME in os.environ:
+        return os.environ[ENV_COMMAND_NAME]
     return Path(sys.argv[0]).name
 
 

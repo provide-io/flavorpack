@@ -16,6 +16,8 @@ from typing import Any
 import click
 from provide.foundation.console import pout
 
+from flavor.config.defaults import ENV_WORKENV
+
 
 @click.command("metadata")
 @click.option("--verbose", "-v", is_flag=True, help="Show raw JSON metadata")
@@ -41,7 +43,7 @@ def metadata_command(verbose: bool) -> None:
 
 def _resolve_workenv() -> Path:
     """Return the path to the active workenv or raise if missing."""
-    workenv = os.environ.get("FLAVOR_WORKENV")
+    workenv = os.environ.get(ENV_WORKENV)
     if not workenv:
         raise click.ClickException("FLAVOR_WORKENV not set - not running in a flavor pack.")
     return Path(workenv)
