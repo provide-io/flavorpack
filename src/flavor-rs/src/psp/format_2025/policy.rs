@@ -342,8 +342,12 @@ pub fn get_current_platform() -> String {
         "linux"
     } else if cfg!(target_os = "macos") {
         "darwin"
-    } else {
+    } else if cfg!(target_os = "freebsd") {
+        "freebsd"
+    } else if cfg!(target_os = "windows") {
         "windows"
+    } else {
+        std::env::consts::OS
     };
     let arch = if cfg!(target_arch = "aarch64") {
         "arm64"
