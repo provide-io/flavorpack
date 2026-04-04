@@ -241,9 +241,16 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
         let effective = policy::merge_policy(pkg_policy, op_policy);
         let has_sbom = metadata.slots.iter().any(|s| s.lifecycle == "attestation");
         let build_timestamp = index.build_timestamp;
-        if let Err(e) = policy::enforce_policy(&effective, build_timestamp, has_sbom, key_trusted) {
-            eprintln!("policy violation: {}", e);
-            std::process::exit(1);
+        match policy::enforce_policy(&effective, build_timestamp, has_sbom, key_trusted) {
+            Err(e) => {
+                eprintln!("policy violation: {}", e);
+                std::process::exit(1);
+            }
+            Ok(warnings) => {
+                for w in &warnings {
+                    eprintln!("policy warning: {}", w);
+                }
+            }
         }
         debug!("✅ Policy enforcement passed");
     }

@@ -12,7 +12,7 @@ FAILED_TESTS=""
 
 # Get directories
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PRETASTER_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+PRETASTER_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 HELPERS_DIR="$(cd "$PRETASTER_DIR/../../dist" && pwd)"
 
 # Change to pretaster directory
@@ -92,16 +92,24 @@ if [[ "$OS" == "windows" ]]; then
     EXT=".exe"
 fi
 
+# Resolve config templates (substitute TASTESH_BIN placeholder)
+TASTESH_BIN="$HELPERS_DIR/bin/flavor-tastesh-${PLATFORM}${EXT}"
+RESOLVED_DIR="dist/.configs"
+mkdir -p "$RESOLVED_DIR"
+for cfg in configs/test-*.json; do
+    sed "s|TASTESH_BIN|${TASTESH_BIN}|g" "$cfg" > "$RESOLVED_DIR/$(basename "$cfg")"
+done
+
 # Select launcher: on Windows use Go launcher (Rust launcher is not supported on Windows)
 # See tests/pretaster/KNOWN_ISSUES.md for details
 if [[ "$OS" == "windows" ]]; then
     LAUNCHER_BIN="$HELPERS_DIR/bin/flavor-go-launcher-$PLATFORM$EXT"
-    ECHO_MANIFEST="configs/test-echo-windows.json"
-    ENV_MANIFEST="configs/test-env-windows.json"
+    ECHO_MANIFEST="$RESOLVED_DIR/test-echo-windows.json"
+    ENV_MANIFEST="$RESOLVED_DIR/test-env-windows.json"
 else
     LAUNCHER_BIN="$HELPERS_DIR/bin/flavor-rs-launcher-$PLATFORM$EXT"
-    ECHO_MANIFEST="configs/test-echo.json"
-    ENV_MANIFEST="configs/test-env.json"
+    ECHO_MANIFEST="$RESOLVED_DIR/test-echo.json"
+    ENV_MANIFEST="$RESOLVED_DIR/test-env.json"
 fi
 
 # Test 1: Simple echo test (Go builder + launcher)
@@ -115,7 +123,7 @@ $HELPERS_DIR/bin/flavor-go-builder-$PLATFORM$EXT \
 # Test 2: Shell script test (Rust builder + launcher)
 echo "2️⃣ Building shell test package (Rust builder + launcher)..."
 $HELPERS_DIR/bin/flavor-rs-builder-$PLATFORM$EXT \
-    --manifest configs/test-shell.json \
+    --manifest $RESOLVED_DIR/test-shell.json \
     --launcher-bin $LAUNCHER_BIN \
     --output dist/shell-test.psp \
     --key-seed test123
@@ -137,7 +145,7 @@ if [[ "$PLATFORM" != "darwin_arm64" ]]; then
     ln -sf "$HELPERS_DIR/bin/flavor-go-builder-$PLATFORM$EXT" "$HELPERS_DIR/bin/flavor-go-builder-darwin_arm64"
 fi
 $HELPERS_DIR/bin/flavor-rs-builder-$PLATFORM$EXT \
-    --manifest configs/test-orchestrate.json \
+    --manifest $RESOLVED_DIR/test-orchestrate.json \
     --launcher-bin $LAUNCHER_BIN \
     --output dist/orchestrate-test.psp \
     --key-seed test123
@@ -145,7 +153,7 @@ $HELPERS_DIR/bin/flavor-rs-builder-$PLATFORM$EXT \
 # Test 5: Single-file executable permission retention
 echo "5️⃣ Building permissions test package (Go builder + launcher)..."
 $HELPERS_DIR/bin/flavor-go-builder-$PLATFORM$EXT \
-    --manifest configs/test-permissions.json \
+    --manifest $RESOLVED_DIR/test-permissions.json \
     --launcher-bin $LAUNCHER_BIN \
     --output dist/permissions-test.psp \
     --key-seed test123
@@ -153,7 +161,7 @@ $HELPERS_DIR/bin/flavor-go-builder-$PLATFORM$EXT \
 # Test 6: Init tar lifecycle cleanup
 echo "6️⃣ Building init cleanup test package (Rust builder + launcher)..."
 $HELPERS_DIR/bin/flavor-rs-builder-$PLATFORM$EXT \
-    --manifest configs/test-init-cleanup.json \
+    --manifest $RESOLVED_DIR/test-init-cleanup.json \
     --launcher-bin $LAUNCHER_BIN \
     --output dist/init-cleanup-test.psp \
     --key-seed test123

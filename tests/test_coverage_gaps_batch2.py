@@ -155,14 +155,14 @@ class TestConfigDirs:
             from flavor.config.dirs import get_policy_file
 
             result = get_policy_file(system=True)
-        assert "policy.toml" in str(result)
+        assert "policy.json" in str(result)
 
     def test_get_policy_file_user_trace(self) -> None:
         with patch("flavor.config.dirs.log", self._make_trace_log()):
             from flavor.config.dirs import get_policy_file
 
             result = get_policy_file()
-        assert "policy.toml" in str(result)
+        assert "policy.json" in str(result)
 
 
 # ===========================================================================

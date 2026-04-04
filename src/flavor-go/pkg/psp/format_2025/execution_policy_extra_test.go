@@ -1,6 +1,9 @@
 package format_2025
 
 import (
+	"os"
+	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -9,123 +12,261 @@ import (
 func TestEnforcePolicyPlatformAllowed(t *testing.T) {
 	currentPlat := getCurrentPlatform()
 	eff := EffectivePolicy{
-		Platforms: []string{currentPlat},
+		Platforms:   []string{currentPlat},
+		Enforcement: NewDefaultEnforcementPolicy(),
 	}
-	if err := EnforcePolicy(eff, 0, false, true); err != nil {
+	_, err := EnforcePolicy(eff, 0, false, true)
+	if err != nil {
 		t.Fatalf("expected no error when current platform is allowed, got: %v", err)
 	}
 }
 
-// TestMustIntCasesForPlainInt covers the `case int` branch in mustInt.
-// This is called directly (not via TOML) to hit the plain int case.
-func TestMustIntCasesForPlainInt(t *testing.T) {
-	// case int
-	v, err := mustInt("test", int(42))
-	if err != nil {
-		t.Fatalf("mustInt(int) error = %v", err)
+// TestApplyOperatorPolicyJSON_AllSections covers parsing a fully populated JSON policy.
+func TestApplyOperatorPolicyJSON_AllSections(t *testing.T) {
+	policy := OperatorPolicy{Enforcement: NewDefaultEnforcementPolicy()}
+	data := []byte(`{
+		"version": 1,
+		"trust": {"require_trusted_key": true, "use_os_keychain": true},
+		"execution": {"refuse_root": true, "max_age_days": 90, "allow_platforms": ["linux_amd64"]},
+		"attestation": {"require_sbom": true},
+		"enforcement": {"default": "warn", "platform_mismatch": "allow"}
+	}`)
+	if err := applyOperatorPolicyJSON(data, &policy); err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
-	if v != 42 {
-		t.Fatalf("mustInt(int) = %d, want 42", v)
+	if !policy.RequireTrustedKey {
+		t.Error("expected RequireTrustedKey=true")
 	}
-
-	// case int8
-	v, err = mustInt("test", int8(10))
-	if err != nil {
-		t.Fatalf("mustInt(int8) error = %v", err)
+	if !policy.UseOsKeychain {
+		t.Error("expected UseOsKeychain=true")
 	}
-	if v != 10 {
-		t.Fatalf("mustInt(int8) = %d, want 10", v)
+	if !policy.RefuseRoot {
+		t.Error("expected RefuseRoot=true")
 	}
-
-	// case int16
-	v, err = mustInt("test", int16(100))
-	if err != nil {
-		t.Fatalf("mustInt(int16) error = %v", err)
+	if policy.MaxAgeDays == nil || *policy.MaxAgeDays != 90 {
+		t.Errorf("expected MaxAgeDays=90, got %v", policy.MaxAgeDays)
 	}
-	if v != 100 {
-		t.Fatalf("mustInt(int16) = %d, want 100", v)
+	if len(policy.AllowPlatforms) != 1 || policy.AllowPlatforms[0] != "linux_amd64" {
+		t.Errorf("expected AllowPlatforms=[linux_amd64], got %v", policy.AllowPlatforms)
 	}
-
-	// case int32
-	v, err = mustInt("test", int32(1000))
-	if err != nil {
-		t.Fatalf("mustInt(int32) error = %v", err)
+	if !policy.RequireSBOM {
+		t.Error("expected RequireSBOM=true")
 	}
-	if v != 1000 {
-		t.Fatalf("mustInt(int32) = %d, want 1000", v)
+	if policy.Enforcement.Default != ModeWarn {
+		t.Errorf("expected enforcement default=warn, got %s", policy.Enforcement.Default)
 	}
-
-	// case uint8
-	v, err = mustInt("test", uint8(5))
-	if err != nil {
-		t.Fatalf("mustInt(uint8) error = %v", err)
-	}
-	if v != 5 {
-		t.Fatalf("mustInt(uint8) = %d, want 5", v)
-	}
-
-	// case uint16
-	v, err = mustInt("test", uint16(500))
-	if err != nil {
-		t.Fatalf("mustInt(uint16) error = %v", err)
-	}
-	if v != 500 {
-		t.Fatalf("mustInt(uint16) = %d, want 500", v)
-	}
-
-	// case uint32
-	v, err = mustInt("test", uint32(9999))
-	if err != nil {
-		t.Fatalf("mustInt(uint32) error = %v", err)
-	}
-	if v != 9999 {
-		t.Fatalf("mustInt(uint32) = %d, want 9999", v)
+	if policy.Enforcement.PlatformMismatch != ModeAllow {
+		t.Errorf("expected enforcement platform_mismatch=allow, got %s", policy.Enforcement.PlatformMismatch)
 	}
 }
 
-// TestApplyExecutionPolicySectionMaxAgeDaysError covers the mustInt error path
-// when max_age_days has an invalid value type.
-func TestApplyExecutionPolicySectionMaxAgeDaysError(t *testing.T) {
-	policy := &OperatorPolicy{}
-	// raw["max_age_days"] = a boolean — mustInt will fail.
-	raw := map[string]any{
-		"max_age_days": "not-a-number",
-	}
-	if err := applyExecutionPolicySection(raw, policy); err == nil {
-		t.Fatal("expected error when max_age_days is a string, got nil")
+// TestApplyOperatorPolicyJSON_InvalidJSON covers the json.Unmarshal error path.
+func TestApplyOperatorPolicyJSON_InvalidJSON(t *testing.T) {
+	policy := OperatorPolicy{Enforcement: NewDefaultEnforcementPolicy()}
+	if err := applyOperatorPolicyJSON([]byte(`{broken`), &policy); err == nil {
+		t.Fatal("expected error for invalid JSON")
 	}
 }
 
-// TestApplyExecutionPolicySectionRefuseRootError covers the mustBool error path
-// when refuse_root has an invalid value type.
-func TestApplyExecutionPolicySectionRefuseRootError(t *testing.T) {
-	policy := &OperatorPolicy{}
-	raw := map[string]any{
-		"refuse_root": "not-a-bool",
-	}
-	if err := applyExecutionPolicySection(raw, policy); err == nil {
-		t.Fatal("expected error when refuse_root is a string, got nil")
+// TestApplyOperatorPolicyJSON_MissingVersion covers the version=0 error path.
+func TestApplyOperatorPolicyJSON_MissingVersion(t *testing.T) {
+	policy := OperatorPolicy{Enforcement: NewDefaultEnforcementPolicy()}
+	if err := applyOperatorPolicyJSON([]byte(`{"trust":{}}`), &policy); err == nil {
+		t.Fatal("expected error for missing version")
 	}
 }
 
-// TestMustIntOverflow covers the overflow paths in mustInt.
-func TestMustIntOverflow(t *testing.T) {
-	// uint overflow: uint(maxInt+1)
-	_, err := mustInt("test", uint(^uint(0)))
+// TestApplyOperatorPolicyJSON_EmptySections covers the case where sections are present but empty.
+func TestApplyOperatorPolicyJSON_EmptySections(t *testing.T) {
+	policy := OperatorPolicy{Enforcement: NewDefaultEnforcementPolicy()}
+	data := []byte(`{"version": 1, "trust": {}, "execution": {}, "attestation": {}}`)
+	if err := applyOperatorPolicyJSON(data, &policy); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+// TestApplyEnforcement_UnknownModeTreatedAsDeny covers the default switch case
+// in applyEnforcement where an unrecognised mode is treated as deny for safety.
+func TestApplyEnforcement_UnknownModeTreatedAsDeny(t *testing.T) {
+	var warnings []string
+	err := applyEnforcement(EnforcementMode("bogus"), "should be denied", &warnings)
 	if err == nil {
-		t.Fatal("expected overflow error for large uint, got nil")
+		t.Fatal("expected unknown enforcement mode to be treated as deny")
 	}
-
-	// int64 positive overflow
-	_, err = mustInt("test", int64(1<<62)) // big but not overflowing on 64-bit
-	if err != nil {
-		// On 64-bit systems, this should succeed
-		t.Logf("int64(1<<62) = ok (expected on 64-bit)")
+	if len(warnings) != 0 {
+		t.Errorf("expected no warnings for unknown mode, got: %v", warnings)
 	}
+}
 
-	// uint64 overflow: math.MaxUint64
-	_, err = mustInt("test", uint64(^uint64(0)))
+// TestLoadOperatorPolicy_SystemPolicyReadError covers the non-IsNotExist error
+// path in LoadOperatorPolicy for the *system* policy file (e.g. path is a directory).
+func TestLoadOperatorPolicy_SystemPolicyReadError(t *testing.T) {
+	dir := t.TempDir()
+	// Create a directory where a file is expected — os.ReadFile on a directory
+	// returns an error that is NOT os.IsNotExist.
+	dirAsFile := dir // the temp dir itself IS a directory
+
+	oldSystem := getSystemPolicyFileImpl
+	oldUser := getUserPolicyFileImpl
+	t.Cleanup(func() {
+		getSystemPolicyFileImpl = oldSystem
+		getUserPolicyFileImpl = oldUser
+	})
+
+	getSystemPolicyFileImpl = func() string { return dirAsFile }
+	getUserPolicyFileImpl = func() string { return "" } // skip user policy
+
+	_, err := LoadOperatorPolicy()
 	if err == nil {
-		t.Fatal("expected overflow error for uint64 max, got nil")
+		t.Fatal("expected read error when system policy path is a directory")
 	}
+}
+
+// TestLoadOperatorPolicy_EmptyPathSkipped covers the path=="" continue branch
+// in LoadOperatorPolicy.
+func TestLoadOperatorPolicy_EmptyPathSkipped(t *testing.T) {
+	oldSystem := getSystemPolicyFileImpl
+	oldUser := getUserPolicyFileImpl
+	t.Cleanup(func() {
+		getSystemPolicyFileImpl = oldSystem
+		getUserPolicyFileImpl = oldUser
+	})
+
+	getSystemPolicyFileImpl = func() string { return "" }
+	getUserPolicyFileImpl = func() string { return "" }
+
+	policy, err := LoadOperatorPolicy()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	// Should return defaults
+	if policy.Enforcement.Default != ModeDeny {
+		t.Errorf("expected default enforcement=deny, got %s", policy.Enforcement.Default)
+	}
+}
+
+// TestEnforcementModeFor_AllChecks covers the ModeFor switch for each check name.
+func TestEnforcementModeFor_AllChecks(t *testing.T) {
+	ep := EnforcementPolicy{
+		Default:          ModeDeny,
+		PlatformMismatch: ModeWarn,
+		UntrustedKey:     ModeAllow,
+		ExpiredPackage:   ModeWarn,
+		MissingEnv:       ModeAllow,
+		MissingSBOM:      ModeWarn,
+		RootExecution:    ModeAllow,
+		OsKeychain:       ModeWarn,
+	}
+
+	checks := map[string]EnforcementMode{
+		"platform_mismatch": ModeWarn,
+		"untrusted_key":     ModeAllow,
+		"expired_package":   ModeWarn,
+		"missing_env":       ModeAllow,
+		"missing_sbom":      ModeWarn,
+		"root_execution":    ModeAllow,
+		"os_keychain":       ModeWarn,
+		"unknown_check":     ModeDeny, // falls through to default
+	}
+
+	for check, want := range checks {
+		got := ep.ModeFor(check)
+		if got != want {
+			t.Errorf("ModeFor(%q) = %s, want %s", check, got, want)
+		}
+	}
+}
+
+// ---------------------------------------------------------------------------
+// getSystemPolicyFile — cross-platform coverage via policyGOOS override
+// ---------------------------------------------------------------------------
+
+func TestGetSystemPolicyFile_Windows(t *testing.T) {
+	old := policyGOOS
+	t.Cleanup(func() { policyGOOS = old })
+	policyGOOS = "windows"
+
+	t.Setenv("PROGRAMDATA", "/tmp/pd")
+	got := getSystemPolicyFile()
+	want := filepath.Join("/tmp/pd", "flavor", "policy.json")
+	if got != want {
+		t.Errorf("getSystemPolicyFile() windows with PROGRAMDATA = %q, want %q", got, want)
+	}
+}
+
+func TestGetSystemPolicyFile_WindowsNoPROGRAMDATA(t *testing.T) {
+	old := policyGOOS
+	t.Cleanup(func() { policyGOOS = old })
+	policyGOOS = "windows"
+
+	t.Setenv("PROGRAMDATA", "")
+	got := getSystemPolicyFile()
+	want := filepath.Join("C:\\ProgramData", "flavor", "policy.json")
+	if got != want {
+		t.Errorf("getSystemPolicyFile() windows fallback = %q, want %q", got, want)
+	}
+}
+
+func TestGetSystemPolicyFile_Unix(t *testing.T) {
+	old := policyGOOS
+	t.Cleanup(func() { policyGOOS = old })
+	policyGOOS = "linux"
+
+	got := getSystemPolicyFile()
+	if got != "/etc/flavor/policy.json" {
+		t.Errorf("getSystemPolicyFile() unix = %q, want /etc/flavor/policy.json", got)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// getCurrentPlatform — cross-platform coverage via policyGOOS/policyGOARCH
+// ---------------------------------------------------------------------------
+
+func TestGetCurrentPlatform_AllOS(t *testing.T) {
+	oldOS := policyGOOS
+	oldArch := policyGOARCH
+	t.Cleanup(func() {
+		policyGOOS = oldOS
+		policyGOARCH = oldArch
+	})
+
+	cases := []struct {
+		goos, goarch, want string
+	}{
+		{"linux", "amd64", "linux_amd64"},
+		{"linux", "arm64", "linux_arm64"},
+		{"darwin", "amd64", "darwin_amd64"},
+		{"darwin", "arm64", "darwin_arm64"},
+		{"freebsd", "amd64", "freebsd_amd64"},
+		{"freebsd", "arm64", "freebsd_arm64"},
+		{"windows", "amd64", "windows_amd64"},
+		{"windows", "arm64", "windows_arm64"},
+	}
+
+	for _, tc := range cases {
+		policyGOOS = tc.goos
+		policyGOARCH = tc.goarch
+		got := getCurrentPlatform()
+		if got != tc.want {
+			t.Errorf("getCurrentPlatform() with GOOS=%s GOARCH=%s = %q, want %q", tc.goos, tc.goarch, got, tc.want)
+		}
+	}
+}
+
+func TestGetCurrentPlatform_RealOS(t *testing.T) {
+	// Ensure policyGOOS/policyGOARCH match runtime constants
+	old := policyGOOS
+	oldArch := policyGOARCH
+	t.Cleanup(func() {
+		policyGOOS = old
+		policyGOARCH = oldArch
+	})
+	policyGOOS = runtime.GOOS
+	policyGOARCH = runtime.GOARCH
+
+	p := getCurrentPlatform()
+	if p == "" {
+		t.Fatal("getCurrentPlatform() returned empty string")
+	}
+	_ = os.Getenv // suppress unused import
 }
