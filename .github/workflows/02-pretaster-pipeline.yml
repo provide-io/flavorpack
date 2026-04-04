@@ -144,8 +144,8 @@ jobs:
           shell: bash
           sync_files: true
           run: |
-            sudo env IGNORE_OSVERSION=yes pkg install -y gmake
-            cd tests/pretaster && gmake HELPERS_DIR=../../helpers dist/echo-test.psp dist/shell-test.psp dist/env-test.psp
+            sudo env IGNORE_OSVERSION=yes pkg install -y gmake bash
+            cd tests/pretaster && gmake SHELL=/usr/local/bin/bash HELPERS_DIR=../../helpers dist/echo-test.psp dist/shell-test.psp dist/env-test.psp
       
       - name: 📤 Upload Pretaster packages
         uses: actions/upload-artifact@v7
