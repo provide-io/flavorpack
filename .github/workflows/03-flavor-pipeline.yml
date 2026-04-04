@@ -11,6 +11,11 @@ on:
         description: 'Test filter (e.g., -k test_name or -m marker)'
         type: string
         required: false
+      platforms:
+        description: 'Comma-separated platforms to build/test (e.g. freebsd_amd64,freebsd_arm64). Empty = all.'
+        type: string
+        required: false
+        default: ''
   
   workflow_run:
     workflows: ["01 🥘 Helper Prep"]
@@ -26,6 +31,8 @@ jobs:
       helper_version: ${{ steps.helpers.outputs.version }}
       helper_run_id: ${{ steps.helpers.outputs.run_id }}
       test_matrix: ${{ steps.matrix.outputs.matrix }}
+      build_matrix: ${{ steps.build_matrix.outputs.matrix }}
+      psp_test_matrix: ${{ steps.build_matrix.outputs.psp_test_matrix }}
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v6
@@ -82,6 +89,10 @@ jobs:
           MATRIX=$(cat matrix.json | jq -c .)
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
           echo "Test matrix: $MATRIX"
+
+      - name: 📦 Define build matrix
+        id: build_matrix
+        run: ci/build-flavor-matrix.sh "${{ inputs.platforms }}"
 
   # Run tests in parallel
   test:
@@ -275,7 +286,8 @@ jobs:
           name: flavor-rust-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
           path: ./helpers-dist
 
-      - name: 📥 Download combined helpers (FreeBSD)
+      - name: 📥 Download combined helpers (FreeBSD only)
+        if: ${{ startsWith(matrix.platform, 'freebsd') }}
         uses: dawidd6/action-download-artifact@v19
         continue-on-error: true
         with:
@@ -400,39 +412,7 @@ jobs:
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - platform: linux_amd64
-            runner: ubuntu-24.04
-            python_platform: manylinux2014_x86_64
-          - platform: linux_arm64
-            runner: ubuntu-24.04-arm
-            python_platform: manylinux2014_aarch64
-          - platform: darwin_amd64
-            runner: macos-15-intel  # Intel Mac
-            python_platform: macosx_10_9_x86_64
-          - platform: darwin_arm64
-            runner: macos-15  # M1 Mac
-            python_platform: macosx_11_0_arm64
-          # Windows re-enabled (continue-on-error: DNS failures are common on Windows runners)
-          - platform: windows_amd64
-            runner: windows-2025
-            python_platform: win_amd64
-            continue_on_error: true
-          - platform: windows_arm64
-            runner: windows-11-arm
-            python_platform: win_arm64
-          - platform: freebsd_amd64
-            runner: ubuntu-24.04
-            python_platform: freebsd_14_2_release_amd64
-            continue_on_error: true
-            vm_arch: x86-64
-          - platform: freebsd_arm64
-            runner: ubuntu-24.04
-            python_platform: freebsd_14_2_release_arm64
-            continue_on_error: true
-            vm_arch: arm64
-
+      matrix: ${{ fromJson(needs.setup.outputs.build_matrix) }}
     continue-on-error: ${{ matrix.continue_on_error == true }}
     steps:
       - name: 📥 Checkout
@@ -482,7 +462,8 @@ jobs:
           name: flavor-rust-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
           path: ./helpers-dist
 
-      - name: 📥 Download combined helpers (FreeBSD)
+      - name: 📥 Download combined helpers (FreeBSD only)
+        if: ${{ matrix.vm_arch != '' }}
         uses: dawidd6/action-download-artifact@v19
         continue-on-error: true
         with:
@@ -612,29 +593,7 @@ jobs:
     timeout-minutes: 10
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - platform: linux_amd64
-            runner: ubuntu-24.04
-          - platform: linux_arm64
-            runner: ubuntu-24.04-arm
-          - platform: darwin_amd64
-            runner: macos-15-intel
-          - platform: darwin_arm64
-            runner: macos-15
-          # Windows re-enabled
-          - platform: windows_amd64
-            runner: windows-2025
-          - platform: windows_arm64
-            runner: windows-11-arm
-          - platform: freebsd_amd64
-            runner: ubuntu-24.04
-            continue_on_error: true
-            vm_arch: x86-64
-          - platform: freebsd_arm64
-            runner: ubuntu-24.04
-            continue_on_error: true
-            vm_arch: arm64
+      matrix: ${{ fromJson(needs.setup.outputs.psp_test_matrix) }}
     continue-on-error: ${{ matrix.continue_on_error == true }}
     steps:
       - name: 📥 Checkout scripts
