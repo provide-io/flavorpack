@@ -301,7 +301,7 @@ jobs:
           shell: bash
           sync_files: true
           run: |
-            sudo env IGNORE_OSVERSION=yes pkg install -y gmake python311 uv
+            sudo env IGNORE_OSVERSION=yes pkg install -y gmake bash python311 uv
             # The PSP launcher resolves "/usr/bin/python3" by extracting the basename
             # and calling which("python3"). A uv venv puts python3 in PATH so the
             # launcher finds it without any symlink hacks.
