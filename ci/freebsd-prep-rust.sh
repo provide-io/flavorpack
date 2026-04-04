@@ -23,7 +23,7 @@ if [ "$HOST_ARCH" = "amd64" ]; then
   echo "🦀 Installing Rust $RUST_VERSION via rustup (amd64)..."
   curl -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --default-toolchain "$RUST_VERSION"
   source "$CARGO_HOME/env"
-  rustup target add x86_64-unknown-freebsd aarch64-unknown-freebsd
+  rustup target add x86_64-unknown-freebsd
 else
   # aarch64 FreeBSD: no rustup host binary available — fall back to pkg.
   echo "🦀 Installing Rust via pkg (aarch64 — rustup host binary unavailable)..."
