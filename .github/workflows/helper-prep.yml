@@ -251,6 +251,14 @@ jobs:
           name: flavor-helpers-${{ needs.setup.outputs.version }}-freebsd_amd64
           path: artifacts/*.zip
 
+      # Upload tastesh as a separate artifact so pretaster pipeline can download it
+      - name: 📤 Upload tastesh
+        uses: actions/upload-artifact@v7
+        with:
+          name: flavor-tastesh-${{ needs.setup.outputs.version }}-freebsd_amd64
+          path: dist/bin/flavor-tastesh-freebsd_amd64
+          if-no-files-found: warn
+
       - name: 📤 Upload test results
         if: always()
         uses: actions/upload-artifact@v7
@@ -386,6 +394,14 @@ jobs:
         with:
           name: flavor-helpers-${{ needs.setup.outputs.version }}-freebsd_arm64
           path: artifacts/*.zip
+
+      # Upload tastesh as a separate artifact so pretaster pipeline can download it
+      - name: 📤 Upload tastesh
+        uses: actions/upload-artifact@v7
+        with:
+          name: flavor-tastesh-${{ needs.setup.outputs.version }}-freebsd_arm64
+          path: dist/bin/flavor-tastesh-freebsd_arm64
+          if-no-files-found: warn
 
       - name: 📤 Upload test results
         if: always()
