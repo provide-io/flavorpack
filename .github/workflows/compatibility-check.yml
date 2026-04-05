@@ -30,95 +30,21 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version: "${{ vars.GO_VERSION }}"
-      
+
       - name: 🦀 Setup Rust
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: nightly
           targets: x86_64-unknown-linux-musl,aarch64-unknown-linux-musl
-      
+
+      # Install musl-tools and autotools for static builds + tastesh
       - name: 🔧 Install build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y musl-tools
-          
-          # Skip ARM64 cross-compiler for now - focus on AMD64 testing
-          echo "Note: Skipping ARM64 musl cross-compiler setup"
-      
-      - name: 🔨 Build AMD64 binaries
-        run: |
-          cd src
+        run: sudo apt-get update && sudo apt-get install -y musl-tools autoconf automake libtool
 
-          # Go builds (static by default with CGO_ENABLED=0)
-          cd flavor-go
-          make clean
-          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 make build
-          cd ..
+      # Build Go, Rust, and tastesh static binaries + verify linking
+      - name: 🔨 Build and verify static binaries
+        run: ci/build-compat-binaries.sh
 
-          # Rust builds (musl for static linking)
-          cd flavor-rs
-          make clean
-          RUSTFLAGS="-C target-feature=+crt-static" cargo build --release --target x86_64-unknown-linux-musl
-          cp target/x86_64-unknown-linux-musl/release/flavor-rs-builder ../../dist/bin/flavor-rs-builder-linux_amd64
-          cp target/x86_64-unknown-linux-musl/release/flavor-rs-launcher ../../dist/bin/flavor-rs-launcher-linux_amd64
-          cd ..
-      
-      # ARM64 builds disabled temporarily - focusing on AMD64 testing
-      # - name: 🔨 Build ARM64 binaries
-      #   run: |
-      #     cd helpers
-      #     
-      #     # Go ARM64 builds
-      #     cd flavor-go
-      #     GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -buildvcs=false \
-      #       -o ../bin/flavor-go-builder-linux_arm64 cmd/flavor-go-builder/main.go
-      #     GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -buildvcs=false \
-      #       -o ../bin/flavor-go-launcher-linux_arm64 cmd/flavor-go-launcher/main.go
-      #     cd ..
-      #     
-      #     # Rust ARM64 builds
-      #     cd flavor-rs
-      #     export CC_aarch64_unknown_linux_musl=aarch64-linux-musl-gcc
-      #     export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=aarch64-linux-musl-gcc
-      #     cargo build --release --target aarch64-unknown-linux-musl
-      #     cp target/aarch64-unknown-linux-musl/release/flavor-rs-builder ../bin/flavor-rs-builder-linux_arm64
-      #     cp target/aarch64-unknown-linux-musl/release/flavor-rs-launcher ../bin/flavor-rs-launcher-linux_arm64
-      #     cd ..
-      
-      - name: 🐚 Build tastesh (embedded POSIX shell for pretaster)
-        run: |
-          # Install autotools needed by dash build
-          sudo apt-get install -y autoconf automake libtool
-          ci/build-dash.sh dist/bin
-
-      - name: 🔍 Verify static linking
-        run: |
-          echo "Verifying static linking for all binaries..."
-          failed=0
-          
-          for binary in dist/bin/flavor-*-linux_*; do
-            if [ -f "$binary" ]; then
-              echo -n "Checking $(basename $binary): "
-              # Check if binary is static - either file says "statically linked" or ldd says "not a dynamic executable"
-              if file "$binary" | grep -q "statically linked"; then
-                echo "✅ Static (file)"
-              elif ldd "$binary" 2>&1 | grep -q "not a dynamic executable\|statically linked"; then
-                echo "✅ Static (ldd)"
-              else
-                echo "❌ Dynamic"
-                echo "  File output: $(file $binary)"
-                echo "  LDD output:"
-                ldd "$binary" 2>&1 | head -3 | sed 's/^/    /'
-                failed=1
-              fi
-            fi
-          done
-          
-          if [ $failed -eq 1 ]; then
-            echo "ERROR: Some binaries are not statically linked!"
-            exit 1
-          fi
-      
       - name: 📦 Upload artifacts
         uses: actions/upload-artifact@v7
         with:
@@ -154,74 +80,17 @@ jobs:
         with:
           name: static-binaries
           path: dist/bin/
-      
+
       - name: 🔧 Set permissions
         run: chmod +x dist/bin/*
-      
+
+      # Test builder/launcher binaries work on this distro
       - name: 🐳 Test on ${{ matrix.distro.name }}
         run: |
-          echo "=================================================="
-          echo "Testing on ${{ matrix.distro.name }}"
-          echo "Architecture: ${{ matrix.distro.arch }}"
-          echo "C Library: ${{ matrix.distro.glibc }}"
-          echo "=================================================="
-          
-          # Run comprehensive tests in container
           docker run --rm \
             -v $PWD/dist/bin:/test \
-            -v $PWD/tests/pretaster:/pretaster \
-            ${{ matrix.distro.image }} sh -c '
-            
-            echo "📋 System Information:"
-            uname -a
-            
-            if command -v ldd >/dev/null 2>&1; then
-              echo "📚 C Library Version:"
-              ldd --version 2>&1 | head -1 || true
-            fi
-            
-            cd /test
-            echo ""
-            echo "🧪 Testing binaries:"
-            echo "-------------------"
-            
-            failed=0
-            for binary in flavor-*-linux_${{ matrix.distro.arch == 'amd64' && 'amd64' || 'arm64' }}; do
-              # Skip tastesh (embedded shell) — not a builder/launcher, has no --version
-              echo "$binary" | grep -q "tastesh" && continue
-              if [ -f "$binary" ]; then
-                printf "%-40s" "$binary:"
-
-                if echo "$binary" | grep -q "launcher"; then
-                  # Launchers pass all args to packaged app - use CLI mode
-                  if FLAVOR_LAUNCHER_CLI=1 ./$binary help >/dev/null 2>&1; then
-                    echo "✅ Works (launcher)"
-                  else
-                    echo "❌ Failed"
-                    FLAVOR_LAUNCHER_CLI=1 ./$binary help 2>&1 | head -5 | sed "s/^/    /"
-                    failed=1
-                  fi
-                else
-                  # Builders support --version directly
-                  if ./$binary --version >/dev/null 2>&1; then
-                    version=$(./$binary --version 2>&1 | head -1)
-                    echo "✅ Works (${version})"
-                  else
-                    echo "❌ Failed"
-                    ./$binary --version 2>&1 | head -5 | sed "s/^/    /"
-                    failed=1
-                  fi
-                fi
-              fi
-            done
-            
-            exit $failed
-          '
-      
-      - name: 📊 Report results
-        if: always()
-        run: |
-          echo "Test completed for ${{ matrix.distro.name }}"
+            -v $PWD/ci:/ci \
+            ${{ matrix.distro.image }} sh /ci/test-compat-binaries.sh /test amd64
 
   # Test on extended Linux distributions
   test-extended-distros:
@@ -252,36 +121,17 @@ jobs:
         with:
           name: static-binaries
           path: dist/bin/
-      
+
       - name: 🔧 Set permissions
         run: chmod +x dist/bin/*
-      
+
+      # Test builder/launcher binaries work on this distro
       - name: 🐳 Test on ${{ matrix.distro.name }}
         run: |
-          echo "Testing on ${{ matrix.distro.name }} (glibc ${{ matrix.distro.glibc }})"
-          
-          docker run --rm -v $PWD/dist/bin:/test ${{ matrix.distro.image }} sh -c '
-            cd /test
-            for binary in flavor-*-linux_amd64; do
-              echo "$binary" | grep -q "tastesh" && continue
-              if [ -f "$binary" ]; then
-                echo -n "Testing $binary: "
-                if echo "$binary" | grep -q "launcher"; then
-                  if FLAVOR_LAUNCHER_CLI=1 ./$binary help >/dev/null 2>&1; then
-                    echo "✅ PASS (launcher)"
-                  else
-                    echo "❌ FAIL"
-                  fi
-                else
-                  if ./$binary --version >/dev/null 2>&1; then
-                    echo "✅ PASS"
-                  else
-                    echo "❌ FAIL"
-                  fi
-                fi
-              fi
-            done
-          '
+          docker run --rm \
+            -v $PWD/dist/bin:/test \
+            -v $PWD/ci:/ci \
+            ${{ matrix.distro.image }} sh /ci/test-compat-binaries.sh /test amd64
 
   # Test ARM64 binaries using QEMU
   test-arm64:
@@ -305,46 +155,23 @@ jobs:
         uses: docker/setup-qemu-action@v4
         with:
           platforms: arm64
-      
+
       - name: 📦 Download binaries
         uses: actions/download-artifact@v8
         with:
           name: static-binaries
           path: dist/bin/
-      
+
       - name: 🔧 Set permissions
         run: chmod +x dist/bin/*
-      
+
+      # Test builder/launcher binaries work on ARM64
       - name: 🦾 Test ARM64 on ${{ matrix.distro.name }}
         run: |
-          echo "Testing ARM64 binaries on ${{ matrix.distro.name }}"
-          
           docker run --rm --platform linux/arm64 \
             -v $PWD/dist/bin:/test \
-            ${{ matrix.distro.image }} sh -c '
-            cd /test
-            echo "Architecture: $(uname -m)"
-            
-            for binary in flavor-*-linux_arm64; do
-              echo "$binary" | grep -q "tastesh" && continue
-              if [ -f "$binary" ]; then
-                echo -n "Testing $binary: "
-                if echo "$binary" | grep -q "launcher"; then
-                  if FLAVOR_LAUNCHER_CLI=1 ./$binary help >/dev/null 2>&1; then
-                    echo "✅ PASS (launcher)"
-                  else
-                    echo "❌ FAIL"
-                  fi
-                else
-                  if ./$binary --version >/dev/null 2>&1; then
-                    echo "✅ PASS"
-                  else
-                    echo "❌ FAIL"
-                  fi
-                fi
-              fi
-            done
-          '
+            -v $PWD/ci:/ci \
+            ${{ matrix.distro.image }} sh /ci/test-compat-binaries.sh /test arm64
 
   # Run pretaster in containers
   test-pretaster:
@@ -369,29 +196,17 @@ jobs:
         with:
           name: static-binaries
           path: dist/bin/
-      
+
       - name: 🔧 Set permissions
         run: chmod +x dist/bin/*
-      
+
+      # Run pretaster combination tests inside the container
       - name: 🔬 Run pretaster on ${{ matrix.distro.name }}
         run: |
-          echo "Running pretaster tests on ${{ matrix.distro.name }}"
-          
           docker run --rm \
             -v $PWD:/workspace \
             -w /workspace \
-            ${{ matrix.distro.image }} sh -c '
-            # Install Python
-            ${{ matrix.distro.install }}
-            
-            # Install pretaster
-            cd tests/pretaster
-            pip3 install --break-system-packages . || pip3 install .
-            
-            # Run tests
-            echo "Running combination tests..."
-            ./tests/combo/test-combinations.sh
-          '
+            ${{ matrix.distro.image }} sh ci/run-compat-pretaster.sh '${{ matrix.distro.install }}'
 
   # Generate compatibility report
   compatibility-report:
@@ -405,84 +220,16 @@ jobs:
         with:
           persist-credentials: false
 
+      # Generate and upload the report
       - name: 📊 Generate report
-        run: |
-          cat << EOF > compatibility-report.md
-          # 🐳 Binary Compatibility Report
-          
-          **Date**: $(date -u +"%Y-%m-%d %H:%M UTC")
-          **Commit**: ${{ github.sha }}
-          **Branch**: ${{ github.ref_name }}
-          
-          ## Test Results
-          
-          ### Core Distributions ✅
-          - CentOS 7 (glibc 2.17): ${{ needs.test-core-distros.result }}
-          - Amazon Linux 2023 (glibc 2.34): ${{ needs.test-core-distros.result }}
-          - Ubuntu 22.04 (glibc 2.35): ${{ needs.test-core-distros.result }}
-          - Ubuntu 24.04 (glibc 2.39): ${{ needs.test-core-distros.result }}
-          - Alpine Linux (musl): ${{ needs.test-core-distros.result }}
-          
-          ### Extended Distributions 🔧
-          - Status: ${{ needs.test-extended-distros.result }}
-          - Debian, Fedora, Rocky Linux, OpenSUSE, Arch Linux
-          
-          ### ARM64 Testing 🦾
-          - Status: ${{ needs.test-arm64.result }}
-          - Ubuntu ARM64, Alpine ARM64, Amazon Linux ARM64
-          
-          ### Pretaster Validation 🔬
-          - Status: ${{ needs.test-pretaster.result }}
-          - Tested on Ubuntu, Amazon Linux, Fedora
-          
-          ## Static Linking Verification
-          
-          All Linux binaries are built with:
-          - **Go**: CGO_ENABLED=0 for fully static binaries
-          - **Rust**: musl targets for static linking
-          - **No glibc dependencies**: Works on any Linux distribution
-          
-          ## Recommendations
-          
-          $(if [ "${{ needs.test-core-distros.result }}" != "success" ]; then
-            echo "⚠️ **Action Required**: Core distribution tests failed. Check build configuration."
-          else
-            echo "✅ All core distributions passed. Binaries are compatible."
-          fi)
-          
-          EOF
-          
-          cat compatibility-report.md
-      
+        run: ci/generate-compat-report.sh "${{ needs.test-core-distros.result }}" "${{ needs.test-extended-distros.result }}" "${{ needs.test-arm64.result }}" "${{ needs.test-pretaster.result }}" "${{ github.sha }}" "${{ github.ref_name }}"
+
       - name: 📦 Upload report
         uses: actions/upload-artifact@v7
         with:
           name: compatibility-report
           path: compatibility-report.md
           retention-days: 30
-      
-      - name: 💬 Post to Slack/Discord (if configured)
-        if: always() && env.SLACK_WEBHOOK_URL != ''
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        run: |
-          # Post summary to Slack
-          STATUS="${{ needs.test-core-distros.result }}"
-          COLOR=$([ "$STATUS" = "success" ] && echo "good" || echo "danger")
-          
-          curl -X POST $SLACK_WEBHOOK_URL \
-            -H 'Content-Type: application/json' \
-            -d "{
-              \"attachments\": [{
-                \"color\": \"$COLOR\",
-                \"title\": \"Daily Compatibility Check\",
-                \"text\": \"Status: $STATUS\",
-                \"fields\": [
-                  {\"title\": \"Core Distros\", \"value\": \"${{ needs.test-core-distros.result }}\", \"short\": true},
-                  {\"title\": \"ARM64\", \"value\": \"${{ needs.test-arm64.result }}\", \"short\": true}
-                ]
-              }]
-            }"
 
   # Final status
   final-status:
@@ -491,14 +238,11 @@ jobs:
     if: always()
     runs-on: ubuntu-24.04
     steps:
+      # Check if core distro tests passed
       - name: 📊 Check overall status
         run: |
           if [ "${{ needs.test-core-distros.result }}" != "success" ]; then
             echo "❌ Compatibility check failed!"
-            echo "Some Linux distributions cannot run the binaries."
-            echo "Please check the static linking configuration."
             exit 1
-          else
-            echo "✅ All compatibility checks passed!"
-            echo "Binaries work across all tested Linux distributions."
           fi
+          echo "✅ All compatibility checks passed!"
