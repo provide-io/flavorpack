@@ -385,6 +385,60 @@ mod tests {
     }
 
     #[test]
+    fn test_derive_index_key_fingerprint_matches_when_attestation_fp_stored() {
+        let seed = [12u8; 32];
+        let signing_key = SigningKey::from_bytes(&seed);
+        let public_key = signing_key.verifying_key().to_bytes();
+        let mut index = crate::psp::format_2025::index::Index::new();
+        index.public_key = public_key;
+
+        // Store the correct fingerprint in attestation_key_fp
+        let fp = compute_key_fingerprint(&public_key).expect("fingerprint");
+        index.attestation_key_fp[..fp.len()].copy_from_slice(fp.as_bytes());
+
+        let result = derive_index_key_fingerprint(&index).expect("derive fingerprint");
+        assert_eq!(result, Some(fp));
+    }
+
+    #[test]
+    fn test_derive_index_key_fingerprint_rejects_zero_key_with_nonzero_attestation_fp() {
+        let mut index = crate::psp::format_2025::index::Index::new();
+        // public_key is all zeros (unsigned) but attestation_key_fp has data
+        index.attestation_key_fp[0] = 0xFF;
+
+        let err = derive_index_key_fingerprint(&index).expect_err("should reject");
+        assert!(err.contains("public_key is missing"));
+    }
+
+    #[test]
+    fn test_load_keys_from_dir_skips_non_pub_files() {
+        let dir = TempDir::new().expect("tempdir");
+        fs::write(dir.path().join("readme.txt"), "not a key").expect("write");
+        fs::write(dir.path().join("key.pem"), "not a pub file").expect("write");
+        let result = load_keys_from_dir(dir.path());
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_load_pub_key_file_without_name_comment() {
+        let dir = TempDir::new().expect("tempdir");
+        let path = dir.path().join("noname.pub");
+        let seed = [13u8; 32];
+        let pem = spki_public_pem_from_seed(seed);
+        fs::write(&path, pem).expect("write public key");
+
+        let key = load_pub_key_file(&path).expect("load public key");
+        assert!(key.name.is_none());
+        assert!(!key.fingerprint.is_empty());
+    }
+
+    #[test]
+    fn test_parse_ed25519_pem_rejects_non_utf8() {
+        let err = parse_ed25519_pem(&[0xFF, 0xFE]).unwrap_err();
+        assert!(!err.is_empty());
+    }
+
+    #[test]
     fn test_load_keys_from_dir_reads_valid_pub_file() {
         let dir = TempDir::new().expect("tempdir");
         let key_path = dir.path().join("user.pub");

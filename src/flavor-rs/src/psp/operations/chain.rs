@@ -140,3 +140,93 @@ lazy_static::lazy_static! {
         m
     };
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn pack_unpack_roundtrip() {
+        let ops = vec![super::super::OP_TAR, super::super::OP_GZIP];
+        let packed = pack_operations(&ops).expect("pack");
+        let unpacked = unpack_operations(packed);
+        assert_eq!(unpacked, ops);
+    }
+
+    #[test]
+    fn pack_empty_returns_zero() {
+        let packed = pack_operations(&[]).expect("pack empty");
+        assert_eq!(packed, 0);
+    }
+
+    #[test]
+    fn pack_rejects_more_than_eight_operations() {
+        let ops = vec![1u8; 9];
+        assert!(pack_operations(&ops).is_err());
+    }
+
+    #[test]
+    fn unpack_zero_returns_empty() {
+        let ops = unpack_operations(0);
+        assert!(ops.is_empty());
+    }
+
+    #[test]
+    fn operations_to_string_known_chains() {
+        let tar_gz = pack_operations(&[super::super::OP_TAR, super::super::OP_GZIP]).unwrap();
+        assert_eq!(operations_to_string(tar_gz), "tar.gz");
+
+        let tar_zst = pack_operations(&[super::super::OP_TAR, super::super::OP_ZSTD]).unwrap();
+        assert_eq!(operations_to_string(tar_zst), "tar.zst");
+
+        let gzip_only = pack_operations(&[super::super::OP_GZIP]).unwrap();
+        assert_eq!(operations_to_string(gzip_only), "gzip");
+
+        assert_eq!(operations_to_string(0), "raw");
+    }
+
+    #[test]
+    fn string_to_operations_named_chains() {
+        let raw = string_to_operations("raw").unwrap();
+        assert_eq!(raw, 0);
+
+        let empty = string_to_operations("").unwrap();
+        assert_eq!(empty, 0);
+
+        let tar_gz = string_to_operations("tar.gz").unwrap();
+        let expected = pack_operations(&[super::super::OP_TAR, super::super::OP_GZIP]).unwrap();
+        assert_eq!(tar_gz, expected);
+
+        let tgz = string_to_operations("tgz").unwrap();
+        assert_eq!(tgz, expected);
+
+        let zstd = string_to_operations("zstd").unwrap();
+        let expected_zstd = pack_operations(&[super::super::OP_ZSTD]).unwrap();
+        assert_eq!(zstd, expected_zstd);
+    }
+
+    #[test]
+    fn string_to_operations_pipe_format() {
+        let result = string_to_operations("TAR|GZIP").unwrap();
+        let expected = pack_operations(&[super::super::OP_TAR, super::super::OP_GZIP]).unwrap();
+        assert_eq!(result, expected);
+
+        let result = string_to_operations("tar|zstd").unwrap();
+        let expected = pack_operations(&[super::super::OP_TAR, super::super::OP_ZSTD]).unwrap();
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn string_to_operations_rejects_unknown() {
+        assert!(string_to_operations("lz4").is_err());
+        assert!(string_to_operations("TAR|UNKNOWN").is_err());
+    }
+
+    #[test]
+    fn operations_to_string_fallback_pipe_format() {
+        // Create a chain that isn't in COMMON_CHAINS (e.g., gzip|bzip2)
+        let packed = pack_operations(&[super::super::OP_GZIP, super::super::OP_BZIP2]).unwrap();
+        let result = operations_to_string(packed);
+        assert_eq!(result, "gzip|bzip2");
+    }
+}

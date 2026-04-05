@@ -446,6 +446,57 @@ mod tests {
             "Checksum mismatch with non-default values"
         );
     }
+
+    #[test]
+    fn test_unpack_rejects_wrong_size() {
+        let short = vec![0u8; 100];
+        assert!(Index::unpack(&short).is_err());
+
+        let long = vec![0u8; HEADER_SIZE + 1];
+        assert!(Index::unpack(&long).is_err());
+    }
+
+    #[test]
+    fn test_verify_checksum_raw_rejects_wrong_size() {
+        let index = Index::new();
+        assert!(!index.verify_checksum_raw(&[0u8; 100]));
+    }
+
+    #[test]
+    fn test_verify_checksum_raw_detects_corruption() {
+        let index = Index::new();
+        let mut packed = index.pack();
+        // Corrupt a byte
+        packed[100] ^= 0xFF;
+        let unpacked = Index::unpack(&packed).expect("unpack");
+        assert!(!unpacked.verify_checksum_raw(&packed));
+    }
+
+    #[test]
+    fn test_default_index_equals_new() {
+        let from_new = Index::new();
+        let from_default = Index::default();
+        let new_fv = from_new.format_version;
+        let def_fv = from_default.format_version;
+        assert_eq!(new_fv, def_fv);
+        let new_pv = from_new.protocol_version;
+        let def_pv = from_default.protocol_version;
+        assert_eq!(new_pv, def_pv);
+    }
+
+    #[test]
+    fn test_pack_preserves_attestation_fields() {
+        let mut index = Index::new();
+        index.attestation_key_fp[0..4].copy_from_slice(b"ABCD");
+        index.attestation_sbom_digest[0..4].copy_from_slice(b"EFGH");
+        index.attestation_policy_hash[0..4].copy_from_slice(b"IJKL");
+
+        let packed = index.pack();
+        let unpacked = Index::unpack(&packed).expect("unpack");
+        assert_eq!(&unpacked.attestation_key_fp[0..4], b"ABCD");
+        assert_eq!(&unpacked.attestation_sbom_digest[0..4], b"EFGH");
+        assert_eq!(&unpacked.attestation_policy_hash[0..4], b"IJKL");
+    }
 }
 
 // 📦🔧🏗️🪄
