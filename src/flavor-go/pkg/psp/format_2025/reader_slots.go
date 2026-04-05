@@ -224,6 +224,11 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 	} else {
 		// Non-TAR (single file) slots with explicit target path
 		destPath = filepath.Join(destDir, targetPath)
+		// Ensure the target path does not escape the destination directory
+		cleanBase := filepath.Clean(destDir)
+		if !strings.HasPrefix(destPath, cleanBase+string(os.PathSeparator)) && destPath != cleanBase {
+			return "", fmt.Errorf("target path %q escapes extraction directory", targetPath)
+		}
 		extractDir = destPath
 	}
 
