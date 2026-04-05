@@ -2,8 +2,6 @@
   "name": "pretaster-combination",
   "version": "1.0.0",
   "description": "Simple test for builder/launcher combinations",
-  "command": "/usr/bin/python3 {workenv}/scripts/combo_test.py",
-  "environment": {},
   "package": {
     "name": "pretaster-combination",
     "version": "1.0.0",
@@ -13,19 +11,30 @@
   "slots": [
     {
       "slot": 0,
+      "id": "tastesh",
+      "source": "TASTESH_BIN",
+      "target": "bin/tastesh",
+      "purpose": "tool",
+      "lifecycle": "runtime",
+      "operations": "raw",
+      "permissions": "0755",
+      "resolution": "build"
+    },
+    {
+      "slot": 1,
+      "id": "combo-test-sh",
+      "source": "scripts/combo_test.sh",
+      "target": "scripts/combo_test.sh",
       "purpose": "payload",
       "lifecycle": "cached",
       "operations": "raw",
-      "id": "combo-test-py",
-      "source": "scripts/combo_test.py",
-      "target": "scripts/combo_test.py",
       "permissions": "0755"
     }
   ],
   "execution": {
-    "command": "/usr/bin/python3 {workenv}/scripts/combo_test.py",
+    "command": "{workenv}/bin/tastesh {workenv}/scripts/combo_test.sh",
     "args": [],
     "env": {},
-    "primary_slot": 0
+    "primary_slot": 1
   }
 }
