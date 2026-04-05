@@ -12,6 +12,8 @@ import sys
 import click
 from provide.foundation.console import pout
 
+from flavor.config.defaults import ENV_WORKENV
+
 
 @click.command("shell")
 def shell_command() -> None:
@@ -45,8 +47,8 @@ def shell_command() -> None:
     pout("\nEnvironment:", color="yellow")
     pout(f"  • Python: {sys.version.split()[0]}")
     pout(f"  • Platform: {sys.platform}")
-    if "FLAVOR_WORKENV" in os.environ:
-        pout(f"  • Workenv: {os.environ['FLAVOR_WORKENV']}")
+    if ENV_WORKENV in os.environ:
+        pout(f"  • Workenv: {os.environ[ENV_WORKENV]}")
 
     pout("\nType 'exit()' or Ctrl-D to exit the shell.\n")
 

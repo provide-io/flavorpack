@@ -12,6 +12,8 @@ import sys
 import click
 from provide.foundation.console import pout
 
+from flavor.config.defaults import ENV_COMMAND_NAME, ENV_ORIGINAL_COMMAND, ENV_WORKENV
+
 
 @click.command("argv")
 def argv_command() -> None:
@@ -30,9 +32,9 @@ def argv_command() -> None:
 
     # Check environment variables
     env_vars = {
-        "FLAVOR_COMMAND_NAME": "Command name override",
-        "FLAVOR_ORIGINAL_COMMAND": "Original command path",
-        "FLAVOR_WORKENV": "Work environment path",
+        ENV_COMMAND_NAME: "Command name override",
+        ENV_ORIGINAL_COMMAND: "Original command path",
+        ENV_WORKENV: "Work environment path",
     }
 
     for var, desc in env_vars.items():
@@ -57,10 +59,10 @@ def argv_command() -> None:
 
     # Rust launcher sets argv[0] properly
     # Go launcher cannot set argv[0] and uses FLAVOR_COMMAND_NAME
-    if "FLAVOR_COMMAND_NAME" in os.environ and os.environ["FLAVOR_COMMAND_NAME"] != sys.argv[0]:
+    if ENV_COMMAND_NAME in os.environ and os.environ[ENV_COMMAND_NAME] != sys.argv[0]:
         pout("  Launcher: Likely Go (using FLAVOR_COMMAND_NAME fallback)")
         pout(f"    - argv[0]: {sys.argv[0]}")
-        pout(f"    - FLAVOR_COMMAND_NAME: {os.environ['FLAVOR_COMMAND_NAME']}")
+        pout(f"    - {ENV_COMMAND_NAME}: {os.environ[ENV_COMMAND_NAME]}")
     else:
         pout("  Launcher: Likely Rust (argv[0] set properly)")
         pout(f"    - argv[0]: {sys.argv[0]}")

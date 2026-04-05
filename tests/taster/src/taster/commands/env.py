@@ -13,6 +13,8 @@ import os
 import click
 from provide.foundation.console import pout
 
+from flavor.config.defaults import ENV_COMMAND_NAME, ENV_ORIGINAL_COMMAND, ENV_WORKENV
+
 
 @click.command("env")
 def env_command() -> None:
@@ -142,7 +144,7 @@ def _print_env_source(env_vars: Mapping[str, str]) -> None:
     pout("📍 ENVIRONMENT SOURCE", color="cyan", bold=True)
     pout("=" * 60, color="cyan")
 
-    for key in ["FLAVOR_WORKENV", "FLAVOR_COMMAND_NAME", "FLAVOR_ORIGINAL_COMMAND"]:
+    for key in [ENV_WORKENV, ENV_COMMAND_NAME, ENV_ORIGINAL_COMMAND]:
         if key in env_vars:
             pout(f"  {key.replace('FLAVOR_', '').replace('_', ' ').title()}: {env_vars[key]}")
 

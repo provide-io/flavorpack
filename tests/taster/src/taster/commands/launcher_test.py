@@ -16,6 +16,7 @@ import click
 from provide.foundation.console import pout
 from provide.foundation.process import run
 
+from flavor.config.defaults import ENV_EXEC_MODE, ENV_LAUNCHER_CLI, ENV_LOG_LEVEL
 from flavor.helpers import HelperManager
 from flavor.package import build_package_from_manifest
 
@@ -121,9 +122,9 @@ def _build_package(manifest: Path, launcher_path: Path, key_seed: str, verbose: 
 
 def _execute_package(package_path: Path, exec_mode: str, verbose: bool) -> Any:
     """Execute the package using the requested mode."""
-    env = {"FLAVOR_EXEC_MODE": exec_mode}
+    env = {ENV_EXEC_MODE: exec_mode}
     if verbose:
-        env["FLAVOR_LOG_LEVEL"] = "debug"
+        env[ENV_LOG_LEVEL] = "debug"
         env["RUST_BACKTRACE"] = "1"
 
     return run(
@@ -165,7 +166,7 @@ def _print_package_details(package_path: Path) -> None:
         [str(package_path), "info"],
         capture_output=True,
         check=False,
-        env={"FLAVOR_LAUNCHER_CLI": "true"},
+        env={ENV_LAUNCHER_CLI: "true"},
     )
     if info_result.returncode == 0 and info_result.stdout:
         pout(info_result.stdout)
