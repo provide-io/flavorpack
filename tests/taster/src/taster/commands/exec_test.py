@@ -17,6 +17,7 @@ from provide.foundation.console import pout
 from provide.foundation.process import run
 
 from flavor.cache import get_cache_dir
+from flavor.config.defaults import ENV_CACHE_DIR
 from flavor.helpers import HelperManager
 from flavor.package import build_package_from_manifest
 from taster.env_constants import ENV_CACHE_COMPAT, ENV_EXEC_MODE, ENV_LOG_LEVEL
@@ -291,7 +292,7 @@ def _build_env(mode: str, verbose: bool) -> dict[str, str]:
     # Pass through essential vars so the inner PSP can bootstrap (locate cache
     # dir, find uv, write temp files). Without HOME the Rust launcher uses a
     # fallback path that differs from what Path.home() returns in the test.
-    for var in ("HOME", "PATH", "USER", "TEMP", "TMP", "TMPDIR", ENV_CACHE_COMPAT):
+    for var in ("HOME", "PATH", "USER", "TEMP", "TMP", "TMPDIR", ENV_CACHE_COMPAT, ENV_CACHE_DIR):
         if val := os.environ.get(var):
             env[var] = val
     return env
