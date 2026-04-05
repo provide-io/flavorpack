@@ -16,6 +16,8 @@ import click
 from provide.foundation.console import pout
 from provide.foundation.process import run
 
+from flavor.cache import get_cache_dir
+from flavor.config.defaults import ENV_CACHE_COMPAT, ENV_EXEC_MODE, ENV_LOG_LEVEL
 from flavor.helpers import HelperManager
 from flavor.package import build_package_from_manifest
 
@@ -133,19 +135,10 @@ def _run_bootstrap_cache_test(helper_manager: HelperManager, verbose: bool) -> b
             temp_dir = Path(temp_dir_str)
             manifest = _prepare_bootstrap_project(temp_dir)
 
-            import os
-
-            # FLAVOR_CACHE (set by Go launcher) already includes /workenv suffix.
-            # When unset (Rust launcher or bare shell), fall back to ~/.cache/flavor/workenv.
-            flavor_cache = os.environ.get("FLAVOR_CACHE")
-            if flavor_cache:
-                workenv_base = Path(flavor_cache)
-            else:
-                workenv_base = Path.home() / ".cache" / "flavor" / "workenv"
             # Workenv name is derived from PSP filename (not package_name+version).
             # build_package_from_manifest outputs bootstrap-test.psp so the launcher
-            # creates {workenv_base}/bootstrap-test/.
-            workenv_dir = workenv_base / "bootstrap-test"
+            # creates {cache_dir}/bootstrap-test/.
+            workenv_dir = get_cache_dir() / "bootstrap-test"
             if workenv_dir.exists():
                 shutil.rmtree(workenv_dir, ignore_errors=True)
 
@@ -292,13 +285,13 @@ def _build_env(mode: str, verbose: bool) -> dict[str, str]:
     """Create an environment dictionary for launcher execution."""
     import os
 
-    env = {"FLAVOR_EXEC_MODE": mode}
+    env = {ENV_EXEC_MODE: mode}
     if verbose:
-        env["FLAVOR_LOG_LEVEL"] = "debug"
+        env[ENV_LOG_LEVEL] = "debug"
     # Pass through essential vars so the inner PSP can bootstrap (locate cache
     # dir, find uv, write temp files). Without HOME the Rust launcher uses a
     # fallback path that differs from what Path.home() returns in the test.
-    for var in ("HOME", "PATH", "USER", "TEMP", "TMP", "TMPDIR", "FLAVOR_CACHE"):
+    for var in ("HOME", "PATH", "USER", "TEMP", "TMP", "TMPDIR", ENV_CACHE_COMPAT):
         if val := os.environ.get(var):
             env[var] = val
     return env

@@ -18,13 +18,15 @@ from typing import Any
 import click
 from provide.foundation.console import pout
 
+from flavor.config.defaults import ENV_COMMAND_NAME, ENV_LOG_LEVEL, ENV_WORKENV
+
 FeatureTest = Callable[[], bool]
 FeatureResult = dict[str, Any]
 
 
 def get_launcher_type() -> str:
     """Detect launcher type from environment and behavior."""
-    command_name = os.environ.get("FLAVOR_COMMAND_NAME")
+    command_name = os.environ.get(ENV_COMMAND_NAME)
     if command_name and command_name != sys.argv[0]:
         return "go"
     return "rust"
@@ -57,13 +59,13 @@ def test_signal_handling() -> bool:
 
 def test_json_logging() -> bool:
     """Test if JSON logging is available."""
-    log_level = os.environ.get("FLAVOR_LOG_LEVEL", "")
+    log_level = os.environ.get(ENV_LOG_LEVEL, "")
     return log_level.startswith("json")
 
 
 def test_lock_files() -> bool:
     """Test if lock files are used for extraction."""
-    workenv = os.environ.get("FLAVOR_WORKENV")
+    workenv = os.environ.get(ENV_WORKENV)
     if not workenv:
         return False
     lock_file = Path(workenv) / ".extraction.lock"
@@ -111,7 +113,7 @@ def test_process_cleanup() -> bool:
 
 def test_incomplete_extraction() -> bool:
     """Test incomplete extraction handling."""
-    workenv = os.environ.get("FLAVOR_WORKENV")
+    workenv = os.environ.get(ENV_WORKENV)
     if not workenv:
         return False
     return (Path(workenv) / ".extraction.complete").exists()

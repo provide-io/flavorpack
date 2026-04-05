@@ -16,6 +16,8 @@ from typing import Any
 import click
 from provide.foundation.console import pout
 
+from flavor.config.defaults import ENV_ORIGINAL_COMMAND
+
 
 @click.command("verify")
 @click.argument("package_path", required=False, type=click.Path(path_type=Path))  # ty: ignore[invalid-argument-type]
@@ -53,7 +55,7 @@ def _resolve_package_path(package_path: Path | None) -> Path:
     if executable.suffix == ".psp":
         return executable
 
-    original = os.environ.get("FLAVOR_ORIGINAL_COMMAND")
+    original = os.environ.get(ENV_ORIGINAL_COMMAND)
     if original:
         return Path(original)
 

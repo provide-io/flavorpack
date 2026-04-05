@@ -15,6 +15,8 @@ from typing import Any
 import click
 from provide.foundation.console import pout
 
+from flavor.config.defaults import ENV_COMMAND_NAME
+
 
 class SignalTester:
     def __init__(self) -> None:
@@ -169,7 +171,7 @@ def _print_launcher_capabilities() -> None:
     pout("\n🚀 Launcher Signal Capabilities:", color="magenta")
     launcher_name = (
         "rust"
-        if "FLAVOR_COMMAND_NAME" not in os.environ or os.environ.get("FLAVOR_COMMAND_NAME") == sys.argv[0]
+        if ENV_COMMAND_NAME not in os.environ or os.environ.get(ENV_COMMAND_NAME) == sys.argv[0]
         else "go"
     )
 

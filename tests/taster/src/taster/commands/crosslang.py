@@ -21,6 +21,7 @@ from provide.foundation import logger
 from provide.foundation.console import perr, pout
 from provide.foundation.process import run as run_command
 
+from flavor.config.defaults import ENV_LAUNCHER_CLI
 from flavor.helpers.manager import HelperInfo, HelperManager
 
 
@@ -291,7 +292,7 @@ entry_point = "crosslang_test:main"
         package_path.chmod(0o755)
 
         env = os.environ.copy()
-        env["FLAVOR_LAUNCHER_CLI"] = "true"
+        env[ENV_LAUNCHER_CLI] = "true"
 
         # Use info command to verify the package works
         cmd = [str(package_path), "info"]
