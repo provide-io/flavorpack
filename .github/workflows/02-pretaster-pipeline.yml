@@ -102,6 +102,16 @@ jobs:
           name: flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
 
+      # Download tastesh (embedded shell for self-contained PSPs)
+      - name: 📥 Download tastesh
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v19
+        with:
+          workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
+          name: flavor-tastesh-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
+          path: ./helpers-dist
+
       - name: 🔧 Setup helpers
         shell: bash
         run: |
@@ -114,52 +124,14 @@ jobs:
           chmod +x helpers/bin/*
           ls -la helpers/bin/
       
+      # Build pretaster test packages via Makefile (native runners)
       - name: 🔨 Build Pretaster packages
         if: ${{ matrix.vm_arch == '' }}
-        working-directory: tests/pretaster
         shell: bash
-        run: |
-          export FLAVOR_WORKENV_BASE=$(pwd)
-          export FLAVOR_LOG_LEVEL=info
+        working-directory: tests/pretaster
+        run: make HELPERS_DIR=../../helpers dist/echo-test.psp dist/shell-test.psp dist/env-test.psp
 
-          # Create output directory
-          mkdir -p dist
-
-          # Build test packages using JSON manifests directly
-          echo "📦 Building Pretaster test packages..."
-
-          # Determine binary extension for Windows
-          EXT=""
-          if [[ "${{ matrix.platform }}" == "windows_"* ]]; then
-            EXT=".exe"
-          fi
-
-          # Select launcher for cross-language combo: Windows uses Go launcher only
-          # (Rust launcher not supported on Windows — see tests/pretaster/KNOWN_ISSUES.md)
-          if [[ "${{ matrix.platform }}" == "windows_"* ]]; then
-            COMBO_LAUNCHER="../../helpers/bin/flavor-go-launcher-${{ matrix.platform }}${EXT}"
-          else
-            COMBO_LAUNCHER="../../helpers/bin/flavor-rs-launcher-${{ matrix.platform }}${EXT}"
-          fi
-
-          # Build with different builder/launcher combinations
-          ../../helpers/bin/flavor-go-builder-${{ matrix.platform }}${EXT} \
-            --manifest configs/test-echo.json \
-            --launcher-bin "$COMBO_LAUNCHER" \
-            --output dist/pretaster-echo.psp \
-            --key-seed pretaster-test
-
-          # Windows: Rust not supported — skip Rust builder entirely
-          if [[ "${{ matrix.platform }}" != "windows_"* ]]; then
-            ../../helpers/bin/flavor-rs-builder-${{ matrix.platform }}${EXT} \
-              --manifest configs/test-shell.json \
-              --launcher-bin ../../helpers/bin/flavor-go-launcher-${{ matrix.platform }}${EXT} \
-              --output dist/pretaster-shell.psp \
-              --key-seed pretaster-test
-          fi
-
-          ls -la dist/
-
+      # Build pretaster test packages via Makefile (FreeBSD QEMU VM)
       - name: 🔨 Build Pretaster packages (FreeBSD VM)
         if: ${{ matrix.vm_arch != '' }}
         uses: cross-platform-actions/action@v0.32.0
@@ -172,26 +144,8 @@ jobs:
           shell: bash
           sync_files: true
           run: |
-            chmod +x helpers/bin/* 2>/dev/null || true
-
-            cd tests/pretaster
-            mkdir -p dist
-
-            COMBO_LAUNCHER="../../helpers/bin/flavor-rs-launcher-${{ matrix.platform }}"
-
-            ../../helpers/bin/flavor-go-builder-${{ matrix.platform }} \
-              --manifest configs/test-echo.json \
-              --launcher-bin "$COMBO_LAUNCHER" \
-              --output dist/pretaster-echo.psp \
-              --key-seed pretaster-test
-
-            ../../helpers/bin/flavor-rs-builder-${{ matrix.platform }} \
-              --manifest configs/test-shell.json \
-              --launcher-bin ../../helpers/bin/flavor-go-launcher-${{ matrix.platform }} \
-              --output dist/pretaster-shell.psp \
-              --key-seed pretaster-test
-
-            ls -la dist/
+            sudo env IGNORE_OSVERSION=yes pkg install -y gmake
+            cd tests/pretaster && gmake HELPERS_DIR=../../helpers dist/echo-test.psp dist/shell-test.psp dist/env-test.psp
       
       - name: 📤 Upload Pretaster packages
         uses: actions/upload-artifact@v7
