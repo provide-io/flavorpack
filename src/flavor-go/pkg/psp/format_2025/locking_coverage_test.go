@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -10,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // TestMarkExtractionIncompleteMkdirAllFails covers the MkdirAll error path
@@ -30,7 +27,7 @@ func TestMarkExtractionIncompleteMkdirAllFails(t *testing.T) {
 
 	// Create paths whose Extract() resolves under the read-only dir.
 	paths := NewWorkenvPaths(filepath.Join(readOnlyDir, "subdir"), "/tmp/test.pspf")
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	// Should not panic; covers the warn branch for MkdirAll failure.
 	MarkExtractionIncomplete(paths, logger)
@@ -47,7 +44,7 @@ func TestTryAcquireLockOpenFileFails(t *testing.T) {
 	}
 
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/test.pspf")
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	acquired, err := TryAcquireLock(paths, logger)
 	if err == nil {
@@ -66,7 +63,7 @@ func TestTryAcquireLockUnreadableLockFile(t *testing.T) {
 	}
 
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/test.pspf")
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	// Create the extract dir and a lock file with no read permission.
 	if err := os.MkdirAll(paths.Extract(), 0o755); err != nil {
@@ -93,7 +90,7 @@ func TestTryAcquireLockUnreadableLockFile(t *testing.T) {
 // contains non-numeric content (line 56-59).
 func TestTryAcquireLockInvalidPIDContent(t *testing.T) {
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/test.pspf")
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	if err := os.MkdirAll(paths.Extract(), 0o755); err != nil {
 		t.Fatalf("MkdirAll: %v", err)
@@ -118,7 +115,7 @@ func TestCleanupStaleExtractionsMissingTmpDir(t *testing.T) {
 	t.Parallel()
 
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/test.pspf")
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	// tmp/ doesn't exist yet, should return nil.
 	if err := CleanupStaleExtractions(paths, logger); err != nil {
@@ -132,7 +129,7 @@ func TestCleanupStaleExtractionsSkipsNonNumericDirs(t *testing.T) {
 	t.Parallel()
 
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/test.pspf")
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	tmpDir := paths.Tmp()
 	if err := os.MkdirAll(tmpDir, 0o755); err != nil {
@@ -162,7 +159,7 @@ func TestCleanupStaleExtractionsSkipsRunningProcess(t *testing.T) {
 	t.Parallel()
 
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/test.pspf")
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	tmpDir := paths.Tmp()
 	if err := os.MkdirAll(tmpDir, 0o755); err != nil {
