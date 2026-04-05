@@ -130,7 +130,7 @@ jobs:
   # cross-platform-actions ships x86-64 QEMU binaries; all jobs run on ubuntu-24.04.
   # freebsd_arm64 is additionally run on ubuntu-24.04-arm to benchmark QEMU performance.
   build-freebsd-amd64:
-    name: 😈 freebsd_amd64
+    name: 😈🔨 freebsd_amd64
     needs: setup
     runs-on: ubuntu-24.04
     continue-on-error: true
@@ -266,7 +266,7 @@ jobs:
           path: artifacts/metadata/
 
   build-freebsd-arm64:
-    name: 😈 freebsd_arm64
+    name: 😈🔨 freebsd_arm64
     needs: setup
     runs-on: ubuntu-24.04
     continue-on-error: true
