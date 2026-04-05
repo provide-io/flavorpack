@@ -297,8 +297,8 @@ jobs:
             launcher_ext: ".exe"
             bundled_launcher: flavor-rs-launcher
             launcher_name: rust
-            allow_failure: true  # Rust launcher historically crashes on Windows (KNOWN_ISSUES.md)
-          # Windows ARM64: Go is reliable; Rust may work now that encoding is fixed
+            allow_failure: false
+          # Windows ARM64
           - runner: windows-11-arm
             platform: windows_arm64
             activate: workenv/Scripts/activate
@@ -312,7 +312,7 @@ jobs:
             launcher_ext: ".exe"
             bundled_launcher: flavor-rs-launcher
             launcher_name: rust
-            allow_failure: true  # Rust launcher historically crashes on Windows (KNOWN_ISSUES.md)
+            allow_failure: false
       fail-fast: false
     runs-on: ${{ matrix.runner }}
     continue-on-error: ${{ matrix.allow_failure }}
@@ -465,9 +465,8 @@ jobs:
           source ${{ matrix.activate }}
           cd tests/taster
 
-          # For Go-primary rows on Windows, skip the Rust secondary test to avoid
-          # contaminating the reliable Go row with a potentially crashing Rust launcher.
-          # The dedicated Rust-primary matrix rows (allow_failure: true) run this test.
+          # For Go-primary rows on Windows, skip the Rust secondary test —
+          # the dedicated Rust-primary matrix rows cover this.
           if [[ "${{ matrix.platform }}" == "windows_"* ]] && \
              [[ "${{ matrix.bundled_launcher }}" == "flavor-go-launcher" ]]; then
             echo "⚠️ Rust launcher secondary test skipped on Windows Go rows (see Rust-primary row)"
