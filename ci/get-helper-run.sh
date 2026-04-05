@@ -13,7 +13,7 @@ if [ -n "$SPECIFIED_RUN" ]; then
 else
     # Get latest successful helper pipeline run
     echo "🔍 Finding latest successful Helper Pipeline run..."
-    RUN_ID=$(gh run list --workflow=01-helper-prep.yml --status=success --limit=1 --json databaseId -q '.[0].databaseId')
+    RUN_ID=$(gh run list --workflow=helper-prep.yml --status=success --limit=1 --json databaseId -q '.[0].databaseId')
     
     if [ -z "$RUN_ID" ]; then
         echo "❌ No successful Helper Pipeline runs found"

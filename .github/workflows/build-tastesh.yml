@@ -1,4 +1,4 @@
-name: Build tastesh (reusable)
+name: "~ Build tastesh (reusable)"
 
 on:
   workflow_call:
