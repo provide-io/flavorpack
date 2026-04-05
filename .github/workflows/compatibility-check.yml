@@ -31,7 +31,7 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version: "${{ vars.GO_VERSION }}"
-      
+
       - name: 🦀 Setup Rust
         uses: dtolnay/rust-toolchain@master
         with:
@@ -46,70 +46,6 @@ jobs:
       - name: 🔨 Build and verify static binaries
         run: ci/build-compat-binaries.sh
 
-          # Rust builds (musl for static linking)
-          cd flavor-rs
-          make clean
-          RUSTFLAGS="-C target-feature=+crt-static" cargo build --release --target x86_64-unknown-linux-musl
-          cp target/x86_64-unknown-linux-musl/release/flavor-rs-builder ../../dist/bin/flavor-rs-builder-linux_amd64
-          cp target/x86_64-unknown-linux-musl/release/flavor-rs-launcher ../../dist/bin/flavor-rs-launcher-linux_amd64
-          cd ..
-      
-      # ARM64 builds disabled temporarily - focusing on AMD64 testing
-      # - name: 🔨 Build ARM64 binaries
-      #   run: |
-      #     cd helpers
-      #     
-      #     # Go ARM64 builds
-      #     cd flavor-go
-      #     GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -buildvcs=false \
-      #       -o ../bin/flavor-go-builder-linux_arm64 cmd/flavor-go-builder/main.go
-      #     GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -buildvcs=false \
-      #       -o ../bin/flavor-go-launcher-linux_arm64 cmd/flavor-go-launcher/main.go
-      #     cd ..
-      #     
-      #     # Rust ARM64 builds
-      #     cd flavor-rs
-      #     export CC_aarch64_unknown_linux_musl=aarch64-linux-musl-gcc
-      #     export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=aarch64-linux-musl-gcc
-      #     cargo build --release --target aarch64-unknown-linux-musl
-      #     cp target/aarch64-unknown-linux-musl/release/flavor-rs-builder ../bin/flavor-rs-builder-linux_arm64
-      #     cp target/aarch64-unknown-linux-musl/release/flavor-rs-launcher ../bin/flavor-rs-launcher-linux_arm64
-      #     cd ..
-      
-      - name: 🐚 Build tastesh (embedded POSIX shell for pretaster)
-        run: |
-          # Install autotools needed by dash build
-          sudo apt-get install -y autoconf automake libtool
-          ci/build-dash.sh dist/bin
-
-      - name: 🔍 Verify static linking
-        run: |
-          echo "Verifying static linking for all binaries..."
-          failed=0
-          
-          for binary in dist/bin/flavor-*-linux_*; do
-            if [ -f "$binary" ]; then
-              echo -n "Checking $(basename $binary): "
-              # Check if binary is static - either file says "statically linked" or ldd says "not a dynamic executable"
-              if file "$binary" | grep -q "statically linked"; then
-                echo "✅ Static (file)"
-              elif ldd "$binary" 2>&1 | grep -q "not a dynamic executable\|statically linked"; then
-                echo "✅ Static (ldd)"
-              else
-                echo "❌ Dynamic"
-                echo "  File output: $(file $binary)"
-                echo "  LDD output:"
-                ldd "$binary" 2>&1 | head -3 | sed 's/^/    /'
-                failed=1
-              fi
-            fi
-          done
-          
-          if [ $failed -eq 1 ]; then
-            echo "ERROR: Some binaries are not statically linked!"
-            exit 1
-          fi
-      
       - name: 📦 Upload artifacts
         uses: actions/upload-artifact@v7
         with:
@@ -154,59 +90,8 @@ jobs:
         run: |
           docker run --rm \
             -v $PWD/dist/bin:/test \
-            -v $PWD/tests/pretaster:/pretaster \
-            ${{ matrix.distro.image }} sh -c '
-            
-            echo "📋 System Information:"
-            uname -a
-            
-            if command -v ldd >/dev/null 2>&1; then
-              echo "📚 C Library Version:"
-              ldd --version 2>&1 | head -1 || true
-            fi
-            
-            cd /test
-            echo ""
-            echo "🧪 Testing binaries:"
-            echo "-------------------"
-            
-            failed=0
-            for binary in flavor-*-linux_${{ matrix.distro.arch == 'amd64' && 'amd64' || 'arm64' }}; do
-              # Skip tastesh (embedded shell) — not a builder/launcher, has no --version
-              echo "$binary" | grep -q "tastesh" && continue
-              if [ -f "$binary" ]; then
-                printf "%-40s" "$binary:"
-
-                if echo "$binary" | grep -q "launcher"; then
-                  # Launchers pass all args to packaged app - use CLI mode
-                  if FLAVOR_LAUNCHER_CLI=1 ./$binary help >/dev/null 2>&1; then
-                    echo "✅ Works (launcher)"
-                  else
-                    echo "❌ Failed"
-                    FLAVOR_LAUNCHER_CLI=1 ./$binary help 2>&1 | head -5 | sed "s/^/    /"
-                    failed=1
-                  fi
-                else
-                  # Builders support --version directly
-                  if ./$binary --version >/dev/null 2>&1; then
-                    version=$(./$binary --version 2>&1 | head -1)
-                    echo "✅ Works (${version})"
-                  else
-                    echo "❌ Failed"
-                    ./$binary --version 2>&1 | head -5 | sed "s/^/    /"
-                    failed=1
-                  fi
-                fi
-              fi
-            done
-            
-            exit $failed
-          '
-      
-      - name: 📊 Report results
-        if: always()
-        run: |
-          echo "Test completed for ${{ matrix.distro.name }}"
+            -v $PWD/ci:/ci \
+            ${{ matrix.distro.image }} sh /ci/test-compat-binaries.sh /test amd64
 
   # Test on extended Linux distributions
   test-extended-distros:
@@ -244,30 +129,10 @@ jobs:
       # Test builder/launcher binaries work on this distro
       - name: 🐳 Test on ${{ matrix.distro.name }}
         run: |
-          echo "Testing on ${{ matrix.distro.name }} (glibc ${{ matrix.distro.glibc }})"
-          
-          docker run --rm -v $PWD/dist/bin:/test ${{ matrix.distro.image }} sh -c '
-            cd /test
-            for binary in flavor-*-linux_amd64; do
-              echo "$binary" | grep -q "tastesh" && continue
-              if [ -f "$binary" ]; then
-                echo -n "Testing $binary: "
-                if echo "$binary" | grep -q "launcher"; then
-                  if FLAVOR_LAUNCHER_CLI=1 ./$binary help >/dev/null 2>&1; then
-                    echo "✅ PASS (launcher)"
-                  else
-                    echo "❌ FAIL"
-                  fi
-                else
-                  if ./$binary --version >/dev/null 2>&1; then
-                    echo "✅ PASS"
-                  else
-                    echo "❌ FAIL"
-                  fi
-                fi
-              fi
-            done
-          '
+          docker run --rm \
+            -v $PWD/dist/bin:/test \
+            -v $PWD/ci:/ci \
+            ${{ matrix.distro.image }} sh /ci/test-compat-binaries.sh /test amd64
 
   # Test ARM64 binaries using QEMU
   test-arm64:
@@ -306,30 +171,8 @@ jobs:
         run: |
           docker run --rm --platform linux/arm64 \
             -v $PWD/dist/bin:/test \
-            ${{ matrix.distro.image }} sh -c '
-            cd /test
-            echo "Architecture: $(uname -m)"
-            
-            for binary in flavor-*-linux_arm64; do
-              echo "$binary" | grep -q "tastesh" && continue
-              if [ -f "$binary" ]; then
-                echo -n "Testing $binary: "
-                if echo "$binary" | grep -q "launcher"; then
-                  if FLAVOR_LAUNCHER_CLI=1 ./$binary help >/dev/null 2>&1; then
-                    echo "✅ PASS (launcher)"
-                  else
-                    echo "❌ FAIL"
-                  fi
-                else
-                  if ./$binary --version >/dev/null 2>&1; then
-                    echo "✅ PASS"
-                  else
-                    echo "❌ FAIL"
-                  fi
-                fi
-              fi
-            done
-          '
+            -v $PWD/ci:/ci \
+            ${{ matrix.distro.image }} sh /ci/test-compat-binaries.sh /test arm64
 
   # Run pretaster in containers
   test-pretaster:
@@ -364,18 +207,7 @@ jobs:
           docker run --rm \
             -v $PWD:/workspace \
             -w /workspace \
-            ${{ matrix.distro.image }} sh -c '
-            # Install Python
-            ${{ matrix.distro.install }}
-            
-            # Install pretaster
-            cd tests/pretaster
-            pip3 install --break-system-packages . || pip3 install .
-            
-            # Run tests
-            echo "Running combination tests..."
-            ./tests/combo/test-combinations.sh
-          '
+            ${{ matrix.distro.image }} sh ci/run-compat-pretaster.sh '${{ matrix.distro.install }}'
 
   # Generate compatibility report
   compatibility-report:
