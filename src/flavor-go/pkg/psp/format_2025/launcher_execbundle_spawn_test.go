@@ -1,19 +1,16 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
 	"testing"
 
-	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"github.com/hashicorp/go-hclog"
 )
 
 // TestExecBundleSpawnModeWithEnv covers the spawn-mode branch in execBundle
 // (line 203-204) when FLAVOR_EXEC_MODE=spawn is set explicitly.
 func TestExecBundleSpawnModeWithEnv(t *testing.T) {
 	bundle := buildLauncherTestBundle(t)
-	logger := logging.NewNullLogger()
+	logger := hclog.NewNullLogger()
 
 	// Inject osExitFn to prevent actual os.Exit.
 	oldExit := osExitFn
