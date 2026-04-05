@@ -13,7 +13,7 @@ import sys
 import click
 from provide.foundation.console import pout
 
-from flavor.config.defaults import ENV_COMMAND_NAME, ENV_WORKENV
+from taster.env_constants import ENV_COMMAND_NAME, ENV_WORKENV
 
 
 @click.command("info")
