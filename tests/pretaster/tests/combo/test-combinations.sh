@@ -71,6 +71,15 @@ test_combination() {
     if [[ "$OS" == "windows" ]]; then
         config="configs/test-combination-windows.json"
     fi
+
+    # Resolve TASTESH_BIN placeholder in config
+    local tastesh_bin="$HELPERS_DIR/bin/flavor-tastesh-${PLATFORM}${EXT}"
+    if [[ -f "$tastesh_bin" ]]; then
+        mkdir -p "resolved"
+        sed -e "s|TASTESH_BIN|${tastesh_bin}|g" "$config" > "resolved/$(basename "$config")"
+        config="resolved/$(basename "$config")"
+    fi
+
     if build_package "$builder_bin" "$launcher_bin" "$config" "$output" >> "$log_file" 2>&1; then
         echo "$emoji   ✅ Build successful: $output" | tee -a "$log_file"
     else
