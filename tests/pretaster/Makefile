@@ -183,13 +183,20 @@ $(LOGS_DIR):
 	@mkdir -p $(LOGS_DIR)
 
 # Resolve config templates (substitute TASTESH_BIN placeholder)
+# On Windows (no tastesh yet), use the -windows configs that don't require tastesh.
 $(RESOLVED_DIR):
 	@mkdir -p $(RESOLVED_DIR)
 
 $(RESOLVED_DIR)/%.json: $(CONFIGS_DIR)/%.json $(RESOLVED_DIR)
-	@sed 's|TASTESH_BIN|$(TASTESH)|g' $< > $@
+	@if [ -f "$(TASTESH)" ]; then \
+		sed 's|TASTESH_BIN|$(TASTESH)|g' $< > $@; \
+	elif [ -f "$(CONFIGS_DIR)/$*-windows.json" ]; then \
+		cp "$(CONFIGS_DIR)/$*-windows.json" $@; \
+	else \
+		cp $< $@; \
+	fi
 
-# Individual test packages (use resolved configs for tastesh substitution)
+# Individual test packages (use resolved configs)
 $(ECHO_PSP): $(DIST_DIR) $(RESOLVED_DIR)/test-echo.json
 	$(call print,"📦 Building echo test package...",$(CYAN))
 	@$(GO_BUILDER) \
