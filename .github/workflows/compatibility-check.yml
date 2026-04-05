@@ -85,6 +85,12 @@ jobs:
       #     cp target/aarch64-unknown-linux-musl/release/flavor-rs-launcher ../bin/flavor-rs-launcher-linux_arm64
       #     cd ..
       
+      - name: 🐚 Build tastesh (embedded POSIX shell for pretaster)
+        run: |
+          # Install autotools needed by dash build
+          sudo apt-get install -y autoconf automake libtool
+          ci/build-dash.sh dist/bin
+
       - name: 🔍 Verify static linking
         run: |
           echo "Verifying static linking for all binaries..."
