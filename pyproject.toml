@@ -189,8 +189,38 @@ markers = [
 ]
 
 [tool.mutmut]
-paths_to_mutate = ["src/flavor"]
+# Only mutate pure-Python modules (no subprocess/HelperManager calls).
+# Excluded: helpers/, commands/ (doctor/helpers/utils use HelperManager),
+# packaging/ (orchestrator + python/* shell out to Go/Rust/uv).
+paths_to_mutate = [
+    "src/flavor/cache.py",
+    "src/flavor/exceptions.py",
+    "src/flavor/output.py",
+    "src/flavor/package.py",
+    "src/flavor/verification.py",
+    "src/flavor/config",
+    "src/flavor/psp",
+    "src/flavor/utils",
+]
 tests_dir = ["tests"]
+also_copy = [
+    "VERSION",
+    "Makefile",
+    "scripts",
+    "tools",
+    ".github/workflows",
+    # Non-mutated src/flavor modules (must not overlap with paths_to_mutate)
+    "src/flavor/__init__.py",
+    "src/flavor/__main__.py",
+    "src/flavor/cli.py",
+    "src/flavor/console.py",
+    "src/flavor/locking.py",
+    "src/flavor/py.typed",
+    "src/flavor/helpers",
+    "src/flavor/commands",
+    "src/flavor/packaging",
+    "src/flavor/templates",
+]
 runner = "pytest"
 # Skip tests that fail in the mutants sandbox (env-specific or need Go/Rust sources)
 pytest_add_cli_args = [
@@ -203,7 +233,6 @@ pytest_add_cli_args = [
     "--deselect=tests/test_quality_observability.py",
     "--deselect=tests/test_version_sync.py",
     "--deselect=tests/test_test_taxonomy.py",
-    "--deselect=tests/test_mutant_killers.py::TestCacheGetCacheDir::test_default_cache_dir",
 ]
 do_not_mutate = [
     "*/generated/*", "*_pb2.py", "*_pb2.pyi", "*/tests/*", "*/test_*",
