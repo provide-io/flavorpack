@@ -56,7 +56,7 @@ jobs:
       - name: 📥 Download helper artifacts
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           run_id: ${{ steps.helpers.outputs.run_id }}
           name: flavor-helpers-${{ steps.helpers.outputs.version }}-all
           path: ./helpers-dist
@@ -259,7 +259,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v19
         continue-on-error: true
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-go-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
           path: ./helpers-dist
@@ -268,7 +268,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v19
         continue-on-error: true
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-rust-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
           path: ./helpers-dist
@@ -426,7 +426,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v19
         continue-on-error: true
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-go-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
           path: ./helpers-dist
@@ -435,7 +435,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v19
         continue-on-error: true
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-rust-helpers-${{ needs.setup.outputs.helper_version }}-${{ matrix.platform }}
           path: ./helpers-dist

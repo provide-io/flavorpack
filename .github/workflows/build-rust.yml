@@ -1,4 +1,4 @@
-name: Build Rust Helpers (reusable)
+name: "~ Build Rust Helpers (reusable)"
 # ─────────────────────────────────────────────────────────────────────────────
 # Script policy: keep inline run: blocks to ≤ 3 lines.
 # Anything longer belongs in ci/ and should be called from here.
