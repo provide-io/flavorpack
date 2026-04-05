@@ -13,6 +13,8 @@ import sys
 import click
 from provide.foundation.console import pout
 
+from flavor.config.defaults import ENV_COMMAND_NAME, ENV_WORKENV
+
 
 @click.command("info")
 def info_command() -> None:
@@ -40,13 +42,13 @@ def info_command() -> None:
 
     # Flavor information
     pout("\n🚀 Flavor Information:", color="magenta")
-    if "FLAVOR_WORKENV" in os.environ:
-        pout(f"  Work Environment: {os.environ['FLAVOR_WORKENV']}")
+    if ENV_WORKENV in os.environ:
+        pout(f"  Work Environment: {os.environ[ENV_WORKENV]}")
     else:
         pout("  Work Environment: <not set>")
 
-    if "FLAVOR_COMMAND_NAME" in os.environ:
-        pout(f"  Command Name: {os.environ['FLAVOR_COMMAND_NAME']}")
+    if ENV_COMMAND_NAME in os.environ:
+        pout(f"  Command Name: {os.environ[ENV_COMMAND_NAME]}")
 
     # Check for flavor module
     try:
