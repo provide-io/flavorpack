@@ -10,10 +10,8 @@ VERSION="${2:?version argument required}"
 
 mkdir -p artifacts
 cd dist/bin
-# Package versioned helpers (Go/Rust) + tastesh (no version suffix)
 zip -r "../../artifacts/flavor-helpers-$VERSION-$PLATFORM.zip" \
-  *-"$VERSION"-"$PLATFORM"* \
-  "flavor-tastesh-$PLATFORM"* 2>/dev/null || true
+  *-"$VERSION"-"$PLATFORM"* 2>/dev/null || true
 cd ../..
 
 echo "📦 Packaged helpers for $PLATFORM:"

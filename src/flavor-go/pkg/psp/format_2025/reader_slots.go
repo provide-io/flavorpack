@@ -208,21 +208,21 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 	// Check if this is a tarball first (needed for logic below)
 	isTar := isTarball(decompressed)
 
-	if targetPath == "" || targetPath == "." {
-		// Target was "{workenv}" or "."
-		if isTar {
-			// TAR slots targeting {workenv}: extract directly to destDir (matches Rust behavior)
-			// The tarball contents will be extracted directly to destDir
-			destPath = destDir
-			extractDir = destDir
-		} else {
-			// Non-TAR slots targeting {workenv}: extract to slot-specific subdirectory for atomic move
-			slotSubdir := fmt.Sprintf("slot_%d_%s", slotIndex, slotMeta.ID)
-			destPath = filepath.Join(destDir, slotSubdir)
-			extractDir = destPath
-		}
+	if isTar {
+		// TAR slots always extract to destDir regardless of target — the tar entries encode the
+		// directory structure (e.g., "wheels/foo.whl"). This matches Rust launcher behavior
+		// where extract_tarball ignores slot_target and extracts directly to the workenv path.
+		// Using targetPath as an extraction subdirectory would double-nest the content:
+		// e.g., target="wheels" + tar entry "wheels/foo.whl" → wheels/wheels/foo.whl (wrong).
+		destPath = destDir
+		extractDir = destDir
+	} else if targetPath == "" || targetPath == "." {
+		// Non-TAR slots targeting {workenv}: extract to slot-specific subdirectory for atomic move
+		slotSubdir := fmt.Sprintf("slot_%d_%s", slotIndex, slotMeta.ID)
+		destPath = filepath.Join(destDir, slotSubdir)
+		extractDir = destPath
 	} else {
-		// Target has a subpath - join it with destDir
+		// Non-TAR (single file) slots with explicit target path
 		destPath = filepath.Join(destDir, targetPath)
 		extractDir = destPath
 	}
