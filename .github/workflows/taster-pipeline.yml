@@ -57,7 +57,7 @@ jobs:
           if [ -n "${{ inputs.flavor_run_id }}" ]; then
             RUN_ID="${{ inputs.flavor_run_id }}"
           else
-            RUN_ID=$(gh run list --workflow 03-flavor-pipeline.yml --status success --limit 1 --json databaseId -q '.[0].databaseId')
+            RUN_ID=$(gh run list --workflow flavor-pipeline.yml --status success --limit 1 --json databaseId -q '.[0].databaseId')
           fi
           echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
         env:
@@ -66,7 +66,7 @@ jobs:
       - name: 📥 Download Flavor PSP artifacts
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 03-flavor-pipeline.yml
+          workflow: flavor-pipeline.yml
           run_id: ${{ steps.flavor.outputs.run_id }}
           name_is_regexp: true
           name: "^flavor-${{ steps.version.outputs.version }}-"
@@ -82,7 +82,7 @@ jobs:
       - name: 📥 Download helper artifacts
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           name: flavor-helpers-${{ steps.version.outputs.version }}-all
           path: ./helpers-dist
 
@@ -140,7 +140,7 @@ jobs:
       - name: 📥 Download helpers
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           name: flavor-helpers-${{ needs.setup.outputs.version }}-all
           path: ./helpers-dist
       
@@ -154,7 +154,7 @@ jobs:
         shell: bash
         run: |
           # Find the appropriate Flavor PSP for this platform
-          FLAVOR_PSP=$(find flavor-psp -name "flavor-*-${{ matrix.platform }}.psp" | head -1)
+          FLAVOR_PSP=$(find flavor-psp \( -name "flavor-*-${{ matrix.platform }}.psp" -o -name "flavor-*-${{ matrix.platform }}.exe" \) | head -1)
 
           if [ -z "$FLAVOR_PSP" ]; then
             echo "❌ Flavor PSP not found for ${{ matrix.platform }}"
@@ -337,7 +337,7 @@ jobs:
       - name: 📥 Download helpers
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           name: flavor-helpers-${{ needs.setup.outputs.version }}-all
           path: ./helpers-dist
 

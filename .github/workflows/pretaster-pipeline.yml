@@ -48,7 +48,7 @@ jobs:
           if [ -n "${{ inputs.helper_run_id }}" ]; then
             RUN_ID="${{ inputs.helper_run_id }}"
           else
-            RUN_ID=$(gh run list --workflow 01-helper-prep.yml --status success --limit 1 --json databaseId -q '.[0].databaseId')
+            RUN_ID=$(gh run list --workflow helper-prep.yml --status success --limit 1 --json databaseId -q '.[0].databaseId')
           fi
           echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
         env:
@@ -79,7 +79,7 @@ jobs:
         continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-go-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
@@ -88,7 +88,7 @@ jobs:
         continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-rust-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
@@ -97,7 +97,7 @@ jobs:
         continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
@@ -107,7 +107,7 @@ jobs:
         continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-tastesh-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
@@ -178,7 +178,7 @@ jobs:
         continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-go-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
@@ -187,7 +187,7 @@ jobs:
         continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-rust-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
@@ -196,7 +196,7 @@ jobs:
         continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
@@ -206,7 +206,7 @@ jobs:
         continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-tastesh-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
@@ -362,7 +362,7 @@ jobs:
         continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-go-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
@@ -371,7 +371,7 @@ jobs:
         continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-rust-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
@@ -380,7 +380,7 @@ jobs:
         continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
@@ -390,7 +390,7 @@ jobs:
         continue-on-error: true
         uses: dawidd6/action-download-artifact@v19
         with:
-          workflow: 01-helper-prep.yml
+          workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-helpers-${{ needs.setup.outputs.version }}-all
           path: ./helpers-dist
