@@ -44,7 +44,7 @@ import provide.testkit  # noqa: F401 - Installs setproctitle blocker early
 try:
     import mutmut.__main__ as _mutmut_main
 
-    _mutmut_main.setproctitle = lambda title: None  # type: ignore[assignment]
+    _mutmut_main.setproctitle = lambda title: None
 except ImportError:
     pass
 from provide.testkit.logger import reset_foundation_setup_for_testing
