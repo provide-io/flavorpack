@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import importlib
 import logging
 
 import pytest
@@ -135,3 +136,59 @@ class TestGlobalLoggerProxyPatch:
 
         result = logger.is_trace_enabled()
         assert isinstance(result, bool)
+
+
+@pytest.mark.unit
+class TestPatchingWhenAttrsAbsent:
+    """Force the module-level patching code to run by removing attrs and reloading."""
+
+    def test_global_logger_proxy_patching_when_missing(self) -> None:
+        """Lines 24-27: GlobalLoggerProxy gets patched when attrs don't exist."""
+        from provide.foundation.logger.core import GlobalLoggerProxy
+
+        orig_d = GlobalLoggerProxy.__dict__.get("is_debug_enabled")
+        orig_t = GlobalLoggerProxy.__dict__.get("is_trace_enabled")
+        try:
+            if "is_debug_enabled" in GlobalLoggerProxy.__dict__:
+                delattr(GlobalLoggerProxy, "is_debug_enabled")
+            if "is_trace_enabled" in GlobalLoggerProxy.__dict__:
+                delattr(GlobalLoggerProxy, "is_trace_enabled")
+
+            import flavor.utils.log_guards as lg
+
+            importlib.reload(lg)
+
+            assert hasattr(GlobalLoggerProxy, "is_debug_enabled")
+            assert hasattr(GlobalLoggerProxy, "is_trace_enabled")
+        finally:
+            if orig_d is not None:
+                GlobalLoggerProxy.is_debug_enabled = orig_d  # type: ignore[method-assign]
+            if orig_t is not None:
+                GlobalLoggerProxy.is_trace_enabled = orig_t  # type: ignore[method-assign]
+
+    def test_structlog_class_patching_when_missing(self) -> None:
+        """Lines 56-59: structlog classes get patched when attrs don't exist."""
+        try:
+            from structlog._output import PrintLogger
+        except ImportError:
+            pytest.skip("structlog PrintLogger not available")
+
+        orig_d = PrintLogger.__dict__.get("is_debug_enabled")
+        orig_t = PrintLogger.__dict__.get("is_trace_enabled")
+        try:
+            if "is_debug_enabled" in PrintLogger.__dict__:
+                delattr(PrintLogger, "is_debug_enabled")
+            if "is_trace_enabled" in PrintLogger.__dict__:
+                delattr(PrintLogger, "is_trace_enabled")
+
+            import flavor.utils.log_guards as lg
+
+            importlib.reload(lg)
+
+            assert hasattr(PrintLogger, "is_debug_enabled")
+            assert hasattr(PrintLogger, "is_trace_enabled")
+        finally:
+            if orig_d is not None:
+                PrintLogger.is_debug_enabled = orig_d  # type: ignore[attr-defined]
+            if orig_t is not None:
+                PrintLogger.is_trace_enabled = orig_t  # type: ignore[attr-defined]
