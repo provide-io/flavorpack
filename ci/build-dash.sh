@@ -6,6 +6,11 @@
 #   output_dir defaults to dist/bin
 #
 # Produces: flavor-tastesh-{platform} (or flavor-tastesh-{platform}.exe on Windows)
+#
+# Windows note: dash requires POSIX APIs (sigset_t, sigprocmask, killpg, pipe, fcntl)
+# absent from the native Windows/MinGW CRT.  A pure-Go POSIX sh interpreter is used
+# instead (ci/tastesh-win/), built with GOOS=windows and no runtime dependencies
+# beyond kernel32.dll.  Go must be installed in the build environment.
 
 set -euo pipefail
 
@@ -25,13 +30,52 @@ case "$OS" in
     mingw*|msys*|cygwin*) OS="windows"; EXT=".exe" ;;
     freebsd*) OS="freebsd" ;;
 esac
+
+# On Windows, uname -m reports the shell's native arch (often x86_64 even on ARM64
+# machines because Git Bash ships x86_64 binaries).  Use GitHub Actions' RUNNER_ARCH
+# env var when available to get the correct host architecture.
+if [ "$OS" = "windows" ] && [ -n "${RUNNER_ARCH:-}" ]; then
+    case "${RUNNER_ARCH}" in
+        X64)   ARCH="amd64" ;;
+        ARM64) ARCH="arm64" ;;
+    esac
+fi
+
 PLATFORM="${OS}_${ARCH}"
 
 OUTPUT="${OUTPUT_DIR}/flavor-tastesh-${PLATFORM}${EXT}"
 
-echo "Building dash ${DASH_VERSION} for ${PLATFORM}..."
+echo "Building tastesh for ${PLATFORM}..."
 
-# Download
+# Windows: dash cannot be compiled as a native PE binary — it requires POSIX APIs
+# (sigset_t, sigprocmask, killpg, pipe, fcntl) absent from the Windows/MinGW CRT.
+# Build the pure-Go sh interpreter from ci/tastesh-win/ instead.  Go cross-
+# compilation is trivial (GOOS/GOARCH), so this also works from Linux CI runners.
+if [ "$OS" = "windows" ]; then
+    if ! command -v go >/dev/null 2>&1; then
+        echo "ERROR: go not found. Install Go to build the Windows tastesh binary." >&2
+        exit 1
+    fi
+    # Resolve the tastesh-win source dir relative to THIS script's location.
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    WIN_SRC="${SCRIPT_DIR}/tastesh-win"
+    if [ ! -f "${WIN_SRC}/main.go" ]; then
+        echo "ERROR: ${WIN_SRC}/main.go not found." >&2
+        exit 1
+    fi
+    echo "Windows: building Go-based sh interpreter from ci/tastesh-win/ (GOARCH=${ARCH})"
+    (
+        cd "${WIN_SRC}"
+        GOOS=windows GOARCH="${ARCH}" \
+            go build -ldflags="-s -w" -o "${OUTPUT}" .
+    )
+    chmod +x "$OUTPUT"
+    SIZE=$(wc -c < "$OUTPUT" | tr -d ' ')
+    echo "Built: ${OUTPUT} (${SIZE} bytes)"
+    exit 0
+fi
+
+# Download dash source (non-Windows only)
 TMPDIR=$(mktemp -d)
 trap 'rm -rf "$TMPDIR"' EXIT
 curl -sL "$DASH_URL" -o "$TMPDIR/dash.tar.gz"
@@ -63,20 +107,6 @@ case "$OS" in
     freebsd)
         # FreeBSD: static build; use gnu11 to avoid K&R errors with newer clang
         CFLAGS="-static -std=gnu11" LDFLAGS="-static" ./configure --quiet
-        ;;
-    windows)
-        # Cross-compile with mingw
-        if [ "$ARCH" = "amd64" ]; then
-            CROSS_PREFIX="x86_64-w64-mingw32"
-        else
-            CROSS_PREFIX="aarch64-w64-mingw32"
-        fi
-        if command -v "${CROSS_PREFIX}-gcc" >/dev/null 2>&1; then
-            CC="${CROSS_PREFIX}-gcc" ./configure --quiet --host="${CROSS_PREFIX}" --enable-static
-        else
-            echo "ERROR: ${CROSS_PREFIX}-gcc not found. Install mingw-w64." >&2
-            exit 1
-        fi
         ;;
     *)
         ./configure --quiet

@@ -53,18 +53,19 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true' && runner.os == 'macOS'
         run: brew install autoconf automake libtool || true
 
-      - name: 🐚 Build tastesh (dash)
-        if: steps.cache.outputs.cache-hit != 'true' && runner.os != 'Windows'
+      - name: 🔧 Setup Go (Windows — builds tastesh-win Go interpreter)
+        if: steps.cache.outputs.cache-hit != 'true' && runner.os == 'Windows'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache-dependency-path: ci/tastesh-win/go.sum
+
+      - name: 🐚 Build tastesh (dash / Go sh)
+        if: steps.cache.outputs.cache-hit != 'true'
         shell: bash
         run: ci/build-dash.sh dist/bin
 
-      - name: 🐚 Skip tastesh on Windows
-        if: runner.os == 'Windows'
-        shell: bash
-        run: echo "⚠️ tastesh not yet supported on Windows — skipping"
-
       - name: 📤 Upload artifact
-        if: runner.os != 'Windows'
         uses: actions/upload-artifact@v7
         with:
           name: flavor-tastesh-${{ inputs.version }}-${{ inputs.platform }}
