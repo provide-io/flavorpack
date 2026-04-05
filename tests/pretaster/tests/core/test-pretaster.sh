@@ -13,7 +13,12 @@ FAILED_TESTS=""
 # Get directories
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PRETASTER_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
-HELPERS_DIR="$(cd "$PRETASTER_DIR/../../dist" && pwd)"
+# CI puts helpers in helpers/bin/ (via download-helpers.sh); local builds use dist/bin/
+if [ -d "$PRETASTER_DIR/../../helpers/bin" ]; then
+    HELPERS_DIR="$(cd "$PRETASTER_DIR/../../helpers" && pwd)"
+else
+    HELPERS_DIR="$(cd "$PRETASTER_DIR/../../dist" && pwd)"
+fi
 
 # Change to pretaster directory
 cd "$PRETASTER_DIR"
