@@ -293,6 +293,22 @@ mod tests {
     }
 
     #[test]
+    fn validate_package_checksum_mismatch_none_level_is_non_fatal() {
+        assert!(
+            !validate_package_checksum_mismatch("deadbeef", "cafebabe", ValidationLevel::None)
+                .expect("none mismatch should be non-fatal")
+        );
+    }
+
+    #[test]
+    fn validate_package_checksum_mismatch_minimal_level_is_non_fatal() {
+        assert!(
+            !validate_package_checksum_mismatch("deadbeef", "cafebabe", ValidationLevel::Minimal)
+                .expect("minimal mismatch should be non-fatal")
+        );
+    }
+
+    #[test]
     fn save_index_metadata_writes_expected_json_fields() {
         let temp = tempfile::tempdir().expect("tempdir");
         let paths = WorkenvPaths::new(

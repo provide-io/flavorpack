@@ -196,4 +196,85 @@ mod tests {
             .expect_err("blake2b should be unsupported");
         assert_eq!(err.kind(), std::io::ErrorKind::Unsupported);
     }
+
+    #[test]
+    fn test_calculate_checksum_streaming_sha256() {
+        let checksum =
+            calculate_checksum(&b"hello"[..], ChecksumAlgorithm::Sha256).expect("sha256 streaming");
+        assert!(checksum.starts_with("sha256:"));
+        // SHA-256 hex is 64 chars
+        assert_eq!(checksum.split(':').nth(1).unwrap().len(), 64);
+    }
+
+    #[test]
+    fn test_calculate_checksum_streaming_adler32() {
+        let checksum = calculate_checksum(&b"hello"[..], ChecksumAlgorithm::Adler32)
+            .expect("adler32 streaming");
+        assert!(checksum.starts_with("adler32:"));
+    }
+
+    #[test]
+    fn test_calculate_checksum_streaming_blake2b_error() {
+        let err = calculate_checksum(&b"data"[..], ChecksumAlgorithm::Blake2b)
+            .expect_err("blake2b streaming should fail");
+        assert_eq!(err.kind(), std::io::ErrorKind::Unsupported);
+    }
+
+    #[test]
+    fn test_calculate_checksum_bytes_sha512() {
+        let checksum =
+            calculate_checksum_bytes(b"data", ChecksumAlgorithm::Sha512).expect("sha512 bytes");
+        assert!(checksum.starts_with("sha512:"));
+        // SHA-512 hex is 128 chars
+        assert_eq!(checksum.split(':').nth(1).unwrap().len(), 128);
+    }
+
+    #[test]
+    fn test_parse_checksum_all_prefixed_algorithms() {
+        let (algo, val) = parse_checksum("sha512:abcd").unwrap();
+        assert_eq!(algo, ChecksumAlgorithm::Sha512);
+        assert_eq!(val, "abcd");
+
+        let (algo, val) = parse_checksum("adler32:12345678").unwrap();
+        assert_eq!(algo, ChecksumAlgorithm::Adler32);
+        assert_eq!(val, "12345678");
+
+        let (algo, val) = parse_checksum("blake2b:ff").unwrap();
+        assert_eq!(algo, ChecksumAlgorithm::Blake2b);
+        assert_eq!(val, "ff");
+    }
+
+    #[test]
+    fn test_parse_checksum_unknown_algorithm() {
+        let err = parse_checksum("md5:abc123").unwrap_err();
+        assert!(err.contains("Unknown checksum algorithm"));
+    }
+
+    #[test]
+    fn test_parse_checksum_legacy_sha512_length() {
+        let hex_128 = "a".repeat(128);
+        let (algo, _) = parse_checksum(&hex_128).unwrap();
+        assert_eq!(algo, ChecksumAlgorithm::Sha512);
+    }
+
+    #[test]
+    fn test_parse_checksum_legacy_default_length() {
+        // 10 chars doesn't match any known length, defaults to SHA256
+        let (algo, _) = parse_checksum("abcdef1234").unwrap();
+        assert_eq!(algo, ChecksumAlgorithm::Sha256);
+    }
+
+    #[test]
+    fn test_checksum_algorithm_display() {
+        assert_eq!(format!("{}", ChecksumAlgorithm::Sha256), "sha256");
+        assert_eq!(format!("{}", ChecksumAlgorithm::Sha512), "sha512");
+        assert_eq!(format!("{}", ChecksumAlgorithm::Adler32), "adler32");
+        assert_eq!(format!("{}", ChecksumAlgorithm::Blake2b), "blake2b");
+    }
+
+    #[test]
+    fn test_verify_checksum_rejects_wrong_data() {
+        let checksum = calculate_checksum_bytes(b"correct", ChecksumAlgorithm::Sha256).unwrap();
+        assert!(!verify_checksum(b"wrong", &checksum).unwrap());
+    }
 }
