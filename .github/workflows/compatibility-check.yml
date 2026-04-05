@@ -354,7 +354,18 @@ jobs:
           docker run --rm \
             -v $PWD:/workspace \
             -w /workspace \
-            ${{ matrix.distro.image }} sh ci/run-compat-pretaster.sh '${{ matrix.distro.install }}'
+            ${{ matrix.distro.image }} sh -c '
+            # Install Python
+            ${{ matrix.distro.install }}
+            
+            # Install pretaster
+            cd tests/pretaster
+            pip3 install --break-system-packages . || pip3 install .
+            
+            # Run tests
+            echo "Running combination tests..."
+            ./tests/combo/test-combinations.sh
+          '
 
   # Generate compatibility report
   compatibility-report:
