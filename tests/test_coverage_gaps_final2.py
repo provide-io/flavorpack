@@ -27,7 +27,7 @@ class TestVerifyDisplayBranches:
 
         result: dict[str, object] = {"format": "PSPF/2025"}
         # Should not raise — just silently skip
-        _display_package_metadata(result)  # type: ignore[arg-type]
+        _display_package_metadata(result)
 
     @pytest.mark.unit
     def test_display_build_metadata_with_timestamp(self) -> None:
@@ -68,7 +68,7 @@ class TestVerifyDisplayBranches:
         from flavor.commands.verify import _display_slot_information
 
         result: dict[str, object] = {"format": "PSPF/2025"}
-        _display_slot_information(result)  # type: ignore[arg-type]
+        _display_slot_information(result)
 
     @pytest.mark.unit
     def test_verify_command_integration_no_package_no_slots(self, tmp_path: Path) -> None:
