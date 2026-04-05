@@ -144,8 +144,8 @@ jobs:
           shell: bash
           sync_files: true
           run: |
-            sudo env IGNORE_OSVERSION=yes pkg install -y gmake
-            cd tests/pretaster && gmake HELPERS_DIR=../../helpers dist/echo-test.psp dist/shell-test.psp dist/env-test.psp
+            sudo env IGNORE_OSVERSION=yes pkg install -y gmake bash
+            cd tests/pretaster && gmake SHELL=/usr/local/bin/bash HELPERS_DIR=../../helpers dist/echo-test.psp dist/shell-test.psp dist/env-test.psp
       
       - name: 📤 Upload Pretaster packages
         uses: actions/upload-artifact@v7
@@ -200,6 +200,21 @@ jobs:
           run_id: ${{ needs.setup.outputs.helper_run_id }}
           name: flavor-helpers-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
           path: ./helpers-dist
+
+      # Download tastesh for self-contained PSP test packages
+      - name: 📥 Download tastesh
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v19
+        with:
+          workflow: 01-helper-prep.yml
+          run_id: ${{ needs.setup.outputs.helper_run_id }}
+          name: flavor-tastesh-${{ needs.setup.outputs.version }}-${{ matrix.platform }}
+          path: ./helpers-dist
+
+      # Extract and symlink all helpers including tastesh
+      - name: 🔧 Setup helpers
+        shell: bash
+        run: ci/download-helpers.sh helpers-dist "${{ needs.setup.outputs.version }}" "${{ matrix.platform }}"
 
       - name: 🔍 Verify Cross-Language Package
         shell: bash
