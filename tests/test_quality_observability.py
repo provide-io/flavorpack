@@ -76,3 +76,43 @@ def test_rust_quality_surface_defines_real_fuzz_targets() -> None:
 
     assert 'name = "pspf_operations_roundtrip"' in fuzz_manifest
     assert 'name = "pspf_reader_no_panic"' in fuzz_manifest
+
+
+def test_release_workflow_uses_trusted_publishing_for_pypi() -> None:
+    workflow = yaml.load(RELEASE_WORKFLOW.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+    publish_testpypi = workflow["jobs"]["publish-testpypi"]
+    publish_pypi = workflow["jobs"]["publish-pypi"]
+
+    assert publish_testpypi["permissions"]["id-token"] == "write"
+    assert publish_pypi["permissions"]["id-token"] == "write"
+
+    testpypi_publish = publish_testpypi["steps"][-1]
+    pypi_publish = publish_pypi["steps"][-1]
+
+    assert testpypi_publish["uses"] == "pypa/gh-action-pypi-publish@release/v1"
+    assert pypi_publish["uses"] == "pypa/gh-action-pypi-publish@release/v1"
+
+    assert testpypi_publish["with"]["password"] == "${{ secrets.TEST_PYPI_API_TOKEN }}"
+    assert "password" not in pypi_publish["with"]
+
+
+def test_quality_workflow_avoids_broken_python_heredoc_summary_snippet() -> None:
+    content = QUALITY_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "python3 - <<'PY' >> $GITHUB_STEP_SUMMARY" not in content
+    assert "python3 -c " in content
+
+
+def test_mutmut_copies_cross_language_and_workflow_support_files() -> None:
+    config = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
+    also_copy = set(config["tool"]["mutmut"]["also_copy"])
+
+    # Go/Rust sources are intentionally excluded — parity tests are deselected
+    # for mutmut and including them creates nested mutants/ directories.
+    assert {
+        "VERSION",
+        "Makefile",
+        "scripts",
+        "tools",
+        ".github/workflows",
+    }.issubset(also_copy)
