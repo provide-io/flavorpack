@@ -16,8 +16,6 @@ import click
 from provide.foundation.console import pout
 from provide.foundation.process import run
 
-from flavor.cache import get_cache_dir
-from flavor.config.defaults import ENV_CACHE_DIR
 from flavor.helpers import HelperManager
 from flavor.package import build_package_from_manifest
 from taster.env_constants import ENV_CACHE_COMPAT, ENV_EXEC_MODE, ENV_LOG_LEVEL
@@ -136,10 +134,11 @@ def _run_bootstrap_cache_test(helper_manager: HelperManager, verbose: bool) -> b
             temp_dir = Path(temp_dir_str)
             manifest = _prepare_bootstrap_project(temp_dir)
 
-            # Workenv name is derived from PSP filename (not package_name+version).
-            # build_package_from_manifest outputs bootstrap-test.psp so the launcher
-            # creates {cache_dir}/bootstrap-test/.
-            workenv_dir = get_cache_dir() / "bootstrap-test"
+            # Compute workenv path consistently: both Go and Rust launchers create
+            # workenvs at ~/.cache/flavor/workenv/{psp_name}. Use HOME directly
+            # to avoid dependency on which FLAVOR_CACHE* env var is set.
+            cache_base = Path.home() / ".cache" / "flavor" / "workenv"
+            workenv_dir = cache_base / "bootstrap-test"
             if workenv_dir.exists():
                 shutil.rmtree(workenv_dir, ignore_errors=True)
 
@@ -292,7 +291,7 @@ def _build_env(mode: str, verbose: bool) -> dict[str, str]:
     # Pass through essential vars so the inner PSP can bootstrap (locate cache
     # dir, find uv, write temp files). Without HOME the Rust launcher uses a
     # fallback path that differs from what Path.home() returns in the test.
-    for var in ("HOME", "PATH", "USER", "TEMP", "TMP", "TMPDIR", ENV_CACHE_COMPAT, ENV_CACHE_DIR):
+    for var in ("HOME", "PATH", "USER", "TEMP", "TMP", "TMPDIR", ENV_CACHE_COMPAT):
         if val := os.environ.get(var):
             env[var] = val
     return env
