@@ -271,7 +271,7 @@ $(COMBO_GO_GO): $(DIST_DIR)
 #################
 
 .PHONY: test
-test: test-core test-combo test-security ## Run all tests
+test: test-core test-combo test-security test-compat ## Run all tests
 
 .PHONY: test-security
 test-security: ## Run security test suite (policy, trust, integrity)
@@ -303,6 +303,14 @@ test-direct: build-helpers ## Test direct PSP execution
 	$(call print,"🎯 Testing direct PSP execution...",$(PURPLE))
 	@$(TESTS_DIR)/combo/test-direct.sh || (echo "❌ Direct execution tests failed with exit code $$?"; exit 1)
 	$(call print,"✅ Direct execution tests completed",$(GREEN))
+
+.PHONY: test-compat
+test-compat: build-helpers ## Run compatibility tests (exit codes, JSON manifests, taster commands)
+	@mkdir -p $(LOGS_DIR)
+	$(call print,"🔧 Running compatibility tests...",$(PURPLE))
+	@$(TESTS_DIR)/compat/test-exit-codes.sh || (echo "❌ Exit code tests failed"; exit 1)
+	@$(TESTS_DIR)/compat/test-json-manifests.sh || (echo "❌ JSON manifest tests failed"; exit 1)
+	$(call print,"✅ Compatibility tests completed",$(GREEN))
 
 .PHONY: test-echo
 test-echo: $(ECHO_PSP) ## Test echo package only

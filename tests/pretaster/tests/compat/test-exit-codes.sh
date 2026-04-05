@@ -3,25 +3,36 @@
 
 set -euo pipefail
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+# Load shared test library (colors, helpers)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../lib/test-lib.sh"
 
 echo "🧪 Testing Exit Code Preservation"
 echo "=================================="
 echo ""
 
-# Test directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR/../.."
+
+# Platform detection
+OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+ARCH=$(uname -m)
+if [[ "$OS" == mingw* ]] || [[ "$OS" == msys* ]] || [[ "$OS" == cygwin* ]]; then
+    OS="windows"
+    if [[ "$(uname -s)" == *"-ARM64"* ]] || [[ "$(uname -s)" == *"-arm64"* ]]; then
+        ARCH="arm64"
+    fi
+fi
+[ "$ARCH" = "x86_64" ] && ARCH="amd64"
+[ "$ARCH" = "aarch64" ] && ARCH="arm64"
+PLATFORM="${OS}_${ARCH}"
+EXT=""
+[[ "$OS" == "windows" ]] && EXT=".exe"
 
 # Clean cache to ensure fresh tests
 rm -rf ~/.cache/flavor/workenv 2>/dev/null || true
 
 # Build helpers if needed
-if [[ ! -f "../../dist/bin/flavor-rs-launcher-darwin_arm64" ]]; then
+if [[ ! -f "../../dist/bin/flavor-rs-launcher-${PLATFORM}${EXT}" ]]; then
     make build-helpers >/dev/null 2>&1
 fi
 
@@ -76,8 +87,8 @@ EOF
 EOF
     
     # Build package
-    local builder_bin="../../dist/bin/flavor-${builder}-builder-darwin_arm64"
-    local launcher_bin="../../dist/bin/flavor-${launcher}-launcher-darwin_arm64"
+    local builder_bin="../../dist/bin/flavor-${builder}-builder-${PLATFORM}${EXT}"
+    local launcher_bin="../../dist/bin/flavor-${launcher}-launcher-${PLATFORM}${EXT}"
     if ! $builder_bin --manifest configs/test-exit.json --launcher-bin "$launcher_bin" --output "$package_file" --key-seed test123 --log-level error 2>&1 | grep -v "^🦀\|^🐹" >/dev/null; then
         echo -e "${RED}❌ Failed to build package${NC}"
         return 1
