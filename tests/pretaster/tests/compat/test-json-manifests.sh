@@ -72,6 +72,14 @@ test_json_manifest_combination() {
         config="configs/test-combination-windows.json"
     fi
 
+    # Resolve TASTESH_BIN placeholder in config
+    local tastesh_bin="$HELPERS_DIR/bin/flavor-tastesh-${PLATFORM}${EXT}"
+    if [[ -f "$tastesh_bin" ]]; then
+        mkdir -p "resolved"
+        sed -e "s|TASTESH_BIN|${tastesh_bin}|g" "$config" > "resolved/$(basename "$config")"
+        config="resolved/$(basename "$config")"
+    fi
+
     # Clear cache so rebuilt PSPs don't hit checksum mismatches
     local base_name
     base_name="$(basename "$output" .psp)"
