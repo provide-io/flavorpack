@@ -189,11 +189,11 @@ $(RESOLVED_DIR):
 
 $(RESOLVED_DIR)/%.json: $(CONFIGS_DIR)/%.json $(RESOLVED_DIR)
 	@if [ -f "$(TASTESH)" ]; then \
-		sed 's|TASTESH_BIN|$(TASTESH)|g' $< > $@; \
+		sed -e 's|TASTESH_BIN|$(TASTESH)|g' -e 's|GO_BUILDER_BIN|$(GO_BUILDER)|g' $< > $@; \
 	elif [ -f "$(CONFIGS_DIR)/$*-windows.json" ]; then \
 		cp "$(CONFIGS_DIR)/$*-windows.json" $@; \
 	else \
-		cp $< $@; \
+		sed -e 's|GO_BUILDER_BIN|$(GO_BUILDER)|g' $< > $@; \
 	fi
 
 # Individual test packages (use resolved configs)
@@ -221,10 +221,10 @@ $(ENV_PSP): $(DIST_DIR) $(RESOLVED_DIR)/test-env.json
 		--output $@ \
 		--key-seed $(KEY_SEED)
 
-$(ORCHESTRATE_PSP): $(DIST_DIR)
+$(ORCHESTRATE_PSP): $(DIST_DIR) $(RESOLVED_DIR)/test-orchestrate.json
 	$(call print,"📦 Building orchestration test package...",$(CYAN))
 	@$(RS_BUILDER) \
-		--manifest $(CONFIGS_DIR)/test-orchestrate.json \
+		--manifest $(RESOLVED_DIR)/test-orchestrate.json \
 		--launcher-bin $(GO_LAUNCHER) \
 		--output $@ \
 		--key-seed $(KEY_SEED)

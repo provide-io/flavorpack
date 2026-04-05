@@ -97,12 +97,15 @@ if [[ "$OS" == "windows" ]]; then
     EXT=".exe"
 fi
 
-# Resolve config templates (substitute TASTESH_BIN placeholder)
+# Resolve config templates (substitute TASTESH_BIN and GO_BUILDER_BIN placeholders)
 TASTESH_BIN="$HELPERS_DIR/bin/flavor-tastesh-${PLATFORM}${EXT}"
+GO_BUILDER_BIN="$HELPERS_DIR/bin/flavor-go-builder-${PLATFORM}${EXT}"
 RESOLVED_DIR="dist/.configs"
 mkdir -p "$RESOLVED_DIR"
 for cfg in configs/test-*.json; do
-    sed "s|TASTESH_BIN|${TASTESH_BIN}|g" "$cfg" > "$RESOLVED_DIR/$(basename "$cfg")"
+    sed -e "s|TASTESH_BIN|${TASTESH_BIN}|g" \
+        -e "s|GO_BUILDER_BIN|${GO_BUILDER_BIN}|g" \
+        "$cfg" > "$RESOLVED_DIR/$(basename "$cfg")"
 done
 
 # Select launcher: on Windows use Go launcher (Rust launcher is not supported on Windows)
@@ -142,13 +145,7 @@ $HELPERS_DIR/bin/flavor-go-builder-$PLATFORM$EXT \
     --key-seed test123
 
 # Test 4: Multi-slot orchestration test (Rust builder + launcher)
-# Create platform-agnostic symlink for the manifest to reference
-# The manifest expects flavor-go-builder-darwin_arm64, so we'll create that symlink
-# pointing to our actual platform's binary (skip if we're already darwin_arm64)
 echo "4️⃣ Building orchestration test package (Rust builder + launcher)..."
-if [[ "$PLATFORM" != "darwin_arm64" ]]; then
-    ln -sf "$HELPERS_DIR/bin/flavor-go-builder-$PLATFORM$EXT" "$HELPERS_DIR/bin/flavor-go-builder-darwin_arm64"
-fi
 $HELPERS_DIR/bin/flavor-rs-builder-$PLATFORM$EXT \
     --manifest $RESOLVED_DIR/test-orchestrate.json \
     --launcher-bin $LAUNCHER_BIN \
