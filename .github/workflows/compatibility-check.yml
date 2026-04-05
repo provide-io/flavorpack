@@ -187,6 +187,8 @@ jobs:
             
             failed=0
             for binary in flavor-*-linux_${{ matrix.distro.arch == 'amd64' && 'amd64' || 'arm64' }}; do
+              # Skip tastesh (embedded shell) — not a builder/launcher, has no --version
+              echo "$binary" | grep -q "tastesh" && continue
               if [ -f "$binary" ]; then
                 printf "%-40s" "$binary:"
 
@@ -261,6 +263,7 @@ jobs:
           docker run --rm -v $PWD/dist/bin:/test ${{ matrix.distro.image }} sh -c '
             cd /test
             for binary in flavor-*-linux_amd64; do
+              echo "$binary" | grep -q "tastesh" && continue
               if [ -f "$binary" ]; then
                 echo -n "Testing $binary: "
                 if echo "$binary" | grep -q "launcher"; then
@@ -323,6 +326,7 @@ jobs:
             echo "Architecture: $(uname -m)"
             
             for binary in flavor-*-linux_arm64; do
+              echo "$binary" | grep -q "tastesh" && continue
               if [ -f "$binary" ]; then
                 echo -n "Testing $binary: "
                 if echo "$binary" | grep -q "launcher"; then
