@@ -17,9 +17,9 @@ from provide.foundation.console import pout
 from provide.foundation.process import run
 
 from flavor.cache import get_cache_dir
-from flavor.config.defaults import ENV_CACHE_COMPAT, ENV_EXEC_MODE, ENV_LOG_LEVEL
 from flavor.helpers import HelperManager
 from flavor.package import build_package_from_manifest
+from taster.env_constants import ENV_CACHE_COMPAT, ENV_EXEC_MODE, ENV_LOG_LEVEL
 
 MODULE_TEMPLATE = """\
 import sys

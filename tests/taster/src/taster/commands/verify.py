@@ -16,7 +16,7 @@ from typing import Any
 import click
 from provide.foundation.console import pout
 
-from flavor.config.defaults import ENV_ORIGINAL_COMMAND
+from taster.env_constants import ENV_ORIGINAL_COMMAND
 
 
 @click.command("verify")
