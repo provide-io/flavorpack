@@ -347,7 +347,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
       - name: 🚀 Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v2.6.1
         with:
           tag_name: ${{ needs.prepare.outputs.version_tag }}
           name: Flavor Pack ${{ needs.prepare.outputs.version }}
