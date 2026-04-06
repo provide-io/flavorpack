@@ -573,6 +573,28 @@ class TestBundleExecutorDebugBranch:
 
         assert "KEY" in env
 
+    @pytest.mark.unit
+    def test_prepare_environment_debug_disabled_skips_log(self, tmp_path: Path) -> None:
+        """Branch 215->217: is_debug_enabled() False — debug log is NOT emitted."""
+        from flavor.psp.format_2025.executor import BundleExecutor
+
+        metadata: dict = {
+            "package": {"name": "mypkg", "version": "1.0.0"},
+            "execution": {},
+        }
+        executor = BundleExecutor(metadata=metadata, workenv_dir=tmp_path)
+
+        with (
+            patch.object(pf_logger, "is_debug_enabled", return_value=False),
+            patch(
+                "flavor.psp.format_2025.executor.apply_environment_layers",
+                return_value={"KEY": "value"},
+            ),
+        ):
+            env = executor.prepare_environment()
+
+        assert "KEY" in env
+
 
 # ===========================================================================
 # 5. operations.py — single operation branch and raise path
