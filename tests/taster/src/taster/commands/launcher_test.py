@@ -16,9 +16,9 @@ import click
 from provide.foundation.console import pout
 from provide.foundation.process import run
 
-from flavor.config.defaults import ENV_EXEC_MODE, ENV_LAUNCHER_CLI, ENV_LOG_LEVEL
 from flavor.helpers import HelperManager
 from flavor.package import build_package_from_manifest
+from taster.env_constants import ENV_EXEC_MODE, ENV_LAUNCHER_CLI, ENV_LOG_LEVEL
 
 APP_MAIN = """\
 import sys
