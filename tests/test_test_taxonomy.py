@@ -8,7 +8,7 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PYPROJECT = REPO_ROOT / "pyproject.toml"
 ROOT_MAKEFILE = REPO_ROOT / "Makefile"
-QUALITY_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "05-code-quality.yml"
+QUALITY_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "code-quality.yml"
 
 
 def test_pyproject_registers_shared_test_taxonomy_markers() -> None:

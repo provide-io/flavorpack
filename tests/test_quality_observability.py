@@ -7,7 +7,7 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ROOT_MAKEFILE = REPO_ROOT / "Makefile"
-QUALITY_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "05-code-quality.yml"
+QUALITY_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "code-quality.yml"
 RELEASE_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "release.yml"
 RUST_MAKEFILE = REPO_ROOT / "src" / "flavor-rs" / "Makefile"
 RUST_FUZZ_CARGO = REPO_ROOT / "src" / "flavor-rs" / "fuzz" / "Cargo.toml"
