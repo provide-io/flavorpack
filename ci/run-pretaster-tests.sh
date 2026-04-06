@@ -294,6 +294,18 @@ case "$TEST_SUITE" in
     ${MAKE_CMD} ${MAKE_SHELL:+SHELL="$MAKE_SHELL"} ${MAKE_HELPERS} test-direct
     EXIT_CODE=$?
     ;;
+  compat)
+    echo "🚀 Running COMPAT tests via Make..."
+    echo "════════════════════════════════════════════════════════════════"
+    ${MAKE_CMD} ${MAKE_SHELL:+SHELL="$MAKE_SHELL"} ${MAKE_HELPERS} test-compat
+    EXIT_CODE=$?
+    ;;
+  security)
+    echo "🚀 Running SECURITY tests via Make..."
+    echo "════════════════════════════════════════════════════════════════"
+    ${MAKE_CMD} ${MAKE_SHELL:+SHELL="$MAKE_SHELL"} ${MAKE_HELPERS} test-security
+    EXIT_CODE=$?
+    ;;
   *)
     echo "❌ Unknown test suite: $TEST_SUITE"
     exit 1
