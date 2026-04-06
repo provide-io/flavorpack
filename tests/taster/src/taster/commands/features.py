@@ -18,7 +18,7 @@ from typing import Any
 import click
 from provide.foundation.console import pout
 
-from flavor.config.defaults import ENV_COMMAND_NAME, ENV_LOG_LEVEL, ENV_WORKENV
+from taster.env_constants import ENV_COMMAND_NAME, ENV_LOG_LEVEL, ENV_WORKENV
 
 FeatureTest = Callable[[], bool]
 FeatureResult = dict[str, Any]

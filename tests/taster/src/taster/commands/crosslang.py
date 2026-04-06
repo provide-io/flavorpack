@@ -21,8 +21,8 @@ from provide.foundation import logger
 from provide.foundation.console import perr, pout
 from provide.foundation.process import run as run_command
 
-from flavor.config.defaults import ENV_LAUNCHER_CLI
 from flavor.helpers.manager import HelperInfo, HelperManager
+from taster.env_constants import ENV_LAUNCHER_CLI
 
 
 class CrossLangTester:
