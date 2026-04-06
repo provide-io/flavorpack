@@ -110,12 +110,12 @@ def test_mutmut_copies_cross_language_and_workflow_support_files() -> None:
     config = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
     also_copy = set(config["tool"]["mutmut"]["also_copy"])
 
+    # Go/Rust sources are intentionally excluded — parity tests are deselected
+    # for mutmut and including them creates nested mutants/ directories.
     assert {
         "VERSION",
         "Makefile",
         "scripts",
         "tools",
         ".github/workflows",
-        "src/flavor-go",
-        "src/flavor-rs",
     }.issubset(also_copy)
