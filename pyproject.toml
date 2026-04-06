@@ -230,6 +230,7 @@ pytest_add_cli_args = [
     "--deselect=tests/test_quality_observability.py",
     "--deselect=tests/test_version_sync.py",
     "--deselect=tests/test_test_taxonomy.py",
+    "--deselect=tests/test_mutant_killers.py::TestCacheGetCacheDir::test_default_cache_dir",
 ]
 do_not_mutate = [
     "*/generated/*", "*_pb2.py", "*_pb2.pyi", "*/tests/*", "*/test_*",

@@ -380,7 +380,7 @@ jobs:
             
             # Run tests
             echo "Running combination tests..."
-            ./tests/combination-tests.sh
+            ./tests/combo/test-combinations.sh
           '
 
   # Generate compatibility report
