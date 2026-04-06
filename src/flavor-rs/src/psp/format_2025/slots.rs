@@ -214,4 +214,130 @@ pub fn align_to_page(offset: u64) -> u64 {
     align_offset(offset, DEFAULT_PAGE_SIZE as u64)
 }
 
+#[cfg(test)]
+mod tests {
+    use super::super::constants::PurposeCode;
+    use super::*;
+
+    /// Helper to copy a u64 field from a packed struct to avoid unaligned access.
+    macro_rules! read_packed {
+        ($desc:expr, $field:ident) => {{
+            let val = $desc.$field;
+            val
+        }};
+    }
+
+    #[test]
+    fn slot_descriptor_new_sets_defaults() {
+        let desc = SlotDescriptor::new(42);
+        assert_eq!(read_packed!(desc, id), 42);
+        assert_eq!(read_packed!(desc, name_hash), 0);
+        assert_eq!(read_packed!(desc, offset), 0);
+        assert_eq!(read_packed!(desc, size), 0);
+        assert_eq!(read_packed!(desc, original_size), 0);
+        assert_eq!(read_packed!(desc, operations), 0);
+        assert_eq!(read_packed!(desc, checksum), 0);
+        assert_eq!(desc.purpose, PurposeData);
+        assert_eq!(desc.lifecycle, LifecycleRuntime);
+        assert_eq!(desc.priority, CACHE_NORMAL);
+        assert_eq!(desc.platform, 0);
+    }
+
+    #[test]
+    fn pack_unpack_roundtrip_preserves_all_fields() {
+        let mut desc = SlotDescriptor::new(7);
+        desc.name_hash = 0xDEADBEEF_CAFEBABE;
+        desc.offset = 4096;
+        desc.size = 1024;
+        desc.original_size = 2048;
+        desc.operations = 0x011B; // tar | zstd
+        desc.checksum = 0x12345678_9ABCDEF0;
+        desc.purpose = PurposeCode;
+        desc.lifecycle = LifecycleRuntime;
+        desc.priority = 3;
+        desc.platform = 1;
+        desc.reserved1 = 0xAA;
+        desc.reserved2 = 0xBB;
+        desc.permissions = 0xED;
+        desc.permissions_high = 0x01;
+
+        let packed = desc.pack();
+        assert_eq!(packed.len(), SLOT_DESCRIPTOR_SIZE);
+
+        let unpacked = SlotDescriptor::unpack(&packed).expect("unpack should succeed");
+        assert_eq!(read_packed!(unpacked, id), 7);
+        assert_eq!(read_packed!(unpacked, name_hash), 0xDEADBEEF_CAFEBABE);
+        assert_eq!(read_packed!(unpacked, offset), 4096);
+        assert_eq!(read_packed!(unpacked, size), 1024);
+        assert_eq!(read_packed!(unpacked, original_size), 2048);
+        assert_eq!(read_packed!(unpacked, operations), 0x011B);
+        assert_eq!(read_packed!(unpacked, checksum), 0x12345678_9ABCDEF0);
+        assert_eq!(unpacked.purpose, PurposeCode);
+        assert_eq!(unpacked.lifecycle, LifecycleRuntime);
+        assert_eq!(unpacked.priority, 3);
+        assert_eq!(unpacked.platform, 1);
+        assert_eq!(unpacked.reserved1, 0xAA);
+        assert_eq!(unpacked.reserved2, 0xBB);
+        assert_eq!(unpacked.permissions, 0xED);
+        assert_eq!(unpacked.permissions_high, 0x01);
+    }
+
+    #[test]
+    fn unpack_rejects_wrong_size() {
+        assert!(SlotDescriptor::unpack(&[0u8; 32]).is_none());
+        assert!(SlotDescriptor::unpack(&[0u8; 128]).is_none());
+    }
+
+    #[test]
+    fn hash_name_is_deterministic_and_different_for_different_names() {
+        let h1 = SlotDescriptor::hash_name("app");
+        let h2 = SlotDescriptor::hash_name("app");
+        let h3 = SlotDescriptor::hash_name("config");
+
+        assert_eq!(h1, h2);
+        assert_ne!(h1, h3);
+        assert_ne!(h1, 0);
+    }
+
+    #[test]
+    fn with_name_sets_name_hash() {
+        let desc = SlotDescriptor::new(0).with_name("launcher");
+        assert_eq!(
+            read_packed!(desc, name_hash),
+            SlotDescriptor::hash_name("launcher")
+        );
+    }
+
+    #[test]
+    fn slot_metadata_new_and_with_path() {
+        let desc = SlotDescriptor::new(1);
+        let meta = SlotMetadata::new(desc, "app".to_string());
+        assert_eq!(meta.name, "app");
+        assert!(meta.path.is_none());
+
+        let meta = meta.with_path(PathBuf::from("/tmp/app"));
+        assert_eq!(meta.path.as_deref(), Some(std::path::Path::new("/tmp/app")));
+    }
+
+    #[test]
+    fn align_offset_rounds_up_correctly() {
+        assert_eq!(align_offset(0, 8), 0);
+        assert_eq!(align_offset(1, 8), 8);
+        assert_eq!(align_offset(7, 8), 8);
+        assert_eq!(align_offset(8, 8), 8);
+        assert_eq!(align_offset(9, 8), 16);
+        assert_eq!(align_offset(100, 4096), 4096);
+        assert_eq!(align_offset(4096, 4096), 4096);
+    }
+
+    #[test]
+    fn align_to_page_uses_platform_page_size() {
+        let page = DEFAULT_PAGE_SIZE as u64;
+        assert_eq!(align_to_page(0), 0);
+        assert_eq!(align_to_page(1), page);
+        assert_eq!(align_to_page(page), page);
+        assert_eq!(align_to_page(page + 1), page * 2);
+    }
+}
+
 // 📦🎰🗂️🪄
