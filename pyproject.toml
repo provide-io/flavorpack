@@ -186,7 +186,19 @@ markers = [
 ]
 
 [tool.mutmut]
-paths_to_mutate = ["src/flavor"]
+# Only mutate pure-Python modules (no subprocess/HelperManager calls).
+# Excluded: helpers/, commands/ (doctor/helpers/utils use HelperManager),
+# packaging/ (orchestrator + python/* shell out to Go/Rust/uv).
+paths_to_mutate = [
+    "src/flavor/cache.py",
+    "src/flavor/exceptions.py",
+    "src/flavor/output.py",
+    "src/flavor/package.py",
+    "src/flavor/verification.py",
+    "src/flavor/config",
+    "src/flavor/psp",
+    "src/flavor/utils",
+]
 tests_dir = ["tests"]
 also_copy = [
     "VERSION",
@@ -194,13 +206,42 @@ also_copy = [
     "scripts",
     "tools",
     ".github/workflows",
-    "src/flavor-go",
-    "src/flavor-rs",
+    # Non-mutated src/flavor modules (must not overlap with paths_to_mutate)
+    "src/flavor/__init__.py",
+    "src/flavor/__main__.py",
+    "src/flavor/cli.py",
+    "src/flavor/console.py",
+    "src/flavor/locking.py",
+    "src/flavor/py.typed",
+    "src/flavor/helpers",
+    "src/flavor/commands",
+    "src/flavor/packaging",
+    "src/flavor/templates",
 ]
 runner = "pytest"
-exclude = ["*/generated/*", "*_pb2.py", "*_pb2.pyi", "*/tests/*", "*/test_*"]
+# Skip tests that fail in the mutants sandbox (env-specific or need Go/Rust sources)
+pytest_add_cli_args = [
+    "--import-mode=importlib",
+    # Disable plugins that are not fork-safe (mutmut uses os.fork() for each mutant)
+    "-p", "no:testmon",
+    "-p", "no:provide-telemetry",
+    "--deselect=tests/format_2025/test_pspf_2025_enhanced.py::TestPlatformSpecific::test_page_size",
+    "--deselect=tests/parity/",
+    "--deselect=tests/test_quality_observability.py",
+    "--deselect=tests/test_version_sync.py",
+    "--deselect=tests/test_test_taxonomy.py",
+]
+do_not_mutate = [
+    "*/generated/*", "*_pb2.py", "*_pb2.pyi", "*/tests/*", "*/test_*",
+    # Module-level function calls in these trigger trampoline at import time,
+    # crashing the mutmut clean-test phase (MUTANT_UNDER_TEST=fail).
+    "*/operations.py",
+    "*/security.py",
+    "*/cli.py",
+    "*/locking.py",
+]
 dict_synonyms = ["dict", "OrderedDict", "defaultdict"]
-use_patch_file = true
+use_patch_file = false
 
 [tool.coverage.run]
 branch = true

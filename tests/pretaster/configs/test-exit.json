@@ -3,17 +3,31 @@
         "name": "test-exit-255",
         "version": "1.0.0"
     },
-    "execution": {
-        "command": "python3 {workenv}/scripts/exit_test.py",
-        "primary_slot": 0
-    },
+    "format": "PSPF/2025",
     "slots": [
         {
+            "slot": 0,
+            "id": "tastesh",
+            "source": "TASTESH_BIN",
+            "target": "bin/tastesh",
+            "purpose": "tool",
+            "lifecycle": "runtime",
+            "operations": "raw",
+            "permissions": "0755",
+            "resolution": "build"
+        },
+        {
+            "slot": 1,
             "id": "exit-test-script",
-            "source": "scripts/exit_test.py",
-            "target": "scripts/exit_test.py",
+            "source": "scripts/exit_test.sh",
+            "target": "scripts/exit_test.sh",
             "purpose": "payload",
-            "lifecycle": "cached"
+            "lifecycle": "cached",
+            "permissions": "0755"
         }
-    ]
+    ],
+    "execution": {
+        "command": "{workenv}/bin/tastesh {workenv}/scripts/exit_test.sh",
+        "primary_slot": 1
+    }
 }
