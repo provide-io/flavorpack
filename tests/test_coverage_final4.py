@@ -15,6 +15,7 @@ Covers:
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+from provide.foundation import logger as pf_logger
 import pytest
 
 # ===========================================================================
@@ -38,7 +39,7 @@ class TestDependencyResolverTraceBranches:
                 "flavor.packaging.python.dependency_resolver.run",
                 side_effect=Exception("pipx connection refused"),
             ),
-            patch("provide.foundation.logger.is_trace_enabled", return_value=True),
+            patch.object(pf_logger, "is_trace_enabled", return_value=True),
         ):
             result = resolver._find_uv_via_pipx()
 
@@ -52,7 +53,7 @@ class TestDependencyResolverTraceBranches:
         resolver = DependencyResolver(is_windows=False)
 
         with (
-            patch("provide.foundation.logger.is_debug_enabled", return_value=False),
+            patch.object(pf_logger, "is_debug_enabled", return_value=False),
             patch.object(resolver, "_ensure_pip_available", return_value=False),
         ):
             result = resolver.download_uv_wheel(tmp_path)
@@ -67,8 +68,8 @@ class TestDependencyResolverTraceBranches:
         resolver = DependencyResolver(is_windows=False)
 
         with (
-            patch("provide.foundation.logger.is_debug_enabled", return_value=False),
-            patch("provide.foundation.logger.is_trace_enabled", return_value=True),
+            patch.object(pf_logger, "is_debug_enabled", return_value=False),
+            patch.object(pf_logger, "is_trace_enabled", return_value=True),
             patch.object(resolver, "_ensure_pip_available", return_value=True),
             patch.object(resolver, "_download_uv_with_pip", return_value=None),
             patch.object(resolver, "_fallback_download_uv", return_value=None),
@@ -126,7 +127,7 @@ class TestDependencyResolverTraceBranches:
         mock_result.stderr = "some stderr output"
 
         with (
-            patch("provide.foundation.logger.is_trace_enabled", return_value=True),
+            patch.object(pf_logger, "is_trace_enabled", return_value=True),
             patch(
                 "flavor.packaging.python.dependency_resolver.run",
                 return_value=mock_result,
@@ -145,7 +146,7 @@ class TestDependencyResolverTraceBranches:
         # No .whl files — both trace log lines fire and we get None
         (tmp_path / "something.txt").write_text("not a wheel")
 
-        with patch("provide.foundation.logger.is_trace_enabled", return_value=True):
+        with patch.object(pf_logger, "is_trace_enabled", return_value=True):
             result = resolver._find_downloaded_uv_wheel(str(tmp_path))
 
         assert result is None
@@ -296,7 +297,10 @@ class TestHelperManagerListHelpersBranches:
                 subdir = MagicMock()
                 subdir.is_file.return_value = False
                 mock_embedded.iterdir.return_value = [subdir]
-                MockPath.return_value = mock_embedded
+                # Path(__file__).parent / "bin" → Path(x) → mock_path_obj
+                #   → .parent → mock_path_obj.parent
+                #   → / "bin" → mock_embedded
+                MockPath.return_value.parent.__truediv__.return_value = mock_embedded
 
                 result = mgr.list_helpers()
 
@@ -320,7 +324,7 @@ class TestHelperManagerListHelpersBranches:
                 embedded_file = MagicMock()
                 embedded_file.is_file.return_value = True
                 mock_embedded.iterdir.return_value = [embedded_file]
-                MockPath.return_value = mock_embedded
+                MockPath.return_value.parent.__truediv__.return_value = mock_embedded
 
                 with patch.object(mgr, "_get_helper_info", return_value=None):
                     result = mgr.list_helpers()
@@ -357,7 +361,7 @@ class TestHelperManagerListHelpersBranches:
                 embedded_file.is_file.return_value = True
                 embedded_file.name = helper_name
                 mock_embedded.iterdir.return_value = [embedded_file]
-                MockPath.return_value = mock_embedded
+                MockPath.return_value.parent.__truediv__.return_value = mock_embedded
 
                 result = mgr.list_helpers()
 
@@ -391,7 +395,7 @@ class TestHelperManagerListHelpersBranches:
                 embedded_file.is_file.return_value = True
                 embedded_file.name = embedded_name
                 mock_embedded.iterdir.return_value = [embedded_file]
-                MockPath.return_value = mock_embedded
+                MockPath.return_value.parent.__truediv__.return_value = mock_embedded
 
                 result = mgr.list_helpers()
 
@@ -496,7 +500,7 @@ class TestEnvironmentBuilderTraceBranches:
             tarinfo = tarfile.TarInfo(name="./lib/python3.11/EXTERNALLY-MANAGED")
             tarinfo.size = 0
 
-            with patch("provide.foundation.logger.is_trace_enabled", return_value=True):
+            with patch.object(pf_logger, "is_trace_enabled", return_value=True):
                 result = filter_func(tarinfo)
 
         assert result is None
@@ -515,7 +519,7 @@ class TestEnvironmentBuilderTraceBranches:
             stats: dict[str, int] = {"files_added": 0, "bytes_added": 0, "files_skipped": 0}
             filter_func = builder._create_tarball_filter(stats)
 
-            with patch("provide.foundation.logger.is_trace_enabled", return_value=True):
+            with patch.object(pf_logger, "is_trace_enabled", return_value=True):
                 # Test line 567: ./bin/python -> ./Scripts/python
                 tarinfo1 = tarfile.TarInfo(name="./bin/python")
                 tarinfo1.size = 100
@@ -559,7 +563,7 @@ class TestBundleExecutorDebugBranch:
         executor = BundleExecutor(metadata=metadata, workenv_dir=tmp_path)
 
         with (
-            patch("provide.foundation.logger.is_debug_enabled", return_value=True),
+            patch.object(pf_logger, "is_debug_enabled", return_value=True),
             patch(
                 "flavor.psp.format_2025.executor.apply_environment_layers",
                 return_value={"KEY": "value"},
