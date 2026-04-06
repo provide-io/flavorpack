@@ -35,9 +35,18 @@ if sys.platform == "win32":
                 with contextlib.suppress(Exception):
                     _inner.reconfigure(encoding="utf-8", errors="replace")
 
-from cryptography.hazmat.primitives.asymmetric import ed25519
 from hypothesis import HealthCheck, settings
 import provide.testkit  # noqa: F401 - Installs setproctitle blocker early
+
+# Patch setproctitle to a no-op in mutmut's __main__ module.
+# The real setproctitle C extension is not fork-safe on macOS — calling it
+# in a forked child process (which mutmut does for each mutant) causes SIGSEGV.
+try:
+    import mutmut.__main__ as _mutmut_main
+
+    _mutmut_main.setproctitle = lambda title: None
+except ImportError:
+    pass
 from provide.testkit.logger import reset_foundation_setup_for_testing
 import pytest
 
@@ -131,8 +140,10 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
 
 
 @pytest.fixture(scope="session")
-def key_pair() -> tuple[ed25519.Ed25519PrivateKey, ed25519.Ed25519PublicKey]:
+def key_pair() -> tuple:  # type: ignore[type-arg]
     """Fixture to generate a reusable Ed25519 key pair for the test session."""
+    from cryptography.hazmat.primitives.asymmetric import ed25519
+
     # Generate Ed25519 key pair to match the actual implementation
     private_key = ed25519.Ed25519PrivateKey.generate()
     public_key = private_key.public_key()
