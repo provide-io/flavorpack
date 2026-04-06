@@ -21,7 +21,7 @@ curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VE
 tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
 chmod +x /tmp/gitleaks
 
-if /tmp/gitleaks detect --source . --redact --no-git -l warn 2>&1; then
+if /tmp/gitleaks detect --source . --redact --no-git -l warn --config .gitleaks.toml 2>&1; then
     echo "✅ No secrets detected by Gitleaks" >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
 else
     echo "🚨 Gitleaks detected potential secrets — check the logs" >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
