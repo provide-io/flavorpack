@@ -55,37 +55,57 @@ test_exit_code() {
     local package_name="test-exit-${expected_code}"
     local package_file="dist/${package_name}.psp"
     
-    # Create test script that exits with specific code
-    cat > scripts/exit_test.py << EOF
-#!/usr/bin/env python3
-import sys
-sys.exit(${expected_code})
+    # Create test script that exits with specific code (POSIX sh, no Python needed)
+    cat > scripts/exit_test.sh << EOF
+#!/bin/sh
+exit ${expected_code}
 EOF
-    chmod +x scripts/exit_test.py
-    
-    # Create manifest
+    chmod +x scripts/exit_test.sh
+
+    # Locate tastesh binary
+    local tastesh_bin="../../dist/bin/flavor-tastesh-${PLATFORM}${EXT}"
+    if [[ ! -f "$tastesh_bin" ]]; then
+        echo -e "${RED}❌ tastesh not found: $tastesh_bin${NC}"
+        return 1
+    fi
+
+    # Create manifest with embedded tastesh (slot 0) + shell script (slot 1)
     cat > configs/test-exit.json << EOF
 {
     "package": {
         "name": "${package_name}",
         "version": "1.0.0"
     },
+    "format": "PSPF/2025",
     "execution": {
-        "command": "python3 {workenv}/scripts/exit_test.py",
-        "primary_slot": 0
+        "command": "{workenv}/bin/tastesh {workenv}/scripts/exit_test.sh",
+        "primary_slot": 1
     },
     "slots": [
         {
+            "slot": 0,
+            "id": "tastesh",
+            "source": "${tastesh_bin}",
+            "target": "bin/tastesh",
+            "purpose": "tool",
+            "lifecycle": "runtime",
+            "operations": "raw",
+            "permissions": "0755",
+            "resolution": "build"
+        },
+        {
+            "slot": 1,
             "id": "exit-test-script",
-            "source": "scripts/exit_test.py",
-            "target": "scripts/exit_test.py",
+            "source": "scripts/exit_test.sh",
+            "target": "scripts/exit_test.sh",
             "purpose": "payload",
-            "lifecycle": "cached"
+            "lifecycle": "cached",
+            "permissions": "0755"
         }
     ]
 }
 EOF
-    
+
     # Build package
     local builder_bin="../../dist/bin/flavor-${builder}-builder-${PLATFORM}${EXT}"
     local launcher_bin="../../dist/bin/flavor-${launcher}-launcher-${PLATFORM}${EXT}"
@@ -93,15 +113,15 @@ EOF
         echo -e "${RED}❌ Failed to build package${NC}"
         return 1
     fi
-    
+
     # Run package and capture exit code
     set +e
     FLAVOR_VALIDATION=none "$package_file" 2>/dev/null
     local actual_code=$?
     set -e
-    
+
     # Clean up
-    rm -f "$package_file" scripts/exit_test.py configs/test-exit.json
+    rm -f "$package_file" scripts/exit_test.sh configs/test-exit.json
     
     # Check result
     if [[ $actual_code -eq $expected_code ]]; then
