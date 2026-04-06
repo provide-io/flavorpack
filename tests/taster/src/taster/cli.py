@@ -50,7 +50,7 @@ if sys.platform == "win32":
         pass  # Ignore if we can't enable ANSI
 
 # Import env var constants (after cpuinfo stub but before click)
-from flavor.config.defaults import ENV_COMMAND_NAME
+from taster.env_constants import ENV_COMMAND_NAME
 
 # Override sys.argv[0] if FLAVOR_COMMAND_NAME is set
 if ENV_COMMAND_NAME in os.environ:
