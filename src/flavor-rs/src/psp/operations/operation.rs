@@ -69,3 +69,48 @@ pub fn get_name(id: u8) -> &'static str {
         _ => "UNKNOWN",
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn get_name_returns_correct_names_for_known_ops() {
+        assert_eq!(get_name(super::super::OP_NONE), "NONE");
+        assert_eq!(get_name(super::super::OP_TAR), "TAR");
+        assert_eq!(get_name(super::super::OP_GZIP), "GZIP");
+        assert_eq!(get_name(super::super::OP_BZIP2), "BZIP2");
+        assert_eq!(get_name(super::super::OP_XZ), "XZ");
+        assert_eq!(get_name(super::super::OP_ZSTD), "ZSTD");
+    }
+
+    #[test]
+    fn get_name_returns_unknown_for_unrecognized_ops() {
+        assert_eq!(get_name(0xFF), "UNKNOWN");
+        assert_eq!(get_name(0x50), "UNKNOWN");
+    }
+
+    #[test]
+    fn operation_error_display_formats_correctly() {
+        let io_err = OperationError::Io(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "disk full",
+        ));
+        assert!(io_err.to_string().contains("disk full"));
+
+        let comp_err = OperationError::Compression("bad data".into());
+        assert!(comp_err.to_string().contains("bad data"));
+
+        let arch_err = OperationError::Archive("corrupt".into());
+        assert!(arch_err.to_string().contains("corrupt"));
+
+        let not_rev = OperationError::NotReversible;
+        assert!(not_rev.to_string().contains("not reversible"));
+
+        let unknown = OperationError::UnknownOperation(0xAB);
+        assert!(unknown.to_string().contains("0xab"));
+
+        let invalid = OperationError::InvalidData("bad".into());
+        assert!(invalid.to_string().contains("bad"));
+    }
+}
