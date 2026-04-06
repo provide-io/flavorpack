@@ -5,8 +5,8 @@
 
 """Unit tests for the PackagingOrchestrator."""
 
-import sys
 from pathlib import Path
+import sys
 from typing import Any
 from unittest.mock import MagicMock, patch
 
