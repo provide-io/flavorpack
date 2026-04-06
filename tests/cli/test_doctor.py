@@ -7,7 +7,9 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
+import sys
 from unittest.mock import MagicMock, Mock, patch
 
 from click.testing import CliRunner, Result
@@ -190,6 +192,161 @@ class TestDoctorCommand:
         result = self._run()
         assert "[WARN]" in result.output
         assert "key" in result.output.lower()
+
+
+class TestDoctorCoverageGaps:
+    """Cover remaining uncovered lines in doctor.py."""
+
+    def _run(self, *args: str) -> Result:
+        runner = CliRunner()
+        return runner.invoke(cli_main, ["doctor", *args])
+
+    @patch("flavor.commands.doctor.get_trusted_keys_dir")
+    @patch("flavor.commands.doctor.get_config_dir")
+    @patch("flavor.commands.doctor.get_cache_dir")
+    @patch("flavor.commands.doctor.HelperManager")
+    def test_python_below_311_warns(
+        self,
+        mock_mgr_cls: Mock,
+        mock_cache: Mock,
+        mock_config: Mock,
+        mock_keys: Mock,
+        tmp_path: Path,
+    ) -> None:
+        """Lines 40-42: Python < 3.11 triggers WARN."""
+        mock_mgr_cls.return_value.list_helpers.return_value = {"launchers": [], "builders": []}
+        cache = tmp_path / "cache"
+        cache.mkdir()
+        mock_cache.return_value = cache
+        mock_config.return_value = tmp_path / "config"
+        keys = tmp_path / "keys"
+        keys.mkdir()
+        (keys / "k.pub").write_text("key")
+        mock_keys.return_value = keys
+
+        fake_info = MagicMock(major=2, minor=7)
+        with patch("flavor.commands.doctor.sys") as mock_sys:
+            mock_sys.version = "2.7.18 (default)"
+            mock_sys.version_info = fake_info
+            mock_sys.platform = sys.platform
+            result = self._run()
+        assert "WARN" in result.output
+
+    @patch("flavor.commands.doctor.get_trusted_keys_dir")
+    @patch("flavor.commands.doctor.get_config_dir")
+    @patch("flavor.commands.doctor.get_cache_dir")
+    @patch("flavor.commands.doctor.HelperManager")
+    def test_missing_helper_errors(
+        self,
+        mock_mgr_cls: Mock,
+        mock_cache: Mock,
+        mock_config: Mock,
+        mock_keys: Mock,
+        tmp_path: Path,
+    ) -> None:
+        """Lines 72-74, 124-129: MISSING helper adds error, exit code 1."""
+        missing = HelperInfo(
+            name="flavor-go-launcher-linux_amd64",
+            path=tmp_path / "nonexistent" / "helper",
+            type="launcher",
+            language="go",
+            size=0,
+            version=None,
+        )
+        mock_mgr_cls.return_value.list_helpers.return_value = {"launchers": [missing], "builders": []}
+        cache = tmp_path / "cache"
+        cache.mkdir()
+        mock_cache.return_value = cache
+        mock_config.return_value = tmp_path / "config"
+        keys = tmp_path / "keys"
+        keys.mkdir()
+        (keys / "k.pub").write_text("key")
+        mock_keys.return_value = keys
+
+        result = self._run()
+        assert result.exit_code == 1
+        assert "MISSING" in result.output
+
+    @patch("flavor.commands.doctor.get_trusted_keys_dir")
+    @patch("flavor.commands.doctor.get_config_dir")
+    @patch("flavor.commands.doctor.get_cache_dir")
+    @patch("flavor.commands.doctor.HelperManager")
+    def test_not_executable_helper(
+        self,
+        mock_mgr_cls: Mock,
+        mock_cache: Mock,
+        mock_config: Mock,
+        mock_keys: Mock,
+        tmp_path: Path,
+    ) -> None:
+        """Lines 75-77: Helper exists but not executable."""
+        helper_path = tmp_path / "helper"
+        helper_path.write_bytes(b"\x7fELF")
+        helper_path.chmod(0o644)
+        helper = HelperInfo(
+            name="flavor-go-launcher",
+            path=helper_path,
+            type="launcher",
+            language="go",
+            size=4,
+            version="v1",
+        )
+        mock_mgr_cls.return_value.list_helpers.return_value = {"launchers": [helper], "builders": []}
+        cache = tmp_path / "cache"
+        cache.mkdir()
+        mock_cache.return_value = cache
+        mock_config.return_value = tmp_path / "config"
+        keys = tmp_path / "keys"
+        keys.mkdir()
+        (keys / "k.pub").write_text("key")
+        mock_keys.return_value = keys
+
+        orig_access = os.access
+
+        def fake_access(path: object, mode: int) -> bool:
+            if mode == os.X_OK:
+                return False
+            return orig_access(path, mode)  # type: ignore[arg-type]
+
+        with patch("flavor.commands.doctor.os.access", side_effect=fake_access):
+            result = self._run()
+        assert result.exit_code == 1
+        assert "NOT-EXEC" in result.output
+
+    @patch("flavor.commands.doctor.get_trusted_keys_dir")
+    @patch("flavor.commands.doctor.get_config_dir")
+    @patch("flavor.commands.doctor.get_cache_dir")
+    @patch("flavor.commands.doctor.HelperManager")
+    def test_cache_not_writable(
+        self,
+        mock_mgr_cls: Mock,
+        mock_cache: Mock,
+        mock_config: Mock,
+        mock_keys: Mock,
+        tmp_path: Path,
+    ) -> None:
+        """Lines 97-98: Cache not writable adds error."""
+        mock_mgr_cls.return_value.list_helpers.return_value = {"launchers": [], "builders": []}
+        cache = tmp_path / "cache"
+        cache.mkdir()
+        mock_cache.return_value = cache
+        mock_config.return_value = tmp_path / "config"
+        keys = tmp_path / "keys"
+        keys.mkdir()
+        (keys / "k.pub").write_text("key")
+        mock_keys.return_value = keys
+
+        orig_access = os.access
+
+        def fake_access(path: object, mode: int) -> bool:
+            if path == cache and mode == os.W_OK:
+                return False
+            return orig_access(path, mode)  # type: ignore[arg-type]
+
+        with patch("flavor.commands.doctor.os.access", side_effect=fake_access):
+            result = self._run()
+        assert result.exit_code == 1
+        assert "NOT WRITABLE" in result.output
 
 
 # 🌶️📦🔚

@@ -145,6 +145,38 @@ func TestExtractSlotNonTarTargetingWorkenv(t *testing.T) {
 	}
 }
 
+// TestIsTarballGNUTarFormat covers the GNU tar format branch in isTarball
+// (line 144) where the magic at offset 257 is "ustar  \x00".
+func TestIsTarballGNUTarFormat(t *testing.T) {
+	t.Parallel()
+
+	data := make([]byte, 512)
+	copy(data[257:265], "ustar  \x00")
+
+	if !isTarball(data) {
+		t.Fatal("expected isTarball to return true for GNU tar format")
+	}
+}
+
+// TestIsTarballNoMagic covers the case where data is 512+ bytes but has no tar magic.
+func TestIsTarballNoMagic(t *testing.T) {
+	t.Parallel()
+
+	data := make([]byte, 512)
+	if isTarball(data) {
+		t.Fatal("expected isTarball to return false when no tar magic present")
+	}
+}
+
+// TestIsTarballTooSmall covers the case where data is less than 512 bytes.
+func TestIsTarballTooSmall(t *testing.T) {
+	t.Parallel()
+
+	if isTarball([]byte("too short")) {
+		t.Fatal("expected isTarball to return false for short data")
+	}
+}
+
 // TestExtractSlotDestPathIsExistingDirectory covers the path where destPath is an
 // existing directory (returns the directory without writing a file).
 func TestExtractSlotDestPathIsExistingDirectory(t *testing.T) {
