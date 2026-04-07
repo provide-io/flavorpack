@@ -64,7 +64,7 @@ See the [PSPF Format Specification](https://foundry.provide.io/flavorpack/refere
 ## 📚 Documentation
 
 - **[Quick Start](https://foundry.provide.io/flavorpack/getting-started/quickstart/)** - Get started in 5 minutes
-- **[User Guide](https://foundry.provide.io/flavorpack/guide/)** - Comprehensive guide to using Flavorpack
+- **[User Guide](https://foundry.provide.io/flavorpack/guide/)** - Comprehensive guide to using FlavorPack
 - **[PSPF Format Specification](https://foundry.provide.io/flavorpack/reference/spec/fep-0001-core-format-and-operation-chains/)** - Binary format details
 - **[API Reference](https://foundry.provide.io/flavorpack/api/)** - Python API documentation
 - **[Development Guide](https://foundry.provide.io/flavorpack/development/)** - Contributing and development setup
