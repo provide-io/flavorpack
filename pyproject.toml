@@ -206,6 +206,7 @@ also_copy = [
     "scripts",
     "tools",
     ".github/workflows",
+    # Note: tests/ is always copied by mutmut automatically (hardcoded in its Config class)
     # Non-mutated src/flavor modules (must not overlap with paths_to_mutate)
     "src/flavor/__init__.py",
     "src/flavor/__main__.py",
