@@ -78,10 +78,9 @@ jobs:
           fi
       
       - name: 🔐 Gitleaks Secret Detection
-        uses: gitleaks/gitleaks-action@v2
+        # Use gitleaks CLI directly — the action requires a paid license; the CLI is MIT-licensed
         continue-on-error: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ci/run-gitleaks.sh
       
       - name: 🗝️ detect-secrets Scan
         continue-on-error: true

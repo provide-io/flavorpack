@@ -246,7 +246,7 @@ jobs:
           
           ## 🔧 What's New
           
-          See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/docs/CHANGELOG.md) for detailed changes.
+          See [Changelog](https://foundry.provide.io/flavorpack/community/changelog/) for detailed changes.
           
           ## 🔒 Verification
           
@@ -258,9 +258,9 @@ jobs:
           
           ## 📚 Documentation
           
-          - [User Guide](https://github.com/${{ github.repository }}/blob/main/docs/USER-GUIDE.md)
-          - [API Reference](https://github.com/${{ github.repository }}/blob/main/docs/API-REFERENCE.md)
-          - [Troubleshooting](https://github.com/${{ github.repository }}/blob/main/docs/TROUBLESHOOTING.md)
+          - [User Guide](https://foundry.provide.io/flavorpack/guide/)
+          - [API Reference](https://foundry.provide.io/flavorpack/api/)
+          - [Troubleshooting](https://foundry.provide.io/flavorpack/troubleshooting/)
           EOF
       
       - name: 📤 Upload release assets
@@ -347,7 +347,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
       - name: 🚀 Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v2.6.1
         with:
           tag_name: ${{ needs.prepare.outputs.version_tag }}
           name: Flavor Pack ${{ needs.prepare.outputs.version }}
@@ -447,7 +447,7 @@ jobs:
   # ==================================================================================
   summary:
     name: 📊 Release Summary
-    needs: [prepare, collect-wheels, collect-packages, create-release, publish-pypi, publish-testpypi]
+    needs: [prepare, collect-wheels, collect-packages, generate-assets, create-release, publish-pypi, publish-testpypi]
     if: always()
     runs-on: ubuntu-24.04
     steps:
