@@ -23,6 +23,13 @@ fi
 # Change to pretaster directory
 cd "$PRETASTER_DIR"
 
+# Clear stale PSP caches — each build produces a new timestamp → new checksum.
+# Without clearing, strict validation rejects the rebuilt package.
+FLAVOR_CACHE_BASE="${FLAVOR_CACHE_BASE:-${HOME}/.cache/flavor/workenv}"
+for pkg in echo-test shell-test env-test orchestrate-test permissions-test init-cleanup-test pretaster-echo pretaster-shell pretaster-env pretaster-orchestrate pretaster-combo; do
+    rm -rf "${FLAVOR_CACHE_BASE}/${pkg}" "${FLAVOR_CACHE_BASE}/.${pkg}.pspf" 2>/dev/null || true
+done
+
 # Check if we're running inside a PSP (FLAVOR_WORKENV will be set by launcher)
 if [ -n "${FLAVOR_WORKENV:-}" ]; then
     echo "📦 Running inside PSP package (FLAVOR_WORKENV=$FLAVOR_WORKENV)"
