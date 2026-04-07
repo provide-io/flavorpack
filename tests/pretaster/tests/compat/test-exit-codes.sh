@@ -109,7 +109,8 @@ EOF
     # Build package
     local builder_bin="../../dist/bin/flavor-${builder}-builder-${PLATFORM}${EXT}"
     local launcher_bin="../../dist/bin/flavor-${launcher}-launcher-${PLATFORM}${EXT}"
-    if ! $builder_bin --manifest configs/test-exit.json --launcher-bin "$launcher_bin" --output "$package_file" --key-seed test123 --log-level error 2>&1 | grep -v "^🦀\|^🐹" >/dev/null; then
+    # Use exit status of the builder itself, not grep (piping through grep loses the builder's exit code)
+    if ! $builder_bin --manifest configs/test-exit.json --launcher-bin "$launcher_bin" --output "$package_file" --key-seed test123 --log-level error >/dev/null 2>&1; then
         echo -e "${RED}❌ Failed to build package${NC}"
         return 1
     fi
