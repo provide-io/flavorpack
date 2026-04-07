@@ -55,7 +55,7 @@ jobs:
 
       - name: 🔧 Setup Go (Windows — builds tastesh-win Go interpreter)
         if: steps.cache.outputs.cache-hit != 'true' && runner.os == 'Windows'
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: '1.23'
           cache-dependency-path: ci/tastesh-win/go.sum
