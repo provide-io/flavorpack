@@ -556,7 +556,7 @@ class TestBundleExecutorDebugBranch:
         """Branch 215 True: is_debug_enabled() True — debug log is emitted."""
         from flavor.psp.format_2025.executor import BundleExecutor
 
-        metadata: dict = {
+        metadata: dict[str, object] = {
             "package": {"name": "mypkg", "version": "1.0.0"},
             "execution": {},
         }
@@ -578,7 +578,7 @@ class TestBundleExecutorDebugBranch:
         """Branch 215->217: is_debug_enabled() False — debug log is NOT emitted."""
         from flavor.psp.format_2025.executor import BundleExecutor
 
-        metadata: dict = {
+        metadata: dict[str, object] = {
             "package": {"name": "mypkg", "version": "1.0.0"},
             "execution": {},
         }
