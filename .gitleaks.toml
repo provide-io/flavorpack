@@ -1,0 +1,21 @@
+# Gitleaks configuration
+# https://github.com/gitleaks/gitleaks?tab=readme-ov-file#configuration
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Intentional test key material and generated build artifacts"
+paths = [
+    # Ed25519 test keys used in unit/integration tests — not real secrets
+    '''tests/packaging/test_keys\.py''',
+    '''tests/pretaster/configs/keys/''',
+    '''tests/taster/configs/keys/''',
+    '''tests/taster/keys/''',
+    # Deterministic key seed constant in Go builder tests
+    '''src/flavor-go/pkg/psp/format_2025/builder\.go''',
+    '''src/flavor-go-bf\.txt''',
+]
