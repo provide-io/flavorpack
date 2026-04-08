@@ -63,7 +63,7 @@ flavor verify myapp.psp
 
 The Progressive Secure Package Format is a polyglot file format that works as both an OS executable and a structured package. Each `.psp` file contains a native launcher, package metadata, and compressed data slots.
 
-See the [PSPF Format Specification](docs/reference/spec/fep-0001-core-format-and-operation-chains.md#32-package-structure-overview) for the complete binary layout diagram and technical details.
+See the [PSPF Format Specification](https://foundry.provide.io/flavorpack/reference/spec/fep-0001-core-format-and-operation-chains/#32-package-structure-overview) for the complete binary layout diagram and technical details.
 
 ## 📚 Documentation
 
