@@ -131,7 +131,7 @@ The `sbom` value MUST be a valid CycloneDX 1.6 JSON object. The `components` arr
 - All Python packages installed into the package (name, version, PURL)
 - The Python runtime (version, implementation)
 - The launcher binary (language, version, content hash)
-- The FlavorPack builder (version, content hash)
+- The Flavorpack builder (version, content hash)
 
 Builders MAY include additional components. Consumers MUST NOT reject attestation slots that contain components beyond this list.
 
@@ -369,6 +369,6 @@ Consumers relying on SBOM data for compliance purposes SHOULD verify the full Ed
 - [RFC8174] Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words", BCP 14, RFC 8174, May 2017. <https://www.rfc-editor.org/rfc/rfc8174>
 - [RFC8785] Rundgren, A., Jordan, B., Erdtman, S., "JSON Canonicalization Scheme (JCS)", RFC 8785, June 2020. <https://www.rfc-editor.org/rfc/rfc8785>
 - [CycloneDX16] OWASP Foundation, "CycloneDX Specification v1.6", 2024. <https://cyclonedx.org/specification/overview/>
-- [FEP-0001] FlavorPack Engineering Proposal 0001, "Progressive Secure Package Format (PSPF/2025) - Core Specification".
-- [FEP-0002] FlavorPack Engineering Proposal 0002, "PSPF/2025 JSON Metadata Format Specification".
+- [FEP-0001] Flavorpack Engineering Proposal 0001, "Progressive Secure Package Format (PSPF/2025) - Core Specification".
+- [FEP-0002] Flavorpack Engineering Proposal 0002, "PSPF/2025 JSON Metadata Format Specification".
 - [XDG-BASEDIR] freedesktop.org, "XDG Base Directory Specification". <https://specifications.freedesktop.org/basedir-spec/latest/>

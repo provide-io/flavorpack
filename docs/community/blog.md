@@ -1,10 +1,10 @@
 # Blog
 
-Articles, updates, and deep dives about FlavorPack.
+Articles, updates, and deep dives about Flavorpack.
 
 ## Coming Soon
 
-The FlavorPack blog is under development.
+The Flavorpack blog is under development.
 
 ## Stay Updated
 
@@ -27,7 +27,7 @@ In the meantime, follow these channels:
 
 Want to write for the blog?
 
-- Share your FlavorPack use case
+- Share your Flavorpack use case
 - Write a technical tutorial
 - Document an integration
 - Explain a complex feature

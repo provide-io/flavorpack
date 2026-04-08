@@ -1,19 +1,19 @@
 # Frequently Asked Questions
 
-Common questions and answers about FlavorPack.
+Common questions and answers about Flavorpack.
 
 !!! note "Package Name vs Tool Name"
-    **FlavorPack** (or `flavorpack`) is the Python package name. The command-line tool and API is called **`flavor`**. Install with `uv sync` (alpha), use with `flavor pack`.
+    **Flavorpack** (or `flavorpack`) is the Python package name. The command-line tool and API is called **`flavor`**. Install with `uv sync` (alpha), use with `flavor pack`.
 
 ## General Questions
 
-### What is FlavorPack?
+### What is Flavorpack?
 
-FlavorPack is a Python packaging system that creates self-contained, single-file executables from Python applications. It bundles your code, dependencies, and resources into a Progressive Secure Package Format (PSPF) file that runs anywhere without installation.
+Flavorpack is a Python packaging system that creates self-contained, single-file executables from Python applications. It bundles your code, dependencies, and resources into a Progressive Secure Package Format (PSPF) file that runs anywhere without installation.
 
-### How does FlavorPack differ from PyInstaller or cx_Freeze?
+### How does Flavorpack differ from PyInstaller or cx_Freeze?
 
-| Feature | FlavorPack | PyInstaller | cx_Freeze |
+| Feature | Flavorpack | PyInstaller | cx_Freeze |
 |---------|------------|-------------|-----------|
 | Output format | Single `.psp` file | Single exe or folder | Folder with exe |
 | Cross-platform build | Yes | Limited | Limited |
@@ -23,23 +23,23 @@ FlavorPack is a Python packaging system that creates self-contained, single-file
 | Work environments | Managed cache | Temp extraction | In-place |
 | Update mechanism | Slot-based | Full rebuild | Full rebuild |
 
-### What platforms does FlavorPack support?
+### What platforms does Flavorpack support?
 
-FlavorPack supports:
+Flavorpack supports:
 - **Linux**: x86_64 (amd64), ARM64
 - **macOS**: Intel (x86_64), Apple Silicon (ARM64)
 - **Windows**: x86_64 (64-bit)
 
 ### What Python versions are supported?
 
-FlavorPack requires Python 3.11 or later.
+Flavorpack requires Python 3.11 or later.
 
 ## Installation
 
-### How do I install FlavorPack?
+### How do I install Flavorpack?
 
 !!! warning "Alpha Status - Source Installation Only"
-    FlavorPack is currently in alpha. Installation from PyPI is **not yet available**.
+    Flavorpack is currently in alpha. Installation from PyPI is **not yet available**.
 
 ```bash
 # Clone the repository
@@ -70,9 +70,9 @@ Yes, during alpha you need to build the launcher binaries locally. This requires
 
 Run `make build-helpers` to build the Go and Rust launcher/builder binaries.
 
-### Can I use FlavorPack in a virtual environment?
+### Can I use Flavorpack in a virtual environment?
 
-Yes, FlavorPack works perfectly in virtual environments. During alpha, use source installation:
+Yes, Flavorpack works perfectly in virtual environments. During alpha, use source installation:
 
 ```bash
 python -m venv venv
@@ -81,7 +81,7 @@ cd flavorpack
 uv sync
 ```
 
-### How do I update FlavorPack?
+### How do I update Flavorpack?
 
 During alpha, update from source:
 
@@ -110,7 +110,7 @@ entry_point = "myapp:main"
 ### Can I include non-Python files?
 
 !!! info "📋 Planned Feature"
-    Manual slot configuration is planned for a future release. Currently, FlavorPack automatically packages your Python application and its dependencies.
+    Manual slot configuration is planned for a future release. Currently, Flavorpack automatically packages your Python application and its dependencies.
 
 ### How do I exclude files from the package?
 
@@ -143,7 +143,7 @@ entry_point = "myapp:main"
 
 ## Running Packages
 
-### How do I run a FlavorPack package?
+### How do I run a Flavorpack package?
 
 ```bash
 # Linux/macOS
@@ -190,13 +190,13 @@ flavor workenv clean --yes
 
 ### Can I run packages without extraction?
 
-Not currently. FlavorPack always extracts to a work environment, but caching makes subsequent runs very fast.
+Not currently. Flavorpack always extracts to a work environment, but caching makes subsequent runs very fast.
 
 ## Security
 
 ### How does package signing work?
 
-FlavorPack uses Ed25519 digital signatures:
+Flavorpack uses Ed25519 digital signatures:
 
 ```bash
 # Generate keys
@@ -221,9 +221,9 @@ Yes, but it's not recommended:
 FLAVOR_VALIDATION=none ./myapp.psp
 ```
 
-### How secure are FlavorPack packages?
+### How secure are Flavorpack packages?
 
-FlavorPack provides:
+Flavorpack provides:
 - Ed25519 digital signatures
 - SHA-256 checksums for all components
 - Isolated work environments
@@ -238,7 +238,7 @@ Dependencies specified in `pyproject.toml` are installed into a virtual environm
 
 ### Can I use packages with C extensions?
 
-Yes, FlavorPack supports packages with compiled extensions. Platform-specific wheels are automatically included.
+Yes, Flavorpack supports packages with compiled extensions. Platform-specific wheels are automatically included.
 
 ### What if a dependency isn't on PyPI?
 
@@ -313,9 +313,9 @@ myapp-admin = "myapp.admin:main"
 myapp-worker = "myapp.worker:main"
 ```
 
-### Can I use FlavorPack programmatically?
+### Can I use Flavorpack programmatically?
 
-Yes, FlavorPack provides a Python API:
+Yes, Flavorpack provides a Python API:
 
 ```python
 from flavor import build_package_from_manifest
@@ -332,9 +332,9 @@ See the [API Reference](../api/index/) for complete documentation.
 
 You can build custom launchers from the Go or Rust source in the `helpers/` directory.
 
-### Can I embed FlavorPack in CI/CD?
+### Can I embed Flavorpack in CI/CD?
 
-Yes, FlavorPack works well in CI/CD. During alpha, use source installation:
+Yes, Flavorpack works well in CI/CD. During alpha, use source installation:
 
 {% raw %}
 ```yaml
@@ -380,13 +380,13 @@ Subsequent runs: <100ms (cached)
 
 ## Licensing
 
-### What license is FlavorPack under?
+### What license is Flavorpack under?
 
-FlavorPack is licensed under the Apache License 2.0.
+Flavorpack is licensed under the Apache License 2.0.
 
-### Can I use FlavorPack for commercial applications?
+### Can I use Flavorpack for commercial applications?
 
-Yes, FlavorPack can be used for commercial applications without restrictions.
+Yes, Flavorpack can be used for commercial applications without restrictions.
 
 ### Do I need to include attribution?
 

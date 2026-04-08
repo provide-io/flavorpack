@@ -1,0 +1,200 @@
+# Base MkDocs Configuration for provide.io Ecosystem
+# This file contains shared configuration for all provide.io project documentation.
+# Individual projects should inherit from this using: INHERIT: .provide/foundry/base-mkdocs.yml
+
+# Theme Configuration
+theme:
+  name: material
+  language: en
+  custom_dir: .provide/foundry/theme
+
+  # Color Palette (with light/dark mode toggle)
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+  # Typography
+  font:
+    text: Roboto
+    code: Roboto Mono
+
+  # Logo
+  logo: assets/images/officium-light.svg
+  favicon: assets/images/officium-dark.svg
+
+  # Material theme features
+  features:
+    # Navigation
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.instant.progress
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    # - navigation.expand  # Disabled - causes issues with monorepo nested nav
+    - navigation.path
+    - navigation.indexes
+    - navigation.top
+    - navigation.footer
+
+    # Table of contents
+    - toc.follow
+    # - toc.integrate  # Disabled - can interfere with navigation sidebar in monorepo
+
+    # Search
+    - search.suggest
+    - search.highlight
+    - search.share
+
+    # Content
+    - content.code.copy
+    - content.code.select
+    - content.code.annotate
+    - content.tabs.link
+    - content.tooltips
+    - content.action.edit
+    - content.action.view
+
+    # Header
+    - header.autohide
+
+    # Announce
+    - announce.dismiss
+
+# Plugins Configuration
+plugins:
+  - search:
+      separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+      lang:
+        - en
+
+  - autorefs
+
+  - macros:
+      include_dir: .provide/foundry/theme/data
+      # Custom delimiters to avoid conflicts with GitHub Actions syntax (${{ }})
+      j2_variable_start_string: '{$'
+      j2_variable_end_string: '$}'
+      j2_block_start_string: '{%'
+      j2_block_end_string: '%}'
+
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: google
+            show_source: true
+            show_root_heading: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            show_signature_annotations: true
+            signature_crossrefs: true
+            show_bases: true
+            show_inheritance_diagram: false
+            merge_init_into_class: true
+            separate_signature: true
+            members_order: source
+            inherited_members: true
+
+  - htmlproofer:
+      # Warn only for local development, can be overridden in CI
+      raise_error: false
+      # Validation options
+      validate_rendered_template: true
+      validate_external_urls: false  # External links checked separately in CI
+
+# Markdown Extensions
+markdown_extensions:
+  # Python Markdown
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - tables
+  - meta
+
+  # Python Markdown Extensions
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.mark
+  - pymdownx.tilde
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+      use_pygments: true
+      auto_title: true
+      linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.smartsymbols
+  - pymdownx.snippets:
+      check_paths: true
+      base_path:
+        - docs
+        - .
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+      combine_header_slug: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.critic:
+      mode: view
+
+# Extra CSS
+# Projects reference centralized theme from provide-foundry namespace package
+extra_css:
+  - css/provide-theme.css
+  - css/termynal.css
+  - css/extra.css  # Project-specific overrides
+
+# Extra JavaScript
+extra_javascript:
+  - https://unpkg.com/mermaid@10/dist/mermaid.min.js
+  - js/mermaid-init.js
+  - js/termynal.js
+  - js/custom.js
+
+# Copyright Footer
+copyright: ©2024-2025 provide.io llc<br/>🛠️ with 💚 and 🦝 on 🌎
+
+# Validation
+validation:
+  omitted_files: info
+  absolute_links: warn
+  unrecognized_links: warn

@@ -1,10 +1,10 @@
 # Cache Management
 
-Manage FlavorPack's work environment cache for efficient package execution.
+Manage Flavorpack's work environment cache for efficient package execution.
 
 ## Overview
 
-FlavorPack uses a work environment cache to avoid extracting packages on every execution. Understanding and managing this cache is essential for optimal performance and disk usage.
+Flavorpack uses a work environment cache to avoid extracting packages on every execution. Understanding and managing this cache is essential for optimal performance and disk usage.
 
 ### What is the Cache?
 
@@ -213,7 +213,7 @@ This ensures:
 
 ### Automatic Validation
 
-Every time a package runs, FlavorPack validates the cache:
+Every time a package runs, Flavorpack validates the cache:
 
 ```mermaid
 graph TD

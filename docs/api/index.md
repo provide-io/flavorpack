@@ -1,13 +1,13 @@
 # API Reference
 
-Python API reference documentation for FlavorPack.
+Python API reference documentation for Flavorpack.
 
 !!! note "Package Name vs Tool Name"
-    **FlavorPack** (or `flavorpack`) is the Python package name. The command-line tool and API is called **`flavor`**. Import with `from flavor import ...`.
+    **Flavorpack** (or `flavorpack`) is the Python package name. The command-line tool and API is called **`flavor`**. Import with `from flavor import ...`.
 
 ## Overview
 
-FlavorPack provides a function-based API for building and verifying PSPF packages. The API is designed for integration into build systems, CI/CD pipelines, and custom tooling.
+Flavorpack provides a function-based API for building and verifying PSPF packages. The API is designed for integration into build systems, CI/CD pipelines, and custom tooling.
 
 ## Main API
 
@@ -140,7 +140,7 @@ except VerificationError as e:
 
 ## Documentation Types
 
-FlavorPack provides two types of API documentation:
+Flavorpack provides two types of API documentation:
 
 ### 📖 Manual API Guides (Recommended)
 
@@ -189,7 +189,7 @@ flavor/
 
 **User Documentation**:
 
-- 📚 [User Guide](../guide/index/) - Learn how to use FlavorPack
+- 📚 [User Guide](../guide/index/) - Learn how to use Flavorpack
 - 🍳 [Cookbook](../cookbook/index/) - Practical examples and recipes
 - 📋 [CLI Reference](../guide/usage/cli/) - Command-line interface documentation
 

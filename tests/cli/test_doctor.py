@@ -86,7 +86,7 @@ class TestDoctorCommand:
         mock_keys_dir: Mock,
         tmp_path: Path,
     ) -> None:
-        """Output contains the FlavorPack Doctor header."""
+        """Output contains the Flavorpack Doctor header."""
         mock_mgr = MagicMock()
         mock_mgr.list_helpers.return_value = {"launchers": [], "builders": []}
         mock_mgr_cls.return_value = mock_mgr
@@ -95,7 +95,7 @@ class TestDoctorCommand:
         mock_keys_dir.return_value = tmp_path / "keys"
 
         result = self._run()
-        assert "FlavorPack Doctor" in result.output
+        assert "Flavorpack Doctor" in result.output
 
     @patch("flavor.commands.doctor.get_trusted_keys_dir")
     @patch("flavor.commands.doctor.get_config_dir")

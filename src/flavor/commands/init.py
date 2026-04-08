@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""flavor init — one-shot host setup for FlavorPack."""
+"""flavor init — one-shot host setup for Flavorpack."""
 
 from __future__ import annotations
 
@@ -47,7 +47,7 @@ _POLICY_JSON_SCAFFOLD = {
     help="Set up system-wide config under /etc/flavor (requires root/sudo).",
 )
 def init_command(global_: bool) -> None:
-    """Set up FlavorPack config directory structure on this host.
+    """Set up Flavorpack config directory structure on this host.
 
     Creates the trusted-keys directory and a default policy.json.
     Safe to run multiple times — existing files are never overwritten.
@@ -55,7 +55,7 @@ def init_command(global_: bool) -> None:
     config_root: Path = get_system_config_dir() if global_ else get_config_dir()
     scope = "system" if global_ else "user"
 
-    log.debug("Initializing FlavorPack config", scope=scope, root=str(config_root))
+    log.debug("Initializing Flavorpack config", scope=scope, root=str(config_root))
 
     # Create trusted-keys directory
     trusted_keys_dir = config_root / "trusted-keys"
@@ -70,7 +70,7 @@ def init_command(global_: bool) -> None:
     else:
         pout(f"  {policy_file}  (already exists, not modified)")
 
-    pout(f"\nFlavorPack {scope} config initialised at {config_root}")
+    pout(f"\nFlavorpack {scope} config initialised at {config_root}")
     if not global_:
         pout("  Add trusted keys with: flavor trust add <key.pub>")
         pout(f"  Edit policy:           {policy_file}")

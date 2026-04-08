@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""FlavorPack configuration manager for env loading and global access."""
+"""Flavorpack configuration manager for env loading and global access."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from flavor.config.config import (
 
 
 class FlavorConfigManager:
-    """Manager for FlavorPack configuration."""
+    """Manager for Flavorpack configuration."""
 
     def __init__(self) -> None:
         """Initialize the configuration manager."""

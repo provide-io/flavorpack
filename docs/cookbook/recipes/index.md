@@ -6,7 +6,7 @@ Short, focused how-to guides for specific integration scenarios and workflows.
 
 ### :material-docker: **Docker Integration**
 
-Use FlavorPack packages in Docker containers.
+Use Flavorpack packages in Docker containers.
 
 **[View Recipe →](docker/)**
 

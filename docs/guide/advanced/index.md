@@ -1,6 +1,6 @@
 # Advanced Topics
 
-Deep dive into FlavorPack's advanced features and customization options.
+Deep dive into Flavorpack's advanced features and customization options.
 
 ## Overview
 
@@ -8,7 +8,7 @@ These topics are for users who want to:
 - Customize launchers and builders
 - Optimize performance
 - Debug complex issues
-- Extend FlavorPack functionality
+- Extend Flavorpack functionality
 
 ## Topics
 

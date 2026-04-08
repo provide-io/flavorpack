@@ -1,6 +1,6 @@
 # Understanding the PSPF Format
 
-The **Progressive Secure Package Format (PSPF) 2025 Edition** is the core innovation that makes FlavorPack possible. It's a polyglot file format that works as both an OS-native executable and a structured data package.
+The **Progressive Secure Package Format (PSPF) 2025 Edition** is the core innovation that makes Flavorpack possible. It's a polyglot file format that works as both an OS-native executable and a structured data package.
 
 ## What Makes PSPF Special?
 
@@ -327,7 +327,7 @@ sequenceDiagram
 
 ### Cache Management
 
-FlavorPack uses intelligent caching:
+Flavorpack uses intelligent caching:
 
 ```bash
 # Cache structure

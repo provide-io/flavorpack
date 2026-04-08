@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""UV tool manager for FlavorPack packaging.
+"""UV tool manager for Flavorpack packaging.
 
 This module provides UV (uv) command management with Foundation integration
 for Python package management operations that benefit from uv's performance.

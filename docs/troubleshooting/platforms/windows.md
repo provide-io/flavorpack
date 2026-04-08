@@ -86,12 +86,12 @@ Register-ScheduledTask -TaskName "MyApp" -Action $action -Trigger $trigger -Prin
 **Solution**:
 ```powershell
 # Add to PATH (current session)
-$env:Path += ";C:\Path\To\FlavorPack"
+$env:Path += ";C:\Path\To\Flavorpack"
 
 # Add to PATH (permanent)
 [Environment]::SetEnvironmentVariable(
     "Path",
-    $env:Path + ";C:\Path\To\FlavorPack",
+    $env:Path + ";C:\Path\To\Flavorpack",
     [EnvironmentVariableTarget]::User
 )
 
@@ -124,7 +124,7 @@ py -3.11 -m pip install --upgrade pip
 **Solution**:
 ```powershell
 # Windows Defender exclusions
-Add-MpPreference -ExclusionPath "C:\FlavorPack"
+Add-MpPreference -ExclusionPath "C:\Flavorpack"
 Add-MpPreference -ExclusionProcess "myapp.psp"
 
 # Check quarantine
@@ -177,7 +177,7 @@ icacls .\myapp.psp /inheritance:r
 {% raw %}
 ```powershell
 # Allow through firewall
-New-NetFirewallRule -DisplayName "FlavorPack" `
+New-NetFirewallRule -DisplayName "Flavorpack" `
     -Direction Outbound -Program "C:\Path\To\myapp.psp" `
     -Action Allow
 
@@ -214,12 +214,12 @@ netsh winhttp show proxy
 # Install as service using NSSM
 nssm install MyApp "C:\Path\To\myapp.psp"
 nssm set MyApp AppDirectory "C:\Path\To"
-nssm set MyApp DisplayName "My FlavorPack App"
-nssm set MyApp Description "FlavorPack application service"
+nssm set MyApp DisplayName "My Flavorpack App"
+nssm set MyApp Description "Flavorpack application service"
 nssm start MyApp
 
 # Or using sc.exe
-sc create MyApp binPath= "C:\Path\To\myapp.psp" DisplayName= "My FlavorPack App"
+sc create MyApp binPath= "C:\Path\To\myapp.psp" DisplayName= "My Flavorpack App"
 sc start MyApp
 ```
 
@@ -232,7 +232,7 @@ $Shortcut = $WshShell.CreateShortcut("$env:USERPROFILE\Desktop\MyApp.lnk")
 $Shortcut.TargetPath = "C:\Path\To\myapp.psp"
 $Shortcut.WorkingDirectory = "C:\Path\To"
 $Shortcut.IconLocation = "C:\Path\To\icon.ico"
-$Shortcut.Description = "My FlavorPack Application"
+$Shortcut.Description = "My Flavorpack Application"
 $Shortcut.Save()
 ```
 
@@ -240,9 +240,9 @@ $Shortcut.Save()
 
 ```powershell
 # Add to context menu
-$regPath = "Registry::HKEY_CLASSES_ROOT\*\shell\RunWithFlavorPack"
+$regPath = "Registry::HKEY_CLASSES_ROOT\*\shell\RunWithFlavorpack"
 New-Item -Path $regPath -Force
-New-ItemProperty -Path $regPath -Name "(Default)" -Value "Run with FlavorPack"
+New-ItemProperty -Path $regPath -Name "(Default)" -Value "Run with Flavorpack"
 New-Item -Path "$regPath\command" -Force
 New-ItemProperty -Path "$regPath\command" -Name "(Default)" `
     -Value '"C:\Path\To\myapp.psp" "%1"'
@@ -258,7 +258,7 @@ New-ItemProperty -Path "$regPath\command" -Name "(Default)" `
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug FlavorPack",
+      "name": "Debug Flavorpack",
       "type": "python",
       "request": "launch",
       "program": "${workspaceFolder}/myapp.psp",
@@ -280,9 +280,9 @@ New-ItemProperty -Path "$regPath\command" -Name "(Default)" `
   "profiles": {
     "list": [
       {
-        "name": "FlavorPack Dev",
-        "commandline": "powershell.exe -NoExit -Command \"& {Set-Location 'C:\\FlavorPack'; $env:FLAVOR_LOG_LEVEL='debug'}\"",
-        "startingDirectory": "C:\\FlavorPack",
+        "name": "Flavorpack Dev",
+        "commandline": "powershell.exe -NoExit -Command \"& {Set-Location 'C:\\Flavorpack'; $env:FLAVOR_LOG_LEVEL='debug'}\"",
+        "startingDirectory": "C:\\Flavorpack",
         "icon": "🌶️"
       }
     ]
@@ -332,8 +332,8 @@ Get-EventLog -LogName Application -Newest 50 | Where-Object {$_.Message -like "*
 Get-EventLog -LogName System -EntryType Error -Newest 20
 
 # Create custom event log
-New-EventLog -LogName "FlavorPack" -Source "MyApp"
-Write-EventLog -LogName "FlavorPack" -Source "MyApp" -EventId 1 -Message "Application started"
+New-EventLog -LogName "Flavorpack" -Source "MyApp"
+Write-EventLog -LogName "Flavorpack" -Source "MyApp" -EventId 1 -Message "Application started"
 ```
 {% endraw %}
 
@@ -341,7 +341,7 @@ Write-EventLog -LogName "FlavorPack" -Source "MyApp" -EventId 1 -Message "Applic
 
 {% raw %}
 ```powershell
-# diagnose-flavor.ps1 - Diagnostic script for FlavorPack on Windows
+# diagnose-flavor.ps1 - Diagnostic script for Flavorpack on Windows
 
 Write-Host "=== System Information ===" -ForegroundColor Cyan
 $os = Get-CimInstance Win32_OperatingSystem

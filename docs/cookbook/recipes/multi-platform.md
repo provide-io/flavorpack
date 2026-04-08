@@ -4,7 +4,7 @@ Build packages for multiple platforms from a single codebase.
 
 ## Overview
 
-FlavorPack supports building packages for different platforms (Linux, macOS, Windows) and architectures (AMD64, ARM64) from a single build machine.
+Flavorpack supports building packages for different platforms (Linux, macOS, Windows) and architectures (AMD64, ARM64) from a single build machine.
 
 ## Single-Platform Build
 
@@ -99,7 +99,7 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install FlavorPack
+      - name: Install Flavorpack
         run: pip install flavor
 
       - name: Build helpers
