@@ -67,13 +67,13 @@ See the [PSPF Format Specification](docs/reference/spec/fep-0001-core-format-and
 
 ## 📚 Documentation
 
-- **[Quick Start](docs/getting-started/quickstart.md)** - Get started in 5 minutes
-- **[User Guide](docs/guide/)** - Comprehensive guide to using FlavorPack
-- **[PSPF Format Specification](docs/reference/spec/fep-0001-core-format-and-operation-chains.md)** - Binary format details
-- **[API Reference](docs/api/)** - Python API documentation
-- **[Development Guide](docs/development/)** - Contributing and development setup
-- **[Troubleshooting](docs/troubleshooting/)** - Common issues and solutions
-- **[Full Documentation](docs/index.md)** - Complete documentation portal
+- **[Quick Start](https://foundry.provide.io/flavorpack/getting-started/quickstart/)** - Get started in 5 minutes
+- **[User Guide](https://foundry.provide.io/flavorpack/guide/)** - Comprehensive guide to using FlavorPack
+- **[PSPF Format Specification](https://foundry.provide.io/flavorpack/reference/spec/fep-0001-core-format-and-operation-chains/)** - Binary format details
+- **[API Reference](https://foundry.provide.io/flavorpack/api/)** - Python API documentation
+- **[Development Guide](https://foundry.provide.io/flavorpack/development/)** - Contributing and development setup
+- **[Troubleshooting](https://foundry.provide.io/flavorpack/troubleshooting/)** - Common issues and solutions
+- **[Full Documentation](https://foundry.provide.io/flavorpack/)** - Complete documentation portal
 
 ## 🏗️ Architecture
 
