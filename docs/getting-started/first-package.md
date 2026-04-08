@@ -186,8 +186,7 @@ A simple command-line weather tool packaged with Flavorpack.
 - 🔒 No API keys required
 
 Built with Flavorpack - https://foundry.provide.io/flavorpack/
-
-````
+```
 
 ## Step 3: Build the Package
 
@@ -429,10 +428,10 @@ Try these improvements:
 
 Congratulations! You've successfully:
 
-✅ Created a real-world Python application\
-✅ Configured it for Flavorpack packaging\
-✅ Built a self-contained executable\
-✅ Tested and verified the package\
-✅ Learned distribution strategies
+✅ Created a real-world Python application  
+✅ Configured it for Flavorpack packaging  
+✅ Built a self-contained executable  
+✅ Tested and verified the package  
+✅ Learned distribution strategies  
 
 Your weather CLI tool is now ready to share with the world - no installation required! 🎉

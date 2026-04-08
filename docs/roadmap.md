@@ -2,7 +2,8 @@
 
 This roadmap shows the current implementation status and planned features for Flavorpack. Use this to understand what works today versus what's coming in future releases.
 
-!!! info "Version Status" Flavorpack is currently in **alpha** stage. APIs, file formats, and commands may change without notice.
+!!! info "Version Status"
+    Flavorpack is currently in **alpha** stage. APIs, file formats, and commands may change without notice.
 
 ## Legend
 
@@ -706,9 +707,9 @@ ______________________________________________________________________
 Want to help implement roadmap features?
 
 1. **Pick a Feature:** Choose from "Planned" features above
-1. **Discuss Approach:** Open GitHub Discussion
-1. **Create FEP:** Submit Flavorpack Enhancement Proposal if needed
-1. **Submit PR:** Implement with tests and docs
+2. **Discuss Approach:** Open GitHub Discussion
+3. **Create FEP:** Submit Flavorpack Enhancement Proposal if needed
+4. **Submit PR:** Implement with tests and docs
 
 See our [Contributing Guide](development/contributing/) for detailed instructions.
 
@@ -719,9 +720,9 @@ ______________________________________________________________________
 Have an idea for Flavorpack? Here's how to suggest features:
 
 1. **Check Existing Roadmap:** Review this document first
-1. **Search Issues:** Check if already proposed on [GitHub Issues](https://github.com/provide-io/flavorpack/issues)
-1. **Submit FEP:** Create Flavorpack Enhancement Proposal for major features
-1. **Community Discussion:** Discuss in [GitHub Discussions](https://github.com/provide-io/flavorpack/discussions)
+2. **Search Issues:** Check if already proposed on [GitHub Issues](https://github.com/provide-io/flavorpack/issues)
+3. **Submit FEP:** Create Flavorpack Enhancement Proposal for major features
+4. **Community Discussion:** Discuss in [GitHub Discussions](https://github.com/provide-io/flavorpack/discussions)
 
 ______________________________________________________________________
 

@@ -165,7 +165,8 @@ flavor pack --manifest pyproject.toml --key-seed "secret-seed"
 # Signing is automatic - no separate sign command needed
 ```
 
-!!! note "No Post-Build Signing" Flavorpack does not support signing packages after they've been built. Signing happens only during `flavor pack`. To re-sign a package, rebuild it with new keys.
+!!! note "No Post-Build Signing"
+    Flavorpack does not support signing packages after they've been built. Signing happens only during `flavor pack`. To re-sign a package, rebuild it with new keys.
 
 ### Batch Building with Signing
 
@@ -329,7 +330,8 @@ flavor trust verify package.psp
 
 ### 3. Web of Trust (Future)
 
-!!! info "Planned Feature" Multiple signatures from trusted parties (N-of-M threshold schemes) are planned for a future release. Currently Flavorpack supports a single signer per package with trusted key store verification.
+!!! info "Planned Feature"
+    Multiple signatures from trusted parties (N-of-M threshold schemes) are planned for a future release. Currently Flavorpack supports a single signer per package with trusted key store verification.
 
 ### 4. Certificate Authority (Future)
 
@@ -596,7 +598,8 @@ flavor trust remove <64-hex-char fingerprint>
 
 ### Multi-Signature Packages (Planned)
 
-!!! info "Future Feature" Threshold signature schemes (N-of-M signatures required) are planned for a future release. Currently Flavorpack supports a single signer per package with trusted key store verification.
+!!! info "Future Feature"
+    Threshold signature schemes (N-of-M signatures required) are planned for a future release. Currently Flavorpack supports a single signer per package with trusted key store verification.
 
 ### Hardware Token Integration (Planned)
 

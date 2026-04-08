@@ -14,7 +14,6 @@
 ## Overview
 
 Flavorpack is a multi-language packaging system that implements the Progressive Secure Package Format (PSPF/2025). It creates self-extracting, polyglot archives that are simultaneously valid as:
-
 - Native OS executables (Linux/macOS/Windows)
 - PSPF packages with cryptographic integrity verification
 - Python-installable packages with embedded dependencies

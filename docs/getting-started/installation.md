@@ -1,6 +1,7 @@
 # Installation
 
-!!! warning "Alpha Release - Source Installation Only" Flavorpack is in early alpha. PyPI packages and pre-built binaries are not yet available. Check current version with `flavor --version`. **Install from source only.**
+!!! warning "Alpha Release - Source Installation Only"
+    Flavorpack is in early alpha. PyPI packages and pre-built binaries are not yet available. Check current version with `flavor --version`. **Install from source only.**
 
 Get started with Flavorpack, a cross-language packaging system implementing the Progressive Secure Package Format (PSPF/2025) that creates self-contained, portable executables from Python applications.
 
@@ -8,7 +9,8 @@ Get started with Flavorpack, a cross-language packaging system implementing the 
 
 --8\<-- ".provide/foundry/docs/\_partials/python-requirements.md"
 
-!!! info "UV Version Requirement" Flavorpack requires **UV 0.8.13 or later** for full functionality. Earlier versions may have compatibility issues with modern package management features.
+!!! info "UV Version Requirement"
+    Flavorpack requires **UV 0.8.13 or later** for full functionality. Earlier versions may have compatibility issues with modern package management features.
 
 --8\<-- ".provide/foundry/docs/\_partials/uv-installation.md"
 
@@ -22,7 +24,7 @@ Flavorpack's native launchers and builders require Go and Rust toolchains:
 
 **Rust Requirements:**
 
-FlavorPack requires Rust 1.86+ (edition 2024):
+Flavorpack requires Rust 1.86+ (edition 2024):
 
 ```bash
 # Install Rust via rustup
@@ -46,7 +48,7 @@ See [Rust's official installation guide](https://www.rust-lang.org/tools/install
 
 | Component | Version | Required For |
 |-----------|---------|--------------|
-| Python | 3.11+ | Running FlavorPack |
+| Python | 3.11+ | Running Flavorpack |
 | UV | 0.8.13+ | Package management |
 | Go | 1.26+ | Building Go helpers |
 | Rust | 1.86+ | Building Rust helpers (edition 2024) |
@@ -63,7 +65,8 @@ See [Rust's official installation guide](https://www.rust-lang.org/tools/install
 | macOS    | arm64        | ✅ Full     | Dynamic       | Apple Silicon                          |
 | Windows  | x86_64       | ⚠️ Disabled | Dynamic       | Currently disabled due to UTF-8 issues |
 
-!!! warning "Windows Support Status" Windows support is currently **disabled** in Flavorpack due to UTF-8 encoding issues in the native helpers. Windows support is planned for a future release once these issues are resolved.
+!!! warning "Windows Support Status"
+    Windows support is currently **disabled** in Flavorpack due to UTF-8 encoding issues in the native helpers. Windows support is planned for a future release once these issues are resolved.
 
 !!! info "Binary Compatibility" All Linux binaries are built as static executables: - **Go**: Built with `CGO_ENABLED=0` for static linking - **Rust**: Built with musl libc for static linking - **Compatibility**: Works on CentOS 7+, Amazon Linux 2023, Ubuntu, Alpine, and any Linux distribution - **No glibc dependencies**: Binaries are fully portable
 
@@ -226,7 +229,6 @@ make build-windows
 ### Basic Verification
 
 **1. Check Flavorpack Version:**
-
 ```bash
 # Verify flavor command is available
 flavor --version
