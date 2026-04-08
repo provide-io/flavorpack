@@ -6,7 +6,7 @@
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![CI](https://github.com/provide-io/flavorpack/actions/workflows/flavor-pipeline.yml/badge.svg)](https://github.com/provide-io/flavorpack/actions/workflows/flavor-pipeline.yml)
 
-> **Beta**: Flavorpack is under active development. The PSPF 2025 format is stable, and core packaging workflows are tested across 6 platforms (Linux, macOS, Windows, FreeBSD — amd64/arm64). APIs may still evolve before 1.0.
+> **Beta**: FlavorPack is under active development. The PSPF 2025 format is stable, and core packaging workflows are tested across 6 platforms (Linux, macOS, Windows, FreeBSD — amd64/arm64). APIs may still evolve before 1.0.
 
 **Flavorpack** is a cross-language packaging system that creates self-contained, portable executables using the **Progressive Secure Package Format (PSPF) 2025 Edition**. It enables you to ship Python applications as single binaries that "just work" - no installation, no dependencies, no configuration required.
 
