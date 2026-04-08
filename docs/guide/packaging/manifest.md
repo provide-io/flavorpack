@@ -4,9 +4,8 @@ Complete reference for `pyproject.toml` configuration options in Flavorpack pack
 
 !!! warning "Alpha Release - Limited Configuration Support" **Many configuration options shown in this guide are planned but not yet implemented.**
 
-```
-Flavorpack is in alpha and currently supports a **minimal subset** of the documented configuration.
-See the ["Currently Supported Configuration"](#currently-supported-configuration) section below for what actually works today.
+    Flavorpack is in alpha and currently supports a **minimal subset** of the documented configuration.
+    See the ["Currently Supported Configuration"](#currently-supported-configuration) section below for what actually works today.
 
 Features marked with 📋 are planned for future releases. See the [Roadmap](../roadmap/) for implementation timelines.
 ```
@@ -320,9 +319,8 @@ git_commit = "${GIT_COMMIT}"
 
 !!! warning "📋 Planned Feature - Not Yet Implemented" **Slot configuration via `pyproject.toml` is not yet supported.**
 
-```
-Slots are currently created automatically by Flavorpack based on your Python application structure.
-Manual slot configuration is planned for a future release. See [Roadmap](../roadmap/#slot-configuration) for details.
+    Slots are currently created automatically by Flavorpack based on your Python application structure.
+    Manual slot configuration is planned for a future release. See [Roadmap](../roadmap/#slot-configuration) for details.
 
 This entire section documents the **planned slot configuration format** that will be available in future releases.
 ```

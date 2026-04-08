@@ -32,7 +32,6 @@ Your application "just works" - no external dependencies, no configuration requi
 Every package is automatically signed and verified with Ed25519 cryptography. Package integrity is guaranteed.
 
 ### Language Agnostic
-
 Bundle Python, React, Rust, or any combination. Flavorpack doesn't care what's inside—it just packages and runs it.
 
 ### Efficient & Smart

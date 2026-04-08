@@ -100,13 +100,13 @@ def build_sbom(
         launcher_component["hashes"] = [{"alg": alg, "content": value}]
     components.append(launcher_component)
 
-    # FlavorPack builder
+    # Flavorpack builder
     components.append(
         {
             "type": "application",
             "name": package_info.get("builder_name", "flavor-python"),
             "version": package_info.get("builder_version", "unknown"),
-            "description": "FlavorPack PSPF builder",
+            "description": "Flavorpack PSPF builder",
         }
     )
 

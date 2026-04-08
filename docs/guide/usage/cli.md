@@ -4,9 +4,8 @@ Complete command-line interface documentation for Flavorpack.
 
 !!! tip "Prerequisites" Before using the CLI, ensure you have:
 
-```
-- [Flavorpack installed](../../getting-started/installation/)
-- [Helpers built](../../development/contributing/#building-helpers) for package creation
+    - [Flavorpack installed](../../getting-started/installation/)
+    - [Helpers built](../../development/contributing/#building-helpers) for package creation
 
 See [System Requirements](../../reference/requirements/) for detailed information.
 ```

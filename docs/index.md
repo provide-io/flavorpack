@@ -1,6 +1,7 @@
 # Welcome to Flavorpack
 
-!!! warning "Alpha Software - Development Version" Flavorpack is currently in early alpha. APIs, file formats, and commands may change without notice. Not recommended for production use. Check current version with `flavor --version`. **Source installation only** at this time.
+!!! warning "Alpha Software - Development Version"
+    Flavorpack is currently in early alpha. APIs, file formats, and commands may change without notice. Not recommended for production use. Check current version with `flavor --version`. **Source installation only** at this time.
 
 **Flavorpack** is a cross-language packaging system that creates self-contained, portable executables using the **Progressive Secure Package Format (PSPF/2025)**. Ship Python applications as single binaries that work without installation, dependencies, or configuration.
 

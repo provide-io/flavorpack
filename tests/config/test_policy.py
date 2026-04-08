@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Tests for FlavorPack launch-time policy schema, parsing, and merge logic."""
+"""Tests for Flavorpack launch-time policy schema, parsing, and merge logic."""
 
 from __future__ import annotations
 

@@ -42,7 +42,6 @@ Solutions to common problems and error messages.
 Resources for contributors and developers.
 
 ### Getting Involved
-
 - [Contributing](../development/contributing/) - How to contribute to Flavorpack
 - [Architecture](../development/architecture/) - System design and components
 - [Building Helpers](../development/helpers/) - Native component development
@@ -105,7 +104,8 @@ Connect with the Flavorpack community.
 - [Issue Tracker](https://github.com/provide-io/flavorpack/issues)
 - [Discussions](https://github.com/provide-io/flavorpack/discussions)
 
-!!! note "PyPI Package" Flavorpack is not yet available on PyPI. Install from source following the [installation guide](../getting-started/installation/).
+!!! note "PyPI Package"
+    Flavorpack is not yet available on PyPI. Install from source following the [installation guide](../getting-started/installation/).
 
 ### Documentation Formats
 

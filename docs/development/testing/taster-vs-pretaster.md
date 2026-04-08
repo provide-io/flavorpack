@@ -4,18 +4,18 @@ Flavorpack uses two complementary testing frameworks to ensure comprehensive val
 
 ## Quick Comparison
 
-| Feature             | TASTER                                                                                    | PRETASTER                                                      |
-| ------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| **Type**            | Python-based comprehensive test suite                                                     | Shell-based cross-language validation                          |
-| **Language**        | Python 3.11+ with pytest                                                                  | Bash scripts                                                   |
-| **Primary Purpose** | Property testing, integration testing, security validation                                | Builder/launcher compatibility testing                         |
-| **Test Scope**      | Format validation, I/O pipelines, signal handling, memory-mapped I/O, metadata inspection | Package creation and execution across language combinations    |
-| **Use Cases**       | Development, debugging, comprehensive validation                                          | CI/CD, quick compatibility checks, cross-language verification |
-| **Test Execution**  | `pytest` with markers and property-based testing                                          | `make` targets and shell scripts                               |
-| **Package Format**  | Self-contained PSPF package with Python runtime                                           | Simple shell scripts packaged as PSPF                          |
-| **Dependencies**    | Flavorpack, pytest, hypothesis                                                            | Flavorpack helpers (go/rust binaries)                          |
-| **Speed**           | Slower but thorough (property testing, edge cases)                                        | Fast (focused compatibility checks)                            |
-| **When to Use**     | Feature development, debugging issues, security testing                                   | PR validation, release testing, quick sanity checks            |
+| Feature | TASTER | PRETASTER |
+|---------|--------|-----------|
+| **Type** | Python-based comprehensive test suite | Shell-based cross-language validation |
+| **Language** | Python 3.11+ with pytest | Bash scripts |
+| **Primary Purpose** | Property testing, integration testing, security validation | Builder/launcher compatibility testing |
+| **Test Scope** | Format validation, I/O pipelines, signal handling, memory-mapped I/O, metadata inspection | Package creation and execution across language combinations |
+| **Use Cases** | Development, debugging, comprehensive validation | CI/CD, quick compatibility checks, cross-language verification |
+| **Test Execution** | `pytest` with markers and property-based testing | `make` targets and shell scripts |
+| **Package Format** | Self-contained PSPF package with Python runtime | Simple shell scripts packaged as PSPF |
+| **Dependencies** | Flavorpack, pytest, hypothesis | Flavorpack helpers (go/rust binaries) |
+| **Speed** | Slower but thorough (property testing, edge cases) | Fast (focused compatibility checks) |
+| **When to Use** | Feature development, debugging issues, security testing | PR validation, release testing, quick sanity checks |
 
 ______________________________________________________________________
 
@@ -102,7 +102,6 @@ pytest --cov=src --cov-report=term-missing
 ### When to Use TASTER
 
 ✅ **Use TASTER when:**
-
 - Developing new Flavorpack features
 - Debugging package format issues
 - Testing environment variable processing
@@ -142,8 +141,7 @@ ______________________________________________________________________
    - Exit code verification
    - Simple I/O testing
 
-1. **Minimal Dependencies**
-
+3. **Minimal Dependencies**
    - Only requires shell and Flavorpack helpers
    - No Python runtime needed for execution
    - Fast test execution

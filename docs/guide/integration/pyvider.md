@@ -2,11 +2,10 @@
 
 Package Terraform providers built with Pyvider into self-contained executables.
 
-!!! info "Optional Integration" **Flavorpack works standalone** without Pyvider. This integration is optional.
+!!! info "Optional Integration"
+    **Flavorpack works standalone** without Pyvider. This integration is optional.
 
-```
-Use Flavorpack with Pyvider when you want to package Terraform providers written in Python into self-contained executables.
-```
+    Use Flavorpack with Pyvider when you want to package Terraform providers written in Python into self-contained executables.
 
 ## Overview
 

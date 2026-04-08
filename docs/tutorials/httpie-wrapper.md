@@ -1,6 +1,8 @@
 # Tutorial: Packaging an HTTPie Wrapper
 
-**Time to Complete:** 20-25 minutes **Difficulty:** Intermediate **Prerequisites:** Python 3.11+, Flavorpack installed
+**Time to Complete:** 20-25 minutes
+**Difficulty:** Intermediate
+**Prerequisites:** Python 3.11+, Flavorpack installed
 
 This tutorial demonstrates how to package a Python CLI application that wraps HTTPie (a popular HTTP client) into a self-contained executable using Flavorpack.
 
@@ -688,7 +690,12 @@ ______________________________________________________________________
 
 Congratulations! You've successfully:
 
-✅ Created a Python CLI application that wraps HTTPie ✅ Managed multiple API environments ✅ Packaged third-party dependencies (httpie, click) ✅ Built a self-contained executable with Flavorpack ✅ Distributed a tool without requiring Python installation ✅ Configured environment isolation and security
+✅ Created a Python CLI application that wraps HTTPie
+✅ Managed multiple API environments
+✅ Packaged third-party dependencies (httpie, click)
+✅ Built a self-contained executable with Flavorpack
+✅ Distributed a tool without requiring Python installation
+✅ Configured environment isolation and security
 
 ______________________________________________________________________
 
@@ -738,4 +745,7 @@ api-tool/
 
 ______________________________________________________________________
 
-**Tutorial Version:** 1.0 **Last Updated:** October 30, 2025 **Flavorpack Version:** 0.2.0+ **Python Version:** 3.11+
+**Tutorial Version:** 1.0
+**Last Updated:** October 30, 2025
+**Flavorpack Version:** 0.2.0+
+**Python Version:** 3.11+

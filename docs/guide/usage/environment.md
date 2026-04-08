@@ -48,11 +48,11 @@ ______________________________________________________________________
 
 Flavorpack uses environment variables for configuration, debugging, and runtime communication. Variables are organized into different categories based on their purpose and when they're used.
 
-!!! info "Two Variable Namespaces" Flavorpack uses two prefixes:
+!!! info "Two Variable Namespaces"
+    Flavorpack uses two prefixes:
 
-```
-- **`FLAVOR_*`**: Flavorpack-specific variables
-- **`FOUNDATION_*`**: Variables from the [provide-foundation](https://github.com/provide-io/provide-foundation) logging framework
+    - **`FLAVOR_*`**: Flavorpack-specific variables
+    - **`FOUNDATION_*`**: Variables from the [provide-foundation](https://github.com/provide-io/provide-foundation) logging framework
 
 Both are used together and serve different purposes.
 ```

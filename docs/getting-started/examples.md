@@ -373,13 +373,23 @@ class MenuBarApp(rumps.App):
         super(MenuBarApp, self).__init__("🌶️")
         self.menu = ["Status", "Refresh", None, "Settings"]
     
-    @rumps.clicked("Status")
-    def status(self, _):
-        rumps.notification(
-            "Flavorpack Status",
-            "Everything is working!",
-            "Your app is running from a PSPF package"
-        )
+    class MenuBarApp(rumps.App):
+        def __init__(self):
+            super(MenuBarApp, self).__init__("🌶️")
+            self.menu = ["Status", "Refresh", None, "Settings"]
+        
+        @rumps.clicked("Status")
+        def status(self, _):
+            rumps.notification(
+                "Flavorpack Status",
+                "Everything is working!",
+                "Your app is running from a PSPF package"
+            )
+        
+        @rumps.clicked("Refresh")
+        def refresh(self, _):
+            self.title = "🌶️✨"
+            rumps.timer(2)(lambda _: setattr(self, 'title', '🌶️'))()
     
     @rumps.clicked("Refresh")
     def refresh(self, _):
@@ -393,26 +403,30 @@ if __name__ == "__main__":
 
 ### Windows System Tray
 
-=== "Python Code" \`\`\`python # systray.py import pystray from PIL import Image, ImageDraw
-
-````
-def create_image():
-    # Create an icon
-    image = Image.new('RGB', (64, 64), color='white')
-    draw = ImageDraw.Draw(image)
-    draw.ellipse([16, 16, 48, 48], fill='orange')
-    return image
-
-def on_quit(icon, item):
-    icon.stop()
-
-def main():
-    icon = pystray.Icon(
-        "Flavorpack",
-        create_image(),
-        menu=pystray.Menu(
-            pystray.MenuItem("Status", lambda: print("Running")),
-            pystray.MenuItem("Quit", on_quit)
+=== "Python Code"
+    ```python
+    # systray.py
+    import pystray
+    from PIL import Image, ImageDraw
+    
+    def create_image():
+        # Create an icon
+        image = Image.new('RGB', (64, 64), color='white')
+        draw = ImageDraw.Draw(image)
+        draw.ellipse([16, 16, 48, 48], fill='orange')
+        return image
+    
+    def on_quit(icon, item):
+        icon.stop()
+    
+    def main():
+        icon = pystray.Icon(
+            "Flavorpack",
+            create_image(),
+            menu=pystray.Menu(
+                pystray.MenuItem("Status", lambda: print("Running")),
+                pystray.MenuItem("Quit", on_quit)
+            )
         )
     )
     icon.run()
@@ -421,13 +435,56 @@ def main():
 
 ### Linux Desktop Entry
 
-=== "Desktop File" `ini     # flavorpack-app.desktop     [Desktop Entry]     Type=Application     Name=Flavorpack App     Comment=Packaged with Flavorpack     Exec=/opt/flavorpack/myapp.psp     Icon=flavorpack     Terminal=false     Categories=Utility;     `
+=== "Desktop File"
+    ```ini
+    # flavorpack-app.desktop
+    [Desktop Entry]
+    Type=Application
+    Name=Flavorpack App
+    Comment=Packaged with Flavorpack
+    Exec=/opt/flavorpack/myapp.psp
+    Icon=flavorpack
+    Terminal=false
+    Categories=Utility;
+    ```
 
 ## Integration Examples
 
 ### GitHub Actions
 
-=== ".github/workflows/package.yml" \`\`\`yaml name: Package with Flavorpack
+=== ".github/workflows/package.yml"
+    ```yaml
+    name: Package with Flavorpack
+    
+    on:
+      release:
+        types: [created]
+    
+    jobs:
+      package:
+        runs-on: ubuntu-latest
+        
+        steps:
+        - uses: actions/checkout@v3
+        
+        - name: Setup Python
+          uses: actions/setup-python@v4
+          with:
+            python-version: '3.11'
+        
+        - name: Install Flavorpack
+          run: |
+            git clone https://github.com/provide-io/flavorpack.git
+            cd flavorpack
+            uv sync
+            make build-helpers
+        
+{% raw %}
+        - name: Build Package
+          run: |
+            flavor pack \
+              --manifest pyproject.toml \
+              --output ${{ github.event.repository.name }}.psp
 
 ```
 on:
@@ -474,12 +531,11 @@ jobs:
 
 === "Dockerfile" \`\`\`dockerfile # Build stage FROM python:3.11 AS builder
 
-````
-# Install Flavorpack from source
-RUN git clone https://github.com/provide-io/flavorpack.git /flavorpack
-WORKDIR /flavorpack
-RUN pip install uv && uv sync && make build-helpers
-ENV PATH="/flavorpack/.venv/bin:$PATH"
+    # Install Flavorpack from source
+    RUN git clone https://github.com/provide-io/flavorpack.git /flavorpack
+    WORKDIR /flavorpack
+    RUN pip install uv && uv sync && make build-helpers
+    ENV PATH="/flavorpack/.venv/bin:$PATH"
 
 # Copy application
 WORKDIR /app
