@@ -2,7 +2,8 @@
 
 This roadmap shows the current implementation status and planned features for Flavorpack. Use this to understand what works today versus what's coming in future releases.
 
-!!! info "Version Status" Flavorpack is currently in **alpha** stage. APIs, file formats, and commands may change without notice.
+!!! info "Version Status"
+    Flavorpack is currently in **alpha** stage. APIs, file formats, and commands may change without notice.
 
 ## Legend
 

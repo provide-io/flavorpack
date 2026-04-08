@@ -2,7 +2,8 @@
 
 Comprehensive guide to diagnosing and resolving common Flavorpack issues.
 
-!!! warning "Alpha Software - Some Features Not Yet Implemented" Flavorpack is in **alpha** status. This troubleshooting guide includes solutions for both implemented and planned features. Features marked with 📋 **PLANNED** are not yet available.
+!!! warning "Alpha Software - Some Features Not Yet Implemented"
+    Flavorpack is in **alpha** status. This troubleshooting guide includes solutions for both implemented and planned features. Features marked with 📋 **PLANNED** are not yet available.
 
 ```
 If you encounter issues with features that don't work, check the [Roadmap](../guide/roadmap/) to see implementation status.
@@ -193,7 +194,8 @@ flavor helpers info flavor-rs-launcher-darwin_arm64
 flavor helpers test
 ```
 
-!!! info "Available Helper Commands" Flavorpack provides these helper management commands:
+!!! info "Available Helper Commands"
+    Flavorpack provides these helper management commands:
 
 ```
 - `flavor helpers list` - List available helper binaries
@@ -319,10 +321,9 @@ set FLAVOR_CACHE=C:\tmp\f
 **Symptom**: Package deleted or blocked by antivirus
 
 **Solution**:
-
 1. Add Flavorpack to antivirus whitelist
-1. Sign packages with certificate
-1. Submit false positive report to antivirus vendor
+2. Sign packages with certificate
+3. Submit false positive report to antivirus vendor
 
 #### macOS
 

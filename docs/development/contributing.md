@@ -37,6 +37,10 @@ uv sync
 ```
 
 This command will:
+1. Create a virtual environment (`.venv/` by default)
+2. Install Flavorpack in editable mode
+3. Install all dependencies including `provide-foundation[all]`
+4. Set up the development environment
 
 1. Create a virtual environment (`.venv/` by default)
 1. Install Flavorpack in editable mode

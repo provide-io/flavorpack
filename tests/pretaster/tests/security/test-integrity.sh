@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Integrity and enforcement mode tests for FlavorPack pretaster
+# Integrity and enforcement mode tests for Flavorpack pretaster
 # Tests: tamper detection, verify subcommand, age enforcement,
 #        enforcement modes (allow, warn), forward-version compat
 # Usage: ./tests/test-integrity.sh  (run from the pretaster directory)

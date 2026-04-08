@@ -6,4 +6,5 @@
 | macOS    | arm64        | ✅ Full     | Dynamic       | Apple Silicon                          |
 | Windows  | x86_64       | ⚠️ Disabled | Dynamic       | Currently disabled due to UTF-8 issues |
 
-!!! warning "Windows Support Status" Windows support is currently **disabled** in Flavorpack due to UTF-8 encoding issues in the native helpers. Windows support is planned for a future release once these issues are resolved.
+!!! warning "Windows Support Status"
+    Windows support is currently **disabled** in Flavorpack due to UTF-8 encoding issues in the native helpers. Windows support is planned for a future release once these issues are resolved.

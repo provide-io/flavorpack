@@ -181,7 +181,7 @@ Set these when running `.psp` packages for debugging:
 
 ## XDG Directories
 
-FlavorPack follows XDG Base Directory conventions. All three implementations must use
+Flavorpack follows XDG Base Directory conventions. All three implementations must use
 the same platform-aware path resolution.
 
 ### Cache directory

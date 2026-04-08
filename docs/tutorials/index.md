@@ -21,7 +21,9 @@ ______________________________________________________________________
 
 ### [HTTPie Wrapper Tutorial](httpie-wrapper/)
 
-**Level:** Intermediate **Time:** 20-25 minutes **Prerequisites:** Python 3.11+, Flavorpack installed
+**Level:** Intermediate
+**Time:** 20-25 minutes
+**Prerequisites:** Python 3.11+, Flavorpack installed
 
 Build a custom HTTP client tool that wraps HTTPie with environment management. Learn how to:
 

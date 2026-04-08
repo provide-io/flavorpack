@@ -2,7 +2,8 @@
 
 **Status**: Standards Track **Type**: Process Document **Created**: 2025-01-08 **Version**: v0.1 **Category**: Standards Track
 
-!!! info "Implementation Status" This document defines the operation registry structure and governance for the full 256-code space. **Currently, only the v0 required operations (Section 12.1) are implemented** in Flavorpack v0.0.1023. The remaining operations, categories, and procedures described here are planned for future releases and serve as the design specification for the operation system.
+!!! info "Implementation Status"
+    This document defines the operation registry structure and governance for the full 256-code space. **Currently, only the v0 required operations (Section 12.1) are implemented** in Flavorpack v0.0.1023. The remaining operations, categories, and procedures described here are planned for future releases and serve as the design specification for the operation system.
 
 ## Abstract
 

@@ -541,10 +541,9 @@ set FLAVOR_CACHE=C:\tmp\f
 **Cause**: Antivirus false positive.
 
 **Solution**:
-
 1. Add Flavorpack to Windows Defender exclusions
-1. Sign packages with certificate
-1. Submit for Microsoft SmartScreen review
+2. Sign packages with certificate
+3. Submit for Microsoft SmartScreen review
 
 ### macOS
 

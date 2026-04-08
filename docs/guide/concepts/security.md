@@ -487,7 +487,6 @@ Stay informed:
 ### Standards
 
 Flavorpack follows:
-
 - **NIST** cryptographic standards
 - **OWASP** secure coding practices
 - **CIS** benchmark configurations
