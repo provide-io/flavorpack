@@ -29,6 +29,7 @@ reports/
 .idea/
 .vscode/
 .worktree/
+.worktrees/
 
 # Local Build Artifacts
 # Compiled helper binaries should not be version controlled.
