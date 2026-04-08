@@ -2,7 +2,8 @@
 
 Common questions and answers about Flavorpack.
 
-!!! note "Package Name vs Tool Name" **Flavorpack** (or `flavorpack`) is the Python package name. The command-line tool and API is called **`flavor`**. Install with `uv sync` (alpha), use with `flavor pack`.
+!!! note "Package Name vs Tool Name"
+    **Flavorpack** (or `flavorpack`) is the Python package name. The command-line tool and API is called **`flavor`**. Install with `uv sync` (alpha), use with `flavor pack`.
 
 ## General Questions
 
@@ -12,20 +13,19 @@ Flavorpack is a Python packaging system that creates self-contained, single-file
 
 ### How does Flavorpack differ from PyInstaller or cx_Freeze?
 
-| Feature              | Flavorpack         | PyInstaller          | cx_Freeze       |
-| -------------------- | ------------------ | -------------------- | --------------- |
-| Output format        | Single `.psp` file | Single exe or folder | Folder with exe |
-| Cross-platform build | Yes                | Limited              | Limited         |
-| Package signing      | Built-in Ed25519   | External tools       | External tools  |
-| Compression          | Multiple codecs    | ZIP only             | ZIP only        |
-| Lazy loading         | Yes                | No                   | No              |
-| Work environments    | Managed cache      | Temp extraction      | In-place        |
-| Update mechanism     | Slot-based         | Full rebuild         | Full rebuild    |
+| Feature | Flavorpack | PyInstaller | cx_Freeze |
+|---------|------------|-------------|-----------|
+| Output format | Single `.psp` file | Single exe or folder | Folder with exe |
+| Cross-platform build | Yes | Limited | Limited |
+| Package signing | Built-in Ed25519 | External tools | External tools |
+| Compression | Multiple codecs | ZIP only | ZIP only |
+| Lazy loading | Yes | No | No |
+| Work environments | Managed cache | Temp extraction | In-place |
+| Update mechanism | Slot-based | Full rebuild | Full rebuild |
 
 ### What platforms does Flavorpack support?
 
 Flavorpack supports:
-
 - **Linux**: x86_64 (amd64), ARM64
 - **macOS**: Intel (x86_64), Apple Silicon (ARM64)
 - **Windows**: x86_64 (64-bit)
@@ -38,7 +38,8 @@ Flavorpack requires Python 3.11 or later.
 
 ### How do I install Flavorpack?
 
-!!! warning "Alpha Status - Source Installation Only" Flavorpack is currently in alpha. Installation from PyPI is **not yet available**.
+!!! warning "Alpha Status - Source Installation Only"
+    Flavorpack is currently in alpha. Installation from PyPI is **not yet available**.
 
 ```bash
 # Clone the repository
@@ -108,7 +109,8 @@ entry_point = "myapp:main"
 
 ### Can I include non-Python files?
 
-!!! info "📋 Planned Feature" Manual slot configuration is planned for a future release. Currently, Flavorpack automatically packages your Python application and its dependencies.
+!!! info "📋 Planned Feature"
+    Manual slot configuration is planned for a future release. Currently, Flavorpack automatically packages your Python application and its dependencies.
 
 ### How do I exclude files from the package?
 
@@ -224,7 +226,6 @@ FLAVOR_VALIDATION=none ./myapp.psp
 ### How secure are Flavorpack packages?
 
 Flavorpack provides:
-
 - Ed25519 digital signatures
 - SHA-256 checksums for all components
 - Isolated work environments

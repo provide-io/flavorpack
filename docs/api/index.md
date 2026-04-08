@@ -2,7 +2,8 @@
 
 Python API reference documentation for Flavorpack.
 
-!!! note "Package Name vs Tool Name" **Flavorpack** (or `flavorpack`) is the Python package name. The command-line tool and API is called **`flavor`**. Import with `from flavor import ...`.
+!!! note "Package Name vs Tool Name"
+    **Flavorpack** (or `flavorpack`) is the Python package name. The command-line tool and API is called **`flavor`**. Import with `from flavor import ...`.
 
 ## Overview
 

@@ -4,18 +4,16 @@ Complete guide to packaging Python applications with Flavorpack, including depen
 
 !!! tip "Prerequisites" Before packaging Python apps, ensure you have:
 
-```
-- [Flavorpack installed](../../getting-started/installation/) from source
-- [Helpers built](../usage/cli/#helpers-build) (`make build-helpers`)
-- A Python project with valid `pyproject.toml`
+    - [Flavorpack installed](../../getting-started/installation/) from source
+    - [Helpers built](../usage/cli/#helpers-build) (`make build-helpers`)
+    - A Python project with valid `pyproject.toml`
 
 See [System Requirements](../../reference/requirements/) for detailed version information.
 ```
 
 !!! warning "Alpha Release - Many Features Not Yet Implemented" **This guide shows both working features and planned future features.**
 
-```
-Flavorpack's Python packaging is in alpha. Basic packaging works today, but many advanced features documented here are **planned for future releases**.
+    Flavorpack's Python packaging is in alpha. Basic packaging works today, but many advanced features documented here are **planned for future releases**.
 
 **✅ What Works Today**:
 
@@ -77,11 +75,11 @@ Flavorpack itself requires **Python 3.11 or higher** to run the packaging tools.
 
 Packaged applications currently use whatever Python version is available in your build environment. This Python runtime gets embedded into the package.
 
-| Your Build Environment | Packaged Python Version         |
-| ---------------------- | ------------------------------- |
-| Python 3.12            | ✅ Package includes Python 3.12 |
-| Python 3.11            | ✅ Package includes Python 3.11 |
-| Python 3.10 or older   | ❌ Flavorpack won't run         |
+| Your Build Environment | Packaged Python Version |
+|------------------------|------------------------|
+| Python 3.12 | ✅ Package includes Python 3.12 |
+| Python 3.11 | ✅ Package includes Python 3.11 |
+| Python 3.10 or older | ❌ Flavorpack won't run |
 
 !!! info "Current Limitation" **Python version selection is not yet implemented.** You cannot specify a different Python version than what's in your build environment.
 
@@ -209,7 +207,8 @@ dependencies = [
 
 ### Build Environment
 
-!!! note "Planned Feature" Flavorpack creates a basic isolated virtual environment during build. Advanced configuration options (custom venv path, build-time environment variables, pre-install commands) are **planned for v0.3.0 (Q1 2026)**.
+!!! note "Planned Feature"
+    Flavorpack creates a basic isolated virtual environment during build. Advanced configuration options (custom venv path, build-time environment variables, pre-install commands) are **planned for v0.3.0 (Q1 2026)**.
 
 ```
 See [Roadmap - Build Environment Configuration](../../roadmap/#build-environment-configuration) for full details.

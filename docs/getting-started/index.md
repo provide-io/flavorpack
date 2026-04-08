@@ -2,7 +2,8 @@
 
 Welcome to Flavorpack! This guide will help you get up and running with creating your first Progressive Secure Package.
 
-!!! note "Package Name vs Tool Name" **Flavorpack** (or `flavorpack`) is the Python package name used for installation. The actual command-line tool and API is called **`flavor`**. Install with `pip install flavorpack`, use with `flavor pack`.
+!!! note "Package Name vs Tool Name"
+    **Flavorpack** (or `flavorpack`) is the Python package name used for installation. The actual command-line tool and API is called **`flavor`**. Install with `pip install flavorpack`, use with `flavor pack`.
 
 ## Quick Start Path
 
@@ -52,8 +53,8 @@ Choose the path that matches your goals:
 Just want to package a Python app quickly?
 
 1. [Installation](installation/) - Get Flavorpack installed
-1. [Quick Start](quickstart/) - Your first package in 5 minutes
-1. [Examples](examples/) - Copy a working example similar to your needs
+2. [Quick Start](quickstart/) - Your first package in 5 minutes
+3. [Examples](examples/) - Copy a working example similar to your needs
 
 ### For Developers
 
@@ -86,7 +87,8 @@ ______________________________________________________________________
 See [Installation → System Requirements](installation/#system-requirements) for details.
 ```
 
-??? question "Is Flavorpack production-ready?" Flavorpack is currently in **alpha** status. The core PSPF format and basic packaging features work well, but APIs and file formats may change without notice.
+??? question "Is Flavorpack production-ready?"
+    Flavorpack is currently in **alpha** status. The core PSPF format and basic packaging features work well, but APIs and file formats may change without notice.
 
 ```
 Not recommended for production use yet. See the [Roadmap](../guide/roadmap/) for planned v1.0 features.
@@ -102,7 +104,8 @@ Not recommended for production use yet. See the [Roadmap](../guide/roadmap/) for
 See [First Package Guide](first-package/) for a complete walkthrough.
 ```
 
-??? question "What's the difference between Flavorpack and PyInstaller?" Flavorpack creates **PSPF packages** with:
+??? question "What's the difference between Flavorpack and PyInstaller?"
+    Flavorpack creates **PSPF packages** with:
 
 ```
 - Cryptographic signing (Ed25519)
@@ -110,10 +113,10 @@ See [First Package Guide](first-package/) for a complete walkthrough.
 - Cross-language support (Python, Go, Rust)
 - Native launchers (not Python-based)
 
-PyInstaller creates traditional executables. Flavorpack is better for:
-- Security-conscious deployments
-- Large applications (caching helps)
-- Cross-platform distribution
+    PyInstaller creates traditional executables. Flavorpack is better for:
+    - Security-conscious deployments
+    - Large applications (caching helps)
+    - Cross-platform distribution
 
 See [PSPF Format](../guide/concepts/pspf-format/) for technical details.
 ```

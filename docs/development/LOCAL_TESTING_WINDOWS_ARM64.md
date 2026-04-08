@@ -288,7 +288,7 @@ unzip -l packages/*.psp
 
 ## Part 5: Run Taster Tests
 
-Taster is a **self-contained test application** that validates all FlavorPack functionality through a comprehensive test suite.
+Taster is a **self-contained test application** that validates all Flavorpack functionality through a comprehensive test suite.
 
 ### What Taster Tests
 

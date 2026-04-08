@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""FlavorPack launch-time policy: schema, parsing, and merge logic."""
+"""Flavorpack launch-time policy: schema, parsing, and merge logic."""
 
 from __future__ import annotations
 
@@ -295,7 +295,7 @@ def merge_policy(pkg: PackagePolicy, op: OperatorPolicy) -> EffectivePolicy:
 
 
 def get_current_platform() -> str:
-    """Return the normalized FlavorPack platform string for the current host."""
+    """Return the normalized Flavorpack platform string for the current host."""
     if sys.platform.startswith("linux"):
         os_name = "linux"
     elif sys.platform == "darwin":
