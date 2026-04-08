@@ -1,0 +1,32 @@
+# Contributors to the provide.io ecosystem
+# Primary contributors and maintainers
+
+contributors:
+  - name: Tim Perkins
+    github: timperkins
+    email: code@tim.life
+    role: Lead Developer & Architect
+    avatar: https://github.com/timperkins.png
+    contributions:
+      - provide-foundation
+      - provide-testkit
+      - pyvider
+      - pyvider-cty
+      - pyvider-hcl
+      - pyvider-rpcplugin
+      - wrknv
+      - plating
+      - tofusoup
+      - supsrc
+      - flavorpack
+
+  - name: provide.io Team
+    github: provide-io
+    email: engineering@provide.io
+    role: Core Team
+    avatar: https://github.com/provide-io.png
+    contributions:
+      - Ecosystem coordination
+      - Documentation
+      - Infrastructure
+      - Release management

@@ -1,6 +1,6 @@
 # Docker Integration
 
-Use FlavorPack packages in Docker containers for minimal, secure deployments.
+Use Flavorpack packages in Docker containers for minimal, secure deployments.
 
 ## Why Use .psp Files with Docker?
 
@@ -33,7 +33,7 @@ FROM python:3.11-slim AS builder
 WORKDIR /build
 COPY . .
 
-# Install FlavorPack
+# Install Flavorpack
 RUN pip install flavorpack
 
 # Build helpers

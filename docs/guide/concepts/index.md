@@ -1,10 +1,10 @@
 # Core Concepts
 
-Understanding the fundamental concepts behind FlavorPack and the PSPF format.
+Understanding the fundamental concepts behind Flavorpack and the PSPF format.
 
-## What is FlavorPack?
+## What is Flavorpack?
 
-FlavorPack is a packaging system that solves modern software distribution challenges. It takes your entire application—code, dependencies, assets, and all—and bundles it into a **single, executable file**.
+Flavorpack is a packaging system that solves modern software distribution challenges. It takes your entire application—code, dependencies, assets, and all—and bundles it into a **single, executable file**.
 
 Instead of complex installation procedures:
 ```bash
@@ -19,7 +19,7 @@ You get a simple, portable executable:
 ./myapp
 ```
 
-## Why FlavorPack?
+## Why Flavorpack?
 
 ### True Portability
 Your application "just works" - no external dependencies, no configuration required. The package contains everything needed to run.
@@ -28,7 +28,7 @@ Your application "just works" - no external dependencies, no configuration requi
 Every package is automatically signed and verified with Ed25519 cryptography. Package integrity is guaranteed.
 
 ### Language Agnostic
-Bundle Python, React, Rust, or any combination. FlavorPack doesn't care what's inside—it just packages and runs it.
+Bundle Python, React, Rust, or any combination. Flavorpack doesn't care what's inside—it just packages and runs it.
 
 ### Efficient & Smart
 Progressive extraction only unpacks what's needed, when needed. Smart caching reuses work environments across runs.
@@ -36,7 +36,7 @@ Progressive extraction only unpacks what's needed, when needed. Smart caching re
 ### Built for CI/CD
 Self-contained packages with reproducible builds. Perfect for continuous deployment pipelines.
 
-## What FlavorPack Is Not
+## What Flavorpack Is Not
 
 - **Not a container**: Runs directly on the host OS without virtualization overhead
 - **Not a VM**: Doesn't bundle a guest operating system
@@ -44,7 +44,7 @@ Self-contained packages with reproducible builds. Perfect for continuous deploym
 
 ## The PSPF Format
 
-A FlavorPack package uses the Progressive Secure Package Format (PSPF/2025). It's two things at once:
+A Flavorpack package uses the Progressive Secure Package Format (PSPF/2025). It's two things at once:
 
 1. A **native executable** that your OS can run directly
 2. A **structured archive** containing your application
@@ -119,7 +119,7 @@ Slots are the building blocks of a package. Each slot contains a specific type o
 
 ## Work Environments
 
-A work environment is where FlavorPack extracts and runs your application. It's a temporary directory structure that:
+A work environment is where Flavorpack extracts and runs your application. It's a temporary directory structure that:
 
 1. **Isolates** each package execution
 2. **Caches** persistent data between runs
@@ -144,7 +144,7 @@ A work environment is where FlavorPack extracts and runs your application. It's 
 
 ## Package Signing
 
-Every FlavorPack package is cryptographically signed using Ed25519:
+Every Flavorpack package is cryptographically signed using Ed25519:
 
 1. **Key Generation**: Create a public/private key pair
 2. **Metadata Hashing**: Hash the package metadata
@@ -167,7 +167,7 @@ This generates the same key pair every time, enabling:
 
 ## Execution Flow
 
-When you run a FlavorPack package:
+When you run a Flavorpack package:
 
 ```mermaid
 graph TD
@@ -183,7 +183,7 @@ graph TD
 
 ## Platform Support
 
-FlavorPack supports multiple platforms through:
+Flavorpack supports multiple platforms through:
 
 1. **Platform-specific launchers**: Native binaries for each OS/architecture
 2. **Cross-platform packages**: Same package data works everywhere
@@ -201,7 +201,7 @@ FlavorPack supports multiple platforms through:
 
 ## Compression
 
-FlavorPack uses multiple compression strategies:
+Flavorpack uses multiple compression strategies:
 
 - **Metadata**: Gzipped JSON for configuration
 - **Python environments**: Tar+gzip for maximum compression
@@ -219,7 +219,7 @@ Smart caching improves performance:
 
 ## Security Model
 
-FlavorPack's security is built on:
+Flavorpack's security is built on:
 
 1. **Cryptographic signatures**: Ed25519 for integrity
 2. **No elevation**: Runs with user permissions

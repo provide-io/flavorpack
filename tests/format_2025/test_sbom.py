@@ -128,12 +128,12 @@ def test_sbom_launcher_has_hash() -> None:
 
 
 def test_sbom_includes_builder() -> None:
-    """SBOM components include the FlavorPack builder."""
+    """SBOM components include the Flavorpack builder."""
     sbom = build_sbom(_minimal_package_info())
     assert sbom is not None
     builder = next(c for c in sbom["components"] if c.get("name") == "flavor-python")
     assert builder["version"] == "0.3.21"
-    assert builder["description"] == "FlavorPack PSPF builder"
+    assert builder["description"] == "Flavorpack PSPF builder"
 
 
 def test_sbom_is_json_serialisable() -> None:
@@ -243,6 +243,6 @@ def test_sbom_defaults_for_missing_info_keys() -> None:
     assert python_component["version"] == "unknown"
     launcher = next(c for c in sbom["components"] if "launcher" in c["name"])
     assert launcher["name"] == "flavor-unknown-launcher"
-    builder = next(c for c in sbom["components"] if c.get("description") == "FlavorPack PSPF builder")
+    builder = next(c for c in sbom["components"] if c.get("description") == "Flavorpack PSPF builder")
     assert builder["name"] == "flavor-python"
     assert builder["version"] == "unknown"

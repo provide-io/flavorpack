@@ -1,6 +1,6 @@
 # CI/CD Integration
 
-Automate FlavorPack packaging in your CI/CD pipelines.
+Automate Flavorpack packaging in your CI/CD pipelines.
 
 ## Pipeline Overview
 
@@ -94,9 +94,9 @@ jobs:
       - name: Install UV
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
-      - name: Install FlavorPack
+      - name: Install Flavorpack
         run: |
-          # Note: FlavorPack is not yet on PyPI - install from source
+          # Note: Flavorpack is not yet on PyPI - install from source
           git clone https://github.com/provide-io/flavorpack.git
           cd flavorpack
           uv sync
@@ -148,7 +148,7 @@ build:helpers:
   stage: build
   image: python:3.11
   script:
-    # Note: FlavorPack is not yet on PyPI - install from source
+    # Note: Flavorpack is not yet on PyPI - install from source
     - git clone https://github.com/provide-io/flavorpack.git
     - cd flavorpack
     - pip install uv
@@ -194,9 +194,9 @@ jobs:
       - checkout
 
       - run:
-          name: Install FlavorPack
+          name: Install Flavorpack
           command: |
-            # Note: FlavorPack is not yet on PyPI - install from source
+            # Note: Flavorpack is not yet on PyPI - install from source
             git clone https://github.com/provide-io/flavorpack.git
             cd flavorpack
             pip install uv
@@ -337,7 +337,7 @@ Here's a production-ready GitHub Actions workflow that builds, tests, and releas
 {% raw %}
 ```yaml
 # .github/workflows/release.yml
-name: Build and Release FlavorPack Package
+name: Build and Release Flavorpack Package
 
 on:
   push:
@@ -391,13 +391,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-uv-
 
-      - name: Clone FlavorPack
+      - name: Clone Flavorpack
         run: |
           git clone --depth 1 https://github.com/provide-io/flavorpack.git
           cd flavorpack
           uv sync
 
-      - name: Cache FlavorPack Helpers
+      - name: Cache Flavorpack Helpers
         id: cache-helpers
         uses: actions/cache@v3
         with:

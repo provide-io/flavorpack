@@ -1,6 +1,6 @@
 # Development Guide
 
-This guide provides comprehensive instructions for setting up the development environment, building FlavorPack, running tests, and contributing to the project.
+This guide provides comprehensive instructions for setting up the development environment, building Flavorpack, running tests, and contributing to the project.
 
 ## Table of Contents
 
@@ -38,7 +38,7 @@ uv sync
 
 This command will:
 1. Create a virtual environment (`.venv/` by default)
-2. Install FlavorPack in editable mode
+2. Install Flavorpack in editable mode
 3. Install all dependencies including `provide-foundation[all]`
 4. Set up the development environment
 
@@ -47,7 +47,7 @@ This command will:
 
 ## Building Helpers
 
-FlavorPack's high-performance builders and launchers are written in Go and Rust. Build them after initial setup and whenever you modify helper source code.
+Flavorpack's high-performance builders and launchers are written in Go and Rust. Build them after initial setup and whenever you modify helper source code.
 
 ### Build All Helpers
 
@@ -158,7 +158,7 @@ uv run pytest -n auto
 
 ### Testing with Taster
 
-Taster is the comprehensive test package for FlavorPack functionality:
+Taster is the comprehensive test package for Flavorpack functionality:
 
 ```bash
 # Build Taster
@@ -374,7 +374,7 @@ Follow conventional commits:
 
 - **ALWAYS use pip3** for wheel operations (never pip or uv pip for wheels)
 - **NEVER add environment-specific logic in helpers** - they must be generic
-- **Test with Taster first** - if Taster doesn't work, FlavorPack is broken
+- **Test with Taster first** - if Taster doesn't work, Flavorpack is broken
 - **Use deterministic builds** for testing (`--key-seed`)
 
 ## Resources

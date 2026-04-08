@@ -1,10 +1,10 @@
 # Signing & Verification
 
-Secure your FlavorPack packages with Ed25519 digital signatures for authenticity and integrity.
+Secure your Flavorpack packages with Ed25519 digital signatures for authenticity and integrity.
 
 ## Overview
 
-FlavorPack uses Ed25519 digital signatures to ensure packages haven't been tampered with and come from trusted sources. This guide covers key generation, package signing, verification, and best practices for secure distribution.
+Flavorpack uses Ed25519 digital signatures to ensure packages haven't been tampered with and come from trusted sources. This guide covers key generation, package signing, verification, and best practices for secure distribution.
 
 ## Quick Start
 
@@ -163,7 +163,7 @@ flavor pack --manifest pyproject.toml --key-seed "secret-seed"
 ```
 
 !!! note "No Post-Build Signing"
-    FlavorPack does not support signing packages after they've been built. Signing happens only during `flavor pack`. To re-sign a package, rebuild it with new keys.
+    Flavorpack does not support signing packages after they've been built. Signing happens only during `flavor pack`. To re-sign a package, rebuild it with new keys.
 
 ### Batch Building with Signing
 
@@ -288,7 +288,7 @@ flavor verify package.psp
 
 ### 2. Trusted Key Store
 
-Distribute signing public keys to recipients who register them locally. FlavorPack maintains a per-user and system-wide trusted key store:
+Distribute signing public keys to recipients who register them locally. Flavorpack maintains a per-user and system-wide trusted key store:
 
 - **User store**: `~/.config/flavor/trusted-keys/` (keys added with `flavor trust add`)
 - **System store**: `/etc/flavor/trusted-keys/` (managed by administrators)
@@ -326,7 +326,7 @@ flavor trust verify package.psp
 ### 3. Web of Trust (Future)
 
 !!! info "Planned Feature"
-    Multiple signatures from trusted parties (N-of-M threshold schemes) are planned for a future release. Currently FlavorPack supports a single signer per package with trusted key store verification.
+    Multiple signatures from trusted parties (N-of-M threshold schemes) are planned for a future release. Currently Flavorpack supports a single signer per package with trusted key store verification.
 
 ### 4. Certificate Authority (Future)
 
@@ -342,7 +342,7 @@ ca_bundle = "/etc/ssl/certs/ca-certificates.crt"
 
 ### Public Key Format
 
-FlavorPack generates keys in PEM format:
+Flavorpack generates keys in PEM format:
 
 ```bash
 # Generate keys
@@ -586,7 +586,7 @@ flavor trust remove <64-hex-char fingerprint>
 ### Multi-Signature Packages (Planned)
 
 !!! info "Future Feature"
-    Threshold signature schemes (N-of-M signatures required) are planned for a future release. Currently FlavorPack supports a single signer per package with trusted key store verification.
+    Threshold signature schemes (N-of-M signatures required) are planned for a future release. Currently Flavorpack supports a single signer per package with trusted key store verification.
 
 ### Hardware Token Integration (Planned)
 

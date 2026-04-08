@@ -50,7 +50,7 @@ _POLICY_JSON_SCAFFOLD = {
 
 @click.group("policy")
 def policy_group() -> None:
-    """Manage FlavorPack launch-time execution policy.
+    """Manage Flavorpack launch-time execution policy.
 
     Policy controls what packages are allowed to run on this host.
     Operator settings can only tighten package-declared constraints.
@@ -77,7 +77,7 @@ def policy_init(global_: bool) -> None:
         pout(f"✓ {policy_file}  (scaffolded)")
 
     scope = "system" if global_ else "user"
-    pout(f"\nFlavorPack {scope} policy file ready. Edit it to enforce constraints.")
+    pout(f"\nFlavorpack {scope} policy file ready. Edit it to enforce constraints.")
 
 
 @policy_group.command("show")

@@ -1,10 +1,10 @@
 # Helper Binaries
 
-Understanding FlavorPack's native Go and Rust helper system.
+Understanding Flavorpack's native Go and Rust helper system.
 
 ## Overview
 
-FlavorPack uses native helper binaries (written in Go and Rust) for high-performance package operations. These helpers handle:
+Flavorpack uses native helper binaries (written in Go and Rust) for high-performance package operations. These helpers handle:
 
 - **Building**: PSPF package assembly
 - **Launching**: Package extraction and execution
@@ -52,7 +52,7 @@ dist/bin/
 
 ## Helper Selection
 
-FlavorPack automatically selects appropriate helpers based on platform and availability.
+Flavorpack automatically selects appropriate helpers based on platform and availability.
 
 ### Automatic Selection
 

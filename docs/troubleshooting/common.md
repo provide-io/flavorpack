@@ -1,6 +1,6 @@
 # Troubleshooting Guide
 
-Solutions to common FlavorPack issues and debugging techniques.
+Solutions to common Flavorpack issues and debugging techniques.
 
 ## Quick Diagnostic
 
@@ -139,7 +139,7 @@ flavor pack --manifest pyproject.toml
 
 **Solutions**:
 ```bash
-# Clean FlavorPack cache
+# Clean Flavorpack cache
 flavor clean --all --yes
 
 # Check cache size
@@ -292,7 +292,7 @@ dist/bin/flavor-go-builder-* --manifest test.json --output test.psp
 ### Environment Debugging
 
 ```bash
-# Check all FlavorPack environment variables
+# Check all Flavorpack environment variables
 env | grep FLAVOR
 
 # Test with clean environment

@@ -1,6 +1,6 @@
 # TASTER vs PRETASTER: Testing Framework Comparison
 
-FlavorPack uses two complementary testing frameworks to ensure comprehensive validation of PSPF packages across all languages and platforms.
+Flavorpack uses two complementary testing frameworks to ensure comprehensive validation of PSPF packages across all languages and platforms.
 
 ## Quick Comparison
 
@@ -13,7 +13,7 @@ FlavorPack uses two complementary testing frameworks to ensure comprehensive val
 | **Use Cases** | Development, debugging, comprehensive validation | CI/CD, quick compatibility checks, cross-language verification |
 | **Test Execution** | `pytest` with markers and property-based testing | `make` targets and shell scripts |
 | **Package Format** | Self-contained PSPF package with Python runtime | Simple shell scripts packaged as PSPF |
-| **Dependencies** | FlavorPack, pytest, hypothesis | FlavorPack helpers (go/rust binaries) |
+| **Dependencies** | Flavorpack, pytest, hypothesis | Flavorpack helpers (go/rust binaries) |
 | **Speed** | Slower but thorough (property testing, edge cases) | Fast (focused compatibility checks) |
 | **When to Use** | Feature development, debugging issues, security testing | PR validation, release testing, quick sanity checks |
 
@@ -23,7 +23,7 @@ FlavorPack uses two complementary testing frameworks to ensure comprehensive val
 
 ### Overview
 
-**Taster** is a sophisticated Python-based testing framework packaged as a self-contained PSPF package. It serves as both a testing tool and a reference implementation demonstrating all FlavorPack capabilities.
+**Taster** is a sophisticated Python-based testing framework packaged as a self-contained PSPF package. It serves as both a testing tool and a reference implementation demonstrating all Flavorpack capabilities.
 
 ### Key Features
 
@@ -96,7 +96,7 @@ pytest --cov=src --cov-report=term-missing
 ### When to Use TASTER
 
 ✅ **Use TASTER when:**
-- Developing new FlavorPack features
+- Developing new Flavorpack features
 - Debugging package format issues
 - Testing environment variable processing
 - Validating I/O pipelines
@@ -133,7 +133,7 @@ pytest --cov=src --cov-report=term-missing
    - Simple I/O testing
 
 3. **Minimal Dependencies**
-   - Only requires shell and FlavorPack helpers
+   - Only requires shell and Flavorpack helpers
    - No Python runtime needed for execution
    - Fast test execution
 
@@ -329,7 +329,7 @@ pytest tests/taster/tests/ -v --cov
 | **Dependencies** | Many (pytest, hypothesis) | Minimal (bash, helpers) |
 | **Output** | Detailed reports | Pass/fail |
 
-**Key Insight**: Use **PRETASTER** for fast feedback on compatibility, and **TASTER** for thorough validation and debugging. Both are essential for maintaining FlavorPack quality.
+**Key Insight**: Use **PRETASTER** for fast feedback on compatibility, and **TASTER** for thorough validation and debugging. Both are essential for maintaining Flavorpack quality.
 
 ---
 

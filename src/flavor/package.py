@@ -32,7 +32,7 @@ def build_package_from_manifest(
 ) -> list[Path]:
     """Build a PSPF package from a manifest file.
 
-    This is the main entry point for building FlavorPack packages programmatically.
+    This is the main entry point for building Flavorpack packages programmatically.
     It reads a pyproject.toml or JSON manifest, resolves dependencies, creates a
     Python virtual environment, and assembles everything into a single .psp executable.
 
@@ -144,7 +144,7 @@ def verify_package(package_path: Path) -> dict[str, Any]:
 
 
 def clean_cache() -> None:
-    """Remove all cached FlavorPack work environments and build artifacts.
+    """Remove all cached Flavorpack work environments and build artifacts.
 
     Deletes the ~/.cache/flavor/ directory and all its contents, including:
     - Extracted package work environments

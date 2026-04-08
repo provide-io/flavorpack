@@ -55,7 +55,7 @@ extra:
 
   # Announcement bar
   announcement:
-    text: "📦 FlavorPack documentation has been modernized with comprehensive cookbook examples and professional theming!"
+    text: "📦 Flavorpack documentation has been modernized with comprehensive cookbook examples and professional theming!"
 
 nav:
   - Home: index.md

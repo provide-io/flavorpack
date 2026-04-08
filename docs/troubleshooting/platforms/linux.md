@@ -1,10 +1,10 @@
 # Linux Platform Guide
 
-Comprehensive troubleshooting and optimization guide for FlavorPack on Linux systems.
+Comprehensive troubleshooting and optimization guide for Flavorpack on Linux systems.
 
 ## Overview
 
-Linux offers excellent support for FlavorPack packages with native performance, robust security features, and broad distribution compatibility. This guide covers Linux-specific issues, optimizations, and best practices.
+Linux offers excellent support for Flavorpack packages with native performance, robust security features, and broad distribution compatibility. This guide covers Linux-specific issues, optimizations, and best practices.
 
 ## Supported Distributions
 
@@ -290,7 +290,7 @@ nmcli connection modify eth0 ipv4.dns "8.8.8.8 1.1.1.1"
 ### Docker
 
 ```dockerfile
-# Optimal Dockerfile for FlavorPack
+# Optimal Dockerfile for Flavorpack
 FROM ubuntu:22.04
 
 # Install minimal dependencies
@@ -473,7 +473,7 @@ aureport -x --summary
 ```ini
 # /etc/systemd/system/myapp.service
 [Unit]
-Description=My FlavorPack Application
+Description=My Flavorpack Application
 After=network.target
 
 [Service]
@@ -519,7 +519,7 @@ systemctl status myapp.service
 Version=1.0
 Type=Application
 Name=My Application
-Comment=FlavorPack Application
+Comment=Flavorpack Application
 Exec=/opt/myapp/package.psp %F
 Icon=/opt/myapp/icon.png
 Terminal=false
@@ -543,7 +543,7 @@ Package: myapp
 Version: 1.0.0
 Architecture: amd64
 Maintainer: Your Name <you@example.com>
-Description: My FlavorPack Application
+Description: My Flavorpack Application
 EOF
 ```
 
@@ -555,14 +555,14 @@ cat > myapp.spec << EOF
 Name: myapp
 Version: 1.0.0
 Release: 1%{?dist}
-Summary: My FlavorPack Application
+Summary: My Flavorpack Application
 
 License: MIT
 URL: https://example.com
 Source0: package.psp
 
 %description
-FlavorPack application
+Flavorpack application
 
 %install
 mkdir -p %{buildroot}/usr/bin
@@ -587,7 +587,7 @@ rpmbuild -ba myapp.spec
 pkgname=myapp
 pkgver=1.0.0
 pkgrel=1
-pkgdesc="My FlavorPack Application"
+pkgdesc="My Flavorpack Application"
 arch=('x86_64')
 url="https://example.com"
 license=('MIT')
@@ -609,7 +609,7 @@ makepkg -si
 pkgname=myapp
 pkgver=1.0.0
 pkgrel=0
-pkgdesc="My FlavorPack Application"
+pkgdesc="My Flavorpack Application"
 url="https://example.com"
 arch="x86_64"
 license="MIT"
@@ -671,7 +671,7 @@ perf top -p $(pgrep package.psp)
 
 ## Environment Variables
 
-### FlavorPack-Specific
+### Flavorpack-Specific
 
 ```bash
 # Cache directory
@@ -705,7 +705,7 @@ export LC_ALL=en_US.UTF-8
 
 ```bash
 #!/bin/bash
-# diagnose-flavor.sh - Diagnostic script for FlavorPack on Linux
+# diagnose-flavor.sh - Diagnostic script for Flavorpack on Linux
 
 echo "=== System Information ==="
 uname -a

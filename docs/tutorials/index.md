@@ -1,6 +1,6 @@
 # Tutorials
 
-**Welcome to FlavorPack tutorials!** These hands-on guides walk you through complete examples of packaging Python applications with FlavorPack.
+**Welcome to Flavorpack tutorials!** These hands-on guides walk you through complete examples of packaging Python applications with Flavorpack.
 
 ---
 
@@ -11,9 +11,9 @@ Tutorials are **learning-oriented** guides that take you step-by-step through bu
 - ✅ Provides complete, working code
 - ✅ Explains key concepts as you go
 - ✅ Shows expected output at each step
-- ✅ Builds your confidence with FlavorPack
+- ✅ Builds your confidence with Flavorpack
 
-**New to FlavorPack?** Start with [Build Your First Package](../getting-started/first-package/) to learn the basics.
+**New to Flavorpack?** Start with [Build Your First Package](../getting-started/first-package/) to learn the basics.
 
 ---
 
@@ -23,7 +23,7 @@ Tutorials are **learning-oriented** guides that take you step-by-step through bu
 
 **Level:** Intermediate
 **Time:** 20-25 minutes
-**Prerequisites:** Python 3.11+, FlavorPack installed
+**Prerequisites:** Python 3.11+, Flavorpack installed
 
 Build a custom HTTP client tool that wraps HTTPie with environment management. Learn how to:
 
@@ -89,8 +89,8 @@ Use the tutorials as templates for your own projects. Adapt the patterns to your
 Before starting tutorials, ensure you have:
 
 - **Python 3.11 or later** installed
-- **FlavorPack installed** ([Installation Guide](../getting-started/installation/))
-- **FlavorPack helpers built** (run `make build-helpers`)
+- **Flavorpack installed** ([Installation Guide](../getting-started/installation/))
+- **Flavorpack helpers built** (run `make build-helpers`)
 - **Basic Python knowledge** (functions, imports, packages)
 - **Basic command line skills** (bash, terminal)
 
@@ -121,7 +121,7 @@ Have an idea for a tutorial? We'd love to include it!
 
 After completing tutorials:
 
-- **[User Guide](../guide/index/)** - Deep dive into FlavorPack concepts
+- **[User Guide](../guide/index/)** - Deep dive into Flavorpack concepts
 - **[Cookbook](../cookbook/index/)** - Solve specific packaging challenges
 - **[API Reference](../api/index/)** - Complete technical documentation
 - **[Advanced Topics](../guide/advanced/index/)** - Performance, debugging, custom builders
