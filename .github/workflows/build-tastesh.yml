@@ -57,7 +57,7 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true' && runner.os == 'Windows'
         uses: actions/setup-go@v6
         with:
-          go-version: '1.23'
+          go-version-file: ci/tastesh-win/go.mod
           cache-dependency-path: ci/tastesh-win/go.sum
 
       - name: 🐚 Build tastesh (dash / Go sh)
