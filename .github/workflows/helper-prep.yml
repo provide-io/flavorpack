@@ -40,45 +40,13 @@ jobs:
 
       - name: 🔑 Calculate cache key bases
         id: cache
-        run: |
-          GO_HASH=$(find src/flavor-go -type f \( -name "*.go" -o -name "go.mod" \) | sort | xargs sha256sum | sha256sum | cut -d' ' -f1 | head -c 16)
-          RUST_HASH=$(find src/flavor-rs -type f \( -name "*.rs" -o -name "Cargo.toml" \) | sort | xargs sha256sum | sha256sum | cut -d' ' -f1 | head -c 16)
-          TASTESH_HASH=$(sha256sum ci/build-dash.sh | cut -d' ' -f1 | head -c 16)
-          echo "go_key_base=go-helpers-$GO_HASH" >> $GITHUB_OUTPUT
-          echo "rust_key_base=rust-helpers-$RUST_HASH" >> $GITHUB_OUTPUT
-          echo "tastesh_key_base=tastesh-$TASTESH_HASH" >> $GITHUB_OUTPUT
-          echo "🔑 Go cache key:   go-helpers-$GO_HASH"
-          echo "🔑 Rust cache key: rust-helpers-$RUST_HASH"
-          echo "🔑 tastesh cache:  tastesh-$TASTESH_HASH"
+        run: python3 ci/workflow_helpers.py helper-cache-keys
 
       - name: 📋 Setup build matrix
         id: matrix
         run: |
-          # Define all platforms as a single-line JSON.
-          # In local act mode we keep this to linux_amd64 so the workflow stays executable.
-          # FreeBSD platforms have dedicated jobs below; Windows is included here.
-          if [ "${ACT:-}" = "true" ]; then
-            ALL_PLATFORMS='[{"platform":"linux_amd64","os":"ubuntu-24.04","rust_target":"x86_64-unknown-linux-musl","use_musl":true,"emoji":"🐧"}]'
-          else
-            ALL_PLATFORMS='[{"platform":"linux_amd64","os":"ubuntu-24.04","rust_target":"x86_64-unknown-linux-musl","use_musl":true,"emoji":"🐧"},{"platform":"linux_arm64","os":"ubuntu-24.04-arm","rust_target":"aarch64-unknown-linux-musl","use_musl":true,"emoji":"🐧"},{"platform":"darwin_amd64","os":"macos-15-intel","rust_target":"x86_64-apple-darwin","use_musl":false,"emoji":"🍎"},{"platform":"darwin_arm64","os":"macos-15","rust_target":"aarch64-apple-darwin","use_musl":false,"emoji":"🍎"},{"platform":"windows_amd64","os":"windows-2022","rust_target":"x86_64-pc-windows-msvc","use_musl":false,"emoji":"🪟"},{"platform":"windows_arm64","os":"windows-11-arm","rust_target":"aarch64-pc-windows-msvc","use_musl":false,"emoji":"🪟"}]'
-          fi
-
-          PLATFORMS="${{ inputs.platforms }}"
-          if [ "$PLATFORMS" = "all" ] || [ -z "$PLATFORMS" ]; then
-            MATRIX="{\"include\":$ALL_PLATFORMS}"
-          else
-            FILTERED="[]"
-            for platform in $(echo "$PLATFORMS" | tr ',' ' '); do
-              PLATFORM_JSON=$(echo "$ALL_PLATFORMS" | jq -c ".[] | select(.platform == \"$platform\")")
-              if [ -n "$PLATFORM_JSON" ]; then
-                FILTERED=$(echo "$FILTERED" | jq -c ". + [$PLATFORM_JSON]")
-              fi
-            done
-            MATRIX="{\"include\":$FILTERED}"
-          fi
-
-          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
-          echo "📋 Build matrix: $MATRIX"
+          EXTRA=$([ "${ACT:-}" = "true" ] && echo --act || true)
+          python3 ci/workflow_helpers.py helper-matrix "${{ inputs.platforms }}" $EXTRA
 
   # ── Native platform builds (Linux, macOS, Windows) ─────────────────────────
   # Go and Rust fan out in parallel over the same matrix (12 jobs total).
