@@ -52,14 +52,7 @@ jobs:
 
       - name: 🔍 Get Flavor run
         id: flavor
-        run: |
-          # Get Flavor run ID
-          if [ -n "${{ inputs.flavor_run_id }}" ]; then
-            RUN_ID="${{ inputs.flavor_run_id }}"
-          else
-            RUN_ID=$(gh run list --workflow flavor-pipeline.yml --status success --limit 1 --json databaseId -q '.[0].databaseId')
-          fi
-          echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
+        run: python3 ci/workflow_helpers.py resolve-workflow-run --workflow flavor-pipeline.yml --input-run "${{ inputs.flavor_run_id }}"
         env:
           GH_TOKEN: ${{ github.token }}
 
@@ -73,11 +66,7 @@ jobs:
           path: ./flavor-artifacts
       
       - name: 🔧 Organize Flavor artifacts
-        run: |
-          mkdir -p flavor-psp
-          # Move all PSP and EXE files from subdirectories to flavor-psp
-          find flavor-artifacts -type f \( -name "*.psp" -o -name "*.exe" \) -exec mv {} flavor-psp/ \;
-          ls -la flavor-psp/
+        run: python3 ci/workflow_helpers.py organize-flavor-artifacts flavor-artifacts flavor-psp
       
       - name: 📥 Download helper artifacts
         uses: dawidd6/action-download-artifact@v19
@@ -96,24 +85,7 @@ jobs:
 
       - name: 🧪 Define test matrix
         id: matrix
-        run: |
-          # Define test platforms and commands
-          cat > matrix.json << 'EOF'
-          {
-            "include": [
-              {"name": "linux-amd64", "runner": "ubuntu-24.04", "platform": "linux_amd64"},
-              {"name": "linux-arm64", "runner": "ubuntu-24.04-arm", "platform": "linux_arm64"},
-              {"name": "darwin-amd64", "runner": "macos-15-intel", "platform": "darwin_amd64"},
-              {"name": "darwin-arm64", "runner": "macos-15", "platform": "darwin_arm64"},
-              {"name": "windows-amd64", "runner": "windows-2025", "platform": "windows_amd64"},
-              {"name": "windows-arm64", "runner": "windows-11-arm", "platform": "windows_arm64"}
-            ]
-          }
-          EOF
-
-          MATRIX=$(cat matrix.json | jq -c .)
-          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
-          echo "Test matrix: $MATRIX"
+        run: python3 ci/workflow_helpers.py taster-test-matrix
 
   # Build and test taster on different platforms
   test-taster:
@@ -149,81 +121,28 @@ jobs:
         run: |
           ci/download-helpers.sh helpers-dist "${{ needs.setup.outputs.version }}" "${{ matrix.platform }}"
 
+      - name: 🔍 Resolve build inputs
+        id: resolve
+        shell: bash
+        run: python3 ci/workflow_helpers.py resolve-taster-build --flavor-dir flavor-psp --helpers-dir helpers/bin --platform "${{ matrix.platform }}" --version "${{ needs.setup.outputs.version }}"
+
       - name: 🔨 Build Taster using Flavor PSP
         id: build
         shell: bash
-        run: |
-          # Find the appropriate Flavor PSP for this platform
-          FLAVOR_PSP=$(find flavor-psp \( -name "flavor-*-${{ matrix.platform }}.psp" -o -name "flavor-*-${{ matrix.platform }}.exe" \) | head -1)
-
-          if [ -z "$FLAVOR_PSP" ]; then
-            echo "❌ Flavor PSP not found for ${{ matrix.platform }}"
-            ls -la flavor-psp/
-            exit 1
-          fi
-
-          # Determine binary extension for Windows
-          EXT=""
-          if [[ "${{ matrix.platform }}" == "windows_"* ]]; then
-            EXT=".exe"
-          fi
-
-          # Find the launcher for this platform
-          # Windows: Rust launcher not supported — see tests/pretaster/KNOWN_ISSUES.md
-          if [[ "${{ matrix.platform }}" == "windows_"* ]]; then
-            LAUNCHER="helpers/bin/flavor-go-launcher-${{ needs.setup.outputs.version }}-${{ matrix.platform }}${EXT}"
-            if [ ! -f "$LAUNCHER" ]; then
-              LAUNCHER="helpers/bin/flavor-go-launcher-${{ matrix.platform }}${EXT}"
-            fi
-          else
-            LAUNCHER="helpers/bin/flavor-rs-launcher-${{ needs.setup.outputs.version }}-${{ matrix.platform }}${EXT}"
-            if [ ! -f "$LAUNCHER" ]; then
-              LAUNCHER="helpers/bin/flavor-rs-launcher-${{ matrix.platform }}${EXT}"
-            fi
-          fi
-
-          if [ ! -f "$LAUNCHER" ]; then
-            echo "❌ Launcher not found"
-            ls -la helpers/bin/
-            exit 1
-          fi
-
-          # Use script to build Taster
-          ci/build-taster-with-psp.sh \
-            "$FLAVOR_PSP" \
-            "$LAUNCHER" \
-            "${{ matrix.platform }}" \
-            "${{ needs.setup.outputs.version }}"
-
-          # Export path for subsequent steps
-          echo "taster_path=$PWD/tests/taster/taster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.psp" >> $GITHUB_OUTPUT
+        run: ci/build-taster-with-psp.sh "${{ steps.resolve.outputs.flavor_psp }}" "${{ steps.resolve.outputs.launcher }}" "${{ matrix.platform }}" "${{ needs.setup.outputs.version }}"
 
       - name: 🔍 Verify Built Package
         shell: bash
-        run: |
-          echo "Verifying taster package by running it..."
-          TASTER="${{ steps.build.outputs.taster_path }}"
-          
-          # Make executable
-          chmod +x "$TASTER"
-          
-          # Test that it can run without dd-based verification
-          "$TASTER" --version || exit 1
-          echo "✅ Taster package is executable and responds to commands"
+        run: python3 ci/workflow_helpers.py verify-executable "${{ steps.resolve.outputs.taster_path }}"
 
       - name: 🧪 Test Taster Commands
         shell: bash
         timeout-minutes: 5
         run: |
-          TASTER="${{ steps.build.outputs.taster_path }}"
+          TASTER="${{ steps.resolve.outputs.taster_path }}"
           WITH_TIMEOUT="${{ runner.os == 'Linux' && 'true' || 'false' }}"
           ci/test-taster-basic.sh "$TASTER" "$WITH_TIMEOUT"
-          
-          # Test with user-provided args if any
-          if [ -n "${{ inputs.taster_args }}" ]; then
-            echo "=== Testing user args: ${{ inputs.taster_args }} ==="
-            "$TASTER" ${{ inputs.taster_args }}
-          fi
+          [ -z "${{ inputs.taster_args }}" ] || "$TASTER" ${{ inputs.taster_args }}
 
       # Crosslang testing removed - the command interface varies and causes issues
       # The main tests above are sufficient to verify taster is working
@@ -231,20 +150,7 @@ jobs:
       - name: 📊 Collect test results
         if: always()
         shell: bash
-        run: |
-          mkdir -p test-results
-
-          # Create test report
-          cat > test-results/taster-${{ matrix.platform }}.json << EOF
-          {
-            "platform": "${{ matrix.platform }}",
-            "runner": "${{ matrix.runner }}",
-            "status": "${{ job.status }}",
-            "taster_path": "${{ steps.build.outputs.taster_path }}",
-            "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
-            "helper_version": "${{ needs.setup.outputs.helper_version }}"
-          }
-          EOF
+        run: python3 ci/workflow_helpers.py write-taster-result "test-results/taster-${{ matrix.platform }}.json" --platform "${{ matrix.platform }}" --runner "${{ matrix.runner }}" --status "${{ job.status }}" --taster-path "${{ steps.resolve.outputs.taster_path }}" --helper-version "${{ needs.setup.outputs.helper_version }}"
 
       - name: 📤 Upload taster package
         uses: actions/upload-artifact@v7
@@ -346,23 +252,7 @@ jobs:
           ci/download-helpers.sh helpers-dist "${{ needs.setup.outputs.helper_version }}"
 
       - name: 🔧 Copy helpers into flavor wheel source
-        run: |
-          mkdir -p src/flavor/helpers/bin
-          PLATFORM="${{ matrix.platform }}"
-          EXT="${{ matrix.launcher_ext }}"
-          # Copy current-platform helpers (versioned and symlinked names) into the
-          # flavor package-data dir so they are bundled in the flavorpack wheel
-          # that `flavor pack` installs inside the taster PSP. This makes
-          # HelperManager.get_helper() work inside exec-test.
-          for f in helpers/bin/flavor-*-${PLATFORM}${EXT}; do
-            if [ -f "$f" ]; then
-              cp -f "$f" src/flavor/helpers/bin/
-              echo "  Copied: $(basename $f)"
-            fi
-          done
-          chmod +x src/flavor/helpers/bin/* 2>/dev/null || true
-          echo "Helpers in src/flavor/helpers/bin/:"
-          ls -la src/flavor/helpers/bin/ || echo "  (empty)"
+        run: python3 ci/workflow_helpers.py install-platform-helpers --source-dir helpers/bin --dest-dir src/flavor/helpers/bin --platform "${{ matrix.platform }}"
 
       - name: 📦 Setup uv + Python
         uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
@@ -376,26 +266,8 @@ jobs:
         run: |
           source ${{ matrix.activate }}
           cd tests/taster
-
-          echo "=== Flavor pack with explicit launcher from helpers ==="
           LAUNCHER="../../helpers/bin/${{ matrix.bundled_launcher }}-${{ matrix.platform }}${{ matrix.launcher_ext }}"
-
-          if [ ! -f "$LAUNCHER" ]; then
-            echo "❌ Launcher not found at $LAUNCHER"
-            ls -la ../../helpers/bin/
-            exit 1
-          fi
-
-          flavor pack \
-            --manifest pyproject.toml \
-            --output taster-bundled.psp \
-            --launcher-bin "$LAUNCHER" \
-            --key-seed test123
-
-          chmod +x taster-bundled.psp
-          ./taster-bundled.psp --version
-          ./taster-bundled.psp info
-          echo "✅ Test passed"
+          python3 ../../ci/workflow_helpers.py taster-scenario explicit-launcher --launcher "$LAUNCHER" --output taster-bundled.psp --include-info
 
       - name: 🧪 Test 2a - Taster help
         run: |
@@ -446,153 +318,51 @@ jobs:
         run: |
           source ${{ matrix.activate }}
           cd tests/taster
-
-          echo "=== Checking launcher location ==="
-          FLAVOR_LOCATION=$(python -c "import flavor; import os; print(os.path.dirname(flavor.__file__))")
-          echo "Flavor installed at: $FLAVOR_LOCATION"
-
-          if [ -d "$FLAVOR_LOCATION/helpers/bin" ]; then
-            echo "✅ Launchers found in wheel:"
-            ls -la "$FLAVOR_LOCATION/helpers/bin/"
-            echo "LAUNCHER_SOURCE=wheel" >> $GITHUB_ENV
-          else
-            echo "⚠️ No launchers in wheel, will use helpers"
-            echo "LAUNCHER_SOURCE=helpers" >> $GITHUB_ENV
-          fi
+          python3 ../../ci/workflow_helpers.py taster-scenario launcher-location
 
       - name: 🧪 Test 3b - Build with Rust launcher
+        if: ${{ !(startsWith(matrix.platform, 'windows_') && matrix.bundled_launcher == 'flavor-go-launcher') }}
         run: |
           source ${{ matrix.activate }}
           cd tests/taster
-
-          # For Go-primary rows on Windows, skip the Rust secondary test —
-          # the dedicated Rust-primary matrix rows cover this.
-          if [[ "${{ matrix.platform }}" == "windows_"* ]] && \
-             [[ "${{ matrix.bundled_launcher }}" == "flavor-go-launcher" ]]; then
-            echo "⚠️ Rust launcher secondary test skipped on Windows Go rows (see Rust-primary row)"
-            exit 0
-          fi
-
-          echo "=== Testing with Rust launcher ==="
-          if [ "$LAUNCHER_SOURCE" = "wheel" ]; then
-            FLAVOR_LOCATION=$(python -c "import flavor; import os; print(os.path.dirname(flavor.__file__))")
-            RUST_LAUNCHER="$FLAVOR_LOCATION/helpers/bin/flavor-rs-launcher-${{ matrix.platform }}${{ matrix.launcher_ext }}"
-          else
-            RUST_LAUNCHER="../../helpers/bin/flavor-rs-launcher-${{ matrix.platform }}${{ matrix.launcher_ext }}"
-          fi
-
-          if [ -f "$RUST_LAUNCHER" ]; then
-            flavor pack \
-              --manifest pyproject.toml \
-              --output taster-rust-explicit.psp \
-              --launcher-bin "$RUST_LAUNCHER" \
-              --key-seed test123
-
-            chmod +x taster-rust-explicit.psp
-            ./taster-rust-explicit.psp --version
-            echo "✅ Rust launcher test passed"
-          else
-            echo "⚠️ Rust launcher not found, skipping"
-          fi
+          python3 ../../ci/workflow_helpers.py taster-scenario rust-explicit --platform "${{ matrix.platform }}" --launcher-ext "${{ matrix.launcher_ext }}" --output taster-rust-explicit.psp
 
       - name: 🧪 Test 3c - Build with Go launcher
         run: |
           source ${{ matrix.activate }}
           cd tests/taster
-
-          echo "=== Testing with Go launcher ==="
-          if [ "$LAUNCHER_SOURCE" = "wheel" ]; then
-            FLAVOR_LOCATION=$(python -c "import flavor; import os; print(os.path.dirname(flavor.__file__))")
-            GO_LAUNCHER="$FLAVOR_LOCATION/helpers/bin/flavor-go-launcher-${{ matrix.platform }}${{ matrix.launcher_ext }}"
-          else
-            GO_LAUNCHER="../../helpers/bin/flavor-go-launcher-${{ matrix.platform }}${{ matrix.launcher_ext }}"
-          fi
-
-          if [ -f "$GO_LAUNCHER" ]; then
-            flavor pack \
-              --manifest pyproject.toml \
-              --output taster-go-explicit.psp \
-              --launcher-bin "$GO_LAUNCHER" \
-              --key-seed test123
-
-            chmod +x taster-go-explicit.psp
-            ./taster-go-explicit.psp --version
-            echo "✅ Go launcher test passed"
-          else
-            echo "⚠️ Go launcher not found, skipping"
-          fi
+          python3 ../../ci/workflow_helpers.py taster-scenario go-explicit --platform "${{ matrix.platform }}" --launcher-ext "${{ matrix.launcher_ext }}" --output taster-go-explicit.psp
 
       - name: 🧪 Test 4 - Pipe operations
         run: |
           source ${{ matrix.activate }}
           cd tests/taster
-
-          echo "=== Testing pipe operations ==="
-          if [ -f "taster-bundled.psp" ]; then
-            echo "Hello from pipe" | ./taster-bundled.psp pipe stdin
-            echo "✅ Pipe test passed"
-          else
-            echo "❌ taster-bundled.psp not found"
-            exit 1
-          fi
+          python3 ../../ci/workflow_helpers.py taster-scenario pipe
 
       - name: 🧪 Test 5 - Signal handling
         run: |
           source ${{ matrix.activate }}
           cd tests/taster
-
-          echo "=== Testing signal handling ==="
-          if command -v timeout >/dev/null 2>&1; then
-            timeout 3 ./taster-bundled.psp signals --sleep 1 || true
-            echo "✅ Signal test completed"
-          else
-            echo "⚠️ Skipping signal test (no timeout command)"
-          fi
+          python3 ../../ci/workflow_helpers.py taster-scenario signal
 
       - name: 🧪 Test 6 - Memory-mapped I/O
         run: |
           source ${{ matrix.activate }}
           cd tests/taster
-
-          echo "=== Testing memory-mapped I/O ==="
-          if ./taster-bundled.psp --help | grep -q mmap; then
-            ./taster-bundled.psp mmap
-            echo "✅ Mmap test passed"
-          else
-            echo "⚠️ Mmap command not available"
-          fi
+          python3 ../../ci/workflow_helpers.py taster-scenario mmap
 
       - name: 🧪 Test 7 - Taster self-packaging
         run: |
           source ${{ matrix.activate }}
           cd tests/taster
-
-          echo "=== Testing Taster self-packaging capability ==="
-
           LAUNCHER="../../helpers/bin/${{ matrix.bundled_launcher }}-${{ matrix.platform }}${{ matrix.launcher_ext }}"
-          if [ ! -f "$LAUNCHER" ]; then
-            echo "❌ Launcher not found for self-packaging test"
-            exit 1
-          fi
-
-          # Use script to test self-packaging
-          ../../ci/test-taster-self-package.sh \
-            ./taster-bundled.psp \
-            "$LAUNCHER"
+          ../../ci/test-taster-self-package.sh ./taster-bundled.psp "$LAUNCHER"
 
       - name: 🧪 Test 8 - Bootstrap and cache regression coverage
         run: |
           source ${{ matrix.activate }}
           cd tests/taster
-
-          # exec-test uses Rust launcher internally; Rust launcher crashes on Windows
-          if [[ "${{ matrix.platform }}" == "windows_"* ]]; then
-            echo "⚠️ exec-test uses Rust launcher which is not supported on Windows, skipping"
-            exit 0
-          fi
-
-          echo "=== Testing bootstrap and cache reuse ==="
-          ./taster-bundled.psp exec-test --verbose
+          python3 ../../ci/workflow_helpers.py taster-scenario exec-test --platform "${{ matrix.platform }}"
 
   # Summary and validation
   validate:
@@ -613,61 +383,7 @@ jobs:
           path: test-results
 
       - name: 📊 Generate summary
-        run: |
-          echo "## 🍰 Taster Pipeline Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Helper Version:** ${{ needs.setup.outputs.helper_version }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          echo "### Platform Test Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Platform | Status | Runner | Timestamp |" >> $GITHUB_STEP_SUMMARY
-          echo "|----------|--------|--------|-----------|" >> $GITHUB_STEP_SUMMARY
-
-          # Parse test results
-          for result_dir in test-results/taster-results-*; do
-            if [ -d "$result_dir" ]; then
-              for json_file in "$result_dir"/*.json; do
-                if [ -f "$json_file" ]; then
-                  PLATFORM=$(jq -r '.platform' "$json_file")
-                  STATUS=$(jq -r '.status' "$json_file")
-                  RUNNER=$(jq -r '.runner' "$json_file")
-                  TIMESTAMP=$(jq -r '.timestamp' "$json_file")
-
-                  # Convert status to emoji
-                  if [ "$STATUS" = "success" ]; then
-                    STATUS_EMOJI="✅"
-                  else
-                    STATUS_EMOJI="❌"
-                  fi
-
-                  echo "| $PLATFORM | $STATUS_EMOJI $STATUS | $RUNNER | $TIMESTAMP |" >> $GITHUB_STEP_SUMMARY
-                fi
-              done
-            fi
-          done
-
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Test Coverage" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Basic commands (--help, info, env)" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Exit codes and error handling" >> $GITHUB_STEP_SUMMARY
-          echo "✅ File operations and workenv persistence" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Cache management" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Argument parsing" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Cross-language compatibility" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Signal handling" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Pipe operations" >> $GITHUB_STEP_SUMMARY
-
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
-          echo "- [View test results](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+        run: python3 ci/workflow_helpers.py taster-summary --results-dir test-results --helper-version "${{ needs.setup.outputs.helper_version }}" --repository "${{ github.repository }}" --run-id "${{ github.run_id }}"
 
       - name: 🎯 Check status
-        run: |
-          # Check if any test job failed
-          if [ "${{ needs.test-taster.result }}" != "success" ] || [ "${{ needs.comprehensive-test.result }}" != "success" ]; then
-            echo "❌ Some taster tests failed"
-            exit 1
-          fi
-          echo "✅ All taster tests passed"
+        run: '[ "${{ needs.test-taster.result }}" = "success" ] && [ "${{ needs.comprehensive-test.result }}" = "success" ]'
