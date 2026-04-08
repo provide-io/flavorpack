@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""FlavorPack command-line interface entrypoint."""
+"""Flavorpack command-line interface entrypoint."""
 
 from __future__ import annotations
 
@@ -62,14 +62,14 @@ def cli(ctx: click.Context) -> None:
     """PSPF (Progressive Secure Package Format) Build Tool.
 
     Configure logging via environment variables:
-    - FLAVOR_LOG_LEVEL: Set log level for FlavorPack (trace, debug, info, warning, error)
+    - FLAVOR_LOG_LEVEL: Set log level for Flavorpack (trace, debug, info, warning, error)
     - FLAVOR_SETUP_LOG_LEVEL: Control Foundation's initialization logs
     - PROVIDE_LOG_LEVEL: Fallback log level if FLAVOR_LOG_LEVEL not set
     - PROVIDE_LOG_FILE: Write logs to file
     """
     ctx.ensure_object(dict)
 
-    # Load FlavorPack configuration from environment
+    # Load Flavorpack configuration from environment
     flavor_config = FlavorRuntimeConfig.from_env()
 
     # Initialize Foundation with proper configuration
@@ -78,7 +78,7 @@ def cli(ctx: click.Context) -> None:
     # Get base telemetry config from environment
     base_telemetry = TelemetryConfig.from_env()
 
-    # Merge with FlavorPack-specific settings
+    # Merge with Flavorpack-specific settings
     telemetry_config = evolve(
         base_telemetry,
         service_name="flavorpack",

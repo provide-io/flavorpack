@@ -19,7 +19,7 @@ Before you begin, ensure you have:
 ### 1. Clone and Setup
 
 ```bash
-# Clone the FlavorPack repository
+# Clone the Flavorpack repository
 git clone https://github.com/provide-io/flavorpack.git
 cd flavorpack
 
@@ -32,7 +32,7 @@ uv sync
 
 ### 2. Build Native Components
 
-FlavorPack uses native Go and Rust components for optimal performance:
+Flavorpack uses native Go and Rust components for optimal performance:
 
 ```bash
 # Build all helpers (launchers and builders)
@@ -59,7 +59,7 @@ Create a new file `hello.py`:
 
 def main():
     name = input("What's your name? ")
-    print(f"Hello, {name}! Welcome to FlavorPack! 📦")
+    print(f"Hello, {name}! Welcome to Flavorpack! 📦")
     print("Your app is running from a self-contained package!")
 
 if __name__ == "__main__":
@@ -74,7 +74,7 @@ Create `pyproject.toml`:
 [project]
 name = "hello-app"
 version = "1.0.0"
-description = "My first FlavorPack application"
+description = "My first Flavorpack application"
 requires-python = ">=3.11"
 
 [project.scripts]
@@ -108,7 +108,7 @@ chmod +x hello.psp
 
 # Output:
 # What's your name? Alice
-# Hello, Alice! Welcome to FlavorPack! 📦
+# Hello, Alice! Welcome to Flavorpack! 📦
 # Your app is running from a self-contained package!
 ```
 
@@ -234,4 +234,4 @@ Now that you've created your first package:
 
 ---
 
-**Congratulations!** 🎉 You've successfully created and run your first FlavorPack package. You're now ready to package and distribute Python applications as single, self-contained executables.
+**Congratulations!** 🎉 You've successfully created and run your first Flavorpack package. You're now ready to package and distribute Python applications as single, self-contained executables.

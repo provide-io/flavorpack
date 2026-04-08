@@ -1,6 +1,6 @@
-# 🍯 Taster - FlavorPack Test Package
+# 🍯 Taster - Flavorpack Test Package
 
-Taster is a comprehensive test package for FlavorPack that demonstrates and validates all aspects of the Progressive Secure Package Format (PSPF/2025). It serves as both a testing framework and a reference implementation for FlavorPack functionality.
+Taster is a comprehensive test package for Flavorpack that demonstrates and validates all aspects of the Progressive Secure Package Format (PSPF/2025). It serves as both a testing framework and a reference implementation for Flavorpack functionality.
 
 ## What is Taster?
 
@@ -19,7 +19,7 @@ Taster is a self-contained PSPF package that provides:
 
 ### Prerequisites
 
-- **FlavorPack** - Install from the main flavorpack repository
+- **Flavorpack** - Install from the main flavorpack repository
 - **Python 3.11+** - Required for running tests and development
 - **pytest** - For running the test suite
 
@@ -113,7 +113,7 @@ pytest tests/ --timeout=60
 
 ## Commands Reference
 
-Taster provides a rich set of commands for testing different aspects of FlavorPack:
+Taster provides a rich set of commands for testing different aspects of Flavorpack:
 
 ### Core Information
 
@@ -409,7 +409,7 @@ Each command provides detailed help:
 
 ## Contributing
 
-Taster follows the FlavorPack development standards:
+Taster follows the Flavorpack development standards:
 
 - **No backward compatibility** - Always implement the current specification
 - **Use operations field** - Never use deprecated codec field
@@ -417,4 +417,4 @@ Taster follows the FlavorPack development standards:
 - **Comprehensive testing** - Include unit, integration, and property tests
 - **Clear documentation** - Update README for any new functionality
 
-For more information, see the main FlavorPack repository at https://github.com/provide-io/flavorpack
+For more information, see the main Flavorpack repository at https://github.com/provide-io/flavorpack

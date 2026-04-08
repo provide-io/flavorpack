@@ -1,14 +1,14 @@
 # Testing Guide
 
-Comprehensive testing strategy for FlavorPack development.
+Comprehensive testing strategy for Flavorpack development.
 
 ## Overview
 
-FlavorPack uses a multi-layered testing approach to ensure reliability across Python, Go, and Rust components. Our test suite includes unit tests, integration tests, cross-language compatibility tests, and end-to-end packaging tests.
+Flavorpack uses a multi-layered testing approach to ensure reliability across Python, Go, and Rust components. Our test suite includes unit tests, integration tests, cross-language compatibility tests, and end-to-end packaging tests.
 
 ## Testing Frameworks
 
-FlavorPack uses two complementary testing frameworks:
+Flavorpack uses two complementary testing frameworks:
 
 - **[TASTER](./taster-vs-pretaster/#taster-comprehensive-python-testing-framework)** - Comprehensive Python-based testing suite with property-based testing, format validation, and deep integration tests
 - **[PRETASTER](./taster-vs-pretaster/#pretaster-fast-cross-language-validation)** - Fast shell-based cross-language validation for builder/launcher compatibility

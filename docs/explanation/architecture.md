@@ -1,14 +1,14 @@
-# FlavorPack Architecture
+# Flavorpack Architecture
 
 ## System Overview
 
-FlavorPack is a cross-language packaging system designed to work seamlessly with other provide.io tools. The architecture consists of three main layers: the Python orchestrator, native helpers (Go/Rust), and the PSPF package format.
+Flavorpack is a cross-language packaging system designed to work seamlessly with other provide.io tools. The architecture consists of three main layers: the Python orchestrator, native helpers (Go/Rust), and the PSPF package format.
 
 ## Component Architecture
 
 ```mermaid
 graph TB
-    subgraph "FlavorPack Components"
+    subgraph "Flavorpack Components"
         direction TB
         PY[Python Orchestrator<br/>📦 Build Coordinator]
         GO[Go Helper<br/>🐹 Builder & Launcher]
@@ -136,7 +136,7 @@ The Progressive Secure Package Format is a polyglot file that works as both an O
 
 ### Security Model
 
-FlavorPack uses Ed25519 signatures for cryptographic verification:
+Flavorpack uses Ed25519 signatures for cryptographic verification:
 
 **Signing Process:**
 1. Hash the package contents (all bytes except signature)
@@ -308,7 +308,7 @@ sequenceDiagram
 
 ## Cross-Language Compatibility
 
-FlavorPack ensures compatibility across all builder/launcher combinations:
+Flavorpack ensures compatibility across all builder/launcher combinations:
 
 ### Compatibility Matrix
 
@@ -372,7 +372,7 @@ The `tests/parity/` directory contains cross-language parity tests that automati
 
 ## Platform Support
 
-FlavorPack supports major operating systems and architectures:
+Flavorpack supports major operating systems and architectures:
 
 ### Supported Platforms
 
@@ -397,7 +397,7 @@ FlavorPack supports major operating systems and architectures:
 
 ## Integration with Ecosystem
 
-FlavorPack integrates with other provide.io tools:
+Flavorpack integrates with other provide.io tools:
 
 ### Pyvider Integration
 
@@ -428,7 +428,7 @@ system-packages = ["git", "make"]
 
 ## Performance Characteristics
 
-FlavorPack is optimized for production use:
+Flavorpack is optimized for production use:
 
 ### Build Performance
 

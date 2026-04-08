@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-//! Trusted key store for FlavorPack package signature verification.
+//! Trusted key store for Flavorpack package signature verification.
 
 use std::collections::HashMap;
 use std::env;

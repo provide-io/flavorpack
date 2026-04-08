@@ -1,19 +1,19 @@
 # Integration with wrknv
 
-FlavorPack integrates seamlessly with `wrknv` for environment management and packaging.
+Flavorpack integrates seamlessly with `wrknv` for environment management and packaging.
 
 !!! info "Optional Integration"
-    **FlavorPack works standalone** without wrknv and has its own built-in workenv (work environment) management for package caching and execution.
+    **Flavorpack works standalone** without wrknv and has its own built-in workenv (work environment) management for package caching and execution.
 
-    This integration is optional. Use wrknv when you want advanced development environment management alongside FlavorPack's packaging capabilities.
+    This integration is optional. Use wrknv when you want advanced development environment management alongside Flavorpack's packaging capabilities.
 
 ## Overview
 
-[wrknv](https://foundry.provide.io/wrknv/) manages development environments, and FlavorPack packages them into distributable executables.
+[wrknv](https://foundry.provide.io/wrknv/) manages development environments, and Flavorpack packages them into distributable executables.
 
 ```mermaid
 graph LR
-    WE[wrknv<br/>Environment Setup] --> FP[FlavorPack<br/>Package Builder]
+    WE[wrknv<br/>Environment Setup] --> FP[Flavorpack<br/>Package Builder]
     FP --> PKG[.psp Package<br/>Executable]
 
     classDef wrknv fill:#f3e5f5,stroke:#4a148c
@@ -56,7 +56,7 @@ if __name__ == '__main__':
     main()
 ```
 
-### 3. **Package with FlavorPack**
+### 3. **Package with Flavorpack**
 
 ```bash
 # Package the wrknv-managed application
@@ -95,7 +95,7 @@ DATABASE_URL = "postgresql://localhost/dev"
 LOG_LEVEL = "debug"
 
 [tool.flavor.execution.runtime.env]
-# FlavorPack uses these in packages
+# Flavorpack uses these in packages
 pass = ["DATABASE_URL", "LOG_LEVEL"]
 set = { "ENVIRONMENT" = "production" }
 ```
@@ -128,7 +128,7 @@ package = packager.build()
 # wrknv creates the venv
 wrknv activate
 
-# FlavorPack packages it
+# Flavorpack packages it
 flavor pack \
   --venv-path $(wrknv info venv-path) \
   --output myapp.psp
@@ -143,7 +143,7 @@ flavor pack \
 wrknv activate
 python -m myapp.cli  # Test locally
 
-# 2. Package (FlavorPack)
+# 2. Package (Flavorpack)
 flavor pack --output myapp.psp
 
 # 3. Deploy to staging
@@ -172,16 +172,16 @@ flavor pack --force
 # wrknv locks dependencies
 wrknv lock
 
-# FlavorPack uses locked versions
+# Flavorpack uses locked versions
 flavor pack --use-lock-file
 ```
 
 ## Benefits of Integration
 
 1. **Consistent Environments**: wrknv ensures same environment dev → prod
-2. **Simplified Packaging**: FlavorPack uses wrknv's dependency resolution
+2. **Simplified Packaging**: Flavorpack uses wrknv's dependency resolution
 3. **Version Control**: Both use pyproject.toml for configuration
-4. **Smooth Workflow**: Develop with wrknv, deploy with FlavorPack
+4. **Smooth Workflow**: Develop with wrknv, deploy with Flavorpack
 
 ## Troubleshooting
 
@@ -203,7 +203,7 @@ flavor pack
 python_version = "3.11"  # Must match
 
 [tool.flavor]
-python_version = "3.11"  # FlavorPack uses same version
+python_version = "3.11"  # Flavorpack uses same version
 ```
 
 ## See Also

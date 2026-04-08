@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Python distribution management for FlavorPack packaging.
+"""Python distribution management for Flavorpack packaging.
 
 This module provides Python distribution handling including virtual environment
 setup, package installation, and distribution preparation for PSPF packaging.
@@ -34,7 +34,7 @@ from flavor.packaging.python.wheel_builder import WheelBuilder
 
 class PythonDistManager:
     """
-    Python distribution manager for FlavorPack packaging.
+    Python distribution manager for Flavorpack packaging.
 
     Handles creation and management of Python distributions including:
     - Virtual environment creation and management

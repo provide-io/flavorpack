@@ -1,6 +1,6 @@
 # Community Support
 
-Get help from the FlavorPack community.
+Get help from the Flavorpack community.
 
 ## Getting Help
 
@@ -29,7 +29,7 @@ For bug reports and feature requests.
 
 Search the documentation first.
 
-- **[User Guide](../guide/index/)** - How to use FlavorPack
+- **[User Guide](../guide/index/)** - How to use Flavorpack
 - **[Cookbook](../cookbook/index/)** - Practical examples
 - **[Troubleshooting](../troubleshooting/index/)** - Common issues
 - **[FAQ](../troubleshooting/faq/)** - Frequently asked questions
@@ -45,7 +45,7 @@ Search the documentation first.
 
 Include:
 
-- FlavorPack version (`flavor --version`)
+- Flavorpack version (`flavor --version`)
 - Operating system and architecture
 - What you're trying to do
 - What you expected

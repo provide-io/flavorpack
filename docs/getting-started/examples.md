@@ -1,16 +1,16 @@
 # Examples
 
-Explore complete, working examples of FlavorPack in action. Each example includes full source code and step-by-step instructions.
+Explore complete, working examples of Flavorpack in action. Each example includes full source code and step-by-step instructions.
 
 ## Quick Examples
 
 ### Minimal Package
 
-The simplest possible FlavorPack package:
+The simplest possible Flavorpack package:
 
 ```python
 # hello.py
-print("Hello from FlavorPack!")
+print("Hello from Flavorpack!")
 ```
 
 ```toml
@@ -25,7 +25,7 @@ entry_point = "hello"
 
 ```bash
 flavor pack --manifest pyproject.toml --output hello.psp
-./hello.psp  # Outputs: Hello from FlavorPack!
+./hello.psp  # Outputs: Hello from Flavorpack!
 ```
 
 ### CLI with Arguments
@@ -185,7 +185,7 @@ A full-featured task management application:
 
 ### 2. Web API Server
 
-A FastAPI web application packaged with FlavorPack:
+A FastAPI web application packaged with Flavorpack:
 
 === "api.py"
     ```python
@@ -400,7 +400,7 @@ Process CSV files with pandas:
         @rumps.clicked("Status")
         def status(self, _):
             rumps.notification(
-                "FlavorPack Status",
+                "Flavorpack Status",
                 "Everything is working!",
                 "Your app is running from a PSPF package"
             )
@@ -434,7 +434,7 @@ Process CSV files with pandas:
     
     def main():
         icon = pystray.Icon(
-            "FlavorPack",
+            "Flavorpack",
             create_image(),
             menu=pystray.Menu(
                 pystray.MenuItem("Status", lambda: print("Running")),
@@ -451,8 +451,8 @@ Process CSV files with pandas:
     # flavorpack-app.desktop
     [Desktop Entry]
     Type=Application
-    Name=FlavorPack App
-    Comment=Packaged with FlavorPack
+    Name=Flavorpack App
+    Comment=Packaged with Flavorpack
     Exec=/opt/flavorpack/myapp.psp
     Icon=flavorpack
     Terminal=false
@@ -465,7 +465,7 @@ Process CSV files with pandas:
 
 === ".github/workflows/package.yml"
     ```yaml
-    name: Package with FlavorPack
+    name: Package with Flavorpack
     
     on:
       release:
@@ -483,7 +483,7 @@ Process CSV files with pandas:
           with:
             python-version: '3.11'
         
-        - name: Install FlavorPack
+        - name: Install Flavorpack
           run: |
             git clone https://github.com/provide-io/flavorpack.git
             cd flavorpack
@@ -514,7 +514,7 @@ Process CSV files with pandas:
     # Build stage
     FROM python:3.11 AS builder
 
-    # Install FlavorPack from source
+    # Install Flavorpack from source
     RUN git clone https://github.com/provide-io/flavorpack.git /flavorpack
     WORKDIR /flavorpack
     RUN pip install uv && uv sync && make build-helpers

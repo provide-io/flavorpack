@@ -1,0 +1,9 @@
+{#- Custom copyright with build timestamp -#}
+<div class="md-copyright">
+  {% if config.copyright %}
+    <div class="md-copyright__highlight">
+      {{ config.copyright }}<br/>
+      Last Deployed: {{ build_date_utc.strftime('%Y-%m-%d') }}
+    </div>
+  {% endif %}
+</div>

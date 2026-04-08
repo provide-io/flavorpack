@@ -1,10 +1,10 @@
 # Building Helpers
 
-Helpers are the native binary components that power FlavorPack's cross-language packaging system.
+Helpers are the native binary components that power Flavorpack's cross-language packaging system.
 
 ## Overview
 
-FlavorPack uses "helpers" - specialized binaries written in Go and Rust - to handle package building and launching. This architecture provides:
+Flavorpack uses "helpers" - specialized binaries written in Go and Rust - to handle package building and launching. This architecture provides:
 
 1. **Cross-platform support**: Native binaries for each OS/architecture
 2. **Performance**: Compiled code for fast execution
@@ -451,7 +451,7 @@ ls -la dist/bin/
 # Should show all helper binaries with platform suffixes
 ```
 
-Helpers are automatically discovered by FlavorPack - no need to add to PATH.
+Helpers are automatically discovered by Flavorpack - no need to add to PATH.
 
 ### Platform Mismatch
 

@@ -1,24 +1,24 @@
 # Manifest Files
 
-Complete reference for `pyproject.toml` configuration options in FlavorPack packages.
+Complete reference for `pyproject.toml` configuration options in Flavorpack packages.
 
 !!! warning "Alpha Release - Limited Configuration Support"
     **Many configuration options shown in this guide are planned but not yet implemented.**
 
-    FlavorPack is in alpha and currently supports a **minimal subset** of the documented configuration.
+    Flavorpack is in alpha and currently supports a **minimal subset** of the documented configuration.
     See the ["Currently Supported Configuration"](#currently-supported-configuration) section below for what actually works today.
 
     Features marked with 📋 are planned for future releases. See the [Roadmap](../roadmap/) for implementation timelines.
 
 ## Overview
 
-FlavorPack uses `pyproject.toml` as its manifest format, following Python packaging standards while adding custom configuration through the `[tool.flavor]` section. This guide covers all available options for configuring your package build.
+Flavorpack uses `pyproject.toml` as its manifest format, following Python packaging standards while adding custom configuration through the `[tool.flavor]` section. This guide covers all available options for configuring your package build.
 
 ## Currently Supported Configuration
 
 ### Minimal Working Example
 
-This is what **actually works today** in FlavorPack alpha:
+This is what **actually works today** in Flavorpack alpha:
 
 ```toml
 [project]
@@ -44,7 +44,7 @@ entry_point = "myapp:main"        # ✅ Required (module:function format)
 | `dependencies` | ✅ Supported | Runtime dependencies (automatically included) |
 | `scripts` | ✅ Supported | CLI entry points (extracted automatically) |
 
-All other `[project]` fields (description, readme, license, etc.) are preserved but not used by FlavorPack.
+All other `[project]` fields (description, readme, license, etc.) are preserved but not used by Flavorpack.
 
 #### `[tool.flavor]` Section ✅
 
@@ -108,14 +108,14 @@ Some features are available via CLI flags but not manifest configuration:
 
 ## Manifest Structure
 
-A FlavorPack manifest has three main sections:
+A Flavorpack manifest has three main sections:
 
 ```toml
 [project]
 # Standard Python project metadata
 
 [tool.flavor]
-# FlavorPack-specific configuration
+# Flavorpack-specific configuration
 
 [[tool.flavor.slots]]
 # Optional slot definitions
@@ -323,7 +323,7 @@ git_commit = "${GIT_COMMIT}"
 !!! warning "📋 Planned Feature - Not Yet Implemented"
     **Slot configuration via `pyproject.toml` is not yet supported.**
 
-    Slots are currently created automatically by FlavorPack based on your Python application structure.
+    Slots are currently created automatically by Flavorpack based on your Python application structure.
     Manual slot configuration is planned for a future release. See [Roadmap](../roadmap/#slot-configuration) for details.
 
     This entire section documents the **planned slot configuration format** that will be available in future releases.
@@ -368,7 +368,7 @@ extract_to = "app"
 # (64-bit packed uint64 supporting up to 8 operations). However, manifest-based
 # configuration of operations is not yet available.
 #
-# Current behavior: FlavorPack automatically applies tar.gz to all slots.
+# Current behavior: Flavorpack automatically applies tar.gz to all slots.
 # Future: You'll be able to specify operations via manifest configuration.
 #
 # 📋 PLANNED: Manifest-based operation specification
@@ -620,7 +620,7 @@ export FLAVOR_KEY_SEED="secret-seed"  # For reproducible builds
 
 ### Required Fields
 
-FlavorPack validates these required fields:
+Flavorpack validates these required fields:
 
 1. `[project]` section:
    - `name`: Package name
@@ -700,7 +700,7 @@ RATE_LIMIT = 1000
 
 ## Examples
 
-These examples show what actually works today in FlavorPack alpha.
+These examples show what actually works today in Flavorpack alpha.
 
 ### Minimal Manifest (✅ Works Today)
 

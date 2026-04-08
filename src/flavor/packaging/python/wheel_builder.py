@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Wheel building and dependency resolution for FlavorPack packaging.
+"""Wheel building and dependency resolution for Flavorpack packaging.
 
 This module provides wheel building with complex dependency resolution logic,
 combining UV performance where appropriate with PyPA pip compatibility.

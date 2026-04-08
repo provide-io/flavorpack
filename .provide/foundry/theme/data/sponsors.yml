@@ -1,0 +1,45 @@
+# Sponsors of the provide.io ecosystem
+# Add sponsors here as they join
+
+# Sponsorship Tiers
+# - Platinum: $5000+/month - Logo on homepage, dedicated section
+# - Gold: $1000+/month - Logo on all documentation pages
+# - Silver: $500+/month - Logo on footer
+# - Bronze: $100+/month - Name in supporters list
+
+platinum_sponsors: []
+
+gold_sponsors: []
+
+silver_sponsors: []
+
+bronze_sponsors: []
+
+# Individual Supporters
+individual_supporters: []
+
+# Sponsorship Information
+info:
+  title: "Support provide.io"
+  description: "Help sustain the development of the provide.io ecosystem"
+  github_sponsors_url: "https://github.com/sponsors/provide-io"
+  open_collective_url: ""  # Add when available
+  benefits:
+    platinum:
+      - Homepage logo placement
+      - Dedicated sponsor section in documentation
+      - Priority support
+      - Quarterly consulting session
+      - Early access to new features
+    gold:
+      - Logo on all documentation pages
+      - Priority support
+      - Monthly consulting session
+      - Early access to new features
+    silver:
+      - Logo in documentation footer
+      - Priority issue responses
+      - Quarterly consulting session
+    bronze:
+      - Name in supporters list
+      - Priority issue responses

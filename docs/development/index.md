@@ -1,6 +1,6 @@
 # Development Guide
 
-Contribute to FlavorPack by developing new features, fixing bugs, or improving documentation.
+Contribute to Flavorpack by developing new features, fixing bugs, or improving documentation.
 
 ## Getting Started
 
@@ -25,7 +25,7 @@ make test
 
 ### :material-book-open: **Contributing**
 
-Learn how to contribute to FlavorPack.
+Learn how to contribute to Flavorpack.
 
 **[Contributing Guide →](contributing/)**
 
@@ -36,7 +36,7 @@ Learn how to contribute to FlavorPack.
 
 ### :material-sitemap: **Architecture**
 
-Understand FlavorPack's architecture.
+Understand Flavorpack's architecture.
 
 **[Architecture Guide →](architecture/)**
 
@@ -113,7 +113,7 @@ graph LR
 
 ## Code Quality
 
-FlavorPack maintains high code quality standards:
+Flavorpack maintains high code quality standards:
 
 ### Python Code
 ```bash

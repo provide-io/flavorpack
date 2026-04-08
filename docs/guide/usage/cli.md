@@ -1,11 +1,11 @@
 # CLI Reference
 
-Complete command-line interface documentation for FlavorPack.
+Complete command-line interface documentation for Flavorpack.
 
 !!! tip "Prerequisites"
     Before using the CLI, ensure you have:
 
-    - [FlavorPack installed](../../getting-started/installation/)
+    - [Flavorpack installed](../../getting-started/installation/)
     - [Helpers built](../../development/contributing/#building-helpers) for package creation
 
     See [System Requirements](../../reference/requirements/) for detailed information.
@@ -27,7 +27,7 @@ flavor [OPTIONS] COMMAND [ARGS]...
 
 ### Environment Variables
 
-FlavorPack uses numerous environment variables for configuration and debugging. For a complete reference, see the [Environment Variables Guide](environment/).
+Flavorpack uses numerous environment variables for configuration and debugging. For a complete reference, see the [Environment Variables Guide](environment/).
 
 Key variables:
 - **FOUNDATION_LOG_LEVEL**: Set log level for Python components (`trace`, `debug`, `info`, `warning`, `error`)
@@ -327,7 +327,7 @@ keys/
 
 ### workenv
 
-Manage the FlavorPack work environment cache.
+Manage the Flavorpack work environment cache.
 
 ```bash
 flavor workenv COMMAND [OPTIONS]
@@ -482,7 +482,7 @@ flavor workenv inspect [OPTIONS] PACKAGE_ID
 
 ### helpers
 
-Manage FlavorPack helper binaries (launchers and builders).
+Manage Flavorpack helper binaries (launchers and builders).
 
 ```bash
 flavor helpers COMMAND [OPTIONS]
@@ -705,7 +705,7 @@ Would remove 4 helper binaries (18.2 MB):
 
 ## Security Commands
 
-FlavorPack ships a suite of security sub-commands for managing trusted keys, execution policies, and package attestation.
+Flavorpack ships a suite of security sub-commands for managing trusted keys, execution policies, and package attestation.
 
 ### One-Shot Setup
 

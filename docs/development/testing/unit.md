@@ -1,6 +1,6 @@
 # Unit Tests
 
-Write unit tests for FlavorPack components.
+Write unit tests for Flavorpack components.
 
 ## Coming Soon
 

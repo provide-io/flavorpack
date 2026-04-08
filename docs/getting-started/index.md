@@ -1,17 +1,17 @@
 # Getting Started
 
-Welcome to FlavorPack! This guide will help you get up and running with creating your first Progressive Secure Package.
+Welcome to Flavorpack! This guide will help you get up and running with creating your first Progressive Secure Package.
 
 !!! note "Package Name vs Tool Name"
-    **FlavorPack** (or `flavorpack`) is the Python package name used for installation. The actual command-line tool and API is called **`flavor`**. Install with `pip install flavorpack`, use with `flavor pack`.
+    **Flavorpack** (or `flavorpack`) is the Python package name used for installation. The actual command-line tool and API is called **`flavor`**. Install with `pip install flavorpack`, use with `flavor pack`.
 
 ## Quick Start Path
 
-Follow these steps to get FlavorPack up and running:
+Follow these steps to get Flavorpack up and running:
 
-### 1. **[Install FlavorPack](installation/)** ⚙️
+### 1. **[Install Flavorpack](installation/)** ⚙️
 
-Install FlavorPack and its native helper binaries. Supports installation from source (currently the only option), with PyPI and other methods coming soon.
+Install Flavorpack and its native helper binaries. Supports installation from source (currently the only option), with PyPI and other methods coming soon.
 
 **Time**: ~10 minutes
 **Prerequisites**: Python 3.11+, UV, Go 1.26+, Rust 1.86+
@@ -54,7 +54,7 @@ Choose the path that matches your goals:
 
 Just want to package a Python app quickly?
 
-1. [Installation](installation/) - Get FlavorPack installed
+1. [Installation](installation/) - Get Flavorpack installed
 2. [Quick Start](quickstart/) - Your first package in 5 minutes
 3. [Examples](examples/) - Copy a working example similar to your needs
 
@@ -69,7 +69,7 @@ Want to understand how everything works?
 
 ### For DevOps Engineers
 
-Need to integrate FlavorPack into CI/CD?
+Need to integrate Flavorpack into CI/CD?
 
 1. [Installation](installation/) - Automated setup instructions
 2. [CLI Reference](../guide/usage/cli/) - Command-line interface details
@@ -87,8 +87,8 @@ Need to integrate FlavorPack into CI/CD?
 
     See [Installation → System Requirements](installation/#system-requirements) for details.
 
-??? question "Is FlavorPack production-ready?"
-    FlavorPack is currently in **alpha** status. The core PSPF format and basic packaging features work well, but APIs and file formats may change without notice.
+??? question "Is Flavorpack production-ready?"
+    Flavorpack is currently in **alpha** status. The core PSPF format and basic packaging features work well, but APIs and file formats may change without notice.
 
     Not recommended for production use yet. See the [Roadmap](../guide/roadmap/) for planned v1.0 features.
 
@@ -101,15 +101,15 @@ Need to integrate FlavorPack into CI/CD?
 
     See [First Package Guide](first-package/) for a complete walkthrough.
 
-??? question "What's the difference between FlavorPack and PyInstaller?"
-    FlavorPack creates **PSPF packages** with:
+??? question "What's the difference between Flavorpack and PyInstaller?"
+    Flavorpack creates **PSPF packages** with:
 
     - Cryptographic signing (Ed25519)
     - Smart caching (no re-extraction)
     - Cross-language support (Python, Go, Rust)
     - Native launchers (not Python-based)
 
-    PyInstaller creates traditional executables. FlavorPack is better for:
+    PyInstaller creates traditional executables. Flavorpack is better for:
     - Security-conscious deployments
     - Large applications (caching helps)
     - Cross-platform distribution

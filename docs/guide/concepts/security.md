@@ -1,10 +1,10 @@
 # Security Model
 
-FlavorPack implements multiple layers of security to ensure package integrity, authenticity, and safe execution.
+Flavorpack implements multiple layers of security to ensure package integrity, authenticity, and safe execution.
 
 ## Overview
 
-The FlavorPack security model provides comprehensive protection through multiple layers:
+The Flavorpack security model provides comprehensive protection through multiple layers:
 
 ```mermaid
 graph TD
@@ -47,7 +47,7 @@ graph TD
 
 ### Protected Against
 
-FlavorPack's security model defends against:
+Flavorpack's security model defends against:
 
 | Threat | Protection |
 |--------|------------|
@@ -60,7 +60,7 @@ FlavorPack's security model defends against:
 
 ### Out of Scope
 
-FlavorPack does not protect against:
+Flavorpack does not protect against:
 
 - Malicious code in legitimate packages
 - Compromised signing keys
@@ -470,7 +470,7 @@ Stay informed:
 
 ### Standards
 
-FlavorPack follows:
+Flavorpack follows:
 - **NIST** cryptographic standards
 - **OWASP** secure coding practices
 - **CIS** benchmark configurations
@@ -484,7 +484,7 @@ Working towards:
 
 ## SBOM & Provenance
 
-Every signed FlavorPack package includes a CycloneDX 1.6 Software Bill of Materials (SBOM) embedded in the attestation slot (slot 0). The SBOM lists the package name, version, build tools, and Python/Go/Rust dependencies captured at build time.
+Every signed Flavorpack package includes a CycloneDX 1.6 Software Bill of Materials (SBOM) embedded in the attestation slot (slot 0). The SBOM lists the package name, version, build tools, and Python/Go/Rust dependencies captured at build time.
 
 ```bash
 # Print the CycloneDX 1.6 SBOM JSON from a package

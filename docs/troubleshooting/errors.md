@@ -1,10 +1,10 @@
 # Error Messages Reference
 
-Complete reference of FlavorPack error messages with explanations and solutions.
+Complete reference of Flavorpack error messages with explanations and solutions.
 
 ## Overview
 
-This guide lists all error messages you might encounter while using FlavorPack, organized by category. Each error includes the message, cause, and solution.
+This guide lists all error messages you might encounter while using Flavorpack, organized by category. Each error includes the message, cause, and solution.
 
 ## Build Errors
 
@@ -215,7 +215,7 @@ lifecycle = "persistent"
 ls -la data/
 
 # Operations are applied automatically
-# FlavorPack chooses optimal compression based on content
+# Flavorpack chooses optimal compression based on content
 
 # Check permissions
 chmod -R r+X data/
@@ -511,7 +511,7 @@ set FLAVOR_CACHE=C:\tmp\f
 **Cause**: Antivirus false positive.
 
 **Solution**:
-1. Add FlavorPack to Windows Defender exclusions
+1. Add Flavorpack to Windows Defender exclusions
 2. Sign packages with certificate
 3. Submit for Microsoft SmartScreen review
 
@@ -638,7 +638,7 @@ If you encounter an error not listed here:
 
 4. **Report new issue** with:
    - Full error message
-   - FlavorPack version
+   - Flavorpack version
    - Operating system
    - Steps to reproduce
 

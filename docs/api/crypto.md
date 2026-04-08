@@ -7,7 +7,7 @@ Ed25519 key generation and management for PSPF package signing.
 
 ## Overview
 
-FlavorPack uses **Ed25519** digital signatures to ensure package integrity. Every PSPF package can be cryptographically signed, with the signature and public key embedded in the package index block.
+Flavorpack uses **Ed25519** digital signatures to ensure package integrity. Every PSPF package can be cryptographically signed, with the signature and public key embedded in the package index block.
 
 **Ed25519 Benefits**:
 - **Fast**: Quick signature generation and verification
@@ -241,7 +241,7 @@ keys/
 Always exclude private keys from version control:
 
 ```gitignore
-# FlavorPack keys
+# Flavorpack keys
 keys/flavor-private.key
 *.key
 !*-public.key  # Allow public keys
@@ -518,7 +518,7 @@ from flavor.psp.format_2025.keys import load_keys_from_path  # For raw files
 ## Related Documentation
 
 - **[Packaging API](packaging/)** - High-level package building with automatic signing
-- **[Security Model](../guide/concepts/security/)** - FlavorPack security architecture
+- **[Security Model](../guide/concepts/security/)** - Flavorpack security architecture
 - **[Signing Guide](../guide/packaging/signing/)** - Package signing workflow
 - **[CLI Reference](../guide/usage/cli/#keygen)** - CLI key generation
 - **[PSPF Security Specification](../reference/spec/fep-0001-core-format-and-operation-chains/#7-security-model)** - Format security details
