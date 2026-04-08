@@ -176,15 +176,21 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
         }
     }
 
-    // Trust store check: verify the package signing key is trusted.
-    // key_trusted is false only when the store exists AND the key is explicitly absent.
+    // Trust store check: determine whether the package signing key is trusted.
+    // The result feeds into the policy enforcement step below, which decides
+    // whether to deny, warn, or allow based on the operator policy.
+    // We intentionally do NOT hard-fail here — trust decisions belong to policy.
     let key_trusted = {
         use super::trust;
 
         match trust::derive_index_key_fingerprint(&index) {
             Ok(Some(fp)) => match trust::is_key_trusted(&fp, true) {
                 None => {
-                    warn!("⚠️ No trusted-keys store found; treating package as untrusted");
+                    // No trust store configured — key trust cannot be verified.
+                    // Policy enforcement below will decide whether to deny, warn, or allow.
+                    warn!(
+                        "⚠️ No trusted-keys store found; requiring a trusted key will fail closed"
+                    );
                     false
                 }
                 Some(true) => {
@@ -196,14 +202,8 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
                         "Package signing key is not in the trusted-keys store (fp={})",
                         fp
                     );
-                    if matches!(validation_level, ValidationLevel::Strict) {
-                        error!("❌ {}", msg);
-                        return Err(FlavorError::Generic(msg));
-                    } else {
-                        eprintln!("flavor: warning: {msg}");
-                        warn!("⚠️ {}", msg);
-                        false
-                    }
+                    warn!("⚠️ {}", msg);
+                    false
                 }
             },
             Ok(None) => {
