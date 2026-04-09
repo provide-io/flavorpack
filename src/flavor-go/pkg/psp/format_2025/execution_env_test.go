@@ -6,13 +6,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 func TestSetFlavorCacheBeforeWorkenvSetsHostCache(t *testing.T) {
 	cacheRoot := t.TempDir()
 	t.Setenv(EnvCacheDir, cacheRoot)
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	got := setFlavorCacheBeforeWorkenv([]string{"PATH=/usr/bin"}, logger)
 
@@ -26,7 +26,7 @@ func TestSetFlavorCacheBeforeWorkenvSetsHostCache(t *testing.T) {
 }
 
 func TestSetFlavorCacheBeforeWorkenvPreservesExistingValue(t *testing.T) {
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	env := []string{EnvCache + "=/already/set"}
 
 	got := setFlavorCacheBeforeWorkenv(env, logger)
@@ -55,11 +55,7 @@ func TestGetenvAndHasEnv(t *testing.T) {
 
 func TestLogEnvironmentTraceRedactsSensitiveValues(t *testing.T) {
 	var output bytes.Buffer
-	logger := hclog.New(&hclog.LoggerOptions{
-		Name:   "test",
-		Level:  hclog.Trace,
-		Output: &output,
-	})
+	logger := logging.NewBufferLogger(&output, logging.LevelTrace)
 
 	logEnvironmentTrace([]string{
 		"OPENAI_API_KEY=secret",

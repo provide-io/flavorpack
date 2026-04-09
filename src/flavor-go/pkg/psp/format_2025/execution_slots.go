@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/hashicorp/go-hclog"
+	"log/slog"
 )
 
 var osRenameFn = os.Rename
@@ -27,7 +27,7 @@ func extractAndMergeSlotsToWorkenv(
 	metadata *Metadata,
 	paths *WorkenvPaths,
 	index *PSPFIndex,
-	logger hclog.Logger,
+	logger *slog.Logger,
 ) (map[int]string, error) {
 	slotPaths := make(map[int]string)
 	workenvDir := paths.Workenv()

@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hashicorp/go-hclog"
+	"log/slog"
 )
 
 // SelfRefMarker is the special marker for self-referential slots
@@ -63,11 +63,11 @@ type SlotProcessor struct {
 	slotData [][]byte
 
 	// Logger for debug output
-	logger hclog.Logger
+	logger *slog.Logger
 }
 
 // NewSlotProcessor creates a new slot processor
-func NewSlotProcessor(slots []Slot, logger hclog.Logger) *SlotProcessor {
+func NewSlotProcessor(slots []Slot, logger *slog.Logger) *SlotProcessor {
 	return &SlotProcessor{
 		manifestSlots:   slots,
 		slotDescriptors: make([]SlotDescriptor, 0, len(slots)),

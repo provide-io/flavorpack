@@ -13,7 +13,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // ---------------------------------------------------------------------------
@@ -77,7 +77,7 @@ func TestApplyOperatorPolicyJSONInvalidEnforcementMode(t *testing.T) {
 func TestValidatePackageChecksumReadError(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/demo.pspf")
 
 	// Create the instance directory and the checksum file.
@@ -112,7 +112,7 @@ func TestValidatePackageChecksumReadError(t *testing.T) {
 func TestExpandDOSStubSectionOffsetOverflow(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	// Build a PE at 0x80 (triggers expansion by 0x70 bytes).
 	data, layout := buildSyntheticPEForTests(t, 0x80, false)

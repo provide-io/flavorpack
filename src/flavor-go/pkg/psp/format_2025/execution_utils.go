@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hashicorp/go-hclog"
+	"log/slog"
 )
 
 var ioCopyFn = io.Copy
@@ -73,7 +73,7 @@ func copyDirAll(src, dst string) error {
 }
 
 // fixShebangs fixes shebang paths in scripts after atomic move
-func fixShebangs(binDir, oldPrefix, newPrefix string, logger hclog.Logger) error {
+func fixShebangs(binDir, oldPrefix, newPrefix string, logger *slog.Logger) error {
 	if _, err := os.Stat(binDir); os.IsNotExist(err) {
 		return nil
 	}
@@ -145,7 +145,7 @@ func fixShebangs(binDir, oldPrefix, newPrefix string, logger hclog.Logger) error
 }
 
 // cleanupLifecycleSlots removes slots based on their lifecycle after setup
-func cleanupLifecycleSlots(workenvDir string, metadata *Metadata, slotPaths map[int]string, logger hclog.Logger) {
+func cleanupLifecycleSlots(workenvDir string, metadata *Metadata, slotPaths map[int]string, logger *slog.Logger) {
 	for _, slot := range metadata.Slots {
 		// Clean up init lifecycle slots - they're only needed during setup
 		if slot.Lifecycle == "init" {

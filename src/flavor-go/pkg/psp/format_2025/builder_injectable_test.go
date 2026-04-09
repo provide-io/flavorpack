@@ -4,11 +4,12 @@ import (
 	"crypto/ed25519"
 	"errors"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // ── Injectable-var failure paths in doBuild ────────────────────────────────
@@ -22,7 +23,7 @@ func TestDoBuildExitsWhenProcessLauncherFails(t *testing.T) {
 	launcherPath := minimalLauncher(t, dir)
 
 	old := processLauncherFn
-	processLauncherFn = func(_ []byte, _ hclog.Logger) ([]byte, error) {
+	processLauncherFn = func(_ []byte, _ *slog.Logger) ([]byte, error) {
 		return nil, errors.New("synthetic processLauncher failure")
 	}
 	t.Cleanup(func() { processLauncherFn = old })
@@ -31,7 +32,7 @@ func TestDoBuildExitsWhenProcessLauncherFails(t *testing.T) {
 	defer cleanup()
 	defer assertBuilderExited(t, 1)
 
-	doBuild(hclog.NewNullLogger(), manifestPath, filepath.Join(dir, "out.pspf"), launcherPath, "", "", "")
+	doBuild(logging.NewNullLogger(), manifestPath, filepath.Join(dir, "out.pspf"), launcherPath, "", "", "")
 }
 
 // TestDoBuildExitsWhenEd25519GenerateKeyFails covers the ed25519GenerateKeyFn
@@ -53,7 +54,7 @@ func TestDoBuildExitsWhenEd25519GenerateKeyFails(t *testing.T) {
 	defer assertBuilderExited(t, 1)
 
 	// No key files, no seed → uses ephemeral key generation.
-	doBuild(hclog.NewNullLogger(), manifestPath, filepath.Join(dir, "out.pspf"), launcherPath, "", "", "")
+	doBuild(logging.NewNullLogger(), manifestPath, filepath.Join(dir, "out.pspf"), launcherPath, "", "", "")
 }
 
 // TestDoBuildWarnsWhenHostnameFails covers the hostnameFunc failure warning
@@ -76,7 +77,7 @@ func TestDoBuildWarnsWhenHostnameFails(t *testing.T) {
 	t.Cleanup(func() { hostnameFunc = old })
 
 	// doBuild should succeed despite the hostname failure (it only warns).
-	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "")
+	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "")
 
 	if _, err := os.Stat(outputPath); err != nil {
 		t.Fatalf("expected output file to exist after hostname warning: %v", err)
@@ -103,21 +104,21 @@ func TestDoBuildResourceEmbeddingSuccessPath(t *testing.T) {
 	})
 
 	// Override shouldUseResourceEmbeddingFn to return true (pretend we're on Windows with Go launcher).
-	shouldUseResourceEmbeddingFn = func(_ []byte, _ hclog.Logger) bool { return true }
+	shouldUseResourceEmbeddingFn = func(_ []byte, _ *slog.Logger) bool { return true }
 
 	// Override embed and atomic replace to just rename (since we're not on Windows).
-	embedPSPFAsResourceImpl = func(exePath string, adjustedPSPF []byte, _ hclog.Logger) error {
+	embedPSPFAsResourceImpl = func(exePath string, adjustedPSPF []byte, _ *slog.Logger) error {
 		existing, err := os.ReadFile(exePath)
 		if err != nil {
 			return err
 		}
 		return os.WriteFile(exePath, append(existing, adjustedPSPF...), 0o700)
 	}
-	atomicReplaceImpl = func(src, dst string, _ hclog.Logger) error {
+	atomicReplaceImpl = func(src, dst string, _ *slog.Logger) error {
 		return os.Rename(src, dst)
 	}
 
-	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "")
+	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "")
 
 	if _, err := os.Stat(outputPath); err != nil {
 		t.Fatalf("expected output to exist after resource embedding: %v", err)
@@ -141,10 +142,10 @@ func TestDoBuildResourceEmbeddingFailurePath(t *testing.T) {
 		shouldUseResourceEmbeddingFn = oldShouldEmbed
 	})
 
-	shouldUseResourceEmbeddingFn = func(_ []byte, _ hclog.Logger) bool { return true }
+	shouldUseResourceEmbeddingFn = func(_ []byte, _ *slog.Logger) bool { return true }
 
 	// Make embed fail so convertToResourceEmbedding fails.
-	embedPSPFAsResourceImpl = func(_ string, _ []byte, _ hclog.Logger) error {
+	embedPSPFAsResourceImpl = func(_ string, _ []byte, _ *slog.Logger) error {
 		return errors.New("synthetic embed failure for doBuild test")
 	}
 
@@ -152,7 +153,7 @@ func TestDoBuildResourceEmbeddingFailurePath(t *testing.T) {
 	defer cleanup()
 	defer assertBuilderExited(t, 1)
 
-	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "")
+	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "")
 }
 
 // TestDoBuildExitsWhenWriteLauncherFails covers the out.Write failure path

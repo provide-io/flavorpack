@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // ---------------------------------------------------------------------------
@@ -66,7 +66,7 @@ func TestFixShebangsReplacesShebang(t *testing.T) {
 		t.Fatalf("WriteFile: %v", err)
 	}
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	if err := fixShebangs(binDir, oldPrefix, newPrefix, logger); err != nil {
 		t.Fatalf("fixShebangs() error = %v", err)
 	}
@@ -95,7 +95,7 @@ func TestFixShebangsNoNewline(t *testing.T) {
 		t.Fatalf("WriteFile: %v", err)
 	}
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	if err := fixShebangs(binDir, oldPrefix, newPrefix, logger); err != nil {
 		t.Fatalf("fixShebangs() error = %v", err)
 	}
@@ -114,7 +114,7 @@ func TestFixShebangsSkipsNonShebang(t *testing.T) {
 		t.Fatalf("WriteFile: %v", err)
 	}
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	if err := fixShebangs(binDir, "/old", "/new", logger); err != nil {
 		t.Fatalf("fixShebangs() error = %v", err)
 	}
@@ -131,7 +131,7 @@ func TestFixShebangsSkipsDirectory(t *testing.T) {
 		t.Fatalf("MkdirAll(subdir): %v", err)
 	}
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	if err := fixShebangs(binDir, "/old", "/new", logger); err != nil {
 		t.Fatalf("fixShebangs() error = %v", err)
 	}
@@ -276,7 +276,7 @@ func TestMarkExtractionCompleteReadOnlyDir(t *testing.T) {
 	}
 
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/test.pspf")
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	// Create the extract dir successfully.
 	if err := os.MkdirAll(paths.Extract(), 0o755); err != nil {
@@ -379,7 +379,7 @@ func TestCleanupLifecycleSlotsRemoveAllFails(t *testing.T) {
 	t.Parallel()
 
 	workenvDir := t.TempDir()
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	// Create a slot directory with a subdirectory that has restricted permissions.
 	slotDir := filepath.Join(workenvDir, "init-slot")
@@ -414,7 +414,7 @@ func TestTryAcquireLockHeldByRunningProcess(t *testing.T) {
 	t.Parallel()
 
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/test.pspf")
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	// Create extract dir.
 	if err := os.MkdirAll(paths.Extract(), 0o755); err != nil {

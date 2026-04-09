@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 func TestLockLifecycleAndCleanup(t *testing.T) {
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/demo.pspf")
 
 	t.Run("acquire release and stale lock handling", func(t *testing.T) {

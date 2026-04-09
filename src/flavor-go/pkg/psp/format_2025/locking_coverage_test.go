@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestMarkExtractionIncompleteMkdirAllFails covers the MkdirAll error path
@@ -27,7 +27,7 @@ func TestMarkExtractionIncompleteMkdirAllFails(t *testing.T) {
 
 	// Create paths whose Extract() resolves under the read-only dir.
 	paths := NewWorkenvPaths(filepath.Join(readOnlyDir, "subdir"), "/tmp/test.pspf")
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	// Should not panic; covers the warn branch for MkdirAll failure.
 	MarkExtractionIncomplete(paths, logger)
@@ -44,7 +44,7 @@ func TestTryAcquireLockOpenFileFails(t *testing.T) {
 	}
 
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/test.pspf")
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	acquired, err := TryAcquireLock(paths, logger)
 	if err == nil {
@@ -63,7 +63,7 @@ func TestTryAcquireLockUnreadableLockFile(t *testing.T) {
 	}
 
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/test.pspf")
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	// Create the extract dir and a lock file with no read permission.
 	if err := os.MkdirAll(paths.Extract(), 0o755); err != nil {
@@ -90,7 +90,7 @@ func TestTryAcquireLockUnreadableLockFile(t *testing.T) {
 // contains non-numeric content (line 56-59).
 func TestTryAcquireLockInvalidPIDContent(t *testing.T) {
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/test.pspf")
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	if err := os.MkdirAll(paths.Extract(), 0o755); err != nil {
 		t.Fatalf("MkdirAll: %v", err)
@@ -115,7 +115,7 @@ func TestCleanupStaleExtractionsMissingTmpDir(t *testing.T) {
 	t.Parallel()
 
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/test.pspf")
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	// tmp/ doesn't exist yet, should return nil.
 	if err := CleanupStaleExtractions(paths, logger); err != nil {
@@ -129,7 +129,7 @@ func TestCleanupStaleExtractionsSkipsNonNumericDirs(t *testing.T) {
 	t.Parallel()
 
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/test.pspf")
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	tmpDir := paths.Tmp()
 	if err := os.MkdirAll(tmpDir, 0o755); err != nil {
@@ -159,7 +159,7 @@ func TestCleanupStaleExtractionsSkipsRunningProcess(t *testing.T) {
 	t.Parallel()
 
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/test.pspf")
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	tmpDir := paths.Tmp()
 	if err := os.MkdirAll(tmpDir, 0o755); err != nil {
