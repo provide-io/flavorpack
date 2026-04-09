@@ -1,6 +1,6 @@
 # Flavor Go Helpers
 
-This directory contains the Go implementation of FlavorPack helpers (builders and launchers).
+This directory contains the Go implementation of Flavorpack helpers (builders and launchers).
 
 ## Overview
 
@@ -197,11 +197,11 @@ make validate-pspf-combo
 
 ## Related Documentation
 
-- [FlavorPack Architecture](../../docs/development/architecture.md)
+- [Flavorpack Architecture](../../docs/development/architecture.md)
 - [Helper Development Guide](../../docs/development/helpers.md)
 - [PSPF/2025 Specification](../../docs/reference/spec/pspf-2025.md)
 - [Contributing Guidelines](../../docs/development/contributing.md)
 
 ## License
 
-Part of the FlavorPack project. See LICENSE in the project root.
+Part of the Flavorpack project. See LICENSE in the project root.

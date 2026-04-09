@@ -1,14 +1,14 @@
 # Release Process
 
-Complete guide to releasing new versions of FlavorPack.
+Complete guide to releasing new versions of Flavorpack.
 
 ## Overview
 
-FlavorPack uses platform-specific wheels that include native Go/Rust helper binaries. The release process builds separate wheels for each supported platform.
+Flavorpack uses platform-specific wheels that include native Go/Rust helper binaries. The release process builds separate wheels for each supported platform.
 
 ## Semantic Versioning
 
-FlavorPack follows [Semantic Versioning 2.0.0](https://semver.org/):
+Flavorpack follows [Semantic Versioning 2.0.0](https://semver.org/):
 
 - **MAJOR**: Breaking API changes or format version changes
 - **MINOR**: New features, backward compatible
@@ -185,7 +185,7 @@ make release-upload
 ### Release Notes Template
 
 ```markdown
-# FlavorPack v0.1.0
+# Flavorpack v0.1.0
 
 ## Highlights
 

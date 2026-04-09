@@ -1,10 +1,10 @@
 # Configuration
 
-Advanced packaging configuration options for FlavorPack.
+Advanced packaging configuration options for Flavorpack.
 
 ## Overview
 
-FlavorPack provides extensive configuration options through manifest files, command-line flags, and environment variables. This guide covers advanced configuration topics beyond basic packaging.
+Flavorpack provides extensive configuration options through manifest files, command-line flags, and environment variables. This guide covers advanced configuration topics beyond basic packaging.
 
 ---
 
@@ -21,7 +21,7 @@ flavor pack --launcher-bin dist/bin/flavor-rs-launcher-linux_amd64
 # Use Go launcher
 flavor pack --launcher-bin dist/bin/flavor-go-launcher-darwin_arm64
 
-# FlavorPack auto-selects if not specified
+# Flavorpack auto-selects if not specified
 flavor pack --manifest pyproject.toml
 ```
 
@@ -40,7 +40,7 @@ Choose which builder to use for package creation:
 # Auto-select best available builder
 flavor pack --manifest pyproject.toml
 
-# FlavorPack automatically prefers:
+# Flavorpack automatically prefers:
 # 1. Python builder (most features)
 # 2. Go builder (if Python unavailable)
 # 3. Rust builder (if only Rust available)

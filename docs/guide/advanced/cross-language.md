@@ -1,10 +1,10 @@
 # Cross-Language Support
 
-Understanding FlavorPack's Go and Rust helper integration.
+Understanding Flavorpack's Go and Rust helper integration.
 
 ## Overview
 
-FlavorPack uses a polyglot architecture where Python orchestrates native Go and Rust helpers to create high-performance, cross-platform packages.
+Flavorpack uses a polyglot architecture where Python orchestrates native Go and Rust helpers to create high-performance, cross-platform packages.
 
 ```mermaid
 graph TB

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Custom exceptions for FlavorPack."""
+"""Custom exceptions for Flavorpack."""
 
 from __future__ import annotations
 

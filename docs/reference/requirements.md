@@ -1,10 +1,10 @@
 # System Requirements
 
-This page is the single source of truth for all FlavorPack version requirements and system dependencies.
+This page is the single source of truth for all Flavorpack version requirements and system dependencies.
 
 ## Runtime Requirements (End Users)
 
-**PSPF packages created with FlavorPack have ZERO runtime dependencies!**
+**PSPF packages created with Flavorpack have ZERO runtime dependencies!**
 
 When you distribute a `.psp` package, end users need:
 
@@ -40,7 +40,7 @@ When you distribute a `.psp` package, end users need:
 
 ### Core Tools (Required)
 
-These are required for FlavorPack development and package building:
+These are required for Flavorpack development and package building:
 
 | Tool | Version | Verification | Notes |
 |------|---------|--------------|-------|
@@ -113,7 +113,7 @@ These tools enhance the development experience but are not required:
 
 ### Python Dependencies
 
-FlavorPack's Python dependencies are declared in `pyproject.toml`:
+Flavorpack's Python dependencies are declared in `pyproject.toml`:
 
 ```toml
 [project]
@@ -177,7 +177,7 @@ Set these when running `.psp` packages for debugging:
 
 ## XDG Directories
 
-FlavorPack follows XDG Base Directory conventions. All three implementations must use
+Flavorpack follows XDG Base Directory conventions. All three implementations must use
 the same platform-aware path resolution.
 
 ### Cache directory
@@ -252,7 +252,7 @@ go version
 rustc --version
 # Expected: rustc 1.85.0 or higher
 
-# 5. Verify FlavorPack installation
+# 5. Verify Flavorpack installation
 uv run flavor --version
 # Expected: flavorpack x.x.x
 
@@ -265,7 +265,7 @@ uv run flavor helpers list
 
 ## Upgrading
 
-### Update FlavorPack
+### Update Flavorpack
 
 ```bash
 cd flavorpack

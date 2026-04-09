@@ -1,9 +1,9 @@
-# FlavorPack Roadmap
+# Flavorpack Roadmap
 
-This roadmap shows the current implementation status and planned features for FlavorPack. Use this to understand what works today versus what's coming in future releases.
+This roadmap shows the current implementation status and planned features for Flavorpack. Use this to understand what works today versus what's coming in future releases.
 
 !!! info "Version Status"
-    FlavorPack is currently in **alpha** stage. APIs, file formats, and commands may change without notice.
+    Flavorpack is currently in **alpha** stage. APIs, file formats, and commands may change without notice.
 
 ## Legend
 
@@ -103,7 +103,7 @@ map = { OLD = "NEW" }            # ✅ Rename variables
 
 ## Planned Features
 
-The following features are documented in guides but are **not yet implemented**. They represent the planned evolution of FlavorPack.
+The following features are documented in guides but are **not yet implemented**. They represent the planned evolution of Flavorpack.
 
 ### Manifest Configuration Features 📋
 
@@ -587,7 +587,7 @@ Auto-generate API docs from code:
 Live, runnable examples in documentation:
 
 ```bash
-# Try FlavorPack online
+# Try Flavorpack online
 flavor demo hello-world
 flavor demo web-app
 flavor demo cli-tool
@@ -658,7 +658,7 @@ flavor install popular-package
 
 ### Plugin System
 
-Extend FlavorPack with plugins:
+Extend Flavorpack with plugins:
 
 ```bash
 flavor plugin install compression-extras
@@ -772,7 +772,7 @@ Want to help implement roadmap features?
 
 1. **Pick a Feature:** Choose from "Planned" features above
 2. **Discuss Approach:** Open GitHub Discussion
-3. **Create FEP:** Submit FlavorPack Enhancement Proposal if needed
+3. **Create FEP:** Submit Flavorpack Enhancement Proposal if needed
 4. **Submit PR:** Implement with tests and docs
 
 See our [Contributing Guide](development/contributing/) for detailed instructions.
@@ -781,11 +781,11 @@ See our [Contributing Guide](development/contributing/) for detailed instruction
 
 ## Feature Request Process
 
-Have an idea for FlavorPack? Here's how to suggest features:
+Have an idea for Flavorpack? Here's how to suggest features:
 
 1. **Check Existing Roadmap:** Review this document first
 2. **Search Issues:** Check if already proposed on [GitHub Issues](https://github.com/provide-io/flavorpack/issues)
-3. **Submit FEP:** Create FlavorPack Enhancement Proposal for major features
+3. **Submit FEP:** Create Flavorpack Enhancement Proposal for major features
 4. **Community Discussion:** Discuss in [GitHub Discussions](https://github.com/provide-io/flavorpack/discussions)
 
 ---
