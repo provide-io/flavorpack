@@ -8,7 +8,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // buildMinimalTarArchive creates a minimal tar archive containing a single regular file.
@@ -49,7 +49,7 @@ func TestReadSlotSeekFails(t *testing.T) {
 		return 0, errors.New("injected seek failure")
 	}
 
-	reader, _ := NewReaderWithLogger(bundle, hclog.NewNullLogger())
+	reader, _ := NewReaderWithLogger(bundle, logging.NewNullLogger())
 	defer func() { _ = reader.Close() }()
 
 	_, err := reader.ReadSlot(0)
@@ -82,7 +82,7 @@ func TestReadSlotReadDescriptorFails(t *testing.T) {
 		return 0, errors.New("injected read failure")
 	}
 
-	reader, _ := NewReaderWithLogger(bundle, hclog.NewNullLogger())
+	reader, _ := NewReaderWithLogger(bundle, logging.NewNullLogger())
 	defer func() { _ = reader.Close() }()
 
 	_, err := reader.ReadSlot(0)
@@ -112,7 +112,7 @@ func TestReadSlotSeekToDataFails(t *testing.T) {
 		return 0, errors.New("injected seek-to-data failure")
 	}
 
-	reader, _ := NewReaderWithLogger(bundle, hclog.NewNullLogger())
+	reader, _ := NewReaderWithLogger(bundle, logging.NewNullLogger())
 	defer func() { _ = reader.Close() }()
 
 	_, err := reader.ReadSlot(0)
@@ -141,7 +141,7 @@ func TestReadSlotReadDataFails(t *testing.T) {
 		return 0, errors.New("injected read failure for slot data")
 	}
 
-	reader, _ := NewReaderWithLogger(bundle, hclog.NewNullLogger())
+	reader, _ := NewReaderWithLogger(bundle, logging.NewNullLogger())
 	defer func() { _ = reader.Close() }()
 
 	_, err := reader.ReadSlot(0)
@@ -159,7 +159,7 @@ func TestExtractSlotPermissionsSeekFails(t *testing.T) {
 		Target: "{workenv}",
 	}, 0, false)
 
-	reader, _ := NewReaderWithLogger(bundle, hclog.NewNullLogger())
+	reader, _ := NewReaderWithLogger(bundle, logging.NewNullLogger())
 	defer func() { _ = reader.Close() }()
 
 	// ReadSlot uses fileSeekFn twice (slot table seek + slot data seek).
@@ -190,7 +190,7 @@ func TestExtractSlotPermissionsReadFails(t *testing.T) {
 		Target: "{workenv}",
 	}, 0, false)
 
-	reader, _ := NewReaderWithLogger(bundle, hclog.NewNullLogger())
+	reader, _ := NewReaderWithLogger(bundle, logging.NewNullLogger())
 	defer func() { _ = reader.Close() }()
 
 	// ReadSlot uses fileReadFn twice (descriptor + slot data).
@@ -222,7 +222,7 @@ func TestExtractSlotReadDescriptorFails(t *testing.T) {
 		Target: "{workenv}",
 	}, 0, false)
 
-	reader, _ := NewReaderWithLogger(bundle, hclog.NewNullLogger())
+	reader, _ := NewReaderWithLogger(bundle, logging.NewNullLogger())
 	defer func() { _ = reader.Close() }()
 
 	// Warm the index cache
@@ -271,7 +271,7 @@ func TestTarExtractionMkdirAllFails(t *testing.T) {
 		return errors.New("injected MkdirAll failure during tar extraction")
 	}
 
-	reader, _ := NewReaderWithLogger(bundle, hclog.NewNullLogger())
+	reader, _ := NewReaderWithLogger(bundle, logging.NewNullLogger())
 	defer func() { _ = reader.Close() }()
 
 	_, err := reader.ExtractSlot(0, t.TempDir())
@@ -296,7 +296,7 @@ func TestTarExtractionIoCopyFails(t *testing.T) {
 		return 0, errors.New("injected io.Copy failure during tar extraction")
 	}
 
-	reader, _ := NewReaderWithLogger(bundle, hclog.NewNullLogger())
+	reader, _ := NewReaderWithLogger(bundle, logging.NewNullLogger())
 	defer func() { _ = reader.Close() }()
 
 	_, err := reader.ExtractSlot(0, t.TempDir())
@@ -328,7 +328,7 @@ func TestTarExtractionIoCopyFailsWithCloseError(t *testing.T) {
 		return errors.New("injected out.Close failure (secondary)")
 	}
 
-	reader, _ := NewReaderWithLogger(bundle, hclog.NewNullLogger())
+	reader, _ := NewReaderWithLogger(bundle, logging.NewNullLogger())
 	defer func() { _ = reader.Close() }()
 
 	_, err := reader.ExtractSlot(0, t.TempDir())
@@ -358,7 +358,7 @@ func TestTarExtractionOutCloseFails(t *testing.T) {
 		return errors.New("injected out.Close failure during tar extraction")
 	}
 
-	reader, _ := NewReaderWithLogger(bundle, hclog.NewNullLogger())
+	reader, _ := NewReaderWithLogger(bundle, logging.NewNullLogger())
 	defer func() { _ = reader.Close() }()
 
 	_, err := reader.ExtractSlot(0, t.TempDir())
@@ -402,7 +402,7 @@ func TestTarExtractionChmodFails(t *testing.T) {
 		return errors.New("injected Chmod failure (best-effort, should be ignored)")
 	}
 
-	reader, _ := NewReaderWithLogger(bundle, hclog.NewNullLogger())
+	reader, _ := NewReaderWithLogger(bundle, logging.NewNullLogger())
 	defer func() { _ = reader.Close() }()
 
 	// Extraction should succeed despite Chmod failure (best-effort, error is silenced).

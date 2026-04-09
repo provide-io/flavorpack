@@ -7,8 +7,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hashicorp/go-hclog"
+	"log/slog"
+
 	"github.com/provide-io/flavor/go/flavor/internal/workenv"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // setFlavorCacheBeforeWorkenv sets FLAVOR_CACHE to the HOST's cache directory.

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 	"github.com/provide-io/flavor/go/flavor/pkg/psp/format_2025"
 )
 
@@ -22,6 +22,6 @@ func TestVerifyBundleWithLoggerReaderCloseFails(t *testing.T) {
 	}
 
 	// VerifyBundleWithLogger should succeed (the close error is just logged, not fatal)
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	VerifyBundleWithLogger(bundle, logger)
 }

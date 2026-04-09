@@ -61,11 +61,11 @@ type SlotDescriptor struct {
 
 // SlotDescriptorSize is defined in constants.go
 
-func slotLogger() *slog.Logger { return logging.NewDefaultLogger("pspf2025.slots") }
+var slotLogger *slog.Logger = slog.Default()
 
 // Pack serializes the descriptor to exactly 64 bytes
 func (d *SlotDescriptor) Pack() []byte {
-	logging.Trace(slotLogger(), "📦 Packing slot descriptor",
+	logging.Trace(slotLogger, "📦 Packing slot descriptor",
 		"id", d.ID,
 		"operations", fmt.Sprintf("0x%016x", d.Operations),
 	)
@@ -108,7 +108,7 @@ func UnpackSlotDescriptor(data []byte) (*SlotDescriptor, error) {
 		return nil, fmt.Errorf("invalid descriptor size: expected %d, got %d", SlotDescriptorSize, len(data))
 	}
 
-	logging.Trace(slotLogger(), "📂 Unpacking slot descriptor")
+	logging.Trace(slotLogger, "📂 Unpacking slot descriptor")
 
 	d := &SlotDescriptor{
 		// Unpack uint64 fields

@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestTryAcquireLockHeldByActiveProcess covers locking.go:71-74
@@ -31,7 +31,7 @@ func TestTryAcquireLockHeldByActiveProcess(t *testing.T) {
 	t.Cleanup(func() { isProcessRunningFn = old })
 	isProcessRunningFn = func(pid int) bool { return pid == fakePID }
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	acquired, err := TryAcquireLock(paths, logger)
 	if err != nil {
 		t.Fatalf("TryAcquireLock() error = %v", err)

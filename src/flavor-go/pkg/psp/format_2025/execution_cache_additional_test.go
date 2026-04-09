@@ -7,11 +7,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 func TestExecutionCacheHelpers(t *testing.T) {
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/demo.pspf")
 
 	t.Run("disk space validation", func(t *testing.T) {
@@ -129,7 +129,7 @@ func TestExecutionCacheHelpers(t *testing.T) {
 }
 
 func TestCheckDiskSpaceContinuesWhenProbeFails(t *testing.T) {
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/demo.pspf")
 
 	oldGetAvailableDiskSpaceFn := getAvailableDiskSpaceFn
@@ -146,7 +146,7 @@ func TestCheckDiskSpaceContinuesWhenProbeFails(t *testing.T) {
 }
 
 func TestValidatePackageChecksumHandlesMissingFile(t *testing.T) {
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/demo.pspf")
 
 	valid, err := validatePackageChecksum(paths, 0x12345678, logger)
@@ -159,7 +159,7 @@ func TestValidatePackageChecksumHandlesMissingFile(t *testing.T) {
 }
 
 func TestSavePackageChecksumFailsWhenInstancePathIsFile(t *testing.T) {
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/demo.pspf")
 
 	if err := os.MkdirAll(filepath.Dir(paths.Instance()), 0o755); err != nil {
@@ -175,7 +175,7 @@ func TestSavePackageChecksumFailsWhenInstancePathIsFile(t *testing.T) {
 }
 
 func TestSavePackageChecksumSucceeds(t *testing.T) {
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/demo.pspf")
 
 	if err := savePackageChecksum(paths, 0xdeadbeef, logger); err != nil {
@@ -192,7 +192,7 @@ func TestSavePackageChecksumSucceeds(t *testing.T) {
 }
 
 func TestSaveIndexMetadataFailsWhenInstanceIsFile(t *testing.T) {
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/demo.pspf")
 
 	if err := os.MkdirAll(filepath.Dir(paths.Instance()), 0o755); err != nil {
@@ -208,7 +208,7 @@ func TestSaveIndexMetadataFailsWhenInstanceIsFile(t *testing.T) {
 }
 
 func TestSaveIndexMetadataFailsWhenTargetPathIsDirectory(t *testing.T) {
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/demo.pspf")
 
 	if err := os.MkdirAll(paths.IndexMetadataFile(), 0o755); err != nil {
@@ -221,7 +221,7 @@ func TestSaveIndexMetadataFailsWhenTargetPathIsDirectory(t *testing.T) {
 }
 
 func TestCheckWorkenvValidityHandlesMissingAndEmptyWorkenv(t *testing.T) {
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	index := &PSPFIndex{IndexChecksum: 0x12345678}
 
 	t.Run("missing workenv directory", func(t *testing.T) {

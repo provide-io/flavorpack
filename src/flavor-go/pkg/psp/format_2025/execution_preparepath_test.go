@@ -2,16 +2,17 @@ package format_2025
 
 import (
 	"errors"
+	"log/slog"
 	"os"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestPrepareBundlePathCreateTempFails covers execution.go:77-80
 // (createTempFn failure when PSPF is a PE resource).
 func TestPrepareBundlePathCreateTempFails(t *testing.T) {
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	// Inject hasPSPFResourceFn to pretend the bundle has a PE resource
 	oldHas := hasPSPFResourceFn
@@ -23,8 +24,8 @@ func TestPrepareBundlePathCreateTempFails(t *testing.T) {
 		createTempFn = oldCreate
 	})
 
-	hasPSPFResourceFn = func(_ string, _ hclog.Logger) bool { return true }
-	readPSPFFromResourceFn = func(_ string, _ hclog.Logger) ([]byte, error) {
+	hasPSPFResourceFn = func(_ string, _ *slog.Logger) bool { return true }
+	readPSPFFromResourceFn = func(_ string, _ *slog.Logger) ([]byte, error) {
 		return []byte("pspf-data"), nil
 	}
 	createTempFn = func(_, _ string) (*os.File, error) {
@@ -40,7 +41,7 @@ func TestPrepareBundlePathCreateTempFails(t *testing.T) {
 // TestPrepareBundlePathWriteFailure covers execution.go:87-93
 // (Write failure after createTemp succeeds).
 func TestPrepareBundlePathWriteFailure(t *testing.T) {
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	oldHas := hasPSPFResourceFn
 	oldRead := readPSPFFromResourceFn
@@ -52,8 +53,8 @@ func TestPrepareBundlePathWriteFailure(t *testing.T) {
 	})
 
 	pspfData := []byte("pspf-data")
-	hasPSPFResourceFn = func(_ string, _ hclog.Logger) bool { return true }
-	readPSPFFromResourceFn = func(_ string, _ hclog.Logger) ([]byte, error) {
+	hasPSPFResourceFn = func(_ string, _ *slog.Logger) bool { return true }
+	readPSPFFromResourceFn = func(_ string, _ *slog.Logger) ([]byte, error) {
 		return pspfData, nil
 	}
 
@@ -85,7 +86,7 @@ func TestPrepareBundlePathWriteFailure(t *testing.T) {
 // Note: file.Write returning (n<len, nil) is impossible per Go's io.Writer contract.
 // We leave this test as a compilation smoke test.
 func TestPrepareBundlePathNormalPEResourceExtraction(t *testing.T) {
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	oldHas := hasPSPFResourceFn
 	oldRead := readPSPFFromResourceFn
@@ -95,8 +96,8 @@ func TestPrepareBundlePathNormalPEResourceExtraction(t *testing.T) {
 	})
 
 	pspfData := []byte("pspf-data")
-	hasPSPFResourceFn = func(_ string, _ hclog.Logger) bool { return true }
-	readPSPFFromResourceFn = func(_ string, _ hclog.Logger) ([]byte, error) {
+	hasPSPFResourceFn = func(_ string, _ *slog.Logger) bool { return true }
+	readPSPFFromResourceFn = func(_ string, _ *slog.Logger) ([]byte, error) {
 		return pspfData, nil
 	}
 
@@ -133,7 +134,7 @@ func TestRunBundleWithCwdReaderCloseLogs(t *testing.T) {
 		return errors.New("injected reader close failure")
 	}
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	// The close error should be logged but not prevent the function from returning a cmd
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {

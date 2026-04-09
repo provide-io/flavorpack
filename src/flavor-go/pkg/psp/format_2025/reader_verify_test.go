@@ -151,7 +151,7 @@ func TestReadSlotReturnsErrInvalidSlotIndex(t *testing.T) {
 }
 
 // TestReadSlotNilLoggerFallback constructs a Reader with nil logger to cover the
-// hclog.L() fallback path in ReadSlot.
+// slog.Default() fallback path in ReadSlot.
 func TestReadSlotNilLoggerFallback(t *testing.T) {
 	t.Parallel()
 
@@ -166,7 +166,7 @@ func TestReadSlotNilLoggerFallback(t *testing.T) {
 	defer func() { _ = reader.Close() }()
 
 	// Pre-populate the index cache so ReadIndex returns without touching r.logger,
-	// then set logger to nil to trigger the hclog.L() fallback inside ReadSlot.
+	// then set logger to nil to trigger the slog.Default() fallback inside ReadSlot.
 	if _, err := reader.ReadIndex(); err != nil {
 		t.Fatalf("ReadIndex: %v", err)
 	}
