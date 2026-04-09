@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestTryAcquireLockMkdirAllFailure covers lines 30-32 in TryAcquireLock:
@@ -18,7 +18,7 @@ import (
 // Since the extract dir can't be created, OpenFile on lockPath (inside it) also fails.
 func TestTryAcquireLockMkdirAllFailure(t *testing.T) {
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/test-mkdirfail.pspf")
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	// Place a file at the extract dir path so MkdirAll fails.
 	extractParent := filepath.Dir(paths.Extract())
@@ -132,7 +132,7 @@ func TestCleanupStaleExtractionsRemoveAllFailure(t *testing.T) {
 	isProcessRunningFn = func(pid int) bool { return false } // All PIDs appear dead
 
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/test-removeall.pspf")
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	tmpDir := paths.Tmp()
 	if err := os.MkdirAll(tmpDir, 0o755); err != nil {

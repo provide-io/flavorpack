@@ -3,11 +3,12 @@ package format_2025
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // builderExitCode is the panic value used by the buildExitFn trap in tests.
@@ -113,7 +114,7 @@ func TestDoBuildExitsMissingManifest(t *testing.T) {
 	defer cleanup()
 	defer assertBuilderExited(t, 1)
 
-	doBuild(hclog.NewNullLogger(), "/nonexistent/path/manifest.json", "/tmp/out.pspf", "/tmp/launcher", "", "", "")
+	doBuild(logging.NewNullLogger(), "/nonexistent/path/manifest.json", "/tmp/out.pspf", "/tmp/launcher", "", "", "")
 }
 
 func TestDoBuildExitsInvalidJSONManifest(t *testing.T) {
@@ -127,7 +128,7 @@ func TestDoBuildExitsInvalidJSONManifest(t *testing.T) {
 	defer cleanup()
 	defer assertBuilderExited(t, 1)
 
-	doBuild(hclog.NewNullLogger(), manifestPath, filepath.Join(dir, "out.pspf"), "/tmp/launcher", "", "", "")
+	doBuild(logging.NewNullLogger(), manifestPath, filepath.Join(dir, "out.pspf"), "/tmp/launcher", "", "", "")
 }
 
 func TestDoBuildExitsNoLauncherPath(t *testing.T) {
@@ -143,7 +144,7 @@ func TestDoBuildExitsNoLauncherPath(t *testing.T) {
 	defer assertBuilderExited(t, 1)
 
 	// Pass launcherBin="" and no env var — must exit.
-	doBuild(hclog.NewNullLogger(), manifestPath, filepath.Join(dir, "out.pspf"), "", "", "", "")
+	doBuild(logging.NewNullLogger(), manifestPath, filepath.Join(dir, "out.pspf"), "", "", "", "")
 }
 
 func TestDoBuildExitsLauncherNotFound(t *testing.T) {
@@ -155,7 +156,7 @@ func TestDoBuildExitsLauncherNotFound(t *testing.T) {
 	defer cleanup()
 	defer assertBuilderExited(t, 1)
 
-	doBuild(hclog.NewNullLogger(), manifestPath, filepath.Join(dir, "out.pspf"), "/nonexistent/launcher", "", "", "")
+	doBuild(logging.NewNullLogger(), manifestPath, filepath.Join(dir, "out.pspf"), "/nonexistent/launcher", "", "", "")
 }
 
 func TestDoBuildExitsLoadKeysFails(t *testing.T) {
@@ -169,7 +170,7 @@ func TestDoBuildExitsLoadKeysFails(t *testing.T) {
 	defer cleanup()
 	defer assertBuilderExited(t, 1)
 
-	doBuild(hclog.NewNullLogger(), manifestPath, filepath.Join(dir, "out.pspf"), launcherPath, "/nonexistent/private.pem", "/nonexistent/public.pem", "")
+	doBuild(logging.NewNullLogger(), manifestPath, filepath.Join(dir, "out.pspf"), launcherPath, "/nonexistent/private.pem", "/nonexistent/public.pem", "")
 }
 
 func TestDoBuildExitsEnvSeedMissing(t *testing.T) {
@@ -185,7 +186,7 @@ func TestDoBuildExitsEnvSeedMissing(t *testing.T) {
 	defer cleanup()
 	defer assertBuilderExited(t, 1)
 
-	doBuild(hclog.NewNullLogger(), manifestPath, filepath.Join(dir, "out.pspf"), launcherPath, "", "", "env")
+	doBuild(logging.NewNullLogger(), manifestPath, filepath.Join(dir, "out.pspf"), launcherPath, "", "", "env")
 }
 
 func TestDoBuildExitsCreateOutputFails(t *testing.T) {
@@ -211,7 +212,7 @@ func TestDoBuildExitsCreateOutputFails(t *testing.T) {
 	defer assertBuilderExited(t, 1)
 
 	// Try to write output inside the read-only directory.
-	doBuild(hclog.NewNullLogger(), manifestPath, filepath.Join(readonlyDir, "out.pspf"), launcherPath, "", "", "")
+	doBuild(logging.NewNullLogger(), manifestPath, filepath.Join(readonlyDir, "out.pspf"), launcherPath, "", "", "")
 }
 
 // ── Success-path tests covering branches not hit by builder_test.go ──────────
@@ -226,7 +227,7 @@ func TestDoBuildSuccessWithSourceDateEpoch(t *testing.T) {
 	t.Setenv("SOURCE_DATE_EPOCH", "1700000000")
 
 	// Should succeed without exiting.
-	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "")
+	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "")
 
 	if _, err := os.Stat(outputPath); err != nil {
 		t.Fatalf("expected output file to exist: %v", err)
@@ -243,7 +244,7 @@ func TestDoBuildSuccessWithEnvKeySeed(t *testing.T) {
 	t.Setenv(EnvKeySeed, "my-test-seed-value")
 
 	// Should succeed without exiting.
-	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "env")
+	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "env")
 
 	if _, err := os.Stat(outputPath); err != nil {
 		t.Fatalf("expected output file to exist: %v", err)
@@ -258,7 +259,7 @@ func TestDoBuildSuccessEphemeralKeys(t *testing.T) {
 	outputPath := filepath.Join(dir, "out.pspf")
 
 	// No key files, no seed — uses ephemeral key generation.
-	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "")
+	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "")
 
 	if _, err := os.Stat(outputPath); err != nil {
 		t.Fatalf("expected output file to exist: %v", err)
@@ -290,7 +291,7 @@ func TestDoBuildSuccessWithCacheValidation(t *testing.T) {
 	launcherPath := minimalLauncher(t, dir)
 	outputPath := filepath.Join(dir, "out.pspf")
 
-	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "")
+	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "")
 
 	reader, err := NewReader(outputPath)
 	if err != nil {
@@ -333,7 +334,7 @@ func TestDoBuildSuccessWithRuntimeEnv(t *testing.T) {
 	launcherPath := minimalLauncher(t, dir)
 	outputPath := filepath.Join(dir, "out.pspf")
 
-	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "")
+	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "")
 
 	reader, err := NewReader(outputPath)
 	if err != nil {
@@ -360,7 +361,7 @@ func TestDoBuildSuccessSourceDateEpochInvalidFallsBackToNow(t *testing.T) {
 	// Invalid SOURCE_DATE_EPOCH falls back to time.Now().
 	t.Setenv("SOURCE_DATE_EPOCH", "not-a-number")
 
-	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "")
+	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "")
 
 	if _, err := os.Stat(outputPath); err != nil {
 		t.Fatalf("expected output file to exist: %v", err)
@@ -384,7 +385,7 @@ func TestDoBuildSuccessConvertToResourceEmbedding(t *testing.T) {
 	})
 
 	embedCalled := false
-	embedPSPFAsResourceImpl = func(exePath string, adjustedPSPF []byte, logger hclog.Logger) error {
+	embedPSPFAsResourceImpl = func(exePath string, adjustedPSPF []byte, logger *slog.Logger) error {
 		embedCalled = true
 		existing, err := os.ReadFile(exePath)
 		if err != nil {
@@ -392,7 +393,7 @@ func TestDoBuildSuccessConvertToResourceEmbedding(t *testing.T) {
 		}
 		return os.WriteFile(exePath, append(existing, adjustedPSPF...), 0o700)
 	}
-	atomicReplaceImpl = func(src, dst string, logger hclog.Logger) error {
+	atomicReplaceImpl = func(src, dst string, logger *slog.Logger) error {
 		return os.Rename(src, dst)
 	}
 
@@ -415,7 +416,7 @@ func TestDoBuildSuccessConvertToResourceEmbedding(t *testing.T) {
 	// the full integration but do verify embedPSPFAsResourceImpl is injectable.
 
 	// Run doBuild — on non-Windows this won't call embedPSPFAsResourceImpl.
-	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "")
+	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "")
 
 	if _, err := os.Stat(outputPath); err != nil {
 		t.Fatalf("expected output file to exist: %v", err)
@@ -431,7 +432,7 @@ func TestDoBuildSuccessConvertToResourceEmbedding(t *testing.T) {
 func TestAdjustPSPFOffsetsRejectsUnpackError(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	// Build minimal PSPF data with correct magic but corrupted index bytes.
 	data := make([]byte, MagicTrailerSize+100)
@@ -454,7 +455,7 @@ func TestAdjustPSPFOffsetsRejectsUnpackError(t *testing.T) {
 func TestAdjustPSPFOffsetsSlotDescriptorOutOfBounds(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	// Build valid PSPF with slot count > actual data so descriptor is out of bounds.
 	launcherSize := int64(100)
 	pspfData, _ := syntheticPSPFDataForBuilderTest(t, launcherSize, 180, 200, 240)
@@ -479,7 +480,7 @@ func TestAdjustPSPFOffsetsSlotDescriptorOutOfBounds(t *testing.T) {
 func TestAdjustPSPFOffsetsSlotDescriptorRebaseUnderflow(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	// Use a small offset that will underflow when we subtract launcherSize.
 	launcherSize := int64(100)
 	// descriptorOffset smaller than launcherSize → subtractUint64Checked will fail.
@@ -516,7 +517,7 @@ func TestConvertToResourceEmbeddingFailsCreateTempFile(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Chmod(dir, 0o755) })
 
-	err := convertToResourceEmbedding(bundlePath, launcherSize, hclog.NewNullLogger())
+	err := convertToResourceEmbedding(bundlePath, launcherSize, logging.NewNullLogger())
 	if err == nil {
 		t.Fatal("expected error when temp file cannot be created")
 	}
@@ -536,11 +537,11 @@ func TestConvertToResourceEmbeddingFailsEmbedCall(t *testing.T) {
 
 	old := embedPSPFAsResourceImpl
 	t.Cleanup(func() { embedPSPFAsResourceImpl = old })
-	embedPSPFAsResourceImpl = func(_ string, _ []byte, _ hclog.Logger) error {
+	embedPSPFAsResourceImpl = func(_ string, _ []byte, _ *slog.Logger) error {
 		return fmt.Errorf("synthetic embed failure")
 	}
 
-	err := convertToResourceEmbedding(bundlePath, launcherSize, hclog.NewNullLogger())
+	err := convertToResourceEmbedding(bundlePath, launcherSize, logging.NewNullLogger())
 	if err == nil {
 		t.Fatal("expected error when embedPSPFAsResourceImpl fails")
 	}
@@ -564,14 +565,14 @@ func TestConvertToResourceEmbeddingFailsAtomicReplace(t *testing.T) {
 		embedPSPFAsResourceImpl = oldEmbed
 		atomicReplaceImpl = oldAtomic
 	})
-	embedPSPFAsResourceImpl = func(exePath string, adjustedPSPF []byte, _ hclog.Logger) error {
+	embedPSPFAsResourceImpl = func(exePath string, adjustedPSPF []byte, _ *slog.Logger) error {
 		return nil // succeed
 	}
-	atomicReplaceImpl = func(_, _ string, _ hclog.Logger) error {
+	atomicReplaceImpl = func(_, _ string, _ *slog.Logger) error {
 		return fmt.Errorf("synthetic atomic replace failure")
 	}
 
-	err := convertToResourceEmbedding(bundlePath, launcherSize, hclog.NewNullLogger())
+	err := convertToResourceEmbedding(bundlePath, launcherSize, logging.NewNullLogger())
 	if err == nil {
 		t.Fatal("expected error when atomicReplaceImpl fails")
 	}
@@ -617,7 +618,7 @@ func TestDoBuildExitsProcessSlotsFails(t *testing.T) {
 			}
 			panic(r)
 		}()
-		doBuild(hclog.NewNullLogger(), manifestPath, filepath.Join(dir, "out.pspf"), launcherPath, "", "", "")
+		doBuild(logging.NewNullLogger(), manifestPath, filepath.Join(dir, "out.pspf"), launcherPath, "", "", "")
 	}()
 	if !exited {
 		t.Fatal("expected doBuild to call buildExitFn(1) when ProcessSlots fails")
@@ -661,7 +662,7 @@ func TestDoBuildExitsMkdirAllFails(t *testing.T) {
 			}
 			panic(r)
 		}()
-		doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "")
+		doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "")
 	}()
 	if !exited {
 		t.Fatal("expected doBuild to call buildExitFn(1) when MkdirAll fails")
@@ -671,7 +672,7 @@ func TestDoBuildExitsMkdirAllFails(t *testing.T) {
 func TestAdjustPSPFOffsetsMetadataUnderflow(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	launcherSize := int64(100)
 	// Build PSPF with metadataOffset < launcherSize and no slots to skip the slot loop.
 	pspfData, _ := syntheticPSPFDataForBuilderTest(t, launcherSize, 180, 200, 240)
@@ -700,7 +701,7 @@ func TestAdjustPSPFOffsetsMetadataUnderflow(t *testing.T) {
 func TestAdjustPSPFOffsetsSlotTableUnderflow(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	launcherSize := int64(100)
 	pspfData, _ := syntheticPSPFDataForBuilderTest(t, launcherSize, 180, 200, 240)
 
@@ -732,7 +733,7 @@ func TestBuildWithLogLevelUsesBuilderEnvVarDirectly(t *testing.T) {
 	t.Cleanup(func() { buildImpl = oldBuildImpl })
 
 	called := false
-	buildImpl = func(_ hclog.Logger, _, _, _, _, _, _ string) { called = true }
+	buildImpl = func(_ *slog.Logger, _, _, _, _, _, _ string) { called = true }
 
 	t.Setenv(EnvBuilderLogLevel, "warn")
 

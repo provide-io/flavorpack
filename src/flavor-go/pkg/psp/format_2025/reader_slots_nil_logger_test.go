@@ -21,7 +21,7 @@ func buildBundleForNilLoggerTest(t *testing.T) string {
 
 // TestReadSlotNilLogger covers lines 96-98 in reader_slots.go:
 // when r.logger is nil at the time ReadSlot's local logger check executes,
-// ReadSlot falls back to hclog.L(). We first warm up the cached index by
+// ReadSlot falls back to slog.Default(). We first warm up the cached index by
 // calling ReadIndex with a valid logger, then nil out the logger field so
 // ReadSlot's nil-check branch is reached without panicking in ReadMagicTrailer.
 func TestReadSlotNilLogger(t *testing.T) {
@@ -52,7 +52,7 @@ func TestReadSlotNilLogger(t *testing.T) {
 }
 
 // TestExtractSlotNilLogger covers lines 149-151 in reader_slots.go:
-// when r.logger is nil at ExtractSlot's logger check, it falls back to hclog.L().
+// when r.logger is nil at ExtractSlot's logger check, it falls back to slog.Default().
 // We warm up the cached index and metadata first so they don't need r.logger.
 func TestExtractSlotNilLogger(t *testing.T) {
 	bundlePath := buildBundleForNilLoggerTest(t)

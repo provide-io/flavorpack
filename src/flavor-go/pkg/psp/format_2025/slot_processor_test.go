@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 func TestSlotProcessorProcessSlotsSelfReferentialDefaults(t *testing.T) {
@@ -19,7 +19,7 @@ func TestSlotProcessorProcessSlotsSelfReferentialDefaults(t *testing.T) {
 			Purpose:   "runtime",
 			Lifecycle: "startup",
 		},
-	}, hclog.NewNullLogger())
+	}, logging.NewNullLogger())
 
 	if err := processor.ProcessSlots(); err != nil {
 		t.Fatalf("ProcessSlots() error = %v", err)
@@ -71,7 +71,7 @@ func TestSlotProcessorProcessSlotsRegularFile(t *testing.T) {
 			Permissions: "0755",
 			Resolution:  "runtime",
 		},
-	}, hclog.NewNullLogger())
+	}, logging.NewNullLogger())
 
 	if err := processor.ProcessSlots(); err != nil {
 		t.Fatalf("ProcessSlots() error = %v", err)
@@ -135,7 +135,7 @@ func TestSlotProcessorProcessSlotsGzipAndTarOperations(t *testing.T) {
 					Lifecycle:  "runtime",
 					Operations: ops,
 				},
-			}, hclog.NewNullLogger())
+			}, logging.NewNullLogger())
 
 			if err := processor.ProcessSlots(); err != nil {
 				t.Fatalf("ProcessSlots() with %q error = %v", ops, err)
@@ -167,7 +167,7 @@ func TestSlotProcessorLoadSlotDataResolvesWorkenvPlaceholder(t *testing.T) {
 
 	t.Setenv(EnvWorkenvBase, tmpDir)
 
-	processor := NewSlotProcessor(nil, hclog.NewNullLogger())
+	processor := NewSlotProcessor(nil, logging.NewNullLogger())
 	rawData, err := processor.loadSlotData(&Slot{
 		Source:     "{workenv}/nested/payload.txt",
 		Operations: "raw",
@@ -208,7 +208,7 @@ func TestSlotProcessorProcessSlotsRejectsInvalidInput(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			processor := NewSlotProcessor([]Slot{tc.slot}, hclog.NewNullLogger())
+			processor := NewSlotProcessor([]Slot{tc.slot}, logging.NewNullLogger())
 			if err := processor.ProcessSlots(); err == nil {
 				t.Fatalf("ProcessSlots() succeeded unexpectedly for %s", tc.name)
 			}
@@ -248,7 +248,7 @@ func TestSlotProcessorLoadSlotDataFallsBackToGetwd(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Chdir(orig) })
 
-	processor := NewSlotProcessor(nil, hclog.NewNullLogger())
+	processor := NewSlotProcessor(nil, logging.NewNullLogger())
 	rawData, err := processor.loadSlotData(&Slot{
 		Source:     "{workenv}/payload.txt",
 		Operations: "raw",

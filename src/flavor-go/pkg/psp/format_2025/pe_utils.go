@@ -85,7 +85,7 @@ func needsDOSStubExpansion(data []byte, logger *slog.Logger) bool {
 //   - logger: Logger instance
 //
 // Returns error if operation fails
-func updateSectionOffsets(data []byte, paddingSize int, logger hclog.Logger) error {
+func updateSectionOffsets(data []byte, paddingSize int, logger *slog.Logger) error {
 	if paddingSize < 0 {
 		return fmt.Errorf("padding size must be non-negative, got %d", paddingSize)
 	}

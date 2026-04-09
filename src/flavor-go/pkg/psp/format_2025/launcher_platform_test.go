@@ -3,7 +3,7 @@ package format_2025
 import (
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 func TestExecBundleWindowsForcesSpawnMode(t *testing.T) {
@@ -14,7 +14,7 @@ func TestExecBundleWindowsForcesSpawnMode(t *testing.T) {
 	// On Windows (simulated), execBundle should force spawn mode.
 	// We capture whether spawnBundle is called by having it return an error.
 	// Use a non-existent bundle path so spawnBundle returns quickly.
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	err := execBundle("/nonexistent/fake.pspf", []string{}, "/tmp", logger)
 	// The error comes from spawnBundle trying to open the file — that's fine.
 	// What matters is no panic and we took the spawn path.
@@ -29,7 +29,7 @@ func TestExecBundleWindowsForcesSpawnModeEvenWhenExecEnvSet(t *testing.T) {
 	// Set exec mode explicitly — should still be overridden to spawn on Windows
 	t.Setenv("FLAVOR_EXEC_MODE", "exec")
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	err := execBundle("/nonexistent/fake.pspf", []string{}, "/tmp", logger)
 	_ = err
 }

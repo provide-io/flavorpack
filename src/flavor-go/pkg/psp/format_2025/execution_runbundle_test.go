@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestRunBundleWithCwdMetadataExecutionNil covers lines 282-284:
@@ -32,7 +32,7 @@ func TestRunBundleWithCwdMetadataExecutionNil(t *testing.T) {
 		},
 	}, metadata)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
 		t.Fatalf("runBundleWithCwd() error = %v", err)
@@ -67,7 +67,7 @@ func TestRunBundleWithCwdLoadOperatorPolicyError(t *testing.T) {
 		Target: "{workenv}",
 	}, 0, false)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {
 		t.Fatal("expected error when LoadOperatorPolicy fails due to invalid JSON")
@@ -87,7 +87,7 @@ func TestRunBundleWithCwdValidationNoneCompletesSuccessfully(t *testing.T) {
 		Target: "{workenv}",
 	}, 0, false)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
 		t.Fatalf("runBundleWithCwd() error = %v", err)

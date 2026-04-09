@@ -148,7 +148,7 @@ func fixShebangs(binDir, oldPrefix, newPrefix string, logger *slog.Logger) error
 }
 
 // cleanupLifecycleSlots removes slots based on their lifecycle after setup
-func cleanupLifecycleSlots(workenvDir string, metadata *Metadata, slotPaths map[int]string, logger hclog.Logger) {
+func cleanupLifecycleSlots(workenvDir string, metadata *Metadata, slotPaths map[int]string, logger *slog.Logger) {
 	for _, slot := range metadata.Slots {
 		// Clean up init lifecycle slots - they're only needed during setup
 		if slot.Lifecycle == "init" {

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestLaunchWithLogLevelNonCLIExecBundleError exercises the non-CLI path
@@ -205,7 +205,7 @@ func TestLaunchWithLogLevelRunCommandPostExitFn(t *testing.T) {
 // json.NewEncoder(os.Stdout).Encode(...) will fail.
 func TestShowMetadataEncodeFailure(t *testing.T) {
 	bundle := buildLauncherTestBundle(t)
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	oldExit := osExitFn
 	var capturedCode int
@@ -244,7 +244,7 @@ func TestShowMetadataEncodeFailure(t *testing.T) {
 func TestShowMetadataNewReaderFailure(t *testing.T) {
 	// buildBundleWithBadMetadata creates a valid index but unreadable metadata.
 	bundle := buildBundleWithBadMetadata(t)
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	exitCode, panicked := withStubbedExit(func() {
 		showMetadata(bundle, logger)
@@ -340,7 +340,7 @@ func TestExecBundleReplaceArgvAndEnvCapture(t *testing.T) {
 	t.Setenv(EnvValidation, "none")
 
 	bundle := buildLauncherTestBundle(t)
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	err := execBundleReplace(bundle, nil, t.TempDir(), logger)
 	if err == nil || !strings.Contains(err.Error(), "unexpectedly") {

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestShowBundleInfoVerifyMagicTrailerFails covers launcher_cli.go:72-74
@@ -30,7 +30,7 @@ func TestShowBundleInfoVerifyMagicTrailerFails(t *testing.T) {
 	// showBundleInfo should complete normally (✗ is just displayed, not fatal)
 	func() {
 		defer func() { _ = recover() }()
-		showBundleInfo(bundle, hclog.NewNullLogger())
+		showBundleInfo(bundle, logging.NewNullLogger())
 	}()
 
 	// exitCalled should be false — VerifyMagicTrailer failure is non-fatal (just changes display)

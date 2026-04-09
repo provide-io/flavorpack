@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestExecBundleReplaceSyscallExecNilError covers the "impossible" path at
@@ -23,7 +23,7 @@ func TestExecBundleReplaceSyscallExecNilError(t *testing.T) {
 	t.Setenv(EnvValidation, "none")
 
 	bundle := buildLauncherTestBundle(t)
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	err := execBundleReplace(bundle, nil, t.TempDir(), logger)
 	if err == nil {

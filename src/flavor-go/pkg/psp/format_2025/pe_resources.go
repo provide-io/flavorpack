@@ -11,6 +11,7 @@ import (
 	"os"
 
 	"github.com/tc-hib/winres"
+	"log/slog"
 )
 
 const (

@@ -20,7 +20,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 type multiSlotBundleSpec struct {
@@ -298,7 +298,7 @@ func buildSignedBundleForPolicyTests(t *testing.T, manifest BuildOptions) string
 		t.Fatalf("WriteFile(manifest) error = %v", err)
 	}
 
-	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, privateKeyPath, publicKeyPath, "")
+	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, privateKeyPath, publicKeyPath, "")
 	return outputPath
 }
 
@@ -330,7 +330,7 @@ func TestPrepareBundlePathReturnsExecutableWithoutResource(t *testing.T) {
 		Target: "{workenv}",
 	}, 0, false)
 
-	path, cleanup, err := prepareBundlePath(bundle, hclog.NewNullLogger())
+	path, cleanup, err := prepareBundlePath(bundle, logging.NewNullLogger())
 	if err != nil {
 		t.Fatalf("prepareBundlePath() error = %v", err)
 	}
@@ -418,7 +418,7 @@ func TestRunBundleWithCwdPreparesWorkenvAndCommands(t *testing.T) {
 	}, metadata)
 
 	userCwd := t.TempDir()
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	cmd, err := runBundleWithCwd(bundle, []string{"--flag"}, userCwd, logger)
 	if err != nil {
@@ -523,7 +523,7 @@ func TestRunBundleWithCwdMergesTarSlotDirectories(t *testing.T) {
 		Build:     &BuildInfo{Tool: "flavor-go"},
 	})
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	if _, err := runBundleWithCwd(bundle, []string{"--flag"}, t.TempDir(), logger); err != nil {
 		t.Fatalf("runBundleWithCwd() error = %v", err)
 	}
@@ -589,7 +589,7 @@ func TestExtractAndMergeSlotsToWorkenvMergesContentAndWritesMetadata(t *testing.
 		},
 	}, metadata)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	reader, err := NewReaderWithLogger(bundle, logger)
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger() error = %v", err)
@@ -687,7 +687,7 @@ func TestExtractAndMergeSlotsToWorkenvMovesSlotTopLevelFilesToWorkenvRoot(t *tes
 		},
 	}, metadata)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	reader, err := NewReaderWithLogger(bundle, logger)
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger() error = %v", err)
@@ -743,7 +743,7 @@ func TestExtractAndMergeSlotsToWorkenvMergesRegularTargetDirectories(t *testing.
 		},
 	}, metadata)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	reader, err := NewReaderWithLogger(bundle, logger)
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger() error = %v", err)
@@ -811,7 +811,7 @@ func TestExtractAndMergeSlotsToWorkenvCleansUpTempDirOnExtractionFailure(t *test
 		},
 	}, metadata)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	reader, err := NewReaderWithLogger(bundle, logger)
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger() error = %v", err)
@@ -873,7 +873,7 @@ func TestExtractAndMergeSlotsToWorkenvFailsWhenTempExtractionCannotBeCreated(t *
 
 	t.Setenv(EnvCacheDir, fileRoot)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	reader, err := NewReaderWithLogger(bundle, logger)
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger() error = %v", err)
@@ -923,7 +923,7 @@ func TestExtractAndMergeSlotsToWorkenvMovesRegularFilesToWorkenv(t *testing.T) {
 		},
 	}, metadata)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	reader, err := NewReaderWithLogger(bundle, logger)
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger() error = %v", err)
@@ -981,7 +981,7 @@ func TestExtractAndMergeSlotsToWorkenvFailsWhenMetadataPathIsAFile(t *testing.T)
 		},
 	}, metadata)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	reader, err := NewReaderWithLogger(bundle, logger)
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger() error = %v", err)
@@ -1019,7 +1019,7 @@ func TestExecBundleSpawnMode(t *testing.T) {
 	t.Setenv(EnvValidation, "none")
 	t.Setenv(EnvExecMode, "spawn")
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	oldOsExitFn := osExitFn
 	t.Cleanup(func() {
 		osExitFn = oldOsExitFn
@@ -1057,7 +1057,7 @@ func TestRunBundleWithCwdUsesValidCache(t *testing.T) {
 		Target: "{workenv}/bin/app.txt",
 	}, 0o644, false)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	reader, err := NewReaderWithLogger(bundle, logger)
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger() error = %v", err)
@@ -1118,7 +1118,7 @@ func TestRunBundleWithCwdUsesCustomWorkenvPath(t *testing.T) {
 		Target: "{workenv}/bin/app.txt",
 	}, 0o644, false)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
 		t.Fatalf("runBundleWithCwd() error = %v", err)
@@ -1162,7 +1162,7 @@ func TestRunBundleWithCwdRejectsInvalidSetupCommand(t *testing.T) {
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	})
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger); err == nil {
 		t.Fatal("expected runBundleWithCwd() to fail for invalid setup command syntax")
 	}
@@ -1192,7 +1192,7 @@ func TestRunBundleWithCwdIgnoresUnknownSetupCommandType(t *testing.T) {
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	})
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
 		t.Fatalf("runBundleWithCwd() error = %v", err)
@@ -1204,6 +1204,7 @@ func TestRunBundleWithCwdIgnoresUnknownSetupCommandType(t *testing.T) {
 
 func TestRunBundleWithCwdRejectsPolicyViolation(t *testing.T) {
 	t.Setenv(EnvCacheDir, t.TempDir())
+	t.Setenv(EnvConfigDir, t.TempDir())
 	t.Setenv(EnvValidation, "none")
 	t.Setenv(EnvWorkenvCache, "false")
 
@@ -1228,7 +1229,7 @@ func TestRunBundleWithCwdRejectsPolicyViolation(t *testing.T) {
 		},
 	})
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger); err == nil || !strings.Contains(err.Error(), "policy violation") {
 		t.Fatalf("runBundleWithCwd() error = %v, want policy violation", err)
 	}
@@ -1264,7 +1265,7 @@ func TestRunBundleWithCwdRejectsUnsignedBundleWhenTrustedKeyRequired(t *testing.
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	})
 
-	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), hclog.NewNullLogger()); err == nil || !strings.Contains(err.Error(), "policy violation") {
+	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logging.NewNullLogger()); err == nil || !strings.Contains(err.Error(), "policy violation") {
 		t.Fatalf("runBundleWithCwd() error = %v, want require_trusted_key failure", err)
 	}
 }
@@ -1286,7 +1287,7 @@ func TestRunBundleWithCwdRejectsSignedBundleWhenTrustedKeyStoreMissing(t *testin
 		Execution: ExecutionConfig{Command: "/bin/true"},
 	})
 
-	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), hclog.NewNullLogger()); err == nil || !strings.Contains(err.Error(), "policy violation") {
+	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logging.NewNullLogger()); err == nil || !strings.Contains(err.Error(), "policy violation") {
 		t.Fatalf("runBundleWithCwd() error = %v, want missing trust-store failure", err)
 	}
 }
@@ -1320,7 +1321,7 @@ func TestRunBundleWithCwdRejectsUnsupportedOsKeychainPolicy(t *testing.T) {
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	})
 
-	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), hclog.NewNullLogger()); err == nil || !strings.Contains(err.Error(), "policy violation") {
+	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logging.NewNullLogger()); err == nil || !strings.Contains(err.Error(), "policy violation") {
 		t.Fatalf("runBundleWithCwd() error = %v, want unsupported keychain policy failure", err)
 	}
 }
@@ -1354,7 +1355,7 @@ func TestRunBundleWithCwdRejectsInvalidOperatorPolicyFile(t *testing.T) {
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	})
 
-	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), hclog.NewNullLogger()); err == nil || !strings.Contains(err.Error(), "failed to load operator policy") {
+	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logging.NewNullLogger()); err == nil || !strings.Contains(err.Error(), "failed to load operator policy") {
 		t.Fatalf("runBundleWithCwd() error = %v, want invalid policy failure", err)
 	}
 }
@@ -1387,7 +1388,7 @@ func TestRunBundleWithCwdRejectsWriteFilePathEscapeViaPackageNamePlaceholder(t *
 		Build:     &BuildInfo{Tool: "flavor-go"},
 	})
 
-	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), hclog.NewNullLogger()); err == nil || !strings.Contains(err.Error(), "escapes work environment directory") {
+	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logging.NewNullLogger()); err == nil || !strings.Contains(err.Error(), "escapes work environment directory") {
 		t.Fatalf("runBundleWithCwd() error = %v, want write_file path escape failure", err)
 	}
 }
@@ -1403,7 +1404,7 @@ func TestRunBundleWithCwdRejectsBuildTimestampOverflow(t *testing.T) {
 	})
 	patchBundleBuildTimestamp(t, bundle, math.MaxInt64+1)
 
-	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), hclog.NewNullLogger()); err == nil || !strings.Contains(err.Error(), "invalid build timestamp") {
+	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logging.NewNullLogger()); err == nil || !strings.Contains(err.Error(), "invalid build timestamp") {
 		t.Fatalf("runBundleWithCwd() error = %v, want invalid build timestamp", err)
 	}
 }
@@ -1444,7 +1445,7 @@ func TestRunBundleWithCwdRejectsOutOfRangeWriteFileMode(t *testing.T) {
 		Build:     &BuildInfo{Tool: "flavor-go"},
 	})
 
-	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), hclog.NewNullLogger()); err == nil || !strings.Contains(err.Error(), "setup command mode") {
+	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logging.NewNullLogger()); err == nil || !strings.Contains(err.Error(), "setup command mode") {
 		t.Fatalf("runBundleWithCwd() error = %v, want setup command mode range failure", err)
 	}
 }
@@ -1477,7 +1478,7 @@ func TestRunBundleWithCwdRejectsEscapingWorkenvDirectory(t *testing.T) {
 		},
 	})
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger); err == nil || !strings.Contains(err.Error(), "escapes work environment directory") {
 		t.Fatalf("runBundleWithCwd() error = %v, want workenv escape rejection", err)
 	}
@@ -1513,7 +1514,7 @@ func TestRunBundleWithCwdRejectsEscapingWriteFileSetupPath(t *testing.T) {
 		Build:     &BuildInfo{Tool: "flavor-go"},
 	})
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger); err == nil || !strings.Contains(err.Error(), "escapes work environment directory") {
 		t.Fatalf("runBundleWithCwd() error = %v, want setup write-file path rejection", err)
 	}
@@ -1552,7 +1553,7 @@ func TestRunBundleWithCwdRejectsEscapingEnumeratePath(t *testing.T) {
 		Build:     &BuildInfo{Tool: "flavor-go"},
 	})
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger); err == nil || !strings.Contains(err.Error(), "escapes work environment directory") {
 		t.Fatalf("runBundleWithCwd() error = %v, want enumerate path rejection", err)
 	}
@@ -1591,7 +1592,7 @@ func TestRunBundleWithCwdFailsWhenMetadataDirCannotBeCreated(t *testing.T) {
 		t.Fatalf("WriteFile(metadata) error = %v", err)
 	}
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger); err == nil || !strings.Contains(err.Error(), "failed to create metadata directory") {
 		t.Fatalf("runBundleWithCwd() error = %v, want metadata directory failure", err)
 	}
@@ -1620,7 +1621,7 @@ func TestRunBundleWithCwdRejectsInvalidExecutionCommandSyntax(t *testing.T) {
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	})
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger); err == nil || !strings.Contains(err.Error(), "failed to parse command") {
 		t.Fatalf("runBundleWithCwd() error = %v, want command parse failure", err)
 	}
@@ -1649,7 +1650,7 @@ func TestRunBundleWithCwdRejectsEmptyExecutionCommand(t *testing.T) {
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	})
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger); err == nil || !strings.Contains(err.Error(), "empty command") {
 		t.Fatalf("runBundleWithCwd() error = %v, want empty command", err)
 	}
@@ -1679,7 +1680,7 @@ func TestRunBundleWithCwdFailsWhenSetupCommandExecutionFails(t *testing.T) {
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	})
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger); err == nil || !strings.Contains(err.Error(), "setup command") {
 		t.Fatalf("runBundleWithCwd() error = %v, want setup command failure", err)
 	}
@@ -1695,7 +1696,7 @@ func TestRunBundleWithCwdValidationModesHandleIntegrityFailureDifferently(t *tes
 		Target: "{workenv}/bin/app.txt",
 	}, 0o644, false)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	t.Setenv(EnvValidation, "strict")
 	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger); err == nil {
@@ -1752,7 +1753,7 @@ func TestRunBundleWithCwdRejectsMissingExecutionConfiguration(t *testing.T) {
 
 	bundle := buildRawBundleForTests(t, []SlotDescriptor{desc}, metadata, [][]byte{stored})
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	if _, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger); err == nil || !strings.Contains(err.Error(), "no execution configuration found") {
 		t.Fatalf("runBundleWithCwd() error = %v, want missing execution configuration", err)
 	}
@@ -1782,7 +1783,7 @@ func TestRunBundleWithCwdRejectsMissingSlotReference(t *testing.T) {
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	})
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {
 		// {slot:1} is unresolved but runBundleWithCwd currently does not return an
@@ -2018,7 +2019,7 @@ func TestLaunchDelegatesToLaunchWithLogLevel(t *testing.T) {
 func TestExecutionQuietRemovalHelpers(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	dir := t.TempDir()
 	filePath := filepath.Join(dir, "gone.txt")
 	if err := os.WriteFile(filePath, []byte("bye"), 0o600); err != nil {

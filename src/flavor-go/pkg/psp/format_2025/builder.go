@@ -5,6 +5,7 @@ package format_2025
 
 import (
 	"bytes"
+	"context"
 	"crypto/ed25519"
 	cryptorand "crypto/rand"
 	"crypto/sha256"
@@ -50,6 +51,8 @@ var outBinaryWriteFn = func(f *os.File, v interface{}) error {
 	return binary.Write(f, binary.LittleEndian, v)
 }
 
+var builderStderrWriter io.Writer = os.Stderr
+
 // BuildWithLogLevel builds a PSPF package with explicit log level control
 func BuildWithLogLevel(manifestPath, outputPath, launcherBin, privateKeyPath, publicKeyPath, keySeed, cliLogLevel string) {
 	// Determine log level and source
@@ -87,36 +90,11 @@ func BuildWithLogLevel(manifestPath, outputPath, launcherBin, privateKeyPath, pu
 			defer func() { _ = file.Close() }()
 			logOutput = file
 		}
-	} else if !logging.IsJSONFormat(logLevel) {
+	} else if !strings.HasPrefix(logLevel, "json") {
 		logOutput = logging.NewPrefixWriter("🐹 ", builderStderrWriter)
 	}
-
-	// Configure logger
-	var output io.Writer = os.Stderr
-
-	// Support log file output
-	if logPath := os.Getenv(EnvLogPath); logPath != "" {
-		if file, err := openFileValidated(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.FileMode(FilePerms)); err == nil {
-			defer func() { _ = file.Close() }()
-			output = file
-		}
-	}
-
-	// Add 🐹 prefix to non-JSON output
-	if !jsonFormat {
-		output = logging.NewPrefixWriter("🐹 ", output)
-	}
-
-	logger := hclog.New(&hclog.LoggerOptions{
-		Name:       "flavor-go-builder",
-		Level:      hclog.LevelFromString(actualLevel),
-		JSONFormat: jsonFormat,
-		Output:     output,
-		TimeFormat: "2006-01-02T15:04:05Z", // UTC ISO format without timezone
-		TimeFn: func() time.Time {
-			return time.Now().UTC() // Force UTC time
-		},
-	})
+	logging.Setup(logLevel, logOutput)
+	logger := logging.NewLogger(context.Background(), "flavor-go.builder")
 
 	// Log startup messages
 	logger.Info("🐹🐹🐹 Hello from Flavor's Go Builder 🐹🐹🐹")
@@ -651,7 +629,7 @@ func shouldUseResourceEmbeddingForPlatform(goos, launcherType string, logger *sl
 // launcher+PSPF file. This is required when the PSPF is extracted from a PE resource and
 // written to a standalone temp file: without adjustment, seeks to MetadataOffset,
 // SlotTableOffset, and slot data offsets would all land past end-of-file.
-func adjustPSPFOffsets(pspfData []byte, launcherSize int64, logger hclog.Logger) ([]byte, error) {
+func adjustPSPFOffsets(pspfData []byte, launcherSize int64, logger *slog.Logger) ([]byte, error) {
 	if int64(len(pspfData)) < MagicTrailerSize {
 		return nil, fmt.Errorf("PSPF data too small: %d < %d", len(pspfData), MagicTrailerSize)
 	}
