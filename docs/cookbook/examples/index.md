@@ -1,9 +1,9 @@
 # Cookbook Examples
 
-Practical examples demonstrating how to use FlavorPack for various packaging scenarios.
+Practical examples demonstrating how to use Flavorpack for various packaging scenarios.
 
 !!! warning "Examples Need Verification"
-    These cookbook examples demonstrate FlavorPack's intended usage patterns. However, some advanced configuration options shown here (such as `[tool.flavor.slots]` arrays, `[tool.flavor.targets]`, and `[tool.flavor.environment]` tables) may not yet be fully implemented.
+    These cookbook examples demonstrate Flavorpack's intended usage patterns. However, some advanced configuration options shown here (such as `[tool.flavor.slots]` arrays, `[tool.flavor.targets]`, and `[tool.flavor.environment]` tables) may not yet be fully implemented.
 
     **Verified to work**:
     - Basic `pyproject.toml` with `[tool.flavor]` and `entry_point`
@@ -16,7 +16,7 @@ Practical examples demonstrating how to use FlavorPack for various packaging sce
     - `[tool.flavor.targets]` multi-platform builds
     - `--compress`, `--jobs` CLI flags
 
-    Before relying on any example, test it with your FlavorPack installation. If a configuration option doesn't work, check the current [manifest documentation](../../guide/packaging/manifest/) for supported options.
+    Before relying on any example, test it with your Flavorpack installation. If a configuration option doesn't work, check the current [manifest documentation](../../guide/packaging/manifest/) for supported options.
 
 ## Quick Examples
 
@@ -29,7 +29,7 @@ The simplest possible PSPF package.
 [project]
 name = "hello-world"
 version = "1.0.0"
-description = "Minimal FlavorPack example"
+description = "Minimal Flavorpack example"
 requires-python = ">=3.11"
 
 [tool.flavor]
@@ -39,7 +39,7 @@ entry_point = "hello:main"
 ```python
 # hello.py
 def main():
-    print("Hello from FlavorPack!")
+    print("Hello from Flavorpack!")
     
 if __name__ == "__main__":
     main()
@@ -95,7 +95,7 @@ if __name__ == "__main__":
 flavor pack --progress --strip
 
 # Run with options
-./dist/myapp.psp --name "FlavorPack" --color blue
+./dist/myapp.psp --name "Flavorpack" --color blue
 ```
 
 ### Web Application
@@ -129,11 +129,11 @@ import os
 from fastapi import FastAPI
 import uvicorn
 
-app = FastAPI(title="FlavorPack API")
+app = FastAPI(title="Flavorpack API")
 
 @app.get("/")
 def read_root():
-    return {"message": "Hello from FlavorPack!", "version": "1.0.0"}
+    return {"message": "Hello from Flavorpack!", "version": "1.0.0"}
 
 @app.get("/health")
 def health_check():
@@ -341,7 +341,7 @@ jobs:
         with:
           python-version: '3.11'
       
-      - name: Install FlavorPack
+      - name: Install Flavorpack
         run: pip install flavor
       
 {% raw %}
@@ -438,7 +438,7 @@ flavor --log-level debug verify package.psp
 ### Environment Debugging
 
 ```bash
-# Check FlavorPack environment
+# Check Flavorpack environment
 env | grep FLAVOR
 
 # Test with clean environment

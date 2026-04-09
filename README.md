@@ -1,14 +1,14 @@
-# FlavorPack: Progressive Secure Polyglot Packaging Toolchain
+# Flavorpack: Progressive Secure Polyglot Packaging Toolchain
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![uv](https://img.shields.io/badge/uv-package_manager-FF6B35.svg)](https://github.com/astral-sh/uv)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-[![CI](https://github.com/provide-io/flavorpack/actions/workflows/03-flavor-pipeline.yml/badge.svg)](https://github.com/provide-io/flavorpack/actions/workflows/03-flavor-pipeline.yml)
+[![CI](https://github.com/provide-io/flavorpack/actions/workflows/flavor-pipeline.yml/badge.svg)](https://github.com/provide-io/flavorpack/actions/workflows/flavor-pipeline.yml)
 
-> **⚠️ Alpha Software**: FlavorPack is in early development. APIs, file formats, and commands may change without notice. Not recommended for production use. Check current version with `flavor --version`. Install from source only.
+> **Beta**: Flavorpack is under active development. The PSPF 2025 format is stable, and core packaging workflows are tested across 6 platforms (Linux, macOS, Windows, FreeBSD — amd64/arm64). APIs may still evolve before 1.0.
 
-**FlavorPack** is a cross-language packaging system that creates self-contained, portable executables using the **Progressive Secure Package Format (PSPF) 2025 Edition**. It enables you to ship Python applications as single binaries that "just work" - no installation, no dependencies, no configuration required.
+**Flavorpack** is a cross-language packaging system that creates self-contained, portable executables using the **Progressive Secure Package Format (PSPF) 2025 Edition**. It enables you to ship Python applications as single binaries that "just work" - no installation, no dependencies, no configuration required.
 
 > **Note**: The package name is `flavorpack`, but the command-line tool is `flavor`.
 
@@ -31,7 +31,7 @@
 
 ### Installation (Source Only)
 
-> **Note**: FlavorPack is not yet available on PyPI. Source installation is currently the only option.
+> **Note**: Flavorpack is not yet available on PyPI. Source installation is currently the only option.
 
 ```bash
 # Clone the repository
@@ -68,7 +68,7 @@ See the [PSPF Format Specification](https://foundry.provide.io/flavorpack/refere
 ## 📚 Documentation
 
 - **[Quick Start](https://foundry.provide.io/flavorpack/getting-started/quickstart/)** - Get started in 5 minutes
-- **[User Guide](https://foundry.provide.io/flavorpack/guide/)** - Comprehensive guide to using FlavorPack
+- **[User Guide](https://foundry.provide.io/flavorpack/guide/)** - Comprehensive guide to using Flavorpack
 - **[PSPF Format Specification](https://foundry.provide.io/flavorpack/reference/spec/fep-0001-core-format-and-operation-chains/)** - Binary format details
 - **[API Reference](https://foundry.provide.io/flavorpack/api/)** - Python API documentation
 - **[Development Guide](https://foundry.provide.io/flavorpack/development/)** - Contributing and development setup
@@ -77,7 +77,7 @@ See the [PSPF Format Specification](https://foundry.provide.io/flavorpack/refere
 
 ## 🏗️ Architecture
 
-FlavorPack consists of three main components:
+Flavorpack consists of three main components:
 
 1. **Python Orchestrator** (`src/flavor/`)
    - Manages the build process and dependency resolution
@@ -121,7 +121,7 @@ make validate-pspf
 
 ### Test Taxonomy
 
-FlavorPack uses a shared test-intent taxonomy across Python, Go, and Rust. Use the root `make` targets instead of guessing which language-native runner to invoke first.
+Flavorpack uses a shared test-intent taxonomy across Python, Go, and Rust. Use the root `make` targets instead of guessing which language-native runner to invoke first.
 
 ```bash
 make test-unit
@@ -175,7 +175,7 @@ The tools run in strict mode. In this rollout phase, the dedicated quality-obser
 
 ## 🙏 Acknowledgments
 
-FlavorPack is built on the shoulders of giants:
+Flavorpack is built on the shoulders of giants:
 - [UV](https://github.com/astral-sh/uv) for fast Python package management
 - The Python, Go, and Rust communities for excellent tooling
 

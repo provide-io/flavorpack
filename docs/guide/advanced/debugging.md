@@ -1,10 +1,10 @@
 # Advanced Debugging
 
-Deep debugging techniques for FlavorPack packages, builds, and runtime issues.
+Deep debugging techniques for Flavorpack packages, builds, and runtime issues.
 
 ## Overview
 
-This guide covers advanced debugging techniques for diagnosing complex issues in FlavorPack packages, from build failures to runtime errors.
+This guide covers advanced debugging techniques for diagnosing complex issues in Flavorpack packages, from build failures to runtime errors.
 
 ---
 
@@ -12,7 +12,7 @@ This guide covers advanced debugging techniques for diagnosing complex issues in
 
 ### Configure Logging
 
-FlavorPack uses hierarchical logging with multiple levels:
+Flavorpack uses hierarchical logging with multiple levels:
 
 ```bash
 # Trace - Every operation logged

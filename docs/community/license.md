@@ -1,10 +1,10 @@
 # License
 
-FlavorPack is open source software.
+Flavorpack is open source software.
 
 ## Apache License 2.0
 
-FlavorPack is licensed under the **Apache License, Version 2.0**.
+Flavorpack is licensed under the **Apache License, Version 2.0**.
 
 **[View Full License →](https://github.com/provide-io/flavorpack/blob/main/LICENSE)**
 
@@ -32,7 +32,7 @@ FlavorPack is licensed under the **Apache License, Version 2.0**.
 
 ## Third-Party Licenses
 
-FlavorPack includes or depends on third-party software with their own licenses:
+Flavorpack includes or depends on third-party software with their own licenses:
 
 - **Python** - PSF License
 - **Go standard library** - BSD License
@@ -43,7 +43,7 @@ See `LICENSE-THIRD-PARTY` in the repository for complete attribution.
 
 ## Contributing
 
-By contributing to FlavorPack, you agree that your contributions will be licensed under the Apache License 2.0.
+By contributing to Flavorpack, you agree that your contributions will be licensed under the Apache License 2.0.
 
 See **[Contributing Guide](../development/contributing/)** for details.
 

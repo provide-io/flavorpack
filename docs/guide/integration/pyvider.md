@@ -3,17 +3,17 @@
 Package Terraform providers built with Pyvider into self-contained executables.
 
 !!! info "Optional Integration"
-    **FlavorPack works standalone** without Pyvider. This integration is optional.
+    **Flavorpack works standalone** without Pyvider. This integration is optional.
 
-    Use FlavorPack with Pyvider when you want to package Terraform providers written in Python into self-contained executables.
+    Use Flavorpack with Pyvider when you want to package Terraform providers written in Python into self-contained executables.
 
 ## Overview
 
-[Pyvider](https://foundry.provide.io/pyvider/) enables building Terraform providers in Python. FlavorPack packages them into standalone binaries that Terraform can execute without requiring Python installation.
+[Pyvider](https://foundry.provide.io/pyvider/) enables building Terraform providers in Python. Flavorpack packages them into standalone binaries that Terraform can execute without requiring Python installation.
 
 ```mermaid
 graph LR
-    PY[Pyvider<br/>Provider Code] --> FP[FlavorPack<br/>Package Builder]
+    PY[Pyvider<br/>Provider Code] --> FP[Flavorpack<br/>Package Builder]
     FP --> PKG[terraform-provider-*<br/>.psp executable]
     PKG --> TF[Terraform<br/>Uses Provider]
 

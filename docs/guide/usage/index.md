@@ -1,6 +1,6 @@
 # Using Packages
 
-Learn how to run, inspect, and manage FlavorPack packages.
+Learn how to run, inspect, and manage Flavorpack packages.
 
 ## Quick Start
 

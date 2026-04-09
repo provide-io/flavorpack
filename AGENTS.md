@@ -4,7 +4,7 @@ This file provides guidance for AI assistants when working with code in this rep
 
 ## Project Overview
 
-FlavorPack is a cross-language packaging system implementing the Progressive Secure Package Format (PSPF/2025). It creates self-contained, portable executables from Python applications using native Go/Rust launchers.
+Flavorpack is a cross-language packaging system implementing the Progressive Secure Package Format (PSPF/2025). It creates self-contained, portable executables from Python applications using native Go/Rust launchers.
 
 ## Binary Compatibility
 

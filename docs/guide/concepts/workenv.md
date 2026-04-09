@@ -34,7 +34,7 @@ When a PSPF package executes, it creates a "work environment" - a temporary dire
 
 ### Platform-Specific Locations
 
-FlavorPack follows the XDG Base Directory specification for cache directories:
+Flavorpack follows the XDG Base Directory specification for cache directories:
 
 | Platform | Default Location | Environment Variable Override |
 |----------|-----------------|------------------------------|

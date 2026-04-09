@@ -1,22 +1,22 @@
 # Troubleshooting
 
-Comprehensive guide to diagnosing and resolving common FlavorPack issues.
+Comprehensive guide to diagnosing and resolving common Flavorpack issues.
 
 !!! warning "Alpha Software - Some Features Not Yet Implemented"
-    FlavorPack is in **alpha** status. This troubleshooting guide includes solutions for both implemented and planned features. Features marked with 📋 **PLANNED** are not yet available.
+    Flavorpack is in **alpha** status. This troubleshooting guide includes solutions for both implemented and planned features. Features marked with 📋 **PLANNED** are not yet available.
 
     If you encounter issues with features that don't work, check the [Roadmap](../guide/roadmap/) to see implementation status.
 
 ## Overview
 
-This guide helps you troubleshoot issues with building, running, and distributing FlavorPack packages. Each section provides symptoms, causes, and step-by-step solutions.
+This guide helps you troubleshoot issues with building, running, and distributing Flavorpack packages. Each section provides symptoms, causes, and step-by-step solutions.
 
 ## Quick Diagnostics
 
 ### Check Your Environment
 
 ```bash
-# Check FlavorPack version
+# Check Flavorpack version
 flavor --version
 
 # Check Python version
@@ -49,13 +49,13 @@ FLAVOR_LOG_LEVEL=debug ./myapp.psp
 
 ### Installation Problems
 
-#### FlavorPack Not Found
+#### Flavorpack Not Found
 
 **Symptom**: `flavor: command not found`
 
 **Solution**:
 ```bash
-# Ensure FlavorPack is installed from source
+# Ensure Flavorpack is installed from source
 cd flavorpack
 uv pip install -e .
 
@@ -184,7 +184,7 @@ flavor helpers test
 ```
 
 !!! info "Available Helper Commands"
-    FlavorPack provides these helper management commands:
+    Flavorpack provides these helper management commands:
 
     - `flavor helpers list` - List available helper binaries
     - `flavor helpers build` - Build helpers from source
@@ -300,7 +300,7 @@ set FLAVOR_CACHE=C:\tmp\f
 **Symptom**: Package deleted or blocked by antivirus
 
 **Solution**:
-1. Add FlavorPack to antivirus whitelist
+1. Add Flavorpack to antivirus whitelist
 2. Sign packages with certificate
 3. Submit false positive report to antivirus vendor
 

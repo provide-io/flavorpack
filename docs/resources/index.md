@@ -1,6 +1,6 @@
 # Resources
 
-Additional resources for FlavorPack users and developers.
+Additional resources for Flavorpack users and developers.
 
 ## 📚 Cookbook
 
@@ -36,7 +36,7 @@ Solutions to common problems and error messages.
 Resources for contributors and developers.
 
 ### Getting Involved
-- [Contributing](../development/contributing/) - How to contribute to FlavorPack
+- [Contributing](../development/contributing/) - How to contribute to Flavorpack
 - [Architecture](../development/architecture/) - System design and components
 - [Building Helpers](../development/helpers/) - Native component development
 
@@ -52,7 +52,7 @@ Resources for contributors and developers.
 
 ## 👥 Community
 
-Connect with the FlavorPack community.
+Connect with the Flavorpack community.
 
 - [Support](../community/support/) - Get help and support
 - [Discussions](../community/discussions/) - Join the conversation
@@ -93,7 +93,7 @@ Connect with the FlavorPack community.
 - [Discussions](https://github.com/provide-io/flavorpack/discussions)
 
 !!! note "PyPI Package"
-    FlavorPack is not yet available on PyPI. Install from source following the [installation guide](../getting-started/installation/).
+    Flavorpack is not yet available on PyPI. Install from source following the [installation guide](../getting-started/installation/).
 
 ### Documentation Formats
 - [API Reference](../api/index/) - Technical API documentation

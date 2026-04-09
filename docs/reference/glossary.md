@@ -1,6 +1,6 @@
 # Glossary
 
-Definitions of key terms and concepts used in FlavorPack and PSPF documentation.
+Definitions of key terms and concepts used in Flavorpack and PSPF documentation.
 
 ## A
 
@@ -43,7 +43,7 @@ flavor pack --key-seed "my-stable-seed"
 ## E
 
 ### Ed25519
-A modern elliptic curve signature algorithm used by FlavorPack for package signing and verification. Provides 128-bit security with 32-byte keys and 64-byte signatures.
+A modern elliptic curve signature algorithm used by Flavorpack for package signing and verification. Provides 128-bit security with 32-byte keys and 64-byte signatures.
 
 **Key Benefits**:
 - Fast signature generation and verification
@@ -126,7 +126,7 @@ The complete 8200-byte structure at the end of a PSPF package:
 - End Magic (4 bytes): 🪄 emoji
 
 ### Manifest
-A configuration file (typically `pyproject.toml`) that describes how to package an application. Contains project metadata, dependencies, entry points, and FlavorPack-specific settings.
+A configuration file (typically `pyproject.toml`) that describes how to package an application. Contains project metadata, dependencies, entry points, and Flavorpack-specific settings.
 
 **Example**:
 ```toml
@@ -181,7 +181,7 @@ A file that is valid in multiple formats simultaneously. PSPF packages are polyg
 The ability to extract and load package components on-demand rather than all at once, improving startup time and memory efficiency.
 
 ### PSPF
-**Progressive Secure Package Format** - The binary file format used by FlavorPack for creating self-contained, cryptographically signed executable packages.
+**Progressive Secure Package Format** - The binary file format used by Flavorpack for creating self-contained, cryptographically signed executable packages.
 
 **Current Version**: PSPF/2025 (Edition 2025)
 
@@ -262,7 +262,7 @@ flavor workenv inspect   # Inspect specific package
 | Acronym | Full Term | Description |
 |---------|-----------|-------------|
 | **PSPF** | Progressive Secure Package Format | The binary format specification |
-| **FEP** | FlavorPack Enhancement Proposal | Design documents for PSPF features |
+| **FEP** | Flavorpack Enhancement Proposal | Design documents for PSPF features |
 | **EOF** | End of File | The final byte position in a file |
 | **SHA** | Secure Hash Algorithm | Cryptographic hash function (SHA-256) |
 | **PEM** | Privacy Enhanced Mail | ASCII encoding format for keys |

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""FlavorPack runtime configuration for CLI startup."""
+"""Flavorpack runtime configuration for CLI startup."""
 
 from __future__ import annotations
 
@@ -26,13 +26,13 @@ def parse_log_level(value: str) -> str:
 
 @define
 class FlavorRuntimeConfig(RuntimeConfig):
-    """FlavorPack runtime configuration for CLI startup."""
+    """Flavorpack runtime configuration for CLI startup."""
 
     log_level: str = field(
         default="WARNING",
         env_var=ENV_LOG_LEVEL,
         metadata={
-            "help": "Log level for FlavorPack operations (TRACE, DEBUG, INFO, WARNING, ERROR, CRITICAL)"
+            "help": "Log level for Flavorpack operations (TRACE, DEBUG, INFO, WARNING, ERROR, CRITICAL)"
         },
     )
 

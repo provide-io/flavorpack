@@ -1,12 +1,12 @@
 # User Guide
 
-Welcome to the FlavorPack User Guide. This comprehensive guide covers everything you need to know about using FlavorPack to package and distribute Python applications.
+Welcome to the Flavorpack User Guide. This comprehensive guide covers everything you need to know about using Flavorpack to package and distribute Python applications.
 
 ## What's in This Guide
 
 ### :material-lightbulb: **Core Concepts**
 
-Understand the fundamentals of FlavorPack and the PSPF format.
+Understand the fundamentals of Flavorpack and the PSPF format.
 
 - **[PSPF Format](concepts/pspf-format/)** - Progressive Secure Package Format specification
 - **[Package Structure](concepts/package-structure/)** - How packages are organized

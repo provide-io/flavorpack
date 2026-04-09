@@ -1,6 +1,6 @@
 # Community
 
-Join the FlavorPack community and connect with other users and contributors.
+Join the Flavorpack community and connect with other users and contributors.
 
 ## Get Involved
 
@@ -25,7 +25,7 @@ Get help from the community.
 
 ### :material-forum: **Discussions**
 
-Join conversations about FlavorPack.
+Join conversations about Flavorpack.
 
 **[GitHub Discussions →](discussions/)**
 
@@ -79,7 +79,7 @@ We welcome contributions of all kinds:
 
 ## License
 
-FlavorPack is licensed under **Apache-2.0**.
+Flavorpack is licensed under **Apache-2.0**.
 
 **[View License →](license/)**
 

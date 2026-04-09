@@ -1,16 +1,16 @@
 # Installation
 
 !!! warning "Alpha Release - Source Installation Only"
-    FlavorPack is in early alpha. PyPI packages and pre-built binaries are not yet available. Check current version with `flavor --version`. **Install from source only.**
+    Flavorpack is in early alpha. PyPI packages and pre-built binaries are not yet available. Check current version with `flavor --version`. **Install from source only.**
 
-Get started with FlavorPack, a cross-language packaging system implementing the Progressive Secure Package Format (PSPF/2025) that creates self-contained, portable executables from Python applications.
+Get started with Flavorpack, a cross-language packaging system implementing the Progressive Secure Package Format (PSPF/2025) that creates self-contained, portable executables from Python applications.
 
 ## Prerequisites
 
 --8<-- ".provide/foundry/docs/_partials/python-requirements.md"
 
 !!! info "UV Version Requirement"
-    FlavorPack requires **UV 0.8.13 or later** for full functionality. Earlier versions may have compatibility issues with modern package management features.
+    Flavorpack requires **UV 0.8.13 or later** for full functionality. Earlier versions may have compatibility issues with modern package management features.
 
 --8<-- ".provide/foundry/docs/_partials/uv-installation.md"
 
@@ -18,13 +18,13 @@ Get started with FlavorPack, a cross-language packaging system implementing the 
 
 ### Additional Requirements for Building Helpers
 
-FlavorPack's native launchers and builders require Go and Rust toolchains:
+Flavorpack's native launchers and builders require Go and Rust toolchains:
 
 --8<-- ".provide/foundry/docs/_partials/go-requirements.md"
 
 **Rust Requirements:**
 
-FlavorPack requires Rust 1.86+ (edition 2024):
+Flavorpack requires Rust 1.86+ (edition 2024):
 
 ```bash
 # Install Rust via rustup
@@ -48,7 +48,7 @@ See [Rust's official installation guide](https://www.rust-lang.org/tools/install
 
 | Component | Version | Required For |
 |-----------|---------|--------------|
-| Python | 3.11+ | Running FlavorPack |
+| Python | 3.11+ | Running Flavorpack |
 | UV | 0.8.13+ | Package management |
 | Go | 1.26+ | Building Go helpers |
 | Rust | 1.86+ | Building Rust helpers (edition 2024) |
@@ -66,7 +66,7 @@ See [Rust's official installation guide](https://www.rust-lang.org/tools/install
 | Windows | x86_64 | ⚠️ Disabled | Dynamic | Currently disabled due to UTF-8 issues |
 
 !!! warning "Windows Support Status"
-    Windows support is currently **disabled** in FlavorPack due to UTF-8 encoding issues in the native helpers. Windows support is planned for a future release once these issues are resolved.
+    Windows support is currently **disabled** in Flavorpack due to UTF-8 encoding issues in the native helpers. Windows support is planned for a future release once these issues are resolved.
 
 !!! info "Binary Compatibility"
     All Linux binaries are built as static executables:
@@ -152,7 +152,7 @@ The devcontainer includes:
 
 ## Building Native Helpers
 
-FlavorPack requires native launchers and builders written in Go and Rust. These must be built for your platform.
+Flavorpack requires native launchers and builders written in Go and Rust. These must be built for your platform.
 
 ### Automatic Build
 
@@ -224,7 +224,7 @@ make build-windows
 
 ### Basic Verification
 
-**1. Check FlavorPack Version:**
+**1. Check Flavorpack Version:**
 ```bash
 # Verify flavor command is available
 flavor --version
@@ -246,7 +246,7 @@ import flavor
 from flavor.psp.format_2025 import builder, reader
 from flavor.packaging.orchestrator import PackagingOrchestrator
 
-print(f"FlavorPack version: {flavor.__version__}")
+print(f"Flavorpack version: {flavor.__version__}")
 print("✅ Installation successful!")
 ```
 
@@ -370,7 +370,7 @@ flavor keygen --out-dir keys/
 
 ### 2. Environment Variables
 
-FlavorPack uses environment variables for configuration, caching, and logging. For complete documentation, see the [Environment Variables Guide](../guide/usage/environment/).
+Flavorpack uses environment variables for configuration, caching, and logging. For complete documentation, see the [Environment Variables Guide](../guide/usage/environment/).
 
 Common variables:
 
@@ -462,13 +462,13 @@ The project has a polyglot architecture with three main layers:
 **When using WSL2**:
 - Install WSL2 with `wsl --install`
 - Use the Linux installation method
-- All FlavorPack features will work in WSL2
+- All Flavorpack features will work in WSL2
 
 ## Troubleshooting
 
 --8<-- ".provide/foundry/docs/_partials/troubleshooting-common.md"
 
-### FlavorPack-Specific Issues
+### Flavorpack-Specific Issues
 
 #### UV not found after installation
 

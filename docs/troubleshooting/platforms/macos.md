@@ -153,7 +153,7 @@ export HTTPS_PROXY=http://proxy.example.com:8080
 
 **Solution**:
 ```bash
-# Clear FlavorPack cache
+# Clear Flavorpack cache
 rm -rf ~/.cache/flavor/workenv/
 
 # Clear pip cache if packaging issues

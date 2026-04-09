@@ -4,7 +4,7 @@ View package contents, metadata, and verify integrity of PSPF packages.
 
 ## Overview
 
-FlavorPack provides multiple commands for inspecting package contents, from quick overviews to detailed metadata exploration.
+Flavorpack provides multiple commands for inspecting package contents, from quick overviews to detailed metadata exploration.
 
 ### Inspection Commands
 

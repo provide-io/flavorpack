@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Shared pytest fixtures and helpers for FlavorPack tests."""
+"""Shared pytest fixtures and helpers for Flavorpack tests."""
 
 from __future__ import annotations
 

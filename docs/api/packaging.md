@@ -4,7 +4,7 @@ Python API for building PSPF packages programmatically.
 
 ## Overview
 
-The FlavorPack packaging API provides Python functions for creating, verifying, and managing PSPF packages. This API is used internally by the `flavor pack` command but can also be used directly in Python scripts.
+The Flavorpack packaging API provides Python functions for creating, verifying, and managing PSPF packages. This API is used internally by the `flavor pack` command but can also be used directly in Python scripts.
 
 ---
 
@@ -96,7 +96,7 @@ from pathlib import Path
 from flavor.package import verify_package
 
 def verify_package(package_path: Path) -> dict[str, Any]:
-    """Verify a FlavorPack package."""
+    """Verify a Flavorpack package."""
     ...
 ```
 
@@ -203,7 +203,7 @@ packages = build_package_from_manifest(
 
 ### clean_cache
 
-Clean FlavorPack build cache.
+Clean Flavorpack build cache.
 
 ```python
 from flavor.package import clean_cache
@@ -294,7 +294,7 @@ orchestrator.build_package()
 
 ```python
 #!/usr/bin/env python3
-"""Build a FlavorPack package programmatically."""
+"""Build a Flavorpack package programmatically."""
 
 from pathlib import Path
 from flavor.package import (
@@ -356,7 +356,7 @@ if __name__ == "__main__":
 
 ```python
 #!/usr/bin/env python3
-"""CI/CD build script for FlavorPack packages."""
+"""CI/CD build script for Flavorpack packages."""
 
 import os
 import sys
