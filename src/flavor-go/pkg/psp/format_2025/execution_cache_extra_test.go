@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestSavePackageChecksumMkdirAllFailurePermission covers the mkdirAllFn failure path
@@ -16,7 +16,7 @@ func TestSavePackageChecksumMkdirAllFailurePermission(t *testing.T) {
 		return os.ErrPermission
 	}
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/demo.pspf")
 	if err := savePackageChecksum(paths, 0x12345678, logger); err == nil {
 		t.Fatal("expected error when MkdirAll fails in savePackageChecksum")
@@ -43,7 +43,7 @@ func TestSavePackageChecksumWriteFailure(t *testing.T) {
 		return os.OpenFile(tmpPath, os.O_RDONLY, 0o400)
 	}
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/demo.pspf")
 	// Call savePackageChecksum — mkdirAllFn must succeed for this test.
 	oldMkdir := mkdirAllFn

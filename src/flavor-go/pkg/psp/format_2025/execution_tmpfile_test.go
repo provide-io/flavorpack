@@ -2,10 +2,11 @@ package format_2025
 
 import (
 	"errors"
+	"log/slog"
 	"os"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestPrepareBundlePathIncompleteWrite covers execution.go:105-110
@@ -20,12 +21,12 @@ func TestPrepareBundlePathIncompleteWrite(t *testing.T) {
 	// Inject hasPSPFResourceFn to claim PE resource is present
 	oldHas := hasPSPFResourceFn
 	t.Cleanup(func() { hasPSPFResourceFn = oldHas })
-	hasPSPFResourceFn = func(_ string, _ hclog.Logger) bool { return true }
+	hasPSPFResourceFn = func(_ string, _ *slog.Logger) bool { return true }
 
 	// Inject readPSPFFromResourceFn to return actual bundle data
 	oldRead := readPSPFFromResourceFn
 	t.Cleanup(func() { readPSPFFromResourceFn = oldRead })
-	readPSPFFromResourceFn = func(_ string, _ hclog.Logger) ([]byte, error) { return data, nil }
+	readPSPFFromResourceFn = func(_ string, _ *slog.Logger) ([]byte, error) { return data, nil }
 
 	// Inject tmpFileWriteFn to return short write (0 bytes, no error)
 	oldWrite := tmpFileWriteFn
@@ -35,7 +36,7 @@ func TestPrepareBundlePathIncompleteWrite(t *testing.T) {
 		return 0, nil // zero bytes written, no error → triggers incomplete write check
 	}
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	_, _, prepErr := prepareBundlePath(bundle, logger)
 	if prepErr == nil {
 		t.Fatal("expected error from prepareBundlePath due to incomplete write")
@@ -54,11 +55,11 @@ func TestPrepareBundlePathCloseFailure(t *testing.T) {
 	// Inject hasPSPFResourceFn and readPSPFFromResourceFn
 	oldHas := hasPSPFResourceFn
 	t.Cleanup(func() { hasPSPFResourceFn = oldHas })
-	hasPSPFResourceFn = func(_ string, _ hclog.Logger) bool { return true }
+	hasPSPFResourceFn = func(_ string, _ *slog.Logger) bool { return true }
 
 	oldRead := readPSPFFromResourceFn
 	t.Cleanup(func() { readPSPFFromResourceFn = oldRead })
-	readPSPFFromResourceFn = func(_ string, _ hclog.Logger) ([]byte, error) { return data, nil }
+	readPSPFFromResourceFn = func(_ string, _ *slog.Logger) ([]byte, error) { return data, nil }
 
 	// Inject tmpFileWriteFn to report full write (so we get past the incomplete write check)
 	oldWrite := tmpFileWriteFn
@@ -77,7 +78,7 @@ func TestPrepareBundlePathCloseFailure(t *testing.T) {
 		return errors.New("injected close failure")
 	}
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	_, _, prepErr := prepareBundlePath(bundle, logger)
 	if prepErr == nil {
 		t.Fatal("expected error from prepareBundlePath due to close failure")

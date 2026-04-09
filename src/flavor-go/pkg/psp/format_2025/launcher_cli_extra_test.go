@@ -3,14 +3,14 @@ package format_2025
 import (
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestShowMetadataSuccess covers the happy path of showMetadata:
 // reads metadata from a valid bundle and encodes it to stdout without error.
 func TestShowMetadataSuccess(t *testing.T) {
 	bundle := buildLauncherTestBundle(t)
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	// Should not panic or call osExitFn.
 	oldExit := osExitFn
@@ -25,7 +25,7 @@ func TestShowMetadataSuccess(t *testing.T) {
 // TestShowBundleInfoSuccess covers the happy path of showBundleInfo with a valid bundle.
 func TestShowBundleInfoSuccess(t *testing.T) {
 	bundle := buildLauncherTestBundle(t)
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	oldExit := osExitFn
 	t.Cleanup(func() { osExitFn = oldExit })

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestRunBundleWithCwdReadMetadataFailure covers execution.go:273-276:
@@ -20,7 +20,7 @@ func TestRunBundleWithCwdReadMetadataFailure(t *testing.T) {
 	// which causes ReadMetadata to fail at gzip.NewReader.
 	bundle := buildBundleWithBadMetadata(t)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {
 		t.Fatal("expected error from runBundleWithCwd when ReadMetadata fails, got nil")

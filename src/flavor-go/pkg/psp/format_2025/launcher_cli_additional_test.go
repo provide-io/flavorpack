@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 func runLauncherCLIAdditionalScenario(t *testing.T, mode, bundle string, args []string) (string, error) {
@@ -39,7 +39,7 @@ func TestLauncherCLIAdditionalHelper(t *testing.T) {
 		args = strings.Split(rawArgs, "\x1f")
 	}
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	switch os.Getenv(EnvLauncherMode) {
 	case "launch":
 		LaunchWithLogLevel(bundle, args, "", "")

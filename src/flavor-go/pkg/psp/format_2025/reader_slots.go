@@ -77,10 +77,6 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 	if firstBytesLen > 16 {
 		firstBytesLen = 16
 	}
-	firstBytesLen := len(slotData)
-	if firstBytesLen > 16 {
-		firstBytesLen = 16
-	}
 	logger.Debug("🐹 Go launcher verifying slot checksum",
 		"slot_id", entry.ID,
 		"data_length", len(slotData),

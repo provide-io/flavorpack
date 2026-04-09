@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestShowBundleInfoReaderCloseLogs covers launcher_cli.go:28-30
@@ -32,7 +32,7 @@ func TestShowBundleInfoReaderCloseLogs(t *testing.T) {
 	// showBundleInfo always calls the deferred reader close, so the error path is exercised
 	func() {
 		defer func() { _ = recover() }()
-		showBundleInfo(bundle, hclog.NewNullLogger())
+		showBundleInfo(bundle, logging.NewNullLogger())
 	}()
 
 	_ = exitCalled
@@ -75,7 +75,7 @@ func TestShowBundleInfoVerifyMagicTrailerFailsViaNonPSPFFile(t *testing.T) {
 
 	func() {
 		defer func() { _ = recover() }()
-		showBundleInfo(notBundle, hclog.NewNullLogger())
+		showBundleInfo(notBundle, logging.NewNullLogger())
 	}()
 
 	if !exitCalled {
@@ -106,7 +106,7 @@ func TestExtractSlotReaderCloseLogs(t *testing.T) {
 
 	func() {
 		defer func() { _ = recover() }()
-		extractSlot(bundle, "0", outputDir, hclog.NewNullLogger())
+		extractSlot(bundle, "0", outputDir, logging.NewNullLogger())
 	}()
 
 	_ = exitCalled
@@ -134,7 +134,7 @@ func TestShowMetadataReaderCloseLogs(t *testing.T) {
 
 	func() {
 		defer func() { _ = recover() }()
-		showMetadata(bundle, hclog.NewNullLogger())
+		showMetadata(bundle, logging.NewNullLogger())
 	}()
 
 	_ = exitCalled
@@ -162,7 +162,7 @@ func TestVerifyBundleReaderCloseLogs(t *testing.T) {
 
 	func() {
 		defer func() { _ = recover() }()
-		verifyBundle(bundle, hclog.NewNullLogger())
+		verifyBundle(bundle, logging.NewNullLogger())
 	}()
 
 	_ = exitCalled

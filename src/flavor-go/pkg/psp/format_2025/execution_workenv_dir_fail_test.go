@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestRunBundleWithCwdWorkenvDirectoryMkdirAllFailure covers execution.go:354-357:
@@ -59,7 +59,7 @@ func TestRunBundleWithCwdWorkenvDirectoryMkdirAllFailure(t *testing.T) {
 		t.Fatalf("WriteFile(data blocker): %v", err)
 	}
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {
 		t.Fatal("expected error when mkdirAllValidated fails for workenv directory, got nil")
@@ -105,7 +105,7 @@ func TestRunBundleWithCwdWorkenvDirectoryWithMode(t *testing.T) {
 		},
 	})
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
 		t.Fatalf("runBundleWithCwd() error = %v", err)

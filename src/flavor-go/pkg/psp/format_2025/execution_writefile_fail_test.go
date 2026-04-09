@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestRunBundleWriteFileValidatedFails covers execution.go:519-522:
@@ -71,7 +71,7 @@ func TestRunBundleWriteFileValidatedFails(t *testing.T) {
 		Build:     &BuildInfo{Tool: "test"},
 	})
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {
 		t.Fatal("expected error when write_file target parent is a regular file, got nil")
