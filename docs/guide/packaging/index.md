@@ -4,11 +4,11 @@ Learn how to build self-contained PSPF packages that bundle your Python applicat
 
 ## Overview
 
-FlavorPack transforms Python applications into portable executables that run anywhere without installation. This guide covers the complete packaging workflow from project setup to distribution.
+Flavorpack transforms Python applications into portable executables that run anywhere without installation. This guide covers the complete packaging workflow from project setup to distribution.
 
 ## Quick Start
 
-### 1. Install FlavorPack
+### 1. Install Flavorpack
 
 ```bash
 pip install flavor
@@ -16,7 +16,7 @@ pip install flavor
 
 ### 2. Create a Manifest
 
-Add FlavorPack configuration to your `pyproject.toml`:
+Add Flavorpack configuration to your `pyproject.toml`:
 
 ```toml
 [project]
@@ -101,7 +101,7 @@ Your application needs an entry point function:
 # src/myapp/main.py
 def main():
     """Application entry point."""
-    print("Hello from FlavorPack!")
+    print("Hello from Flavorpack!")
     # Your application logic here
 
 if __name__ == "__main__":
@@ -189,7 +189,7 @@ flavor inspect myapp-1.0.0.psp
 
 ### Python Environment
 
-FlavorPack automatically creates a virtual environment with your dependencies:
+Flavorpack automatically creates a virtual environment with your dependencies:
 
 - Installs all dependencies from `pyproject.toml`
 - Includes pip for runtime package management

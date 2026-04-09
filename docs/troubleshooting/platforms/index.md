@@ -4,7 +4,7 @@ Platform-specific issues and solutions for different operating systems.
 
 ## Overview
 
-FlavorPack packages are designed to work across platforms, but each operating system has its own quirks and requirements. This section provides platform-specific troubleshooting guides.
+Flavorpack packages are designed to work across platforms, but each operating system has its own quirks and requirements. This section provides platform-specific troubleshooting guides.
 
 ## Platform Guides
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Security test suite orchestrator for FlavorPack pretaster.
+# Security test suite orchestrator for Flavorpack pretaster.
 # Runs all security sub-suites and reports a combined summary.
 #
 # Sub-suites:

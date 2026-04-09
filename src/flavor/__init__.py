@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""FlavorPack core package exports and helper utilities."""
+"""Flavorpack core package exports and helper utilities."""
 
 from __future__ import annotations
 

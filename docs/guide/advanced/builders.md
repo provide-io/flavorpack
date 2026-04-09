@@ -1,6 +1,6 @@
 # Custom Builders
 
-Extend FlavorPack's build system with custom builders.
+Extend Flavorpack's build system with custom builders.
 
 ## Coming Soon
 

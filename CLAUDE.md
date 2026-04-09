@@ -1,4 +1,4 @@
-# FlavorPack
+# Flavorpack
 
 Cross-language packaging system that creates self-contained, portable executables using the Progressive Secure Package Format (PSPF) 2025 Edition. The package name is `flavorpack`, but the CLI tool is `flavor`.
 

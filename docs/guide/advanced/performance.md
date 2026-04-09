@@ -1,10 +1,10 @@
 # Performance Optimization
 
-Optimize FlavorPack package size, build time, and runtime performance.
+Optimize Flavorpack package size, build time, and runtime performance.
 
 ## Overview
 
-FlavorPack packages can be optimized across three dimensions:
+Flavorpack packages can be optimized across three dimensions:
 1. **Package Size** - Reduce distribution size
 2. **Build Time** - Speed up packaging process
 3. **Runtime Performance** - Faster package startup and execution
@@ -98,7 +98,7 @@ flavor pack --launcher-bin dist/bin/flavor-rs-launcher-*
 
 ### Parallel Processing
 
-FlavorPack automatically parallelizes:
+Flavorpack automatically parallelizes:
 - Dependency installation
 - Slot creation
 - Compression

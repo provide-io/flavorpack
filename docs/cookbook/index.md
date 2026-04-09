@@ -1,6 +1,6 @@
 # Cookbook
 
-Practical, real-world examples and recipes for packaging applications with FlavorPack.
+Practical, real-world examples and recipes for packaging applications with Flavorpack.
 
 ## What's in the Cookbook?
 
@@ -42,7 +42,7 @@ Learn how to package:
 
 ### :material-docker: **Docker Integration**
 
-Use FlavorPack packages in Docker containers.
+Use Flavorpack packages in Docker containers.
 
 **[Docker Integration Recipe →](recipes/docker/)**
 

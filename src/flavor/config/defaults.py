@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Centralized default values for FlavorPack configuration."""
+"""Centralized default values for Flavorpack configuration."""
 
 from __future__ import annotations
 

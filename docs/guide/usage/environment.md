@@ -1,6 +1,6 @@
 # Environment Variables
 
-Complete reference for all environment variables used by FlavorPack and its components.
+Complete reference for all environment variables used by Flavorpack and its components.
 
 ## Quick Reference
 
@@ -46,21 +46,21 @@ Complete reference for all environment variables used by FlavorPack and its comp
 
 ## Overview
 
-FlavorPack uses environment variables for configuration, debugging, and runtime communication. Variables are organized into different categories based on their purpose and when they're used.
+Flavorpack uses environment variables for configuration, debugging, and runtime communication. Variables are organized into different categories based on their purpose and when they're used.
 
 !!! info "Two Variable Namespaces"
-    FlavorPack uses two prefixes:
+    Flavorpack uses two prefixes:
 
-    - **`FLAVOR_*`**: FlavorPack-specific variables
+    - **`FLAVOR_*`**: Flavorpack-specific variables
     - **`FOUNDATION_*`**: Variables from the [provide-foundation](https://github.com/provide-io/provide-foundation) logging framework
 
     Both are used together and serve different purposes.
 
 ---
 
-## Core FlavorPack Variables
+## Core Flavorpack Variables
 
-These variables control FlavorPack's core behavior across all components.
+These variables control Flavorpack's core behavior across all components.
 
 ### FLAVOR_CACHE
 
@@ -123,7 +123,7 @@ FLAVOR_VALIDATION=none ./debug-package.psp
 
 ### FLAVOR_LOG_LEVEL
 
-**Purpose**: Set logging verbosity for FlavorPack operations.
+**Purpose**: Set logging verbosity for Flavorpack operations.
 
 **Values**: `trace`, `debug`, `info`, `warning`, `error`
 
@@ -613,7 +613,7 @@ if cpu_type:
 
 ## Foundation (Logging Framework) Variables
 
-FlavorPack uses [provide-foundation](https://github.com/provide-io/provide-foundation) for structured logging. These variables control Foundation's behavior.
+Flavorpack uses [provide-foundation](https://github.com/provide-io/provide-foundation) for structured logging. These variables control Foundation's behavior.
 
 ### FOUNDATION_LOG_LEVEL
 
@@ -623,7 +623,7 @@ FlavorPack uses [provide-foundation](https://github.com/provide-io/provide-found
 
 **Default**: `info`
 
-**Used By**: Python components (FlavorPack orchestrator, Foundation framework)
+**Used By**: Python components (Flavorpack orchestrator, Foundation framework)
 
 **Example**:
 ```bash

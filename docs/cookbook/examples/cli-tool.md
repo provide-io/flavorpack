@@ -1,6 +1,6 @@
 # Packaging a CLI Tool
 
-This guide shows how to package a Python command-line tool into a self-contained executable using FlavorPack.
+This guide shows how to package a Python command-line tool into a self-contained executable using Flavorpack.
 
 ## Example: A Simple Git Helper
 

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""FlavorPack configuration system built on the Provide Foundation config stack.
+"""Flavorpack configuration system built on the Provide Foundation config stack.
 
 Provides typed, validated configuration models that replace ad-hoc env handling.
 """

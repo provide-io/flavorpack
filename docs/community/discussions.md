@@ -1,6 +1,6 @@
 # GitHub Discussions
 
-Join conversations about FlavorPack on GitHub Discussions.
+Join conversations about Flavorpack on GitHub Discussions.
 
 **[View Discussions →](https://github.com/provide-io/flavorpack/discussions)**
 
@@ -25,7 +25,7 @@ Ask questions and get answers.
 
 ### 🎉 Show and Tell
 
-Share what you've built with FlavorPack.
+Share what you've built with Flavorpack.
 
 - Cool projects
 - Interesting use cases
