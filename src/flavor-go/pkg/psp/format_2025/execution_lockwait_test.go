@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestRunBundleWithCwdWaitForExtractionTimeout covers lines 412-414 in execution.go:
@@ -95,7 +95,7 @@ func TestRunBundleWithCwdWorkenvDirChmodFailure(t *testing.T) {
 		},
 	}, metadata)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	cacheRoot := t.TempDir()
 	t.Setenv(EnvCacheDir, cacheRoot)
 	t.Setenv(EnvWorkenvCache, "false")

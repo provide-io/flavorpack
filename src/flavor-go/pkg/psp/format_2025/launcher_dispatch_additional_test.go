@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 func buildLauncherTestBundle(t *testing.T) string {
@@ -203,7 +203,7 @@ func TestLaunchSpawnExitHelper(t *testing.T) {
 
 func TestExecBundleReplaceWithStubbedSyscallExec(t *testing.T) {
 	bundle := buildLauncherTestBundle(t)
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	oldSyscallExecFn := syscallExecFn
 	t.Cleanup(func() {
@@ -263,7 +263,7 @@ func TestExecBundleReplaceResolvesBinaryFromWorkenvPath(t *testing.T) {
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	})
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	oldSyscallExecFn := syscallExecFn
 	t.Cleanup(func() {
 		syscallExecFn = oldSyscallExecFn
@@ -366,7 +366,7 @@ func TestSpawnBundleReturnsStartFailure(t *testing.T) {
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	})
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	err := spawnBundle(bundle, []string{"arg1"}, t.TempDir(), logger)
 	if err == nil {
 		t.Fatal("expected spawnBundle() to fail when command cannot be started")

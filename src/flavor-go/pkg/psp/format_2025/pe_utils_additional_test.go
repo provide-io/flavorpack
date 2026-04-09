@@ -9,7 +9,7 @@ import (
 	"encoding/binary"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestBytesEqualEqualSlices covers the happy path where two identical slices compare equal.
@@ -61,7 +61,7 @@ func TestGetPEHeaderOffsetDataTooShortForSig(t *testing.T) {
 func TestNeedsDOSStubExpansionAdequateSize(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	// 0x90 is not 0x80 → returns false, covers the Trace log branch
 	peData, _ := buildSyntheticPEForTests(t, 0x90, false)
 	if needsDOSStubExpansion(peData, logger) {
@@ -74,7 +74,7 @@ func TestNeedsDOSStubExpansionAdequateSize(t *testing.T) {
 func TestExpandDOSStubAlreadyAdequate(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	// Build PE at exactly TargetDOSStubSize (0xF0) — already at target, no expansion needed.
 	peData, _ := buildSyntheticPEForTests(t, TargetDOSStubSize, false)
@@ -92,7 +92,7 @@ func TestExpandDOSStubAlreadyAdequate(t *testing.T) {
 func TestExpandDOSStubNonPEData(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	_, err := expandDOSStub([]byte("this is not a PE binary"), logger)
 	if err == nil {
@@ -104,7 +104,7 @@ func TestExpandDOSStubNonPEData(t *testing.T) {
 func TestUpdateSizeOfHeadersBeyondBounds(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	// Build minimal data that has a valid e_lfanew pointer but the SizeOfHeaders
 	// field would be beyond the buffer.
@@ -125,7 +125,7 @@ func TestUpdateSizeOfHeadersBeyondBounds(t *testing.T) {
 func TestUpdateDebugDirectoryRVANotMapped(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	// Build a synthetic PE and then set the debug directory RVA to something
 	// that doesn't fall within any section.
@@ -147,7 +147,7 @@ func TestUpdateDebugDirectoryRVANotMapped(t *testing.T) {
 func TestUpdateDebugDirectoryNoDebugDir(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	data, layout := buildSyntheticPEForTests(t, 0x80, false)
 	// Zero out the debug directory RVA/size to simulate "no debug directory".
@@ -165,7 +165,7 @@ func TestUpdateDebugDirectoryNoDebugDir(t *testing.T) {
 func TestUpdateDebugDirectoryEntryBeyondBounds(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	data, layout := buildSyntheticPEForTests(t, 0x80, false)
 	// Truncate to just before the debug directory entry (need at least 8 bytes for it).
@@ -182,7 +182,7 @@ func TestUpdateDebugDirectoryEntryBeyondBounds(t *testing.T) {
 func TestGetLauncherTypeUnknownOffset(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	// PE at 0xA0: not 0x80, not >= 0xE8 → "unknown"
 	peData, _ := buildSyntheticPEForTests(t, 0xA0, false)
@@ -198,7 +198,7 @@ func TestGetLauncherTypeUnknownOffset(t *testing.T) {
 func TestProcessLauncherForPSPFRustNeedsExpansion(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	// PE at 0xE8: detected as "rust" (>= 0xE8), and 0xE8 < TargetDOSStubSize (0xF0)
 	// so needsDOSStubExpansion would return... wait, needsDOSStubExpansion checks
@@ -226,7 +226,7 @@ func TestProcessLauncherForPSPFRustNeedsExpansion(t *testing.T) {
 func TestGetLauncherTypeInvalidPESignature(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	// Build a synthetic PE with invalid PE signature (not 'PE\x00\x00').
 	data := make([]byte, 0x200)
@@ -250,7 +250,7 @@ func TestGetLauncherTypeInvalidPESignature(t *testing.T) {
 func TestProcessLauncherForPSPFRustAlreadyAdequate(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	// PE at 0xF0 = TargetDOSStubSize: detected as rust, needsDOSStubExpansion returns false.
 	rustLauncher, _ := buildSyntheticPEForTests(t, 0xF0, false)

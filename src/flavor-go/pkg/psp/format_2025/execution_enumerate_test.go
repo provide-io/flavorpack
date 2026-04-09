@@ -3,7 +3,7 @@ package format_2025
 import (
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestRunBundleWithCwdEnumerateAndExecuteNoMatches covers execution.go:489-491:
@@ -42,7 +42,7 @@ func TestRunBundleWithCwdEnumerateAndExecuteNoMatches(t *testing.T) {
 		Build:     &BuildInfo{Tool: "test"},
 	})
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	// Should succeed: empty glob matches falls back to running command directly.
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
@@ -87,7 +87,7 @@ func TestRunBundleWithCwdEnumerateAndExecuteGlobError(t *testing.T) {
 		Build:     &BuildInfo{Tool: "test"},
 	})
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	// Glob error is a warning; execution continues.
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {

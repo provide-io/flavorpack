@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestSpawnBundleSuccessPathNoOpExit exercises the success branch of spawnBundle
@@ -18,7 +18,7 @@ func TestSpawnBundleSuccessPathNoOpExit(t *testing.T) {
 	}
 
 	bundle := buildLauncherTestBundle(t)
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	cacheRoot := t.TempDir()
 	t.Setenv(EnvCacheDir, cacheRoot)
@@ -67,7 +67,7 @@ func TestSpawnBundleFailingCommandNoOpExit(t *testing.T) {
 		},
 	}, metadata)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	cacheRoot := t.TempDir()
 	t.Setenv(EnvCacheDir, cacheRoot)
 	t.Setenv(EnvWorkenvCache, "false")
@@ -99,7 +99,7 @@ func TestSpawnBundleWorkenvSetup(t *testing.T) {
 	}
 
 	bundle := buildLauncherTestBundle(t)
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	workenvDir := filepath.Join(t.TempDir(), "custom_workenv")
 	t.Setenv(EnvWorkenv, workenvDir)
@@ -119,7 +119,7 @@ func TestSpawnBundleWorkenvSetup(t *testing.T) {
 // TestSpawnBundlePrepareFails verifies that spawnBundle returns a non-nil error
 // when the bundle path is invalid (prepareBundlePath/NewReaderWithLogger fails).
 func TestSpawnBundlePrepareFails(t *testing.T) {
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	err := spawnBundle("/nonexistent/path/fake.psp", nil, t.TempDir(), logger)
 	if err == nil {
 		t.Fatal("expected error for non-existent bundle path")

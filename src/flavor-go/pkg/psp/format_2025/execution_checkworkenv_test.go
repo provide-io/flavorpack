@@ -13,7 +13,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // buildSignedExecutableBundle creates a minimal signed PSPF bundle that:
@@ -169,7 +169,7 @@ func TestRunBundleWithCwdCheckWorkenvValidityError(t *testing.T) {
 		t.Fatalf("WriteFile(ChecksumFile): %v", err)
 	}
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {
 		t.Fatal("expected error from checkWorkenvValidity (checksum mismatch + strict), got nil")
