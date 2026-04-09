@@ -7,7 +7,8 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
+	"log/slog"
 )
 
 func TestCopyFilePreservesContentAndMode(t *testing.T) {
@@ -80,7 +81,7 @@ func TestFixShebangsRewritesMatchingScriptsOnly(t *testing.T) {
 	}
 
 	var logs bytes.Buffer
-	logger := hclog.New(&hclog.LoggerOptions{Name: "test", Level: hclog.Debug, Output: &logs})
+	logger := logging.NewBufferLogger(&logs, slog.LevelDebug)
 	if err := fixShebangs(binDir, "/old/prefix", "/new/prefix", logger); err != nil {
 		t.Fatalf("fixShebangs returned error: %v", err)
 	}
@@ -119,7 +120,7 @@ func TestCleanupLifecycleSlotsRemovesInitSlots(t *testing.T) {
 		0: initPath,
 		1: keepPath,
 	}
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	cleanupLifecycleSlots(workenvDir, metadata, slotPaths, logger)
 
@@ -157,7 +158,7 @@ func TestCopyHelpersReturnErrorsForMissingInputs(t *testing.T) {
 func TestFixShebangsSkipsMissingBinDir(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	if err := fixShebangs(filepath.Join(t.TempDir(), "missing-bin"), "/old", "/new", logger); err != nil {
 		t.Fatalf("fixShebangs() error = %v", err)
 	}
@@ -171,7 +172,7 @@ func TestFixShebangsSkipsSubdirectories(t *testing.T) {
 	if err := os.Mkdir(filepath.Join(binDir, "subdir"), 0o755); err != nil {
 		t.Fatalf("Mkdir() error = %v", err)
 	}
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	if err := fixShebangs(binDir, "/old", "/new", logger); err != nil {
 		t.Fatalf("fixShebangs() error = %v", err)
 	}

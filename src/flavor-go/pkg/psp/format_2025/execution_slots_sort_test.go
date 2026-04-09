@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestExtractAndMergeSlotsToWorkenv_TwoSlotDirsSort covers line 106-108 in execution_slots.go:
@@ -17,7 +17,7 @@ func TestExtractAndMergeSlotsToWorkenv_TwoSlotDirsSort(t *testing.T) {
 	slotContents := []byte("sort-test-data")
 	bundlePath, _ := buildSlotsBundleForSlotsTest(t, "sort-slot", slotContents)
 
-	reader, err := NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
+	reader, err := NewReaderWithLogger(bundlePath, logging.NewNullLogger())
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger: %v", err)
 	}
@@ -68,7 +68,7 @@ func TestExtractAndMergeSlotsToWorkenv_TwoSlotDirsSort(t *testing.T) {
 	// extractAndMergeSlotsToWorkenv will first extract the real bundle slots,
 	// then also process the injected directories. The sort comparator will see
 	// both slot_0_alpha and slot_2_beta as slot directories, triggering line 106.
-	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, hclog.NewNullLogger())
+	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logging.NewNullLogger())
 	if err != nil {
 		t.Fatalf("extractAndMergeSlotsToWorkenv: %v", err)
 	}
@@ -89,7 +89,7 @@ func TestExtractAndMergeSlotsToWorkenv_Slot0FileRenameFailure(t *testing.T) {
 	slotContents := []byte("rename-fail-data")
 	bundlePath, _ := buildSlotsBundleForSlotsTest(t, "rename-slot", slotContents)
 
-	reader, err := NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
+	reader, err := NewReaderWithLogger(bundlePath, logging.NewNullLogger())
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger: %v", err)
 	}
@@ -132,7 +132,7 @@ func TestExtractAndMergeSlotsToWorkenv_Slot0FileRenameFailure(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Chmod(workenvDir, 0o755) })
 
-	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, hclog.NewNullLogger())
+	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logging.NewNullLogger())
 	if err == nil {
 		t.Fatal("expected error when os.Rename and copyFile both fail for slot_0 file")
 	}
@@ -152,7 +152,7 @@ func TestExtractAndMergeSlotsToWorkenv_SlotNFileRenameFailure(t *testing.T) {
 	slotContents := []byte("slot-n-rename-fail")
 	bundlePath, _ := buildSlotsBundleForSlotsTest(t, "slot-n-rename", slotContents)
 
-	reader, err := NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
+	reader, err := NewReaderWithLogger(bundlePath, logging.NewNullLogger())
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger: %v", err)
 	}
@@ -193,7 +193,7 @@ func TestExtractAndMergeSlotsToWorkenv_SlotNFileRenameFailure(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Chmod(workenvDir, 0o755) })
 
-	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, hclog.NewNullLogger())
+	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logging.NewNullLogger())
 	if err == nil {
 		t.Fatal("expected error when os.Rename and copyFile both fail for slot_N file")
 	}
@@ -213,7 +213,7 @@ func TestExtractAndMergeSlotsToWorkenv_RegularFileRenameFailure(t *testing.T) {
 	slotContents := []byte("regular-file-rename-fail")
 	bundlePath, _ := buildSlotsBundleForSlotsTest(t, "regular-rename", slotContents)
 
-	reader, err := NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
+	reader, err := NewReaderWithLogger(bundlePath, logging.NewNullLogger())
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger: %v", err)
 	}
@@ -250,7 +250,7 @@ func TestExtractAndMergeSlotsToWorkenv_RegularFileRenameFailure(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Chmod(workenvDir, 0o755) })
 
-	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, hclog.NewNullLogger())
+	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logging.NewNullLogger())
 	if err == nil {
 		t.Fatal("expected error when os.Rename and copyFile both fail for regular file")
 	}

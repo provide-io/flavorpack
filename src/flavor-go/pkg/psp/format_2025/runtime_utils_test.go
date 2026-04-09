@@ -4,7 +4,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 func TestProcessRuntimeEnvAppliesPassUnsetMapAndSet(t *testing.T) {
@@ -28,7 +28,7 @@ func TestProcessRuntimeEnvAppliesPassUnsetMapAndSet(t *testing.T) {
 		},
 	}
 
-	got := processRuntimeEnv(env, runtimeEnv, hclog.NewNullLogger())
+	got := processRuntimeEnv(env, runtimeEnv, logging.NewNullLogger())
 	sort.Strings(got)
 
 	want := []string{
@@ -81,7 +81,7 @@ func TestProcessRuntimeEnvHandlesExactUnsetAndMapWithoutRename(t *testing.T) {
 		},
 	}
 
-	got := processRuntimeEnv(env, runtimeEnv, hclog.NewNullLogger())
+	got := processRuntimeEnv(env, runtimeEnv, logging.NewNullLogger())
 	sort.Strings(got)
 
 	want := []string{
@@ -123,7 +123,7 @@ func TestProcessRuntimeEnvHandlesGlobUnsetAndMissingPassPatterns(t *testing.T) {
 		},
 	}
 
-	got := processRuntimeEnv(env, runtimeEnv, hclog.NewNullLogger())
+	got := processRuntimeEnv(env, runtimeEnv, logging.NewNullLogger())
 	sort.Strings(got)
 
 	want := []string{

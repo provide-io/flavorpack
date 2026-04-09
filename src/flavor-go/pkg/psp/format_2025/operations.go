@@ -3,7 +3,9 @@
 package format_2025
 
 import (
-	"github.com/hashicorp/go-hclog"
+	"log/slog"
+
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // Operation constants matching Python/protobuf definitions
@@ -126,15 +128,12 @@ const (
 	OP_TERMINAL uint8 = 0xFF
 )
 
-var logger = hclog.New(&hclog.LoggerOptions{
-	Name:  "pspf2025.operations",
-	Level: hclog.Trace,
-})
+var logger *slog.Logger = slog.Default()
 
 // PackOperations packs a list of operations into a 64-bit integer
 // Up to 8 operations can be packed, each taking 8 bits
 func PackOperations(operations []uint8) uint64 {
-	logger.Trace("📦 Packing operations",
+	logging.Trace(logger, "📦 Packing operations",
 		"count", len(operations),
 		"operations", operations,
 	)
@@ -148,7 +147,7 @@ func PackOperations(operations []uint8) uint64 {
 			break
 		}
 		packed |= uint64(op) << (i * 8)
-		logger.Trace("🔧 Packed operation",
+		logging.Trace(logger, "🔧 Packed operation",
 			"index", i,
 			"op", op,
 			"shift", i*8,
@@ -165,7 +164,7 @@ func PackOperations(operations []uint8) uint64 {
 // UnpackOperations unpacks a 64-bit integer into a list of operations
 // Returns only non-zero operations (stops at first 0x00)
 func UnpackOperations(packed uint64) []uint8 {
-	logger.Trace("📂 Unpacking operations",
+	logging.Trace(logger, "📂 Unpacking operations",
 		"packed", packed,
 	)
 
@@ -176,7 +175,7 @@ func UnpackOperations(packed uint64) []uint8 {
 			break
 		}
 		operations = append(operations, op)
-		logger.Trace("🔍 Unpacked operation",
+		logging.Trace(logger, "🔍 Unpacked operation",
 			"index", i,
 			"op", op,
 		)

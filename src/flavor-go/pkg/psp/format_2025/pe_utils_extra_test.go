@@ -9,7 +9,7 @@ import (
 	"encoding/binary"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestNeedsDOSStubExpansionInvalidPESig covers the getPEHeaderOffset failure path
@@ -17,7 +17,7 @@ import (
 func TestNeedsDOSStubExpansionInvalidPESig(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	data := make([]byte, 0x200)
 	data[0] = 'M'
@@ -37,7 +37,7 @@ func TestNeedsDOSStubExpansionInvalidPESig(t *testing.T) {
 func TestExpandDOSStubInvalidPESignatureAtOffset(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	// Build a buffer with MZ magic and a small PE offset (triggers expansion attempt),
 	// but put an invalid PE signature there so getPEHeaderOffset fails.
@@ -60,7 +60,7 @@ func TestExpandDOSStubInvalidPESignatureAtOffset(t *testing.T) {
 func TestProcessLauncherForPSPFNonPE(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	// Not a PE binary — should be returned unchanged.
 	input := []byte("#!/bin/sh\necho hello\n")
@@ -78,7 +78,7 @@ func TestProcessLauncherForPSPFNonPE(t *testing.T) {
 func TestUpdateDataDirectoriesPE32Plus(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	// Build a PE32+ synthetic PE.
 	data, _ := buildSyntheticPEForTests(t, 0x80, true /* pe32Plus */)
@@ -93,7 +93,7 @@ func TestUpdateDataDirectoriesPE32Plus(t *testing.T) {
 func TestUpdateSectionOffsetsNegativePadding(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	data, _ := buildSyntheticPEForTests(t, 0x80, false)
 	if err := updateSectionOffsets(data, -1, logger); err == nil {
@@ -107,7 +107,7 @@ func TestUpdateSectionOffsetsNegativePadding(t *testing.T) {
 func TestUpdateSectionOffsetsSectionWithZeroRawPointer(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	data, layout := buildSyntheticPEForTests(t, 0x80, false)
 
@@ -132,7 +132,7 @@ func TestUpdateSectionOffsetsSectionWithZeroRawPointer(t *testing.T) {
 func TestUpdateDebugDirectoryDebugEntryWithSmallPointer(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	data, layout := buildSyntheticPEForTests(t, 0x80, false)
 
@@ -156,7 +156,7 @@ func TestUpdateDebugDirectoryDebugEntryWithSmallPointer(t *testing.T) {
 func TestUpdateDebugDirectoryPE32Plus(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	// Build a PE32+ synthetic PE.
 	data, _ := buildSyntheticPEForTests(t, 0x80, true /* pe32Plus */)
@@ -173,7 +173,7 @@ func TestUpdateDebugDirectoryPE32Plus(t *testing.T) {
 func TestUpdateDebugDirectoryEntryPointerFieldBeyondBounds(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	data, layout := buildSyntheticPEForTests(t, 0x80, false)
 

@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestShowMetadataNewReaderError covers lines 205-208 in launcher_cli.go:
@@ -16,7 +16,7 @@ func TestShowMetadataNewReaderError(t *testing.T) {
 	// Non-existent path so prepareBundlePath returns it directly,
 	// but NewReaderWithLogger fails to open it.
 	nonExistent := filepath.Join(t.TempDir(), "nonexistent.psp")
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	exitCode, panicked := withStubbedExit(func() {
 		showMetadata(nonExistent, logger)
@@ -68,7 +68,7 @@ func TestShowMetadataReadMetadataError(t *testing.T) {
 		t.Fatalf("WriteFile: %v", err)
 	}
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	exitCode, panicked := withStubbedExit(func() {
 		showMetadata(bundle, logger)
 	})
@@ -84,7 +84,7 @@ func TestShowMetadataReadMetadataError(t *testing.T) {
 // when NewReaderWithLogger fails, showBundleInfo calls osExitFn(1).
 func TestShowBundleInfoNewReaderError(t *testing.T) {
 	nonExistent := filepath.Join(t.TempDir(), "nonexistent.psp")
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	exitCode, panicked := withStubbedExit(func() {
 		showBundleInfo(nonExistent, logger)
@@ -101,7 +101,7 @@ func TestShowBundleInfoNewReaderError(t *testing.T) {
 // when NewReaderWithLogger fails, extractSlot calls osExitFn(1).
 func TestExtractSlotNewReaderError(t *testing.T) {
 	nonExistent := filepath.Join(t.TempDir(), "nonexistent.psp")
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	exitCode, panicked := withStubbedExit(func() {
 		extractSlot(nonExistent, "0", t.TempDir(), logger)
@@ -118,7 +118,7 @@ func TestExtractSlotNewReaderError(t *testing.T) {
 // when NewReaderWithLogger fails, verifyBundle calls osExitFn(1).
 func TestVerifyBundleNewReaderError(t *testing.T) {
 	nonExistent := filepath.Join(t.TempDir(), "nonexistent.psp")
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	exitCode, panicked := withStubbedExit(func() {
 		verifyBundle(nonExistent, logger)

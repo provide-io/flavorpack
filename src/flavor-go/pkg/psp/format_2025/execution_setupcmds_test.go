@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // buildBundleWithSetupCommands builds a test bundle with setup commands.
@@ -41,7 +41,7 @@ func TestRunBundleWithCwdSetupCommandEmptyParts(t *testing.T) {
 		"  ", // whitespace-only command — shellparse returns empty parts, continue
 	})
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	cacheRoot := t.TempDir()
 	t.Setenv(EnvCacheDir, cacheRoot)
 	t.Setenv(EnvWorkenvCache, "false")
@@ -73,7 +73,7 @@ func TestRunBundleWithCwdSetupCommandWindowsBinDir(t *testing.T) {
 		"/bin/true", // simple command that succeeds on Unix
 	})
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	cacheRoot := t.TempDir()
 	t.Setenv(EnvCacheDir, cacheRoot)
 	t.Setenv(EnvWorkenvCache, "false")
@@ -102,7 +102,7 @@ func TestRunBundleWithCwdValidationMinimalIntegrityFail(t *testing.T) {
 	// all signature bytes are zero, which returns ErrNoIntegritySeal.
 	bundle := buildLauncherTestBundle(t)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	cacheRoot := t.TempDir()
 	t.Setenv(EnvCacheDir, cacheRoot)
 	t.Setenv(EnvWorkenvCache, "false")
@@ -137,7 +137,7 @@ func TestRunBundleWithCwdValidationMinimalIntegrityFail(t *testing.T) {
 func TestRunBundleWithCwdValidationStandardIntegrityFail(t *testing.T) {
 	bundle := buildLauncherTestBundle(t)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	cacheRoot := t.TempDir()
 	t.Setenv(EnvCacheDir, cacheRoot)
 	t.Setenv(EnvWorkenvCache, "false")
@@ -167,7 +167,7 @@ func TestRunBundleWithCwdValidationStandardIntegrityFail(t *testing.T) {
 func TestRunBundleWithCwdValidationRelaxedIntegrityFail(t *testing.T) {
 	bundle := buildLauncherTestBundle(t)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	cacheRoot := t.TempDir()
 	t.Setenv(EnvCacheDir, cacheRoot)
 	t.Setenv(EnvWorkenvCache, "false")
@@ -206,7 +206,7 @@ func TestPrepareBundlePathPEResourceCreateTempFailNote(t *testing.T) {
 func TestRunBundleWithCwdValidationNoneCLI(t *testing.T) {
 	bundle := buildLauncherTestBundle(t)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	cacheRoot := t.TempDir()
 	t.Setenv(EnvCacheDir, cacheRoot)
 	t.Setenv(EnvWorkenvCache, "false")

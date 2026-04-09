@@ -5,7 +5,9 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/hashicorp/go-hclog"
+	"log/slog"
+
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // HashName generates a 64-bit hash of a string for fast lookup.
@@ -56,14 +58,11 @@ type SlotDescriptor struct {
 
 // SlotDescriptorSize is defined in constants.go
 
-var slotLogger = hclog.New(&hclog.LoggerOptions{
-	Name:  "pspf2025.slots",
-	Level: hclog.Trace,
-})
+var slotLogger *slog.Logger = slog.Default()
 
 // Pack serializes the descriptor to exactly 64 bytes
 func (d *SlotDescriptor) Pack() []byte {
-	slotLogger.Trace("📦 Packing slot descriptor",
+	logging.Trace(slotLogger, "📦 Packing slot descriptor",
 		"id", d.ID,
 		"operations", fmt.Sprintf("0x%016x", d.Operations),
 	)
@@ -106,7 +105,7 @@ func UnpackSlotDescriptor(data []byte) (*SlotDescriptor, error) {
 		return nil, fmt.Errorf("invalid descriptor size: expected %d, got %d", SlotDescriptorSize, len(data))
 	}
 
-	slotLogger.Trace("📂 Unpacking slot descriptor")
+	logging.Trace(slotLogger, "📂 Unpacking slot descriptor")
 
 	d := &SlotDescriptor{
 		// Unpack uint64 fields

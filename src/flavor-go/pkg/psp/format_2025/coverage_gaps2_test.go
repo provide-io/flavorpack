@@ -16,7 +16,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // ---------------------------------------------------------------------------
@@ -65,7 +65,7 @@ func TestFixShebangsWriteFileFails(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Chmod(scriptPath, 0o644) })
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	// fixShebangs should NOT return an error; it logs debug and continues.
 	if err := fixShebangs(binDir, oldPrefix, newPrefix, logger); err != nil {
 		t.Fatalf("fixShebangs() should not return error on write failure, got: %v", err)
@@ -84,7 +84,7 @@ func TestSaveIndexMetadataWriteFileFails(t *testing.T) {
 
 	cacheDir := t.TempDir()
 	paths := NewWorkenvPaths(cacheDir, "/tmp/test.pspf")
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	index := &PSPFIndex{FormatVersion: PSPFVersion, SlotCount: 1}
 
@@ -118,7 +118,7 @@ func TestTryAcquireLockIsExistRace(t *testing.T) {
 	t.Parallel()
 
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/isexist-test.pspf")
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	if err := os.MkdirAll(paths.Extract(), 0o755); err != nil {
 		t.Fatalf("MkdirAll(extract): %v", err)
@@ -167,7 +167,7 @@ func TestTryAcquireLockIsExistRace(t *testing.T) {
 //  5. checkWorkenvValidity returns (true, nil) → workenvValid = true.
 func TestRunBundleWorkenvValidTrueAfterWait(t *testing.T) {
 	bundle := buildLauncherTestBundle(t)
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	cacheRoot := t.TempDir()
 	t.Setenv(EnvCacheDir, cacheRoot)
@@ -221,7 +221,7 @@ func TestRunBundleWorkenvValidTrueAfterWait(t *testing.T) {
 	go func() {
 		time.Sleep(120 * time.Millisecond)
 		_ = os.Remove(paths.LockFile())
-		_ = MarkExtractionComplete(paths, hclog.NewNullLogger())
+		_ = MarkExtractionComplete(paths, logging.NewNullLogger())
 	}()
 
 	// runBundleWithCwd should reach workenvValid = true via the wait path.

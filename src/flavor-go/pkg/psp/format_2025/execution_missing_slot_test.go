@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // buildBundleWithSlotNumberMismatch creates a PSPF bundle where:
@@ -129,7 +129,7 @@ func TestRunBundleWithCwdMissingSlotReference(t *testing.T) {
 
 	bundle := buildBundleWithSlotNumberMismatch(t)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {
 		t.Fatal("expected ErrMissingSlot, got nil")
