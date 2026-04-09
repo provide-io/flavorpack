@@ -408,7 +408,7 @@ dependencies = [
 
 [[package]]
 name = "flavor"
-version = "0.3.22"
+version = "0.3.23"
 dependencies = [
  "adler2",
  "anyhow",
