@@ -1,24 +1,25 @@
 package format_2025
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"syscall"
-	"time"
 
-	"github.com/hashicorp/go-hclog"
 	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 var syscallExecFn = syscall.Exec
 var osExitFn = os.Exit
 var osGetWdFn = os.Getwd
+var launcherStderrWriter io.Writer = os.Stderr
 
 // LaunchWithLogLevel launches with explicit log level control
 func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource string) {
@@ -40,48 +41,28 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 		logSource = "default"
 	}
 
-	// Parse JSON format from log level (e.g., "json:debug" or just "debug")
-	jsonFormat := false
+	// Parse the actual level string for logging the configured level in debug output.
 	actualLevel := logLevel
-	if strings.HasPrefix(logLevel, "json") {
-		jsonFormat = true
-		parts := strings.Split(logLevel, ":")
-		if len(parts) > 1 {
-			actualLevel = parts[1]
-		} else {
-			actualLevel = "info"
-		}
+	if strings.HasPrefix(logLevel, "json:") {
+		actualLevel = logLevel[len("json:"):]
+	} else if logLevel == "json" {
+		actualLevel = "info"
 	}
 
-	// Configure logger with JSON if requested
-	var output io.Writer = os.Stderr
+	setUTF8ConsoleOutput()
 
-	// Support log file output
+	// Determine log output destination.
+	var logOutput io.Writer
 	if logPath := os.Getenv(EnvLogPath); logPath != "" {
 		if file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, FilePerms); err == nil {
 			defer func() { _ = file.Close() }()
-			output = file
+			logOutput = file
 		}
+	} else if !strings.HasPrefix(logLevel, "json") {
+		logOutput = logging.NewPrefixWriter("🐹 ", launcherStderrWriter)
 	}
-
-	// Add prefix to non-JSON output; enable UTF-8 console on Windows first
-	if !jsonFormat {
-		setUTF8ConsoleOutput()
-		output = logging.NewPrefixWriter("🐹 ", output)
-	}
-
-	loggerOpts := &hclog.LoggerOptions{
-		Name:       "flavor-go-launcher",
-		Level:      hclog.LevelFromString(actualLevel),
-		JSONFormat: jsonFormat,
-		Output:     output,
-		TimeFormat: "2006-01-02T15:04:05Z", // UTC ISO format without timezone
-		TimeFn: func() time.Time {
-			return time.Now().UTC() // Force UTC time
-		},
-	}
-
-	logger := hclog.New(loggerOpts)
+	logging.Setup(logLevel, logOutput)
+	logger := logging.NewLogger(context.Background(), "flavor-go.launcher")
 
 	// Only log startup messages in CLI mode
 	if isEnvTrue(EnvLauncherCLI) {
@@ -94,11 +75,11 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 	envVars := os.Environ()
 	logger.Debug("🔧 Environment variables received from parent process", "count", len(envVars))
 
-	if logger.IsTrace() {
+	if logging.IsEnabled(logger, logging.LevelTrace) {
 		for _, env := range envVars {
 			parts := strings.SplitN(env, "=", 2)
 			if len(parts) == 2 {
-				logger.Trace("📝 Environment variable", "key", parts[0], "value", parts[1])
+				logging.Trace(logger, "📝 Environment variable", "key", parts[0], "value", parts[1])
 			}
 		}
 	}
@@ -189,7 +170,7 @@ func Launch(exePath string, args []string) {
 }
 
 // execBundle prepares and executes a bundle
-func execBundle(exePath string, args []string, userCwd string, logger hclog.Logger) error {
+func execBundle(exePath string, args []string, userCwd string, logger *slog.Logger) error {
 	// Check execution mode
 	execMode := os.Getenv(EnvExecMode)
 	useSpawn := strings.ToLower(execMode) == "spawn"
@@ -210,7 +191,7 @@ func execBundle(exePath string, args []string, userCwd string, logger hclog.Logg
 }
 
 // execBundleReplace prepares and executes a bundle using syscall.Exec (process replacement)
-func execBundleReplace(exePath string, args []string, userCwd string, logger hclog.Logger) error {
+func execBundleReplace(exePath string, args []string, userCwd string, logger *slog.Logger) error {
 	// Prepare the command (do all extraction and setup)
 	logger.Debug("Preparing command for exec mode", "exe", exePath, "args", args, "cwd", userCwd)
 	var cmd *exec.Cmd
@@ -222,7 +203,7 @@ func execBundleReplace(exePath string, args []string, userCwd string, logger hcl
 
 	// Convert exec.Cmd to syscall.Exec arguments
 	binary := cmd.Path
-	logger.Trace("Binary path extracted from command", "path", binary)
+	logging.Trace(logger, "Binary path extracted from command", "path", binary)
 
 	// exec.Command resolves PATH from the current process environment at call time,
 	// before cmd.Env is populated with workenv/bin. If the binary lives in workenv/bin
@@ -245,7 +226,7 @@ func execBundleReplace(exePath string, args []string, userCwd string, logger hcl
 		logger.Debug("Command args are nil/empty, using binary as sole argument")
 		argv = []string{binary}
 	}
-	logger.Trace("Command arguments prepared", "argv", argv)
+	logging.Trace(logger, "Command arguments prepared", "argv", argv)
 
 	// Convert environment to []string format
 	envv := cmd.Env
@@ -253,10 +234,10 @@ func execBundleReplace(exePath string, args []string, userCwd string, logger hcl
 		logger.Debug("Command environment is nil, using os.Environ()")
 		envv = os.Environ()
 	}
-	logger.Trace("Environment prepared", "env_count", len(envv))
+	logging.Trace(logger, "Environment prepared", "env_count", len(envv))
 
 	logger.Debug("🔄 Replacing process via exec", "binary", binary, "args", argv[1:])
-	logger.Trace("About to call syscall.Exec - process will be replaced")
+	logging.Trace(logger, "About to call syscall.Exec - process will be replaced")
 
 	// This replaces the current process and never returns on success
 	err = syscallExecFn(binary, argv, envv)

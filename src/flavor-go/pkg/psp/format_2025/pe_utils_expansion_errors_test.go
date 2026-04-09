@@ -9,7 +9,7 @@ import (
 	"encoding/binary"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // buildMinimalPEAtOffset80 builds a minimal PE binary at peOffset 0x80 with
@@ -50,7 +50,7 @@ func buildMinimalPEAtOffset80ForTests() []byte {
 func TestExpandDOSStubSizeOfHeadersFails(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	data := buildMinimalPEAtOffset80ForTests()
 
 	_, err := expandDOSStub(data, logger)
@@ -68,7 +68,7 @@ func TestExpandDOSStubSizeOfHeadersFails(t *testing.T) {
 func TestProcessLauncherForPSPFUnknownType(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	// Build a PE with offset 0xA0 — not 0x80 (go), not >= 0xE8 (rust), so "unknown"
 	data := make([]byte, 0x200)

@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 	format_2025 "github.com/provide-io/flavor/go/flavor/pkg/psp/format_2025"
 )
 
@@ -56,6 +56,6 @@ func TestVerifyBundleWithLoggerValidSlot(t *testing.T) {
 	}
 
 	// Call VerifyBundleWithLogger — should succeed and hit line 57-59 in the slot loop.
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	VerifyBundleWithLogger(bundlePath, logger)
 }

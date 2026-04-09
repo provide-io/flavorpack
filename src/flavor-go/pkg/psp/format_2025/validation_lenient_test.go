@@ -3,7 +3,7 @@ package format_2025
 import (
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // buildUnsignedBundle builds a bundle without an integrity seal signature.
@@ -31,7 +31,7 @@ func TestRunBundleWithCwdValidationMinimalBadSeal(t *testing.T) {
 	t.Setenv(EnvValidation, "minimal")
 
 	bundle := buildUnsignedBundle(t)
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
@@ -51,7 +51,7 @@ func TestRunBundleWithCwdValidationRelaxedBadSeal(t *testing.T) {
 	t.Setenv(EnvValidation, "relaxed")
 
 	bundle := buildUnsignedBundle(t)
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
@@ -79,7 +79,7 @@ func TestRunBundleWithCwdValidationMinimalSbomDigestError(t *testing.T) {
 	// validation block is entered and attestation digest check returns no-error
 	// (all zeros = skip). This still covers the ValidationMinimal seal error path.
 	bundle := buildUnsignedBundle(t)
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
@@ -97,7 +97,7 @@ func TestRunBundleWithCwdValidationStandardBadSeal(t *testing.T) {
 	t.Setenv(EnvValidation, "standard")
 
 	bundle := buildUnsignedBundle(t)
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {
@@ -114,7 +114,7 @@ func TestRunBundleWithCwdValidationStrictBadSeal(t *testing.T) {
 	t.Setenv(EnvValidation, "strict")
 
 	bundle := buildUnsignedBundle(t)
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {

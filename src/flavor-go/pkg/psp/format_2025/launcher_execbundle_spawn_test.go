@@ -3,14 +3,14 @@ package format_2025
 import (
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestExecBundleSpawnModeWithEnv covers the spawn-mode branch in execBundle
 // (line 203-204) when FLAVOR_EXEC_MODE=spawn is set explicitly.
 func TestExecBundleSpawnModeWithEnv(t *testing.T) {
 	bundle := buildLauncherTestBundle(t)
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	// Inject osExitFn to prevent actual os.Exit.
 	oldExit := osExitFn

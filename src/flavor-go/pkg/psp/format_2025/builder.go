@@ -2,6 +2,7 @@ package format_2025
 
 import (
 	"bytes"
+	"context"
 	"crypto/ed25519"
 	cryptorand "crypto/rand"
 	"crypto/sha256"
@@ -10,6 +11,7 @@ import (
 	"fmt"
 	"hash/adler32"
 	"io"
+	"log/slog"
 	"math"
 	"os"
 	"os/exec"
@@ -19,7 +21,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/go-hclog"
 	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
@@ -47,6 +48,8 @@ var outBinaryWriteFn = func(f *os.File, v interface{}) error {
 	return binary.Write(f, binary.LittleEndian, v)
 }
 
+var builderStderrWriter io.Writer = os.Stderr
+
 // BuildWithLogLevel builds a PSPF package with explicit log level control
 func BuildWithLogLevel(manifestPath, outputPath, launcherBin, privateKeyPath, publicKeyPath, keySeed, cliLogLevel string) {
 	// Determine log level and source
@@ -67,45 +70,28 @@ func BuildWithLogLevel(manifestPath, outputPath, launcherBin, privateKeyPath, pu
 		logSource = "default"
 	}
 
-	// Parse JSON format from log level
-	jsonFormat := false
+	// Parse the actual level string for logging the configured level in debug output.
 	actualLevel := logLevel
-	if strings.HasPrefix(logLevel, "json") {
-		jsonFormat = true
-		parts := strings.Split(logLevel, ":")
-		if len(parts) > 1 {
-			actualLevel = parts[1]
-		} else {
-			actualLevel = "info"
-		}
+	if strings.HasPrefix(logLevel, "json:") {
+		actualLevel = logLevel[len("json:"):]
+	} else if logLevel == "json" {
+		actualLevel = "info"
 	}
 
-	// Configure logger
-	var output io.Writer = os.Stderr
-
-	// Support log file output
+	// Determine log output destination.
+	// File output (FLAVOR_LOG_PATH) takes priority; otherwise use stderr,
+	// with a 🐹 line prefix for non-JSON console output.
+	var logOutput io.Writer
 	if logPath := os.Getenv(EnvLogPath); logPath != "" {
 		if file, err := openFileValidated(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.FileMode(FilePerms)); err == nil {
 			defer func() { _ = file.Close() }()
-			output = file
+			logOutput = file
 		}
+	} else if !strings.HasPrefix(logLevel, "json") {
+		logOutput = logging.NewPrefixWriter("🐹 ", builderStderrWriter)
 	}
-
-	// Add 🐹 prefix to non-JSON output
-	if !jsonFormat {
-		output = logging.NewPrefixWriter("🐹 ", output)
-	}
-
-	logger := hclog.New(&hclog.LoggerOptions{
-		Name:       "flavor-go-builder",
-		Level:      hclog.LevelFromString(actualLevel),
-		JSONFormat: jsonFormat,
-		Output:     output,
-		TimeFormat: "2006-01-02T15:04:05Z", // UTC ISO format without timezone
-		TimeFn: func() time.Time {
-			return time.Now().UTC() // Force UTC time
-		},
-	})
+	logging.Setup(logLevel, logOutput)
+	logger := logging.NewLogger(context.Background(), "flavor-go.builder")
 
 	// Log startup messages
 	logger.Info("🐹🐹🐹 Hello from Flavor's Go Builder 🐹🐹🐹")
@@ -124,7 +110,7 @@ func BuildWithOptions(manifestPath, outputPath, launcherBin, privateKeyPath, pub
 var buildImpl = doBuild
 
 // doBuild performs the actual build
-func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, privateKeyPath, publicKeyPath, keySeed string) {
+func doBuild(logger *slog.Logger, manifestPath, outputPath, launcherBin, privateKeyPath, publicKeyPath, keySeed string) {
 
 	// Read manifest
 	manifestData, err := readFileValidated(manifestPath)
@@ -608,15 +594,15 @@ func doBuild(logger hclog.Logger, manifestPath, outputPath, launcherBin, private
 //
 // Resource embedding is required for Windows Go launchers because Windows
 // rejects Go binaries with appended data.
-func shouldUseResourceEmbedding(launcherData []byte, logger hclog.Logger) bool {
+func shouldUseResourceEmbedding(launcherData []byte, logger *slog.Logger) bool {
 	return shouldUseResourceEmbeddingForOS(runtime.GOOS, launcherData, logger)
 }
 
-func shouldUseResourceEmbeddingForOS(goos string, launcherData []byte, logger hclog.Logger) bool {
+func shouldUseResourceEmbeddingForOS(goos string, launcherData []byte, logger *slog.Logger) bool {
 	return shouldUseResourceEmbeddingForPlatform(goos, GetLauncherType(launcherData, logger), logger)
 }
 
-func shouldUseResourceEmbeddingForPlatform(goos, launcherType string, logger hclog.Logger) bool {
+func shouldUseResourceEmbeddingForPlatform(goos, launcherType string, logger *slog.Logger) bool {
 	// Only on Windows
 	if goos != "windows" {
 		logger.Debug("Not Windows, using append mode")
@@ -640,7 +626,7 @@ func shouldUseResourceEmbeddingForPlatform(goos, launcherType string, logger hcl
 // launcher+PSPF file. This is required when the PSPF is extracted from a PE resource and
 // written to a standalone temp file: without adjustment, seeks to MetadataOffset,
 // SlotTableOffset, and slot data offsets would all land past end-of-file.
-func adjustPSPFOffsets(pspfData []byte, launcherSize int64, logger hclog.Logger) ([]byte, error) {
+func adjustPSPFOffsets(pspfData []byte, launcherSize int64, logger *slog.Logger) ([]byte, error) {
 	if int64(len(pspfData)) < MagicTrailerSize {
 		return nil, fmt.Errorf("PSPF data too small: %d < %d", len(pspfData), MagicTrailerSize)
 	}
@@ -726,7 +712,7 @@ func adjustPSPFOffsets(pspfData []byte, launcherSize int64, logger hclog.Logger)
 //
 // This reads the PSPF data that was appended after the launcher, removes it from the file,
 // and embeds it as a PE resource instead.
-func convertToResourceEmbedding(filePath string, launcherSize int64, logger hclog.Logger) error {
+func convertToResourceEmbedding(filePath string, launcherSize int64, logger *slog.Logger) error {
 	logger.Debug("Converting append-mode to resource-embedding", "file", filePath, "launcher_size", launcherSize)
 
 	// Read the entire file

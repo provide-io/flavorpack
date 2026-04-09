@@ -10,8 +10,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hashicorp/go-hclog"
+	"log/slog"
+
 	"github.com/provide-io/flavor/go/flavor/internal/workenv"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 	"github.com/provide-io/flavor/go/flavor/pkg/utils/shellparse"
 )
 
@@ -35,15 +37,15 @@ var runBundleReaderCloseFn = (*Reader).Close
 var tmpFileWriteFn = func(f *os.File, d []byte) (int, error) { return f.Write(d) }
 var tmpFileCloseFn = func(f *os.File) error { return f.Close() }
 
-func removeFileQuietly(path, context string, logger hclog.Logger) {
+func removeFileQuietly(path, context string, logger *slog.Logger) {
 	if err := os.Remove(path); err != nil {
-		logger.Trace("Ignoring cleanup error", "context", context, "path", path, "error", err)
+		logging.Trace(logger, "Ignoring cleanup error", "context", context, "path", path, "error", err)
 	}
 }
 
-func removeAllQuietly(path, context string, logger hclog.Logger) {
+func removeAllQuietly(path, context string, logger *slog.Logger) {
 	if err := removeAllFn(path); err != nil {
-		logger.Trace("Ignoring cleanup error", "context", context, "path", path, "error", err)
+		logging.Trace(logger, "Ignoring cleanup error", "context", context, "path", path, "error", err)
 	}
 }
 
@@ -63,17 +65,17 @@ func ensurePathWithinWorkenv(path, workenvDir, original string) error {
 // On Windows with PSPF embedded as a PE resource, it extracts the PSPF data
 // to a temporary file and returns the path + cleanup function.
 // Otherwise, it returns the original exePath with no cleanup.
-func prepareBundlePath(exePath string, logger hclog.Logger) (string, func(), error) {
+func prepareBundlePath(exePath string, logger *slog.Logger) (string, func(), error) {
 	logger.Debug("Checking bundle path preparation method", "exe", exePath)
 
 	// Check if PSPF is embedded as a PE resource
-	logger.Trace("Checking for PE resource embedding")
+	logging.Trace(logger, "Checking for PE resource embedding")
 	if hasPSPFResourceFn(exePath, logger) {
 		logger.Info("🪟 Detected PSPF embedded as PE resource, extracting to temp file")
 		logger.Debug("Starting PE resource extraction workflow")
 
 		// Read PSPF data from resource
-		logger.Trace("Reading PSPF data from PE resource")
+		logging.Trace(logger, "Reading PSPF data from PE resource")
 		pspfData, err := readPSPFFromResourceFn(exePath, logger)
 		if err != nil {
 			logger.Error("Failed to read PSPF from PE resource", "error", err)
@@ -82,7 +84,7 @@ func prepareBundlePath(exePath string, logger hclog.Logger) (string, func(), err
 		logger.Debug("Successfully read PSPF from PE resource", "size", len(pspfData))
 
 		// Create temporary file for PSPF data
-		logger.Trace("Creating temporary file for extracted PSPF data")
+		logging.Trace(logger, "Creating temporary file for extracted PSPF data")
 		tmpFile, err := createTempFn("", "pspf-*.psp")
 		if err != nil {
 			logger.Error("Failed to create temp file for PSPF extraction", "error", err)
@@ -92,12 +94,12 @@ func prepareBundlePath(exePath string, logger hclog.Logger) (string, func(), err
 		logger.Debug("Created temp file", "path", tmpPath)
 
 		// Write PSPF data to temp file
-		logger.Trace("Writing PSPF data to temp file", "size", len(pspfData))
+		logging.Trace(logger, "Writing PSPF data to temp file", "size", len(pspfData))
 		bytesWritten, err := tmpFileWriteFn(tmpFile, pspfData)
 		if err != nil {
 			logger.Error("Failed to write PSPF data to temp file", "error", err, "path", tmpPath)
 			_ = tmpFileCloseFn(tmpFile)
-			logger.Trace("Cleaning up temp file after write failure", "path", tmpPath)
+			logging.Trace(logger, "Cleaning up temp file after write failure", "path", tmpPath)
 			_ = os.Remove(tmpPath)
 			return "", nil, fmt.Errorf("failed to write PSPF to temp file: %w", err)
 		}
@@ -110,10 +112,10 @@ func prepareBundlePath(exePath string, logger hclog.Logger) (string, func(), err
 			return "", nil, fmt.Errorf("incomplete write: wrote %d bytes, expected %d", bytesWritten, len(pspfData))
 		}
 
-		logger.Trace("Closing temp file")
+		logging.Trace(logger, "Closing temp file")
 		if err := tmpFileCloseFn(tmpFile); err != nil {
 			logger.Error("Failed to close temp file", "error", err, "path", tmpPath)
-			logger.Trace("Cleaning up temp file after close failure", "path", tmpPath)
+			logging.Trace(logger, "Cleaning up temp file after close failure", "path", tmpPath)
 			_ = os.Remove(tmpPath)
 			return "", nil, fmt.Errorf("failed to close temp file: %w", err)
 		}
@@ -127,7 +129,7 @@ func prepareBundlePath(exePath string, logger hclog.Logger) (string, func(), err
 			if err := os.Remove(tmpPath); err != nil {
 				logger.Debug("Failed to remove temp file (may have been already removed)", "path", tmpPath, "error", err)
 			} else {
-				logger.Trace("Successfully removed temp file", "path", tmpPath)
+				logging.Trace(logger, "Successfully removed temp file", "path", tmpPath)
 			}
 		}
 		return tmpPath, cleanup, nil
@@ -135,11 +137,11 @@ func prepareBundlePath(exePath string, logger hclog.Logger) (string, func(), err
 
 	// No resource embedding - read from EOF (traditional approach)
 	logger.Debug("📖 No PE resource detected, reading PSPF from EOF (appended to executable)")
-	logger.Trace("Using direct executable path as bundle path", "path", exePath)
+	logging.Trace(logger, "Using direct executable path as bundle path", "path", exePath)
 	return exePath, nil, nil
 }
 
-func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclog.Logger) (*exec.Cmd, error) {
+func runBundleWithCwd(exePath string, args []string, userCwd string, logger *slog.Logger) (*exec.Cmd, error) {
 	// Check if PSPF is embedded as a PE resource (Windows + Go launcher)
 	bundlePath, cleanup, err := prepareBundlePath(exePath, logger)
 	if err != nil {
@@ -706,7 +708,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger hclo
 				v = strings.ReplaceAll(v, placeholder, path)
 			}
 			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
-			logger.Trace("➕ Added package env var", "key", k, "value", v)
+			logging.Trace(logger, "➕ Added package env var", "key", k, "value", v)
 		}
 	}
 

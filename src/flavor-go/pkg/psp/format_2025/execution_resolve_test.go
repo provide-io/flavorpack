@@ -6,13 +6,13 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 func TestResolveExecutableAndLookPathInEnv(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	dir := t.TempDir()
 	executable := filepath.Join(dir, "tool")
 	if err := os.WriteFile(executable, []byte("#!/bin/sh\n"), 0o700); err != nil {
@@ -41,7 +41,7 @@ func TestResolveExecutableAndLookPathInEnv(t *testing.T) {
 }
 
 func TestResolveExecutableUsesPathAndLookPathInEnvSupportsEmptyPathEntry(t *testing.T) {
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	dir := t.TempDir()
 	tool := filepath.Join(dir, "tool")
 	if err := os.WriteFile(tool, []byte("#!/bin/sh\n"), 0o700); err != nil {
