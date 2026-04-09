@@ -1,6 +1,6 @@
-# Contributing to FlavorPack
+# Contributing to Flavorpack
 
-Thank you for your interest in contributing to FlavorPack! This guide will help you get started.
+Thank you for your interest in contributing to Flavorpack! This guide will help you get started.
 
 ## Getting Started
 
@@ -196,4 +196,4 @@ By contributing, you agree that your contributions will be licensed under the Ap
 
 Open a GitHub Discussion or reach out to maintainers.
 
-Thank you for contributing to FlavorPack! 🌶️
+Thank you for contributing to Flavorpack! 🌶️

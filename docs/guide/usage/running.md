@@ -1,6 +1,6 @@
 # Running Packages
 
-Execute FlavorPack packages (.psp files) with zero installation required.
+Execute Flavorpack packages (.psp files) with zero installation required.
 
 ## Basic Execution
 
@@ -58,7 +58,7 @@ Pass arguments directly to your application:
 
 ## Environment Variables
 
-### FlavorPack Variables
+### Flavorpack Variables
 
 Configure launcher behavior:
 

@@ -1,6 +1,6 @@
 # Reader API
 
-The FlavorPack Reader API provides tools for reading and extracting PSPF packages.
+The Flavorpack Reader API provides tools for reading and extracting PSPF packages.
 
 !!! note "Low-Level API"
     This is a low-level API for advanced use cases. For package inspection, see the [CLI Reference](../guide/usage/cli/).

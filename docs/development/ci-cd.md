@@ -2,7 +2,7 @@
 
 ## Overview
 
-The FlavorPack CI/CD system consists of multiple independent GitHub Actions workflows that build, test, and validate the entire system across multiple platforms and language implementations.
+The Flavorpack CI/CD system consists of multiple independent GitHub Actions workflows that build, test, and validate the entire system across multiple platforms and language implementations.
 
 ## Workflow Architecture
 
@@ -87,7 +87,7 @@ graph LR
 
 **File**: `.github/workflows/03-flavor-pipeline.yml`
 
-**Purpose**: Test the main FlavorPack Python package
+**Purpose**: Test the main Flavorpack Python package
 
 **Key Features**:
 - Runs comprehensive test suite with pytest

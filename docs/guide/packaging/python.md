@@ -1,11 +1,11 @@
 # Python Applications
 
-Complete guide to packaging Python applications with FlavorPack, including dependencies, virtual environments, and Python-specific optimizations.
+Complete guide to packaging Python applications with Flavorpack, including dependencies, virtual environments, and Python-specific optimizations.
 
 !!! tip "Prerequisites"
     Before packaging Python apps, ensure you have:
 
-    - [FlavorPack installed](../../getting-started/installation/) from source
+    - [Flavorpack installed](../../getting-started/installation/) from source
     - [Helpers built](../usage/cli/#helpers-build) (`make build-helpers`)
     - A Python project with valid `pyproject.toml`
 
@@ -14,7 +14,7 @@ Complete guide to packaging Python applications with FlavorPack, including depen
 !!! warning "Alpha Release - Many Features Not Yet Implemented"
     **This guide shows both working features and planned future features.**
 
-    FlavorPack's Python packaging is in alpha. Basic packaging works today, but many advanced features documented here are **planned for future releases**.
+    Flavorpack's Python packaging is in alpha. Basic packaging works today, but many advanced features documented here are **planned for future releases**.
 
     **✅ What Works Today**:
 
@@ -35,13 +35,13 @@ Complete guide to packaging Python applications with FlavorPack, including depen
 
 ## Overview
 
-FlavorPack provides first-class support for Python applications. This guide covers what works today and what's planned for future releases.
+Flavorpack provides first-class support for Python applications. This guide covers what works today and what's planned for future releases.
 
 ## What Works Today
 
 ### Basic Python Packaging ✅
 
-FlavorPack can package any Python application with a valid `pyproject.toml`:
+Flavorpack can package any Python application with a valid `pyproject.toml`:
 
 ```toml
 [project]
@@ -69,7 +69,7 @@ This configuration will:
 
 ### Supported Python Versions ✅
 
-FlavorPack itself requires **Python 3.11 or higher** to run the packaging tools.
+Flavorpack itself requires **Python 3.11 or higher** to run the packaging tools.
 
 **Build Environment Python**:
 
@@ -79,7 +79,7 @@ Packaged applications currently use whatever Python version is available in your
 |------------------------|------------------------|
 | Python 3.12 | ✅ Package includes Python 3.12 |
 | Python 3.11 | ✅ Package includes Python 3.11 |
-| Python 3.10 or older | ❌ FlavorPack won't run |
+| Python 3.10 or older | ❌ Flavorpack won't run |
 
 !!! info "Current Limitation"
     **Python version selection is not yet implemented.** You cannot specify a different Python version than what's in your build environment.
@@ -90,7 +90,7 @@ Packaged applications currently use whatever Python version is available in your
 
 ### Dependency Management ✅
 
-FlavorPack automatically handles dependencies defined in `pyproject.toml`:
+Flavorpack automatically handles dependencies defined in `pyproject.toml`:
 
 ```toml
 [project]
@@ -113,7 +113,7 @@ dependencies = [
 
 ### Entry Points ✅
 
-FlavorPack supports standard Python entry points:
+Flavorpack supports standard Python entry points:
 
 ```toml
 [project.scripts]
@@ -130,7 +130,7 @@ The `[tool.flavor].entry_point` is required and specifies which function runs wh
 
 ## Planned Python Features
 
-The following features are planned but **not yet implemented**. See the [FlavorPack Roadmap](../../roadmap/) for detailed status, target versions, and implementation timelines.
+The following features are planned but **not yet implemented**. See the [Flavorpack Roadmap](../../roadmap/) for detailed status, target versions, and implementation timelines.
 
 ### Python Version Selection 📋
 
@@ -173,7 +173,7 @@ api = [
 ]
 ```
 
-FlavorPack automatically includes all dependencies from your `pyproject.toml` file when building packages.
+Flavorpack automatically includes all dependencies from your `pyproject.toml` file when building packages.
 
 ### Platform-Specific Dependencies
 
@@ -209,11 +209,11 @@ dependencies = [
 ### Build Environment
 
 !!! note "Planned Feature"
-    FlavorPack creates a basic isolated virtual environment during build. Advanced configuration options (custom venv path, build-time environment variables, pre-install commands) are **planned for v0.3.0 (Q1 2026)**.
+    Flavorpack creates a basic isolated virtual environment during build. Advanced configuration options (custom venv path, build-time environment variables, pre-install commands) are **planned for v0.3.0 (Q1 2026)**.
 
     See [Roadmap - Build Environment Configuration](../../roadmap/#build-environment-configuration) for full details.
 
-**Current Behavior:** FlavorPack automatically creates a virtual environment and installs dependencies using UV.
+**Current Behavior:** Flavorpack automatically creates a virtual environment and installs dependencies using UV.
 
 **Current Workaround:** Use standard Python packaging tools (pip, setuptools) in your project's development environment before packaging.
 
@@ -329,7 +329,7 @@ def get_data_path():
         # PyInstaller compatibility
         return Path(sys._MEIPASS) / "data"
     elif os.environ.get('FLAVOR_WORKENV'):
-        # FlavorPack work environment
+        # Flavorpack work environment
         return Path(os.environ['FLAVOR_WORKENV']) / "data"
     else:
         # Development
@@ -407,7 +407,7 @@ dependencies = [
 
     See [Roadmap - Runtime Optimization](../../roadmap/#runtime-optimization) and [Roadmap - Advanced Slot Configuration](../../roadmap/#advanced-slot-configuration) for full details.
 
-**Current Behavior:** FlavorPack packages all dependencies and Python code as-is, with basic compression.
+**Current Behavior:** Flavorpack packages all dependencies and Python code as-is, with basic compression.
 
 **Current Workaround:**
 - Pre-compile bytecode in your project before packaging
@@ -483,7 +483,7 @@ from pathlib import Path
 class Config:
     """Application configuration from environment."""
     
-    # FlavorPack provides these
+    # Flavorpack provides these
     WORKENV = Path(os.environ.get('FLAVOR_WORKENV', '.'))
     PACKAGE_VERSION = os.environ.get('FLAVOR_PACKAGE_VERSION', 'dev')
     PACKAGE_NAME = os.environ.get('FLAVOR_PACKAGE_NAME', 'unknown')
@@ -783,7 +783,7 @@ entry_point = "hello:main"
 ```python
 # hello.py
 def main():
-    print("Hello from FlavorPack!")
+    print("Hello from Flavorpack!")
     return 0
 ```
 

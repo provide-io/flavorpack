@@ -1,6 +1,6 @@
 # Creating Your First Package
 
-This tutorial walks you through creating a real-world Python application and packaging it with FlavorPack. We'll build a simple but useful CLI tool that fetches weather information.
+This tutorial walks you through creating a real-world Python application and packaging it with Flavorpack. We'll build a simple but useful CLI tool that fetches weather information.
 
 !!! example "What we'll build"
     A weather CLI tool that:
@@ -27,7 +27,7 @@ Create `weather.py`:
 ```python
 #!/usr/bin/env python3
 """
-A simple weather CLI tool packaged with FlavorPack.
+A simple weather CLI tool packaged with Flavorpack.
 """
 
 import json
@@ -79,7 +79,7 @@ def format_weather(data: dict, city: str) -> str:
 
 def main():
     """Main entry point for the weather CLI."""
-    print("🌤️  Weather CLI - Powered by FlavorPack")
+    print("🌤️  Weather CLI - Powered by Flavorpack")
     print()
     
     if len(sys.argv) > 1:
@@ -95,7 +95,7 @@ def main():
     
     weather_data = get_weather(city)
     print(format_weather(weather_data, city))
-    print("\n✨ Packaged with FlavorPack - https://foundry.provide.io/flavorpack/")
+    print("\n✨ Packaged with Flavorpack - https://foundry.provide.io/flavorpack/")
 
 
 if __name__ == "__main__":
@@ -133,7 +133,7 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.flavor]
-# FlavorPack-specific configuration
+# Flavorpack-specific configuration
 package_name = "weather-cli"
 entry_point = "weather:main"
 
@@ -169,7 +169,7 @@ Create `README.md`:
 ```markdown
 # Weather CLI
 
-A simple command-line weather tool packaged with FlavorPack.
+A simple command-line weather tool packaged with Flavorpack.
 
 ## Usage
 
@@ -190,7 +190,7 @@ A simple command-line weather tool packaged with FlavorPack.
 - 📦 Self-contained executable
 - 🔒 No API keys required
 
-Built with FlavorPack - https://foundry.provide.io/flavorpack/
+Built with Flavorpack - https://foundry.provide.io/flavorpack/
 ```
 
 ## Step 3: Build the Package
@@ -257,7 +257,7 @@ chmod +x weather-cli.psp
 ./weather-cli.psp London
 
 # Output:
-# 🌤️  Weather CLI - Powered by FlavorPack
+# 🌤️  Weather CLI - Powered by Flavorpack
 #
 # Fetching weather for London...
 # ==================================================
@@ -271,7 +271,7 @@ chmod +x weather-cli.psp
 # 🌡️  Feels like: 14°C (57°F)
 # ==================================================
 #
-# ✨ Packaged with FlavorPack - https://foundry.provide.io/flavorpack/
+# ✨ Packaged with Flavorpack - https://foundry.provide.io/flavorpack/
 ```
 
 Try more examples:
@@ -364,7 +364,7 @@ graph LR
 
 ### Cache Management
 
-FlavorPack uses smart caching:
+Flavorpack uses smart caching:
 
 ```bash
 # First run: Extracts to cache
@@ -430,7 +430,7 @@ Try these improvements:
 Congratulations! You've successfully:
 
 ✅ Created a real-world Python application  
-✅ Configured it for FlavorPack packaging  
+✅ Configured it for Flavorpack packaging  
 ✅ Built a self-contained executable  
 ✅ Tested and verified the package  
 ✅ Learned distribution strategies  

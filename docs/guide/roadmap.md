@@ -1,9 +1,9 @@
-# FlavorPack Roadmap
+# Flavorpack Roadmap
 
-This roadmap shows the current implementation status and planned features for FlavorPack. Use this to understand what works today versus what's coming in future releases.
+This roadmap shows the current implementation status and planned features for Flavorpack. Use this to understand what works today versus what's coming in future releases.
 
 !!! info "Version Status"
-    FlavorPack is currently in **alpha** stage. APIs, file formats, and commands may change without notice.
+    Flavorpack is currently in **alpha** stage. APIs, file formats, and commands may change without notice.
 
 ## Legend
 
@@ -103,7 +103,7 @@ map = { OLD = "NEW" }            # ✅ Rename variables
 
 ## Planned Features
 
-The following features are documented in guides but are **not yet implemented**. They represent the planned evolution of FlavorPack.
+The following features are documented in guides but are **not yet implemented**. They represent the planned evolution of Flavorpack.
 
 ### Manifest Configuration Features 📋
 
@@ -577,7 +577,7 @@ Auto-generate API docs from code:
 Live, runnable examples in documentation:
 
 ```bash
-# Try FlavorPack online
+# Try Flavorpack online
 flavor demo hello-world
 flavor demo web-app
 flavor demo cli-tool
@@ -648,7 +648,7 @@ flavor install popular-package
 
 ### Plugin System
 
-Extend FlavorPack with plugins:
+Extend Flavorpack with plugins:
 
 ```bash
 flavor plugin install compression-extras

@@ -2,9 +2,9 @@
 
 **Time to Complete:** 20-25 minutes
 **Difficulty:** Intermediate
-**Prerequisites:** Python 3.11+, FlavorPack installed
+**Prerequisites:** Python 3.11+, Flavorpack installed
 
-This tutorial demonstrates how to package a Python CLI application that wraps HTTPie (a popular HTTP client) into a self-contained executable using FlavorPack.
+This tutorial demonstrates how to package a Python CLI application that wraps HTTPie (a popular HTTP client) into a self-contained executable using Flavorpack.
 
 ---
 
@@ -22,7 +22,7 @@ A custom HTTP client tool called `api-tool` that:
 
 ## Why This Example?
 
-This tutorial demonstrates several important FlavorPack capabilities:
+This tutorial demonstrates several important Flavorpack capabilities:
 
 - **Third-party dependencies**: Packaging external libraries (httpie)
 - **CLI wrappers**: Building tools around existing utilities
@@ -334,7 +334,7 @@ where = ["src"]
 [tool.setuptools.package-data]
 api_tool = ["py.typed"]
 
-# FlavorPack configuration
+# Flavorpack configuration
 [tool.flavor]
 type = "python-app"
 entry_point = "api_tool.cli:cli"
@@ -371,10 +371,10 @@ keywords = ["http", "api", "cli", "httpie"]
 
 ## Step 4: Build the Package
 
-Now package your application with FlavorPack:
+Now package your application with Flavorpack:
 
 ```bash
-# Ensure FlavorPack helpers are built
+# Ensure Flavorpack helpers are built
 make build-helpers  # If not already built
 
 # Package the application
@@ -384,7 +384,7 @@ flavor pack --manifest pyproject.toml --output api-tool.psp
 **Expected Output:**
 
 ```
-📦 FlavorPack Builder
+📦 Flavorpack Builder
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📄 Reading manifest: pyproject.toml
@@ -554,7 +554,7 @@ The wrapper passes arguments directly to HTTPie:
 
 See [HTTPie documentation](https://httpie.io/docs/cli) for complete syntax.
 
-### FlavorPack Configuration
+### Flavorpack Configuration
 
 Key aspects of the `[tool.flavor]` configuration:
 
@@ -693,7 +693,7 @@ Congratulations! You've successfully:
 ✅ Created a Python CLI application that wraps HTTPie
 ✅ Managed multiple API environments
 ✅ Packaged third-party dependencies (httpie, click)
-✅ Built a self-contained executable with FlavorPack
+✅ Built a self-contained executable with Flavorpack
 ✅ Distributed a tool without requiring Python installation
 ✅ Configured environment isolation and security
 
@@ -710,7 +710,7 @@ Congratulations! You've successfully:
 
 ### Learn More
 
-- **[FlavorPack API Reference](../api/index/)** - Complete packaging API
+- **[Flavorpack API Reference](../api/index/)** - Complete packaging API
 - **[Cookbook Examples](../cookbook/examples/index/)** - More packaging patterns
 - **[Advanced Topics](../guide/advanced/index/)** - Custom builders, performance
 - **[HTTPie Documentation](https://httpie.io/docs/cli)** - Complete HTTPie reference
@@ -747,5 +747,5 @@ api-tool/
 
 **Tutorial Version:** 1.0
 **Last Updated:** October 30, 2025
-**FlavorPack Version:** 0.2.0+
+**Flavorpack Version:** 0.2.0+
 **Python Version:** 3.11+

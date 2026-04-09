@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Key management for FlavorPack package signing."""
+"""Key management for Flavorpack package signing."""
 
 from __future__ import annotations
 
