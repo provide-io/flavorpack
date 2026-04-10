@@ -9,7 +9,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestVerifyIntegritySealIoReadAllFails covers reader_verify.go:85-87
@@ -26,7 +26,7 @@ func TestVerifyIntegritySealIoReadAllFails(t *testing.T) {
 		return nil, errors.New("injected io.ReadAll failure")
 	}
 
-	reader, _ := NewReaderWithLogger(bundle, hclog.NewNullLogger())
+	reader, _ := NewReaderWithLogger(bundle, logging.NewNullLogger())
 	defer func() { _ = reader.Close() }()
 
 	_, err := reader.VerifyIntegritySeal()
@@ -49,7 +49,7 @@ func TestVerifyAttestationSbomDigestSeekFails(t *testing.T) {
 		return 0, errors.New("injected seek failure in attestation verification")
 	}
 
-	reader, _ := NewReaderWithLogger(bundle, hclog.NewNullLogger())
+	reader, _ := NewReaderWithLogger(bundle, logging.NewNullLogger())
 	defer func() { _ = reader.Close() }()
 
 	err := reader.VerifyAttestationSbomDigest()
@@ -87,7 +87,7 @@ func TestVerifyAttestationPolicyHashJsonUnmarshalFails(t *testing.T) {
 		return errors.New("injected json.Unmarshal failure")
 	}
 
-	reader, _ := NewReaderWithLogger(bundle, hclog.NewNullLogger())
+	reader, _ := NewReaderWithLogger(bundle, logging.NewNullLogger())
 	defer func() { _ = reader.Close() }()
 
 	err = reader.VerifyAttestationPolicyHash()

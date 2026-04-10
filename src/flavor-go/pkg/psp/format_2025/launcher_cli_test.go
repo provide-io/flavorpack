@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 type launcherExitCode struct {
@@ -119,7 +119,7 @@ func captureStdout(t *testing.T, fn func()) string {
 }
 
 func TestCLIMetadataAndVerificationPaths(t *testing.T) {
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	bundle := buildSingleSlotBundleForTests(t, []byte("cli file content"), []byte("cli file content"), nil, SlotMetadata{
 		ID:     "cli-slot",
 		Target: "{workenv}/bin/app.txt",
@@ -152,7 +152,7 @@ func TestCLIMetadataAndVerificationPaths(t *testing.T) {
 }
 
 func TestShowBundleInfoReportsCodecInfo(t *testing.T) {
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	bundle := buildSingleSlotBundleForTests(t, []byte("cli file content"), []byte("cli file content"), []uint8{OP_GZIP}, SlotMetadata{
 		ID:         "cli-slot",
 		Target:     "{workenv}/bin/app.txt",
@@ -174,7 +174,7 @@ func TestShowBundleInfoReportsCodecInfo(t *testing.T) {
 func TestVerifyBundleDirectSuccess(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	bundle := buildSingleSlotBundleForTests(t, []byte("verify file content"), []byte("verify file content"), nil, SlotMetadata{
 		ID:     "verify-slot",
 		Target: "{workenv}/bin/app.txt",
@@ -189,7 +189,7 @@ func TestVerifyBundleDirectSuccess(t *testing.T) {
 }
 
 func TestCLIHelpersExitOnInvalidInputs(t *testing.T) {
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	bundle := buildSingleSlotBundleForTests(t, []byte("cli file content"), []byte("cli file content"), nil, SlotMetadata{
 		ID:     "cli-slot",
@@ -269,7 +269,7 @@ func TestCLIHelpersExitOnInvalidInputs(t *testing.T) {
 }
 
 func TestVerifyBundleDirectFailure(t *testing.T) {
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	bundle := filepath.Join(t.TempDir(), "invalid.psp")
 	if err := os.WriteFile(bundle, bytes.Repeat([]byte{0}, MagicTrailerSize), 0o600); err != nil {
 		t.Fatalf("WriteFile() error = %v", err)

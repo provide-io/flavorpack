@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestTryAcquireLockIsExistError covers locking.go:71-74
@@ -41,7 +41,7 @@ func TestTryAcquireLockIsExistError(t *testing.T) {
 		return nil, err // returns ErrExist since file now exists
 	}
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	acquired, err := TryAcquireLock(paths, logger)
 	if err != nil {
 		t.Fatalf("TryAcquireLock() unexpected error = %v", err)

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hashicorp/go-hclog"
+	"log/slog"
 )
 
 // resolveExecutable resolves an executable path for cross-platform compatibility
@@ -20,7 +20,7 @@ import (
 // - sh -> bash.exe
 //
 // This ensures that packages with Unix-style command paths work on Windows.
-func resolveExecutable(executable string, logger hclog.Logger) string {
+func resolveExecutable(executable string, logger *slog.Logger) string {
 	// If the path is absolute and the file exists, use it directly.
 	// This handles workenv-relative commands like {workenv}/bin/taster which are
 	// already fully resolved absolute paths; extracting their basename and looking

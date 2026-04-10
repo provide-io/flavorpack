@@ -4,10 +4,11 @@ import (
 	"crypto/ed25519"
 	"errors"
 	"io"
+	"log/slog"
 	"os"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestDoBuildExitsProcessLauncherFails covers the processLauncherFn error path
@@ -20,7 +21,7 @@ func TestDoBuildExitsProcessLauncherFails(t *testing.T) {
 
 	old := processLauncherFn
 	t.Cleanup(func() { processLauncherFn = old })
-	processLauncherFn = func(data []byte, logger hclog.Logger) ([]byte, error) {
+	processLauncherFn = func(data []byte, logger *slog.Logger) ([]byte, error) {
 		return nil, errors.New("injected process launcher failure")
 	}
 
@@ -28,7 +29,7 @@ func TestDoBuildExitsProcessLauncherFails(t *testing.T) {
 	defer cleanup()
 	defer assertBuilderExited(t, 1)
 
-	doBuild(hclog.NewNullLogger(), manifestPath, launcherPath+".pspf", launcherPath, "", "", "")
+	doBuild(logging.NewNullLogger(), manifestPath, launcherPath+".pspf", launcherPath, "", "", "")
 }
 
 // TestDoBuildExitsEd25519GenerateKeyFails covers the ed25519GenerateKeyFn
@@ -50,7 +51,7 @@ func TestDoBuildExitsEd25519GenerateKeyFails(t *testing.T) {
 	defer assertBuilderExited(t, 1)
 
 	// No key files, no seed -> ephemeral key generation -> injected failure
-	doBuild(hclog.NewNullLogger(), manifestPath, launcherPath+".pspf", launcherPath, "", "", "")
+	doBuild(logging.NewNullLogger(), manifestPath, launcherPath+".pspf", launcherPath, "", "", "")
 }
 
 // TestDoBuildSuccessWithHostnameFailure covers the hostnameFunc error path
@@ -71,7 +72,7 @@ func TestDoBuildSuccessWithHostnameFailure(t *testing.T) {
 	// No SOURCE_DATE_EPOCH set, so hostnameFunc path is taken.
 	t.Setenv("SOURCE_DATE_EPOCH", "")
 
-	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
+	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
 
 	// Build should succeed despite hostname failure.
 	if _, err := statValidated(outputPath); err != nil {
@@ -97,5 +98,5 @@ func TestDoBuildExitsOpenOutputFileFails(t *testing.T) {
 	defer cleanup()
 	defer assertBuilderExited(t, 1)
 
-	doBuild(hclog.NewNullLogger(), manifestPath, dir+"/out.pspf", launcherPath, "", "", "seed")
+	doBuild(logging.NewNullLogger(), manifestPath, dir+"/out.pspf", launcherPath, "", "", "seed")
 }
