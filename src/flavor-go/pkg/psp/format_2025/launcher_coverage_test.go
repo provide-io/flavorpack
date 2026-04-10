@@ -1,8 +1,10 @@
 package format_2025
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -113,4 +115,65 @@ func TestLaunchWithLogLevelEnvLogPathNotWritable(t *testing.T) {
 
 	// Should not panic even if the log file cannot be opened.
 	LaunchWithLogLevel(bundle, []string{"info"}, "warn", "test")
+}
+
+// TestLaunchWithLogLevelFlavorJSONLogEnv exercises the FLAVOR_JSON_LOG=1 path: even
+// with a non-json logLevel, the env var triggers JSON mode so no 🐹 prefix is added.
+func TestLaunchWithLogLevelFlavorJSONLogEnv(t *testing.T) {
+	bundle := buildLauncherTestBundle(t)
+	t.Setenv(EnvLauncherCLI, "1")
+	t.Setenv(EnvJSONLog, "1")
+
+	var buf bytes.Buffer
+	old := launcherStderrWriter
+	launcherStderrWriter = &buf
+	t.Cleanup(func() { launcherStderrWriter = old })
+
+	LaunchWithLogLevel(bundle, []string{"info"}, "info", "test")
+
+	out := buf.String()
+	if strings.Contains(out, "🐹 ") {
+		t.Fatalf("FLAVOR_JSON_LOG=1 should suppress the 🐹 prefix, got: %q", out)
+	}
+}
+
+func TestLaunchWithLogLevelConsolePrefixesLines(t *testing.T) {
+	bundle := buildLauncherTestBundle(t)
+	t.Setenv(EnvLauncherCLI, "1")
+
+	t.Run("console mode adds prefix", func(t *testing.T) {
+		var buf bytes.Buffer
+		old := launcherStderrWriter
+		launcherStderrWriter = &buf
+		t.Cleanup(func() { launcherStderrWriter = old })
+
+		LaunchWithLogLevel(bundle, []string{"info"}, "info", "test")
+
+		out := buf.String()
+		if out == "" {
+			t.Skip("no output captured — logger may be at warn level")
+		}
+		for _, line := range strings.Split(strings.TrimRight(out, "\n"), "\n") {
+			if line == "" {
+				continue
+			}
+			if !strings.HasPrefix(line, "🐹 ") {
+				t.Fatalf("expected every line to start with '🐹 ', got: %q", line)
+			}
+		}
+	})
+
+	t.Run("json mode has no prefix", func(t *testing.T) {
+		var buf bytes.Buffer
+		old := launcherStderrWriter
+		launcherStderrWriter = &buf
+		t.Cleanup(func() { launcherStderrWriter = old })
+
+		LaunchWithLogLevel(bundle, []string{"info"}, "json:info", "test")
+
+		out := buf.String()
+		if strings.Contains(out, "🐹 ") {
+			t.Fatalf("expected no 🐹 prefix in JSON output, got: %q", out)
+		}
+	})
 }

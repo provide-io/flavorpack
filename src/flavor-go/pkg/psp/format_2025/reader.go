@@ -10,7 +10,9 @@ import (
 	"io"
 	"os"
 
-	"github.com/hashicorp/go-hclog"
+	"log/slog"
+
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // Constants are defined in constants.go
@@ -35,18 +37,18 @@ type Reader struct {
 	file       *os.File
 	index      *PSPFIndex
 	metadata   *Metadata
-	logger     hclog.Logger
+	logger     *slog.Logger
 }
 
 // NewReader creates a new PSPF reader
 func NewReader(bundlePath string) (*Reader, error) {
-	return NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
+	return NewReaderWithLogger(bundlePath, logging.NewNullLogger())
 }
 
 // NewReaderWithLogger creates a new PSPF reader with a custom logger
-func NewReaderWithLogger(bundlePath string, logger hclog.Logger) (*Reader, error) {
+func NewReaderWithLogger(bundlePath string, logger *slog.Logger) (*Reader, error) {
 	if logger == nil {
-		logger = hclog.NewNullLogger()
+		logger = logging.NewNullLogger()
 	}
 	return &Reader{
 		bundlePath: bundlePath,

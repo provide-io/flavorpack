@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestAtomicReplaceNormalOperation tests the normal fast path (Layer 1).
@@ -25,7 +25,7 @@ func TestAtomicReplaceNormalOperation(t *testing.T) {
 	}
 	defer os.RemoveAll(tempDir)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	// Create source and destination files
 	srcPath := filepath.Join(tempDir, "source.txt")
@@ -77,7 +77,7 @@ func TestAtomicReplaceFilePreservedOnFailure(t *testing.T) {
 	}
 	defer os.RemoveAll(tempDir)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	// Create destination file with important content
 	dstPath := filepath.Join(tempDir, "important.txt")
@@ -121,7 +121,7 @@ func TestAtomicReplaceVerification(t *testing.T) {
 	}
 	defer os.RemoveAll(tempDir)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	srcPath := filepath.Join(tempDir, "source.txt")
 	dstPath := filepath.Join(tempDir, "destination.txt")
@@ -176,7 +176,7 @@ func TestAtomicReplaceWithMultipleRuns(t *testing.T) {
 	}
 	defer os.RemoveAll(tempDir)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	// Perform 5 sequential replacements
 	for i := 0; i < 5; i++ {
@@ -227,7 +227,7 @@ func TestAtomicReplaceWithBackup(t *testing.T) {
 	}
 	defer os.RemoveAll(tempDir)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	srcPath := filepath.Join(tempDir, "source.txt")
 	dstPath := filepath.Join(tempDir, "destination.txt")
@@ -275,7 +275,7 @@ func BenchmarkAtomicReplace(b *testing.B) {
 	}
 	defer os.RemoveAll(tempDir)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	b.ResetTimer()
 
@@ -332,7 +332,7 @@ func TestAtomicReplaceLayerThreeFallback_Manual(t *testing.T) {
 func TestShouldUseResourceEmbeddingForOS(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	goLauncher := syntheticPELauncher(t, 0x80)
 	rustLauncher := syntheticPELauncher(t, 0xE8)
 
@@ -367,7 +367,7 @@ func TestShouldUseResourceEmbeddingForOS(t *testing.T) {
 func TestAdjustPSPFOffsetsRebasesOffsets(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	launcherSize := int64(100)
 	pspfData, slotStart := syntheticPSPFData(t, launcherSize, 180, 200, 240)
 
@@ -406,7 +406,7 @@ func TestAdjustPSPFOffsetsRebasesOffsets(t *testing.T) {
 func TestAdjustPSPFOffsetsRejectsInvalidInputs(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	validData, _ := syntheticPSPFData(t, 100, 180, 200, 240)
 
 	tests := []struct {
@@ -441,7 +441,7 @@ func TestConvertToResourceEmbeddingRejectsShortFile(t *testing.T) {
 		t.Fatalf("WriteFile() error = %v", err)
 	}
 
-	err := convertToResourceEmbedding(filePath, 64, hclog.NewNullLogger())
+	err := convertToResourceEmbedding(filePath, 64, logging.NewNullLogger())
 	if err == nil || !bytes.Contains([]byte(err.Error()), []byte("file is too small")) {
 		t.Fatalf("convertToResourceEmbedding() error = %v, want short-file failure", err)
 	}

@@ -8,15 +8,12 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestOperationPacking tests packing operations into 64-bit integers
 func TestOperationPacking(t *testing.T) {
-	logger := hclog.New(&hclog.LoggerOptions{
-		Name:  "operations_test",
-		Level: hclog.Trace,
-	})
+	logger := logging.NewNullLogger()
 
 	testCases := []struct {
 		name       string
@@ -92,10 +89,7 @@ func TestOperationPacking(t *testing.T) {
 
 // TestOperationUnpacking tests unpacking 64-bit integers into operations
 func TestOperationUnpacking(t *testing.T) {
-	logger := hclog.New(&hclog.LoggerOptions{
-		Name:  "operations_test",
-		Level: hclog.Trace,
-	})
+	logger := logging.NewNullLogger()
 
 	testCases := []struct {
 		name     string
@@ -161,10 +155,7 @@ func TestOperationUnpacking(t *testing.T) {
 
 // TestOperationRoundTrip tests packing and unpacking are inverses
 func TestOperationRoundTrip(t *testing.T) {
-	logger := hclog.New(&hclog.LoggerOptions{
-		Name:  "operations_test",
-		Level: hclog.Trace,
-	})
+	logger := logging.NewNullLogger()
 
 	testCases := [][]uint8{
 		{},
@@ -183,12 +174,12 @@ func TestOperationRoundTrip(t *testing.T) {
 			)
 
 			packed := PackOperations(ops)
-			logger.Trace("📦 Packed",
+			logging.Trace(logger, "📦 Packed",
 				"value", fmt.Sprintf("0x%016x", packed),
 			)
 
 			unpacked := UnpackOperations(packed)
-			logger.Trace("📂 Unpacked",
+			logging.Trace(logger, "📂 Unpacked",
 				"value", unpacked,
 			)
 
@@ -210,10 +201,7 @@ func TestOperationRoundTrip(t *testing.T) {
 
 // TestPythonTestVectors tests against Python-generated test vectors
 func TestPythonTestVectors(t *testing.T) {
-	logger := hclog.New(&hclog.LoggerOptions{
-		Name:  "operations_test",
-		Level: hclog.Trace,
-	})
+	logger := logging.NewNullLogger()
 
 	logger.Info("🐍 Loading Python test vectors")
 
@@ -268,10 +256,7 @@ func TestPythonTestVectors(t *testing.T) {
 
 // TestOperationNames tests operation constant to name mapping
 func TestOperationNames(t *testing.T) {
-	logger := hclog.New(&hclog.LoggerOptions{
-		Name:  "operations_test",
-		Level: hclog.Trace,
-	})
+	logger := logging.NewNullLogger()
 
 	testCases := []struct {
 		op   uint8
@@ -298,7 +283,7 @@ func TestOperationNames(t *testing.T) {
 					tc.op, name, tc.name)
 			}
 
-			logger.Trace("✓ Name verified",
+			logging.Trace(logger, "✓ Name verified",
 				"op", tc.op,
 				"name", name,
 			)
