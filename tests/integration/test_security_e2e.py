@@ -323,9 +323,12 @@ class TestPolicyCLI:
         assert result.exit_code == 0, f"Expected exit 0, got {result.exit_code}: {result.output}"
 
     def test_policy_check_fails_wrong_platform(
-        self, runner: CliRunner, test_builder: PSPFBuilder, tmp_path: Path
+        self, runner: CliRunner, test_builder: PSPFBuilder, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """policy check on a PSP declaring an impossible platform must exit non-zero with 'platform' in output."""
+        # Use an empty config dir so any local policy.json (e.g. with enforcement.default=allow)
+        # cannot override the deny-by-default enforcement mode.
+        monkeypatch.setenv("FLAVOR_CONFIG_DIR", str(tmp_path / "empty-config"))
         psp = _build_simple_psp(
             test_builder,
             tmp_path,

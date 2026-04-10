@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hashicorp/go-hclog"
 	"github.com/tc-hib/winres"
+	"log/slog"
 )
 
 const (
@@ -35,7 +35,7 @@ const (
 //	logger: Logger for diagnostic output
 //
 // Returns error if embedding fails
-func EmbedPSPFAsResource(exePath string, pspfData []byte, logger hclog.Logger) error {
+func EmbedPSPFAsResource(exePath string, pspfData []byte, logger *slog.Logger) error {
 	logger.Info("Embedding PSPF data as PE resource",
 		"exe", exePath,
 		"pspf_size", len(pspfData),
@@ -145,7 +145,7 @@ func EmbedPSPFAsResource(exePath string, pspfData []byte, logger hclog.Logger) e
 //	logger: Logger for diagnostic output
 //
 // Returns the PSPF data or an error
-func ReadPSPFFromResource(exePath string, logger hclog.Logger) ([]byte, error) {
+func ReadPSPFFromResource(exePath string, logger *slog.Logger) ([]byte, error) {
 	logger.Debug("Reading PSPF from PE resources", "exe", exePath)
 
 	f, err := os.Open(exePath)
@@ -176,7 +176,7 @@ func ReadPSPFFromResource(exePath string, logger hclog.Logger) ([]byte, error) {
 
 // HasPSPFResource checks if a PE executable has the PSPF resource embedded.
 // This is used to determine if we should read from resources or from EOF.
-func HasPSPFResource(exePath string, logger hclog.Logger) bool {
+func HasPSPFResource(exePath string, logger *slog.Logger) bool {
 	// Try to read the resource - if it exists, return true
 	_, err := ReadPSPFFromResource(exePath, logger)
 	return err == nil

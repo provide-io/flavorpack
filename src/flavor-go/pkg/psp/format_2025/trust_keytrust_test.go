@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestRunBundleWithCwdIsKeyTrustedError covers lines 182-184 in execution.go:
@@ -28,7 +28,7 @@ func TestRunBundleWithCwdIsKeyTrustedError(t *testing.T) {
 	_ = f.Close()
 	t.Setenv(EnvTrustedKeysDir, f.Name())
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	// IsKeyTrusted error is a warning — runBundleWithCwd should continue.
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
@@ -55,7 +55,7 @@ func TestRunBundleWithCwdUntrustedKeyWarning(t *testing.T) {
 	trustedDir := t.TempDir()
 	t.Setenv(EnvTrustedKeysDir, trustedDir)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	// The key is not in the trusted store — warning is printed but execution continues.
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {
@@ -157,7 +157,7 @@ func TestRunBundleWithCwdTrustedKeyFound(t *testing.T) {
 		t.Fatalf("WriteFile(trusted): %v", err)
 	}
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	// Key is trusted — runBundleWithCwd should set keyTrusted=true and continue.
 	cmd, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err != nil {

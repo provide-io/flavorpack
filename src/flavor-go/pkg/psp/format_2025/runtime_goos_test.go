@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 func TestProcessRuntimeEnvWindowsAddsPassListToExisting(t *testing.T) {
@@ -12,7 +12,7 @@ func TestProcessRuntimeEnvWindowsAddsPassListToExisting(t *testing.T) {
 	currentGOOS = "windows"
 	t.Cleanup(func() { currentGOOS = old })
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	env := []string{"EXISTING_VAR=value", "SYSTEMROOT=C:\\Windows", "WINDIR=C:\\Windows"}
 	runtimeEnv := map[string]interface{}{
 		"pass": []interface{}{"EXISTING_VAR"},
@@ -68,7 +68,7 @@ func TestProcessRuntimeEnvWindowsCreatesPassList(t *testing.T) {
 	currentGOOS = "windows"
 	t.Cleanup(func() { currentGOOS = old })
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	env := []string{"PATH=C:\\Windows\\system32", "SYSTEMROOT=C:\\Windows"}
 	runtimeEnv := map[string]interface{}{} // no pass list
 

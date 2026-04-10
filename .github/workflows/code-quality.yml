@@ -667,6 +667,8 @@ jobs:
 
   python-quality-observability:
     name: 🐍 Python Intent Observability
+    # Mutation testing is expensive; skip on PRs and run nightly/on-demand only.
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     continue-on-error: true
@@ -702,9 +704,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- Commands: \`make quality-python-fast\`, \`make quality-python-deep\`" >> $GITHUB_STEP_SUMMARY
           echo "- Intent categories: Unit / Integration / Cross-Language / Security / Adversarial / Property / Fuzz / Mutation / Smoke" >> $GITHUB_STEP_SUMMARY
-          if [ -f coverage.json ]; then
-            python3 -c 'import json; from pathlib import Path; data = json.loads(Path("coverage.json").read_text()); totals = data.get("totals", {}); print(f"- Coverage: {totals.get(\"percent_covered_display\", \"unknown\")}%")' >> "$GITHUB_STEP_SUMMARY"
-          fi
+          ci/summarize-python-coverage.sh coverage.json >> "$GITHUB_STEP_SUMMARY"
 
       - name: 📤 Upload Python observability artifacts
         if: always()
@@ -721,6 +721,8 @@ jobs:
 
   go-quality-observability:
     name: 🐹 Go Intent Observability
+    # Mutation testing is expensive; skip on PRs and run nightly/on-demand only.
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     continue-on-error: true
@@ -770,6 +772,8 @@ jobs:
 
   rust-quality-observability:
     name: 🦀 Rust Intent Observability
+    # Mutation testing is expensive; skip on PRs and run nightly/on-demand only.
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     continue-on-error: true
@@ -826,7 +830,8 @@ jobs:
   quality-observability-report:
     name: 📈 Intent Observability Report
     needs: [python-quality-observability, go-quality-observability, rust-quality-observability]
-    if: always()
+    # Only runs when the observability jobs themselves run (not on PRs).
+    if: github.event_name != 'pull_request' && always()
     runs-on: ubuntu-24.04
     steps:
       - name: 📊 Summarize observability jobs

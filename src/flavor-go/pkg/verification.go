@@ -1,10 +1,11 @@
 package pkg
 
 import (
+	"context"
 	"fmt"
+	"log/slog"
 	"os"
 
-	"github.com/hashicorp/go-hclog"
 	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 	"github.com/provide-io/flavor/go/flavor/pkg/psp/format_2025"
 )
@@ -12,7 +13,7 @@ import (
 var verifyReaderCloseFn = (*format_2025.Reader).Close
 
 // VerifyBundleWithLogger verifies a bundle with a provided logger
-func VerifyBundleWithLogger(exePath string, logger hclog.Logger) {
+func VerifyBundleWithLogger(exePath string, logger *slog.Logger) {
 	reader, err := format_2025.NewReader(exePath)
 	if err != nil {
 		logger.Error("Failed to create reader", "error", err)
@@ -75,6 +76,7 @@ func VerifyBundleWithLogger(exePath string, logger hclog.Logger) {
 
 // VerifyBundle verifies a bundle using default logger settings
 func VerifyBundle(exePath string) {
-	logger := logging.NewLogger("flavor-verify", logging.GetLogLevel(), nil)
+	logging.Setup(logging.GetLogLevel(), nil)
+	logger := logging.NewLogger(context.Background(), "flavor-verify")
 	VerifyBundleWithLogger(exePath, logger)
 }

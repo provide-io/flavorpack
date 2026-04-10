@@ -7,14 +7,16 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hashicorp/go-hclog"
+	"log/slog"
+
 	"github.com/provide-io/flavor/go/flavor/internal/workenv"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // setFlavorCacheBeforeWorkenv sets FLAVOR_CACHE to the HOST's cache directory.
 // Must be called BEFORE workenv environment variables (which override HOME).
 // This ensures packaged tools can access cached packages from the HOST.
-func setFlavorCacheBeforeWorkenv(env []string, logger hclog.Logger) []string {
+func setFlavorCacheBeforeWorkenv(env []string, logger *slog.Logger) []string {
 	// Check if FLAVOR_CACHE is already set
 	if hasEnv(env, EnvCache) {
 		logger.Debug("🗂️ FLAVOR_CACHE already set, skipping")
@@ -51,12 +53,12 @@ func hasEnv(env []string, key string) bool {
 }
 
 // logEnvironmentTrace logs environment variables at trace level, redacting sensitive values.
-func logEnvironmentTrace(env []string, logger hclog.Logger) {
-	if !logger.IsTrace() {
+func logEnvironmentTrace(env []string, logger *slog.Logger) {
+	if !logging.IsEnabled(logger, logging.LevelTrace) {
 		return
 	}
 
-	logger.Trace("🌍 Environment variables being passed to subprocess:")
+	logging.Trace(logger, "🌍 Environment variables being passed to subprocess:")
 	for _, e := range env {
 		parts := strings.SplitN(e, "=", 2)
 		if len(parts) == 2 {
@@ -64,7 +66,7 @@ func logEnvironmentTrace(env []string, logger hclog.Logger) {
 			if isSensitiveKey(parts[0]) {
 				value = "***"
 			}
-			logger.Trace("  →", "key", parts[0], "value", value)
+			logging.Trace(logger, "  →", "key", parts[0], "value", value)
 		}
 	}
 }
