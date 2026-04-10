@@ -87,7 +87,7 @@ func BuildWithLogLevel(manifestPath, outputPath, launcherBin, privateKeyPath, pu
 			defer func() { _ = file.Close() }()
 			logOutput = file
 		}
-	} else if !strings.HasPrefix(logLevel, "json") {
+	} else if !logging.IsJSONFormat(logLevel) {
 		logOutput = logging.NewPrefixWriter("🐹 ", builderStderrWriter)
 	}
 	logging.Setup(logLevel, logOutput)
