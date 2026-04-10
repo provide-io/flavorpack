@@ -8,14 +8,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hashicorp/go-hclog"
+	"log/slog"
 )
 
 var readerCloseFn = (*Reader).Close
 var verifyMagicTrailerFn = (*Reader).VerifyMagicTrailer
 
 // showBundleInfo displays bundle information in human-readable format
-func showBundleInfo(exePath string, logger hclog.Logger) {
+func showBundleInfo(exePath string, logger *slog.Logger) {
 	// Prepare bundle path (may extract from PE resources on Windows)
 	bundlePath, cleanup, err := prepareBundlePath(exePath, logger)
 	if err != nil {
@@ -97,7 +97,7 @@ func showBundleInfo(exePath string, logger hclog.Logger) {
 }
 
 // extractSlot extracts a specific slot to an output directory
-func extractSlot(exePath, slotStr, outputDir string, logger hclog.Logger) {
+func extractSlot(exePath, slotStr, outputDir string, logger *slog.Logger) {
 	slotIndex, err := strconv.Atoi(slotStr)
 	if err != nil {
 		logger.Error("Invalid slot index", "slot", slotStr)
@@ -193,7 +193,7 @@ func detectLauncherType(exePath string) string {
 }
 
 // showMetadata outputs the raw JSON metadata
-func showMetadata(exePath string, logger hclog.Logger) {
+func showMetadata(exePath string, logger *slog.Logger) {
 	// Prepare bundle path (may extract from PE resources on Windows)
 	bundlePath, cleanup, err := prepareBundlePath(exePath, logger)
 	if err != nil {
@@ -231,7 +231,7 @@ func showMetadata(exePath string, logger hclog.Logger) {
 }
 
 // verifyBundle performs integrity verification on the bundle
-func verifyBundle(exePath string, logger hclog.Logger) {
+func verifyBundle(exePath string, logger *slog.Logger) {
 	// Prepare bundle path (may extract from PE resources on Windows)
 	bundlePath, cleanup, err := prepareBundlePath(exePath, logger)
 	if err != nil {
@@ -307,7 +307,7 @@ func detectBuilderType(metadata *Metadata) string {
 }
 
 // spawnBundle executes the bundle as a child process (doesn't replace current process)
-func spawnBundle(exePath string, args []string, userCwd string, logger hclog.Logger) error {
+func spawnBundle(exePath string, args []string, userCwd string, logger *slog.Logger) error {
 	// Prepare the command (do all extraction and setup)
 	cmd, err := runBundleWithCwd(exePath, args, userCwd, logger)
 	if err != nil {

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestRunBundleWithCwdPathNotFoundInEnvironment covers lines 672-677 in
@@ -29,7 +29,7 @@ func TestRunBundleWithCwdPathNotFoundInEnvironment(t *testing.T) {
 	}
 
 	bundle := buildLauncherTestBundle(t)
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	cacheRoot := t.TempDir()
 	t.Setenv(EnvCacheDir, cacheRoot)
@@ -70,7 +70,7 @@ func TestRunBundleWithCwdWindowsScriptsDir(t *testing.T) {
 	t.Cleanup(func() { currentGOOS = old })
 
 	bundle := buildLauncherTestBundle(t)
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	cacheRoot := t.TempDir()
 	t.Setenv(EnvCacheDir, cacheRoot)
@@ -120,7 +120,7 @@ func TestRunBundleWithCwdWindowsScriptsDirNoPath(t *testing.T) {
 	}
 
 	bundle := buildLauncherTestBundle(t)
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	cacheRoot := t.TempDir()
 	t.Setenv(EnvCacheDir, cacheRoot)

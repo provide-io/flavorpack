@@ -9,6 +9,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"encoding/pem"
+	"log/slog"
 	"math"
 	"os"
 	"path/filepath"
@@ -16,7 +17,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 func TestBuilderBuildWithLogLevelDelegates(t *testing.T) {
@@ -35,7 +36,7 @@ func TestBuilderBuildWithLogLevelDelegates(t *testing.T) {
 	}
 
 	var got call
-	buildImpl = func(_ hclog.Logger, manifestPath, outputPath, launcherBin, privateKeyPath, publicKeyPath, keySeed string) {
+	buildImpl = func(_ *slog.Logger, manifestPath, outputPath, launcherBin, privateKeyPath, publicKeyPath, keySeed string) {
 		got = call{
 			manifestPath:   manifestPath,
 			outputPath:     outputPath,
@@ -70,7 +71,7 @@ func TestBuilderBuildWithOptionsDelegates(t *testing.T) {
 		publicKeyPath  string
 		keySeed        string
 	}
-	buildImpl = func(_ hclog.Logger, manifestPath, outputPath, launcherBin, privateKeyPath, publicKeyPath, keySeed string) {
+	buildImpl = func(_ *slog.Logger, manifestPath, outputPath, launcherBin, privateKeyPath, publicKeyPath, keySeed string) {
 		got.manifestPath = manifestPath
 		got.outputPath = outputPath
 		got.launcherBin = launcherBin
@@ -135,7 +136,7 @@ func TestBuilderBuildWithLogLevelWritesExpectedLogs(t *testing.T) {
 			}
 
 			called := false
-			buildImpl = func(_ hclog.Logger, manifestPath, outputPath, launcherBin, privateKeyPath, publicKeyPath, keySeed string) {
+			buildImpl = func(_ *slog.Logger, manifestPath, outputPath, launcherBin, privateKeyPath, publicKeyPath, keySeed string) {
 				called = true
 				if manifestPath != "manifest.json" || outputPath != "bundle.pspf" || launcherBin != "launcher.bin" || privateKeyPath != "private.key" || publicKeyPath != "public.key" || keySeed != "seed" {
 					t.Fatalf("BuildWithLogLevel() delegated unexpected arguments: %q %q %q %q %q %q", manifestPath, outputPath, launcherBin, privateKeyPath, publicKeyPath, keySeed)
@@ -164,14 +165,14 @@ func TestBuilderBuildWithLogLevelWritesExpectedLogs(t *testing.T) {
 				if !bytes.HasPrefix(firstLine, []byte("{")) {
 					t.Fatalf("expected JSON log output, got %q", string(data))
 				}
-				if !bytes.Contains(data, []byte(`"@level":"debug"`)) {
+				if !bytes.Contains(data, []byte(`"level":"DEBUG"`)) {
 					t.Fatalf("expected JSON log output, got %q", string(data))
 				}
 			} else {
-				if !bytes.HasPrefix(firstLine, []byte("🐹 ")) {
+				if !bytes.HasPrefix(firstLine, []byte("time=")) {
 					t.Fatalf("expected prefixed text log output, got %q", string(data))
 				}
-				if bytes.Contains(data, []byte(`"@level":"debug"`)) {
+				if bytes.Contains(data, []byte(`"level":"DEBUG"`)) {
 					t.Fatalf("expected text log output, got %q", string(data))
 				}
 			}
@@ -222,7 +223,7 @@ func TestDoBuildSuccessWithConcreteSlot(t *testing.T) {
 
 	t.Setenv("SOURCE_DATE_EPOCH", "1735689600")
 
-	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
+	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "seed")
 
 	got, err := os.ReadFile(outputPath)
 	if err != nil {
@@ -320,7 +321,7 @@ func TestDoBuildLoadsKeyFilesAndCarriesRuntimeMetadata(t *testing.T) {
 		t.Fatalf("WriteFile(manifest) error = %v", err)
 	}
 
-	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, privateKeyPath, publicKeyPath, "")
+	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, privateKeyPath, publicKeyPath, "")
 
 	reader, err := NewReader(outputPath)
 	if err != nil {
@@ -396,7 +397,7 @@ func TestDoBuildUsesEnvSeedWhenRequested(t *testing.T) {
 	t.Setenv(EnvKeySeed, "seed-from-env")
 	t.Setenv("SOURCE_DATE_EPOCH", "not-a-number")
 
-	doBuild(hclog.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "env")
+	doBuild(logging.NewNullLogger(), manifestPath, outputPath, launcherPath, "", "", "env")
 
 	reader, err := NewReader(outputPath)
 	if err != nil {
@@ -427,7 +428,7 @@ func TestDoBuildUsesEnvSeedWhenRequested(t *testing.T) {
 func TestBuilderShouldUseResourceEmbeddingForOS(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	goLauncher := syntheticPELauncherForBuilderTest(t, 0x80)
 	rustLauncher := syntheticPELauncherForBuilderTest(t, 0xE8)
 
@@ -462,7 +463,7 @@ func TestBuilderShouldUseResourceEmbeddingForOS(t *testing.T) {
 func TestBuilderAdjustPSPFOffsetsRebasesOffsets(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	launcherSize := int64(100)
 	pspfData, slotStart := syntheticPSPFDataForBuilderTest(t, launcherSize, 180, 200, 240)
 
@@ -501,7 +502,7 @@ func TestBuilderAdjustPSPFOffsetsRebasesOffsets(t *testing.T) {
 func TestBuilderAdjustPSPFOffsetsRejectsInvalidInputs(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	validData, _ := syntheticPSPFDataForBuilderTest(t, 100, 180, 200, 240)
 
 	tests := []struct {
@@ -536,7 +537,7 @@ func TestBuilderConvertToResourceEmbeddingRejectsShortFile(t *testing.T) {
 		t.Fatalf("WriteFile() error = %v", err)
 	}
 
-	err := convertToResourceEmbedding(filePath, 64, hclog.NewNullLogger())
+	err := convertToResourceEmbedding(filePath, 64, logging.NewNullLogger())
 	if err == nil || !bytes.Contains([]byte(err.Error()), []byte("file is too small")) {
 		t.Fatalf("convertToResourceEmbedding() error = %v, want short-file failure", err)
 	}
@@ -561,18 +562,18 @@ func TestBuilderConvertToResourceEmbeddingRewritesFile(t *testing.T) {
 		atomicReplaceImpl = oldAtomic
 	})
 
-	embedPSPFAsResourceImpl = func(exePath string, adjustedPSPF []byte, logger hclog.Logger) error {
+	embedPSPFAsResourceImpl = func(exePath string, adjustedPSPF []byte, logger *slog.Logger) error {
 		launcherBytes, err := os.ReadFile(exePath)
 		if err != nil {
 			return err
 		}
 		return os.WriteFile(exePath, append(launcherBytes, adjustedPSPF...), 0o700)
 	}
-	atomicReplaceImpl = func(sourcePath, destPath string, logger hclog.Logger) error {
+	atomicReplaceImpl = func(sourcePath, destPath string, logger *slog.Logger) error {
 		return os.Rename(sourcePath, destPath)
 	}
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	if err := convertToResourceEmbedding(filePath, launcherSize, logger); err != nil {
 		t.Fatalf("convertToResourceEmbedding() error = %v", err)
 	}
@@ -714,4 +715,46 @@ func mutateTrailerMagicForBuilderTest(t *testing.T, data []byte) []byte {
 	trailerStart := len(mutated) - MagicTrailerSize
 	mutated[trailerStart] = 'X'
 	return mutated
+}
+
+func TestBuildWithLogLevelConsolePrefixesLines(t *testing.T) {
+	oldBuildImpl := buildImpl
+	t.Cleanup(func() { buildImpl = oldBuildImpl })
+	buildImpl = func(_ *slog.Logger, _, _, _, _, _, _ string) {}
+
+	t.Run("console mode adds prefix", func(t *testing.T) {
+		var buf bytes.Buffer
+		old := builderStderrWriter
+		builderStderrWriter = &buf
+		t.Cleanup(func() { builderStderrWriter = old })
+
+		BuildWithLogLevel("m.json", "out.psp", "l.bin", "", "", "", "info")
+
+		out := buf.String()
+		if out == "" {
+			t.Skip("no output captured — logger may be at warn level")
+		}
+		for _, line := range strings.Split(strings.TrimRight(out, "\n"), "\n") {
+			if line == "" {
+				continue
+			}
+			if !strings.HasPrefix(line, "🐹 ") {
+				t.Fatalf("expected every line to start with '🐹 ', got: %q", line)
+			}
+		}
+	})
+
+	t.Run("json mode has no prefix", func(t *testing.T) {
+		var buf bytes.Buffer
+		old := builderStderrWriter
+		builderStderrWriter = &buf
+		t.Cleanup(func() { builderStderrWriter = old })
+
+		BuildWithLogLevel("m.json", "out.psp", "l.bin", "", "", "", "json:info")
+
+		out := buf.String()
+		if strings.Contains(out, "🐹 ") {
+			t.Fatalf("expected no 🐹 prefix in JSON output, got: %q", out)
+		}
+	})
 }

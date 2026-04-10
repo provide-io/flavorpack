@@ -6,14 +6,14 @@ import (
 	"os"
 	"strings"
 
-	"github.com/hashicorp/go-hclog"
+	"log/slog"
 )
 
 var mkdirAllFn = os.MkdirAll
 var openFileFn = os.OpenFile
 
 // checkDiskSpace verifies there's enough disk space for extraction
-func checkDiskSpace(paths *WorkenvPaths, metadata *Metadata, logger hclog.Logger) error {
+func checkDiskSpace(paths *WorkenvPaths, metadata *Metadata, logger *slog.Logger) error {
 	// Calculate total size needed (compressed size * DiskSpaceMultiplier for safety)
 	var totalSizeNeeded int64
 	for _, slot := range metadata.Slots {
@@ -46,7 +46,7 @@ func checkDiskSpace(paths *WorkenvPaths, metadata *Metadata, logger hclog.Logger
 }
 
 // validatePackageChecksum checks if the cached package checksum matches the current package
-func validatePackageChecksum(paths *WorkenvPaths, currentChecksum uint32, logger hclog.Logger) (bool, error) {
+func validatePackageChecksum(paths *WorkenvPaths, currentChecksum uint32, logger *slog.Logger) (bool, error) {
 	checksumPath := paths.ChecksumFile()
 
 	// Read stored checksum
@@ -96,7 +96,7 @@ func validatePackageChecksum(paths *WorkenvPaths, currentChecksum uint32, logger
 }
 
 // savePackageChecksum saves the package checksum to the cache
-func savePackageChecksum(paths *WorkenvPaths, checksum uint32, logger hclog.Logger) error {
+func savePackageChecksum(paths *WorkenvPaths, checksum uint32, logger *slog.Logger) error {
 	instanceDir := paths.Instance()
 	if err := mkdirAllFn(instanceDir, os.FileMode(DirPerms)); err != nil {
 		return fmt.Errorf("failed to create instance directory: %w", err)
@@ -148,7 +148,7 @@ type IndexMetadata struct {
 }
 
 // saveIndexMetadata saves index metadata to JSON file for inspection
-func saveIndexMetadata(paths *WorkenvPaths, index *PSPFIndex, logger hclog.Logger) error {
+func saveIndexMetadata(paths *WorkenvPaths, index *PSPFIndex, logger *slog.Logger) error {
 	instanceDir := paths.Instance()
 	if err := mkdirAllFn(instanceDir, os.FileMode(DirPerms)); err != nil {
 		return fmt.Errorf("failed to create instance directory: %w", err)
@@ -189,7 +189,7 @@ func saveIndexMetadata(paths *WorkenvPaths, index *PSPFIndex, logger hclog.Logge
 }
 
 // checkWorkenvValidity checks if the work environment is valid using checksums
-func checkWorkenvValidity(paths *WorkenvPaths, index *PSPFIndex, metadata *Metadata, logger hclog.Logger) (bool, error) {
+func checkWorkenvValidity(paths *WorkenvPaths, index *PSPFIndex, metadata *Metadata, logger *slog.Logger) (bool, error) {
 	// First check if extraction is complete
 	completePath := paths.CompleteFile()
 	if _, err := os.Stat(completePath); err != nil {

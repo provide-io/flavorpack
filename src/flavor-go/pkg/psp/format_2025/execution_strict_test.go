@@ -3,7 +3,7 @@ package format_2025
 import (
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // buildSignedBundleWithSBOMDigestMismatch creates a properly signed bundle
@@ -59,7 +59,7 @@ func TestRunBundleWithCwdValidationStandardSBOMError(t *testing.T) {
 
 	bundle := buildSignedBundleWithSBOMDigestMismatch(t)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {
 		t.Fatal("expected error from runBundleWithCwd with ValidationStandard and SBOM digest error")
@@ -76,7 +76,7 @@ func TestRunBundleWithCwdValidationStrictSBOMError(t *testing.T) {
 
 	bundle := buildSignedBundleWithSBOMDigestMismatch(t)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {
 		t.Fatal("expected error from runBundleWithCwd with ValidationStrict and SBOM digest error")
@@ -93,7 +93,7 @@ func TestRunBundleWithCwdValidationStandardPolicyHashError(t *testing.T) {
 
 	bundle := buildSignedBundleWithPolicyHashMismatch(t)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {
 		t.Fatal("expected error from runBundleWithCwd with ValidationStandard and policy hash error")
@@ -110,7 +110,7 @@ func TestRunBundleWithCwdValidationStrictPolicyHashError(t *testing.T) {
 
 	bundle := buildSignedBundleWithPolicyHashMismatch(t)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	_, err := runBundleWithCwd(bundle, nil, t.TempDir(), logger)
 	if err == nil {
 		t.Fatal("expected error from runBundleWithCwd with ValidationStrict and policy hash error")

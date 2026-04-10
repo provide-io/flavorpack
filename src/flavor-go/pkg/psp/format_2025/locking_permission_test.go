@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestTryAcquireLockPermissionDenied covers locking.go:71 (return false, err)
@@ -22,7 +22,7 @@ func TestTryAcquireLockPermissionDenied(t *testing.T) {
 	}
 
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/test.pspf")
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	// Create the Extract() directory so MkdirAll inside TryAcquireLock succeeds.
 	extractDir := paths.Extract()
