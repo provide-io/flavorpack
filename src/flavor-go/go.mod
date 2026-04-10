@@ -3,7 +3,7 @@ module github.com/provide-io/flavor/go/flavor
 go 1.26.1
 
 require (
-	github.com/provide-io/provide-telemetry/go/logger v0.2.0
+	github.com/provide-io/provide-telemetry/go/logger v0.2.6
 	github.com/spf13/cobra v1.10.2
 	github.com/tc-hib/winres v0.3.1
 	golang.org/x/sys v0.42.0
