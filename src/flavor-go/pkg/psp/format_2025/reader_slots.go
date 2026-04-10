@@ -12,7 +12,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hashicorp/go-hclog"
+	"log/slog"
+
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 var tarMkdirAllFn = os.MkdirAll
@@ -66,7 +68,7 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 
 	logger := r.logger
 	if logger == nil {
-		logger = hclog.L()
+		logger = slog.Default()
 	}
 	firstBytesLen := len(slotData)
 	if firstBytesLen > 16 {
@@ -85,18 +87,18 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 
 	// Decompress based on operations chain
 	operations := UnpackOperations(entry.Operations)
-	logger.Trace("🔍 Slot operations", "operations", fmt.Sprintf("%#x", entry.Operations), "unpacked", operations)
+	logging.Trace(logger, "🔍 Slot operations", "operations", fmt.Sprintf("%#x", entry.Operations), "unpacked", operations)
 
 	// Apply operations in reverse order (unwrap the layers)
 	result := slotData
 	for i := len(operations) - 1; i >= 0; i-- {
 		op := operations[i]
-		logger.Trace("🔄 Processing operation", "op", fmt.Sprintf("%#x", op), "name", OperationName(op))
+		logging.Trace(logger, "🔄 Processing operation", "op", fmt.Sprintf("%#x", op), "name", OperationName(op))
 
 		switch op {
 		case OP_GZIP:
 			// Decompress gzip
-			logger.Trace("📦 Decompressing GZIP", "inputSize", len(result))
+			logging.Trace(logger, "📦 Decompressing GZIP", "inputSize", len(result))
 			gz, err := gzip.NewReader(bytes.NewReader(result))
 			if err != nil {
 				return nil, fmt.Errorf("failed to create gzip reader: %w", err)
@@ -106,7 +108,7 @@ func (r *Reader) ReadSlot(slotIndex int) ([]byte, error) {
 			if err != nil {
 				return nil, fmt.Errorf("failed to decompress gzip data: %w", err)
 			}
-			logger.Trace("✅ GZIP decompressed", "outputSize", len(decompressed))
+			logging.Trace(logger, "✅ GZIP decompressed", "outputSize", len(decompressed))
 			result = decompressed
 
 		case OP_TAR:
@@ -152,7 +154,7 @@ func isTarball(data []byte) bool {
 func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 	logger := r.logger
 	if logger == nil {
-		logger = hclog.L()
+		logger = slog.Default()
 	}
 
 	metadata, err := r.ReadMetadata()
@@ -165,7 +167,7 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 	}
 
 	slotMeta := metadata.Slots[slotIndex]
-	logger.Trace("🔍 Extracting slot", "index", slotIndex, "id", slotMeta.ID, "target", slotMeta.Target)
+	logging.Trace(logger, "🔍 Extracting slot", "index", slotIndex, "id", slotMeta.ID, "target", slotMeta.Target)
 
 	// ReadSlot already handles decompression based on the slot's encoding!
 	decompressed, err := r.ReadSlot(slotIndex)
@@ -232,7 +234,7 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 		extractDir = destPath
 	}
 
-	logger.Trace("🔍 Slot data check", "isTarball", isTar, "dataLen", len(decompressed), "destPath", destPath)
+	logging.Trace(logger, "🔍 Slot data check", "isTarball", isTar, "dataLen", len(decompressed), "destPath", destPath)
 
 	if isTar {
 
@@ -307,7 +309,7 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 	if info, err := os.Stat(destPath); err == nil && info.IsDir() {
 		// This is the case where Python tarball goes to cache root
 		// Just return the directory since it's a tarball that will be extracted
-		logger.Trace("🔍 Destination is existing directory, skipping write", "destPath", destPath)
+		logging.Trace(logger, "🔍 Destination is existing directory, skipping write", "destPath", destPath)
 		return destPath, nil
 	}
 
@@ -324,7 +326,7 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 	}
 
 	// Log what we're about to write
-	logger.Trace("📝 Writing single file", "destPath", destPath, "dataLen", len(decompressed), "permissions", fmt.Sprintf("%04o", perm))
+	logging.Trace(logger, "📝 Writing single file", "destPath", destPath, "dataLen", len(decompressed), "permissions", fmt.Sprintf("%04o", perm))
 
 	// Check first few bytes to see if it's still compressed
 	if len(decompressed) >= 3 && decompressed[0] == 0x1f && decompressed[1] == 0x8b && decompressed[2] == 0x08 {
@@ -335,6 +337,6 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 		return "", fmt.Errorf("%w: failed to write slot %d to disk: %v", ErrSlotExtractionFailed, slotIndex, err)
 	}
 
-	logger.Trace("✅ Wrote file", "path", destPath, "size", len(decompressed))
+	logging.Trace(logger, "✅ Wrote file", "path", destPath, "size", len(decompressed))
 	return destPath, nil
 }

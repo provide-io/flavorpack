@@ -9,8 +9,8 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/hashicorp/go-hclog"
 	"golang.org/x/sys/windows"
+	"log/slog"
 )
 
 // atomicReplace atomically replaces a destination file with a source file.
@@ -19,7 +19,7 @@ import (
 // 2. GC + extended delay (handles ARM64 file locking)
 // 3. Delete-then-move fallback (handles persistent locks)
 // 4. Verify replacement (ensures operation succeeded)
-func atomicReplace(sourcePath, destPath string, logger hclog.Logger) error {
+func atomicReplace(sourcePath, destPath string, logger *slog.Logger) error {
 	logger.Debug("Performing atomic file replacement (defense-in-depth)",
 		"source", sourcePath,
 		"dest", destPath)
@@ -58,7 +58,7 @@ func atomicReplace(sourcePath, destPath string, logger hclog.Logger) error {
 
 // atomicReplaceWithMoveFileEx uses Windows MoveFileEx API with adaptive delays.
 // Optimized for both x86_64 and ARM64 platforms.
-func atomicReplaceWithMoveFileEx(sourcePath, destPath string, logger hclog.Logger) error {
+func atomicReplaceWithMoveFileEx(sourcePath, destPath string, logger *slog.Logger) error {
 	logger.Debug("Strategy 1: MoveFileEx with adaptive retries")
 
 	fromPtr, err := windows.UTF16PtrFromString(sourcePath)
@@ -109,7 +109,7 @@ func atomicReplaceWithMoveFileEx(sourcePath, destPath string, logger hclog.Logge
 
 // atomicReplaceWithHandleCleanup forces GC and adds extra delays before MoveFileEx.
 // Specifically designed to handle ARM64 file locking issues where handles aren't released quickly.
-func atomicReplaceWithHandleCleanup(sourcePath, destPath string, logger hclog.Logger) error {
+func atomicReplaceWithHandleCleanup(sourcePath, destPath string, logger *slog.Logger) error {
 	logger.Debug("Strategy 2: Force GC + extended delays")
 
 	// Force garbage collection to close any open handles
@@ -168,7 +168,7 @@ func atomicReplaceWithHandleCleanup(sourcePath, destPath string, logger hclog.Lo
 
 // atomicReplaceWithDelete is the ultimate fallback: delete the destination,
 // then move the source. Less atomic but more reliable for persistent locks.
-func atomicReplaceWithDelete(sourcePath, destPath string, logger hclog.Logger) error {
+func atomicReplaceWithDelete(sourcePath, destPath string, logger *slog.Logger) error {
 	logger.Debug("Strategy 3: Delete-then-move fallback")
 
 	// 1. Create backup of original (for recovery)

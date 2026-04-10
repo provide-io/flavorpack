@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 func TestAtomicReplaceUnix(t *testing.T) {
@@ -25,7 +25,7 @@ func TestAtomicReplaceUnix(t *testing.T) {
 		t.Fatalf("WriteFile(dest) error = %v", err)
 	}
 
-	if err := atomicReplace(source, dest, hclog.NewNullLogger()); err != nil {
+	if err := atomicReplace(source, dest, logging.NewNullLogger()); err != nil {
 		t.Fatalf("atomicReplace() error = %v", err)
 	}
 

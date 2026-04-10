@@ -5,10 +5,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hashicorp/go-hclog"
+	"log/slog"
+
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
-func processRuntimeEnv(env []string, runtimeEnv map[string]interface{}, logger hclog.Logger) []string {
+func processRuntimeEnv(env []string, runtimeEnv map[string]interface{}, logger *slog.Logger) []string {
 	envMap := make(map[string]string)
 	for _, e := range env {
 		parts := strings.SplitN(e, "=", 2)
@@ -61,14 +63,14 @@ func processRuntimeEnv(env []string, runtimeEnv map[string]interface{}, logger h
 					for key := range envMap {
 						if matched, _ := filepath.Match(patternStr, key); matched {
 							preserveVars[key] = true
-							logger.Trace("  ✅ Preserving env var (pattern match)", "key", key, "pattern", patternStr)
+							logging.Trace(logger, "  ✅ Preserving env var (pattern match)", "key", key, "pattern", patternStr)
 						}
 					}
 				} else {
 					// Exact variable name
 					if _, exists := envMap[patternStr]; exists {
 						preserveVars[patternStr] = true
-						logger.Trace("  ✅ Preserving env var (exact)", "key", patternStr)
+						logging.Trace(logger, "  ✅ Preserving env var (exact)", "key", patternStr)
 					}
 				}
 			}
@@ -90,7 +92,7 @@ func processRuntimeEnv(env []string, runtimeEnv map[string]interface{}, logger h
 					}
 					for _, key := range toDelete {
 						delete(envMap, key)
-						logger.Trace("  🗑️ Removed env var", "key", key)
+						logging.Trace(logger, "  🗑️ Removed env var", "key", key)
 					}
 					logger.Debug("  Removed variables", "count", len(toDelete), "preserved", len(preserveVars))
 				} else if strings.Contains(patternStr, "*") || strings.Contains(patternStr, "?") {
@@ -103,13 +105,13 @@ func processRuntimeEnv(env []string, runtimeEnv map[string]interface{}, logger h
 					}
 					for _, key := range toDelete {
 						delete(envMap, key)
-						logger.Trace("🗑️ Unset env var (pattern)", "key", key, "pattern", patternStr)
+						logging.Trace(logger, "🗑️ Unset env var (pattern)", "key", key, "pattern", patternStr)
 					}
 				} else {
 					// Exact variable name
 					if _, exists := envMap[patternStr]; exists && !preserveVars[patternStr] {
 						delete(envMap, patternStr)
-						logger.Trace("🗑️ Unset env var", "key", patternStr)
+						logging.Trace(logger, "🗑️ Unset env var", "key", patternStr)
 					}
 				}
 			}
@@ -124,7 +126,7 @@ func processRuntimeEnv(env []string, runtimeEnv map[string]interface{}, logger h
 					envMap[toStr] = value
 					if from != toStr {
 						delete(envMap, from)
-						logger.Trace("🔄 Mapped env var", "from", from, "to", toStr, "value", value)
+						logging.Trace(logger, "🔄 Mapped env var", "from", from, "to", toStr, "value", value)
 					}
 				}
 			}
@@ -136,7 +138,7 @@ func processRuntimeEnv(env []string, runtimeEnv map[string]interface{}, logger h
 		for key, value := range setOps {
 			if valueStr, ok := value.(string); ok {
 				envMap[key] = valueStr
-				logger.Trace("✏️ Set env var", "key", key, "value", valueStr)
+				logging.Trace(logger, "✏️ Set env var", "key", key, "value", valueStr)
 			}
 		}
 	}
@@ -158,14 +160,14 @@ func processRuntimeEnv(env []string, runtimeEnv map[string]interface{}, logger h
 					if !found {
 						logger.Warn("⚠️ No environment variables match required pattern", "pattern", patternStr)
 					} else {
-						logger.Trace("✅ Verified env vars match pattern", "pattern", patternStr)
+						logging.Trace(logger, "✅ Verified env vars match pattern", "pattern", patternStr)
 					}
 				} else {
 					// Exact variable name
 					if _, exists := envMap[patternStr]; !exists {
 						logger.Warn("⚠️ Required environment variable not found", "key", patternStr)
 					} else {
-						logger.Trace("✅ Verified env var exists", "key", patternStr)
+						logging.Trace(logger, "✅ Verified env var exists", "key", patternStr)
 					}
 				}
 			}

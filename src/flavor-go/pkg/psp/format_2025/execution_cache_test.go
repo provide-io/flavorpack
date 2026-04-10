@@ -7,11 +7,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 func TestValidatePackageChecksumAndSavePackageChecksum(t *testing.T) {
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/demo.pspf")
 
 	if err := savePackageChecksum(paths, 0x12345678, logger); err != nil {
@@ -46,7 +46,7 @@ func TestValidatePackageChecksumAndSavePackageChecksum(t *testing.T) {
 func TestSaveIndexMetadataAndCheckWorkenvValidity(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	cacheDir := t.TempDir()
 	paths := NewWorkenvPaths(cacheDir, "/tmp/demo.pspf")
 

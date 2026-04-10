@@ -9,15 +9,12 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestSlotDescriptorPacking tests packing slot descriptors
 func TestSlotDescriptorPacking(t *testing.T) {
-	logger := hclog.New(&hclog.LoggerOptions{
-		Name:  "slots_test",
-		Level: hclog.Trace,
-	})
+	logger := logging.NewNullLogger()
 
 	testCases := []struct {
 		name string
@@ -111,10 +108,7 @@ func TestSlotDescriptorPacking(t *testing.T) {
 
 // TestPythonSlotVectors tests against Python-generated slot descriptor vectors
 func TestPythonSlotVectors(t *testing.T) {
-	logger := hclog.New(&hclog.LoggerOptions{
-		Name:  "slots_test",
-		Level: hclog.Trace,
-	})
+	logger := logging.NewNullLogger()
 
 	logger.Info("🐍 Loading Python slot descriptor test vectors")
 
@@ -224,10 +218,7 @@ func TestPythonSlotVectors(t *testing.T) {
 
 // TestHashName tests that HashName matches Python implementation
 func TestHashName(t *testing.T) {
-	logger := hclog.New(&hclog.LoggerOptions{
-		Name:  "slots_test",
-		Level: hclog.Trace,
-	})
+	logger := logging.NewNullLogger()
 
 	// These values should match what Python generates
 	testCases := []struct {
@@ -261,10 +252,7 @@ func TestHashName(t *testing.T) {
 
 // TestPermissions tests packing/unpacking of 16-bit permissions
 func TestPermissions(t *testing.T) {
-	logger := hclog.New(&hclog.LoggerOptions{
-		Name:  "slots_test",
-		Level: hclog.Trace,
-	})
+	logger := logging.NewNullLogger()
 
 	testCases := []uint16{
 		0o644,
@@ -288,7 +276,7 @@ func TestPermissions(t *testing.T) {
 				t.Errorf("GetPermissions() = 0%o, want 0%o", got, perm)
 			}
 
-			logger.Trace("✓ Permissions verified",
+			logging.Trace(logger, "✓ Permissions verified",
 				"value", fmt.Sprintf("0%o", perm),
 				"low_byte", desc.Permissions,
 				"high_byte", desc.PermissionsHigh,

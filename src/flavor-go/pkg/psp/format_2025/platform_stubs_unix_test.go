@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 func TestSetUTF8ConsoleOutputNoopOnUnix(t *testing.T) {
@@ -19,7 +19,7 @@ func TestSetUTF8ConsoleOutputNoopOnUnix(t *testing.T) {
 func TestPEResourceStubsReturnUnixErrors(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	if err := EmbedPSPFAsResource("/tmp/app", []byte("pspf"), logger); err == nil || !strings.Contains(err.Error(), "only supported on Windows") {
 		t.Fatalf("EmbedPSPFAsResource() error = %v", err)
 	}

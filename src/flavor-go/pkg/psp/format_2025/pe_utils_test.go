@@ -6,7 +6,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 type syntheticPELayout struct {
@@ -93,7 +93,7 @@ func writeSectionHeader(data []byte, name string, virtualSize, virtualAddress, r
 func TestPEHeaderHelpers(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	if !isPEExecutable([]byte("MZ")) {
 		t.Fatal("expected MZ prefix to be detected as PE")
@@ -138,7 +138,7 @@ func TestPEHeaderHelpers(t *testing.T) {
 func TestExpandDOSStubRewritesOffsets(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	original, layout := buildSyntheticPEForTests(t, 0x80, false)
 
 	expanded, err := expandDOSStub(original, logger)
@@ -196,7 +196,7 @@ func TestExpandDOSStubRewritesOffsets(t *testing.T) {
 func TestPEUpdateHelpersEdgeCases(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	data, layout := buildSyntheticPEForTests(t, 0x80, false)
 
 	// Trigger the "certificate offset < 0x80" branch and confirm checksum still clears.
@@ -223,7 +223,7 @@ func TestPEUpdateHelpersEdgeCases(t *testing.T) {
 func TestProcessLauncherForPSPFAndLauncherType(t *testing.T) {
 	t.Parallel()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	if got := GetLauncherType([]byte("plain bytes"), logger); got != "unknown" {
 		t.Fatalf("GetLauncherType() = %q, want unknown", got)
 	}
