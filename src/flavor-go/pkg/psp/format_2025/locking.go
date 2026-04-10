@@ -9,7 +9,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/hashicorp/go-hclog"
+	"log/slog"
 )
 
 // Global flag for lock acquisition status
@@ -28,7 +28,7 @@ type LockInfo struct {
 
 // TryAcquireLock attempts to acquire an exclusive lock for cache extraction
 // Returns true if lock was acquired, false if cache is already being extracted
-func TryAcquireLock(paths *WorkenvPaths, logger hclog.Logger) (bool, error) {
+func TryAcquireLock(paths *WorkenvPaths, logger *slog.Logger) (bool, error) {
 	// Create instance/extract directory if it doesn't exist
 	extractDir := paths.Extract()
 	if err := os.MkdirAll(extractDir, os.FileMode(DirPerms)); err != nil {
@@ -88,7 +88,7 @@ func TryAcquireLock(paths *WorkenvPaths, logger hclog.Logger) (bool, error) {
 }
 
 // ReleaseLock releases the extraction lock
-func ReleaseLock(paths *WorkenvPaths, logger hclog.Logger) {
+func ReleaseLock(paths *WorkenvPaths, logger *slog.Logger) {
 	lockPath := paths.LockFile()
 	if err := os.Remove(lockPath); err != nil {
 		logger.Debug("⚠️ Failed to remove lock file", "error", err)
@@ -99,7 +99,7 @@ func ReleaseLock(paths *WorkenvPaths, logger hclog.Logger) {
 }
 
 // WaitForExtraction waits for another process to finish extraction
-func WaitForExtraction(paths *WorkenvPaths, timeoutSecs int, logger hclog.Logger) error {
+func WaitForExtraction(paths *WorkenvPaths, timeoutSecs int, logger *slog.Logger) error {
 	lockPath := paths.LockFile()
 	maxAttempts := timeoutSecs * 10 // Check every 100ms
 
@@ -123,7 +123,7 @@ func WaitForExtraction(paths *WorkenvPaths, timeoutSecs int, logger hclog.Logger
 }
 
 // MarkExtractionComplete marks cache extraction as complete
-func MarkExtractionComplete(paths *WorkenvPaths, logger hclog.Logger) error {
+func MarkExtractionComplete(paths *WorkenvPaths, logger *slog.Logger) error {
 	extractDir := paths.Extract()
 	if err := os.MkdirAll(extractDir, os.FileMode(DirPerms)); err != nil {
 		return err
@@ -149,7 +149,7 @@ func IsExtractionComplete(paths *WorkenvPaths) bool {
 }
 
 // MarkExtractionIncomplete marks cache as incomplete (used during signal handling)
-func MarkExtractionIncomplete(paths *WorkenvPaths, logger hclog.Logger) {
+func MarkExtractionIncomplete(paths *WorkenvPaths, logger *slog.Logger) {
 	extractDir := paths.Extract()
 	if err := os.MkdirAll(extractDir, os.FileMode(DirPerms)); err != nil {
 		logger.Warn("⚠️ Failed to create extract dir", "error", err)
@@ -165,7 +165,7 @@ func IsLockAcquired() bool {
 }
 
 // CleanupStaleExtractions cleans up stale extraction directories from dead processes
-func CleanupStaleExtractions(paths *WorkenvPaths, logger hclog.Logger) error {
+func CleanupStaleExtractions(paths *WorkenvPaths, logger *slog.Logger) error {
 	tmpDir := paths.Tmp()
 
 	// If the directory doesn't exist, nothing to clean

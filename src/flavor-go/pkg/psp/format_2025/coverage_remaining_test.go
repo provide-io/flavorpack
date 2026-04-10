@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // ---------------------------------------------------------------------------
@@ -27,7 +27,7 @@ func TestShowBundleInfoBadMagicTrailer(t *testing.T) {
 	gzMeta := gzipData(t, metaJSON)
 	bundlePath := buildMinimalBundleWithMetadata(t, gzMeta, PackageEmojiBytes, badEnd)
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	// showBundleInfo should not exit even with bad magic — it just shows "✗" in status.
 	// It will exit if ReadIndex fails due to a version mismatch from the bad trailer.
 	// So we call it and verify it either exits or doesn't — we just want line 73-75 hit.
@@ -56,7 +56,7 @@ func TestTryAcquireLockFprintfFails(t *testing.T) {
 	}
 
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/test.pspf")
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	if err := os.MkdirAll(paths.Extract(), 0o755); err != nil {
 		t.Fatalf("MkdirAll(extract): %v", err)
@@ -89,7 +89,7 @@ func TestMarkExtractionCompleteFprintfFails(t *testing.T) {
 	}
 
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/test.pspf")
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 
 	err := MarkExtractionComplete(paths, logger)
 	if err == nil {
@@ -107,7 +107,7 @@ func TestExtractAndMergeSlotsRenameFallbackSlot0File(t *testing.T) {
 	slotContents := []byte("slot0-file-content")
 	bundlePath, _ := buildSlotsBundleForSlotsTest(t, "slot0-file", slotContents)
 
-	reader, err := NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
+	reader, err := NewReaderWithLogger(bundlePath, logging.NewNullLogger())
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger: %v", err)
 	}
@@ -148,7 +148,7 @@ func TestExtractAndMergeSlotsRenameFallbackSlot0File(t *testing.T) {
 		return fmt.Errorf("synthetic rename failure (cross-filesystem)")
 	}
 
-	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, hclog.NewNullLogger())
+	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logging.NewNullLogger())
 	// May succeed (copyFile fallback) or fail — we just want line 162 hit.
 	_ = err
 }
@@ -163,7 +163,7 @@ func TestExtractAndMergeSlotsRenameFallbackSlotNFile(t *testing.T) {
 	slotContents := []byte("slotN-file-content")
 	bundlePath, _ := buildSlotsBundleForSlotsTest(t, "slotN-file", slotContents)
 
-	reader, err := NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
+	reader, err := NewReaderWithLogger(bundlePath, logging.NewNullLogger())
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger: %v", err)
 	}
@@ -204,7 +204,7 @@ func TestExtractAndMergeSlotsRenameFallbackSlotNFile(t *testing.T) {
 		return fmt.Errorf("synthetic rename failure (cross-filesystem)")
 	}
 
-	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, hclog.NewNullLogger())
+	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logging.NewNullLogger())
 	// May succeed (copyFile fallback) or fail — we just want line 206 hit.
 	_ = err
 }
@@ -219,7 +219,7 @@ func TestExtractAndMergeSlotsRegularFileRenameFallback(t *testing.T) {
 	slotContents := []byte("regular-file-content")
 	bundlePath, _ := buildSlotsBundleForSlotsTest(t, "regular", slotContents)
 
-	reader, err := NewReaderWithLogger(bundlePath, hclog.NewNullLogger())
+	reader, err := NewReaderWithLogger(bundlePath, logging.NewNullLogger())
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger: %v", err)
 	}
@@ -258,7 +258,7 @@ func TestExtractAndMergeSlotsRegularFileRenameFallback(t *testing.T) {
 		return fmt.Errorf("synthetic rename failure")
 	}
 
-	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, hclog.NewNullLogger())
+	_, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logging.NewNullLogger())
 	// May succeed (copyFile fallback) or fail — we just want lines 227-231, 241 hit.
 	_ = err
 }

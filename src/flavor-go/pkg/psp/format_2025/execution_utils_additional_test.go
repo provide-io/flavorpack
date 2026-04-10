@@ -2,12 +2,13 @@ package format_2025
 
 import (
 	"bytes"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
 // TestFixShebangsSingleLineNoNewline covers the len(lines) <= 1 false branch
@@ -27,7 +28,7 @@ func TestFixShebangsSingleLineNoNewline(t *testing.T) {
 	}
 
 	var logs bytes.Buffer
-	logger := hclog.New(&hclog.LoggerOptions{Name: "test", Level: hclog.Debug, Output: &logs})
+	logger := logging.NewBufferLogger(&logs, slog.LevelDebug)
 	if err := fixShebangs(binDir, "/old/prefix", "/new/prefix", logger); err != nil {
 		t.Fatalf("fixShebangs() error = %v", err)
 	}
@@ -63,7 +64,7 @@ func TestFixShebangsWriteFileFailure(t *testing.T) {
 	t.Cleanup(func() { _ = os.Chmod(script, 0o644) })
 
 	var logs bytes.Buffer
-	logger := hclog.New(&hclog.LoggerOptions{Name: "test", Level: hclog.Debug, Output: &logs})
+	logger := logging.NewBufferLogger(&logs, slog.LevelDebug)
 
 	// fixShebangs should not return an error even if WriteFile fails – it only logs.
 	if err := fixShebangs(binDir, "/old/prefix", "/new/prefix", logger); err != nil {

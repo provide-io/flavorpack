@@ -1,18 +1,19 @@
 package format_2025
 
 import (
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
-func newExecutionSlotsExtractionContext(t *testing.T, bundle string) (*Reader, *PSPFIndex, *Metadata, hclog.Logger) {
+func newExecutionSlotsExtractionContext(t *testing.T, bundle string) (*Reader, *PSPFIndex, *Metadata, *slog.Logger) {
 	t.Helper()
 
-	logger := hclog.NewNullLogger()
+	logger := logging.NewNullLogger()
 	reader, err := NewReaderWithLogger(bundle, logger)
 	if err != nil {
 		t.Fatalf("NewReaderWithLogger() error = %v", err)

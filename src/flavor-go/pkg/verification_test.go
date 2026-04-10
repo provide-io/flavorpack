@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
+	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 	"github.com/provide-io/flavor/go/flavor/pkg/psp/format_2025"
 )
 
@@ -77,7 +77,7 @@ func TestVerifyBundleWithLoggerDirect(t *testing.T) {
 	t.Parallel()
 	bundlePath := writeValidBundle(t)
 	// Must not panic or call os.Exit for a valid bundle.
-	VerifyBundleWithLogger(bundlePath, hclog.NewNullLogger())
+	VerifyBundleWithLogger(bundlePath, logging.NewNullLogger())
 }
 
 func TestVerifyBundle(t *testing.T) {
@@ -125,7 +125,7 @@ func TestVerifyBundleHelper(t *testing.T) {
 
 	switch mode {
 	case "success":
-		VerifyBundleWithLogger(path, hclog.NewNullLogger())
+		VerifyBundleWithLogger(path, logging.NewNullLogger())
 	case "failure":
 		VerifyBundle(path)
 	default:
