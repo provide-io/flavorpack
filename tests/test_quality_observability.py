@@ -102,8 +102,10 @@ def test_release_workflow_uses_trusted_publishing_for_pypi() -> None:
 def test_quality_workflow_avoids_broken_python_heredoc_summary_snippet() -> None:
     content = QUALITY_WORKFLOW.read_text(encoding="utf-8")
 
+    # Both inline patterns are broken; coverage summary must use the ci/ script instead.
     assert "python3 - <<'PY' >> $GITHUB_STEP_SUMMARY" not in content
-    assert "python3 -c " in content
+    assert "python3 -c " not in content
+    assert "summarize-python-coverage.sh" in content
 
 
 def test_mutmut_copies_cross_language_and_workflow_support_files() -> None:
