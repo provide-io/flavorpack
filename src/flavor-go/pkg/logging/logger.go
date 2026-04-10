@@ -39,6 +39,12 @@ func NewLogger(ctx context.Context, name string) *slog.Logger {
 	return provlog.GetLogger(ctx, name)
 }
 
+// NewDefaultLogger returns a named *slog.Logger using the current active configuration,
+// evaluated at call time. Use for package-level loggers where no context is available.
+func NewDefaultLogger(name string) *slog.Logger {
+	return provlog.GetDefaultLogger(name)
+}
+
 // NewNullLogger returns a *slog.Logger that discards all output (for tests).
 func NewNullLogger() *slog.Logger {
 	return provlog.NewNullLogger()
@@ -47,6 +53,13 @@ func NewNullLogger() *slog.Logger {
 // NewBufferLogger returns a *slog.Logger that writes to w at the given level (for tests).
 func NewBufferLogger(w io.Writer, level slog.Level) *slog.Logger {
 	return provlog.NewBufferLogger(w, level)
+}
+
+// IsJSONFormat reports whether the given logLevel string (or the FLAVOR_JSON_LOG
+// environment variable) will result in JSON-formatted output. Entry points use this
+// to decide whether to wrap the output writer in a PrefixWriter before calling Setup.
+func IsJSONFormat(logLevel string) bool {
+	return os.Getenv(envvars.EnvJSONLog) == "1" || strings.HasPrefix(logLevel, "json")
 }
 
 // GetLogLevel returns the configured log level from environment.
