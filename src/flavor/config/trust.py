@@ -30,7 +30,7 @@ def compute_key_fingerprint(public_key: Ed25519PublicKey) -> str:
     The fingerprint is SHA-256 of the raw 32-byte key material, hex-encoded
     (64 ASCII characters, lowercase).
     """
-    raw = public_key.public_bytes(Encoding.Raw, PublicFormat.Raw)
+    raw = public_key.public_bytes(Encoding.Raw, PublicFormat.Raw)  # type: ignore[arg-type]
     return hashlib.sha256(raw).hexdigest()
 
 
