@@ -58,7 +58,7 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 			defer func() { _ = file.Close() }()
 			logOutput = file
 		}
-	} else if !strings.HasPrefix(logLevel, "json") {
+	} else if !logging.IsJSONFormat(logLevel) {
 		logOutput = logging.NewPrefixWriter("🐹 ", launcherStderrWriter)
 	}
 	logging.Setup(logLevel, logOutput)
