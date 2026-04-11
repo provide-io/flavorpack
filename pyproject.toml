@@ -126,12 +126,29 @@ exclude = [
 ]
 
 [[tool.mypy.overrides]]
-module = ["structlog.*", "google.*", "grpc.*", "psutil.*", "opentelemetry.*"]
+module = ["structlog.*", "google.*", "grpc.*", "psutil.*", "opentelemetry.*", "mutmut.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = ["flavor.psp.format_2025.generated.*", "flavor.*.generated.*"]
 ignore_errors = true
+
+[[tool.mypy.overrides]]
+# cryptography 46 changed Encoding/PublicFormat/PrivateFormat to str-based enums;
+# mypy now types enum members as str but public_bytes/private_bytes expect the enum
+# class, causing spurious arg-type errors throughout test helpers that use these APIs.
+module = [
+    "tests.cli.test_policy_command",
+    "tests.cli.test_trust_command",
+    "tests.config.test_trust",
+    "tests.format_2025.test_launcher_security_parity",
+    "tests.integration.test_security_e2e",
+    "tests.parity.test_trust_parity",
+    "tests.test_coverage_gaps_batch2",
+    "tests.test_coverage_gaps_final",
+    "tests.test_coverage_gaps_final2",
+]
+disable_error_code = ["arg-type"]
 
 [tool.pylint.main]
 disable = ["C0330", "C0326"]
