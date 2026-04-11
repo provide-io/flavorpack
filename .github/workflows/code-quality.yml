@@ -702,9 +702,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- Commands: \`make quality-python-fast\`, \`make quality-python-deep\`" >> $GITHUB_STEP_SUMMARY
           echo "- Intent categories: Unit / Integration / Cross-Language / Security / Adversarial / Property / Fuzz / Mutation / Smoke" >> $GITHUB_STEP_SUMMARY
-          if [ -f coverage.json ]; then
-            python3 -c 'import json; from pathlib import Path; data = json.loads(Path("coverage.json").read_text()); totals = data.get("totals", {}); print(f"- Coverage: {totals.get(\"percent_covered_display\", \"unknown\")}%")' >> "$GITHUB_STEP_SUMMARY"
-          fi
+          ci/summarize-python-coverage.sh coverage.json >> "$GITHUB_STEP_SUMMARY"
 
       - name: 📤 Upload Python observability artifacts
         if: always()
