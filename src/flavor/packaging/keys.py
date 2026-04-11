@@ -47,13 +47,13 @@ def generate_key_pair(keys_dir: Path) -> tuple[Path, Path]:
 
     # Serialize to PEM format
     private_pem = private_key.private_bytes(
-        encoding=serialization.Encoding.PEM,  # ty: ignore[invalid-argument-type]
-        format=serialization.PrivateFormat.PKCS8,  # ty: ignore[invalid-argument-type]
+        encoding=serialization.Encoding.PEM,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+        format=serialization.PrivateFormat.PKCS8,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
         encryption_algorithm=serialization.NoEncryption(),
     )
     public_pem = public_key.public_bytes(
-        encoding=serialization.Encoding.PEM,  # ty: ignore[invalid-argument-type]
-        format=serialization.PublicFormat.SubjectPublicKeyInfo,  # ty: ignore[invalid-argument-type]
+        encoding=serialization.Encoding.PEM,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+        format=serialization.PublicFormat.SubjectPublicKeyInfo,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
     )
 
     # Save to files with secure permissions
@@ -100,8 +100,8 @@ def load_private_key_raw(key_path: Path) -> bytes:
     if isinstance(private_key, ed25519.Ed25519PrivateKey):
         # Get the private key bytes in PKCS8 format and extract the seed
         pkcs8_bytes = private_key.private_bytes(
-            encoding=serialization.Encoding.DER,
-            format=serialization.PrivateFormat.PKCS8,
+            encoding=serialization.Encoding.DER,  # type: ignore[arg-type]
+            format=serialization.PrivateFormat.PKCS8,  # type: ignore[arg-type]
             encryption_algorithm=serialization.NoEncryption(),
         )
         # The Ed25519 seed is the last 32 bytes of the PKCS8 structure
@@ -155,7 +155,8 @@ def load_public_key_raw(key_path: Path) -> bytes:
     if isinstance(public_key, ed25519.Ed25519PublicKey):
         # Extract the raw 32-byte public key
         raw_public = public_key.public_bytes(
-            encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
+            encoding=serialization.Encoding.Raw,  # type: ignore[arg-type]
+            format=serialization.PublicFormat.Raw,  # type: ignore[arg-type]
         )
         return raw_public
     else:
@@ -196,8 +197,8 @@ def derive_public_key_raw(private_key_path: Path) -> bytes:
         raise ValueError(f"Incompatible key type at {private_key_path}: expected Ed25519 private key.")
 
     return private_key.public_key().public_bytes(
-        encoding=serialization.Encoding.Raw,
-        format=serialization.PublicFormat.Raw,
+        encoding=serialization.Encoding.Raw,  # type: ignore[arg-type]
+        format=serialization.PublicFormat.Raw,  # type: ignore[arg-type]
     )
 
 

@@ -126,7 +126,7 @@ exclude = [
 ]
 
 [[tool.mypy.overrides]]
-module = ["structlog.*", "google.*", "grpc.*", "pytest.*", "jq.*", "psutil.*", "hcl2", "mutmut.*", "opentelemetry.*"]
+module = ["structlog.*", "google.*", "grpc.*", "psutil.*", "opentelemetry.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
