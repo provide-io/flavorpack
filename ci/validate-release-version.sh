@@ -28,11 +28,19 @@ else
     # Check if tag already exists
     TAG="v${VERSION}"
     if git rev-parse "$TAG" >/dev/null 2>&1; then
-        echo "❌ Tag $TAG already exists!"
-        echo "Existing tag points to commit: $(git rev-parse --short "$TAG")"
-        exit 1
+        TAG_COMMIT=$(git rev-parse "$TAG")
+        HEAD_COMMIT=$(git rev-parse HEAD)
+        if [ "$TAG_COMMIT" = "$HEAD_COMMIT" ]; then
+            echo "⚠️ Tag $TAG already exists and points to HEAD — re-run for publish-only is allowed"
+        else
+            echo "❌ Tag $TAG already exists and points to a different commit!"
+            echo "Tag commit:  $(git rev-parse --short "$TAG")"
+            echo "HEAD commit: $(git rev-parse --short HEAD)"
+            exit 1
+        fi
+    else
+        echo "✅ Tag $TAG is available"
     fi
-    echo "✅ Tag $TAG is available"
 fi
 
 echo "✅ Version $VERSION is valid"
