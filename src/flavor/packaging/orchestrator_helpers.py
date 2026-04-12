@@ -18,7 +18,7 @@ from provide.foundation.serialization import json_dumps
 
 from flavor.config.defaults import ENV_BUILDER_BIN, ENV_LAUNCHER_BIN
 from flavor.exceptions import BuildError
-from flavor.packaging.defaults import DEFAULT_ENV_ISOLATION_UNSET
+from flavor.packaging.defaults import DEFAULT_ENV_ISOLATION_UNSET, WINDOWS_SYSTEM_PASS
 
 
 def get_cli_executable_name(package_name: str, build_config: dict[str, Any], windows: bool) -> str:
@@ -223,14 +223,20 @@ def create_builder_manifest(
     # Check for explicit opt-out via isolated flag
     isolated = runtime_env_config.get("isolated", True)  # Default to True (safe by default)
 
+    # On Windows, always preserve system vars required for DLL loading and process
+    # creation regardless of isolation mode (merging before dedup below).
+    windows_pass = WINDOWS_SYSTEM_PASS if windows else []
+
     if isolated is False:
         logger.debug("🔓 Environment isolation disabled via isolated=false flag")
         # User has explicitly opted out of isolation - don't add runtime section
         # unless they provided other env config
+        user_pass = runtime_env_config.get("pass", [])
+        merged_pass = windows_pass + [v for v in user_pass if v not in set(windows_pass)]
         manifest_runtime_env = {
             key: value
             for key, value in {
-                "pass": runtime_env_config.get("pass", []),
+                "pass": merged_pass,
                 "set": runtime_env_config.get("set", {}),
                 "map": runtime_env_config.get("map", {}),
             }.items()
@@ -253,11 +259,14 @@ def create_builder_manifest(
             logger.debug(f"Merging user unset vars {user_unset} with defaults")
             logger.debug(f"Final merged unset list: {merged_unset}")
 
+        user_pass = runtime_env_config.get("pass", [])
+        merged_pass = windows_pass + [v for v in user_pass if v not in set(windows_pass)]
+
         manifest_runtime_env = {
             key: value
             for key, value in {
                 "unset": merged_unset,
-                "pass": runtime_env_config.get("pass", []),
+                "pass": merged_pass,
                 "set": runtime_env_config.get("set", {}),
                 "map": runtime_env_config.get("map", {}),
             }.items()
@@ -458,14 +467,20 @@ def create_python_builder_metadata(
     # Check for explicit opt-out via isolated flag
     isolated = runtime_env_config.get("isolated", True)  # Default to True (safe by default)
 
+    # On Windows, always preserve system vars required for DLL loading and process
+    # creation regardless of isolation mode.
+    windows_pass = WINDOWS_SYSTEM_PASS if windows else []
+
     if isolated is False:
         logger.debug("🔓 Environment isolation disabled via isolated=false flag")
         # User has explicitly opted out of isolation - don't add runtime section
         # unless they provided other env config
+        user_pass = runtime_env_config.get("pass", [])
+        merged_pass = windows_pass + [v for v in user_pass if v not in set(windows_pass)]
         manifest_runtime_env = {
             key: value
             for key, value in {
-                "pass": runtime_env_config.get("pass", []),
+                "pass": merged_pass,
                 "set": runtime_env_config.get("set", {}),
                 "map": runtime_env_config.get("map", {}),
             }.items()
@@ -488,11 +503,14 @@ def create_python_builder_metadata(
             logger.debug(f"Merging user unset vars {user_unset} with defaults")
             logger.debug(f"Final merged unset list: {merged_unset}")
 
+        user_pass = runtime_env_config.get("pass", [])
+        merged_pass = windows_pass + [v for v in user_pass if v not in set(windows_pass)]
+
         manifest_runtime_env = {
             key: value
             for key, value in {
                 "unset": merged_unset,
-                "pass": runtime_env_config.get("pass", []),
+                "pass": merged_pass,
                 "set": runtime_env_config.get("set", {}),
                 "map": runtime_env_config.get("map", {}),
             }.items()
