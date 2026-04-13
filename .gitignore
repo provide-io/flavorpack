@@ -75,6 +75,9 @@ bf-*.txt
 # Local act secrets (never commit)
 .act.secrets
 
+# Wrangler (Cloudflare) local state
+.wrangler/
+
 # Memray profiling output
 memray-output/
 
