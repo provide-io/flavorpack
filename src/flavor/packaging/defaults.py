@@ -15,3 +15,28 @@ DEFAULT_ENV_ISOLATION_UNSET = [
     "UV_CACHE_DIR",
     "VIRTUAL_ENV",
 ]
+
+# Windows system environment variables that must always be preserved.
+# The PSP launcher strips the host environment for isolation, but these
+# variables are required by Windows itself for DLL loading, process
+# creation, temp file handling, and user-profile resolution.
+# They are added to the manifest `pass` list when building on Windows.
+WINDOWS_SYSTEM_PASS = [
+    "SYSTEMROOT",
+    "WINDIR",
+    "COMSPEC",
+    "SYSTEMDRIVE",
+    "PATH",
+    "PATHEXT",
+    "USERPROFILE",
+    "APPDATA",
+    "LOCALAPPDATA",
+    "TEMP",
+    "TMP",
+    "COMPUTERNAME",
+    "PROGRAMFILES",
+    "PROGRAMFILES(X86)",
+    "COMMONPROGRAMFILES",
+    "NUMBER_OF_PROCESSORS",
+    "PROCESSOR_ARCHITECTURE",
+]
