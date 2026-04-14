@@ -1,7 +1,7 @@
 //! Version information for Flavor binaries
 
 /// Current version of Flavor Rust implementation
-pub const VERSION: &str = "0.3.24";
+pub const VERSION: &str = "0.3.25";
 
 /// Build timestamp (set at compile time)
 pub const BUILD_TIME: Option<&str> = option_env!("BUILD_TIME");
@@ -55,7 +55,7 @@ mod tests {
     fn full_version_with_test_inputs_truncates_commit_and_appends_build_time() {
         let version = full_version_with(Some("0123456789abcdef"), Some("2026-03-31T00:00:00Z"));
 
-        assert_eq!(version, "0.3.24 (01234567) built 2026-03-31T00:00:00Z");
+        assert_eq!(version, "0.3.25 (01234567) built 2026-03-31T00:00:00Z");
     }
 
     #[test]
