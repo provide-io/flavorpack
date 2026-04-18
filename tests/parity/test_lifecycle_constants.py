@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # tests/parity/test_lifecycle_constants.py
 """Parity test: LIFECYCLE_ATTESTATION = 11 across all three implementations."""
 

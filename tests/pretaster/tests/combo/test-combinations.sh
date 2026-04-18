@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # Test all builder/launcher combinations with pretaster
 
 # NOTE: DO NOT use 'set -e' here - we want to test ALL combinations

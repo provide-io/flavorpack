@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 //! Standard exit codes for Flavor binaries
 //!
 //! These exit codes are used by both builder and launcher to provide

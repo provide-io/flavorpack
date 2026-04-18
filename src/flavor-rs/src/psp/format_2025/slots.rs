@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 // helpers/flavor-rs/src/psp/format_2025/slots.rs
 // PSPF 2025 Slot Management - Enhanced 64-byte descriptors
 

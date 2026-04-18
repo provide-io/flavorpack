@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 """Cross-language parity tests for platform-specific behaviour.
 
 Tests the Python implementation of platform behaviours that must be

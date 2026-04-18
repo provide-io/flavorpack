@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 version: 2025.1.0
 source: protobuf
 protobuf_package: pspf_2025.operations

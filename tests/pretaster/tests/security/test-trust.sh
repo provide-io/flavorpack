@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # Trust store tests: untrusted/trusted key enforcement + cross-builder trust
 # Usage: ./tests/test-trust.sh  (run from the pretaster directory)
 

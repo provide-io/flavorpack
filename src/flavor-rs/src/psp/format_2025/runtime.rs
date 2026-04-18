@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 //! Runtime environment processing for PSPF/2025
 //!
 //! This module handles the runtime.env configuration from PSPF metadata,

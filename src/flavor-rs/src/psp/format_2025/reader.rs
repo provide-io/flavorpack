@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 // helpers/flavor-rs/src/psp/format_2025/reader.rs
 // PSPF 2025 Bundle Reader - Uses backend system for flexible access
 
