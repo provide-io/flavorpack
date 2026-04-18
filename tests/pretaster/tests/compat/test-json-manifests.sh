@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # Test JSON manifest handling across all builder/launcher combinations.
 #
 # Validates that the fix for _build_with_json_manifest() is correct:

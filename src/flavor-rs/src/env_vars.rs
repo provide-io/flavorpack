@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 //! Centralized FLAVOR_* environment variable name constants.
 //! All env var names must be referenced via these constants, never as inline strings.
 

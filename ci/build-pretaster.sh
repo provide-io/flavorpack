@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # Unified Pretaster Build Script
 # Usage: build-pretaster.sh <platform> <version> [build_type] [output_dir]
 #

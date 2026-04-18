@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 //! Flavor - Progressive Secure Package Format (PSPF) implementation
 //!
 //! This crate provides functionality for building, launching, and verifying

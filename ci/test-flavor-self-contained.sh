@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # Test that Flavor PSP is self-contained and can verify itself
 # Usage: test-flavor-self-contained.sh <platform>
 

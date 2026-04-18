@@ -1,4 +1,6 @@
 #![no_main]
+// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 use flavor_rs::psp::format_2025::{
     constants::{MAGIC_TRAILER_SIZE, MAGIC_WAND_EMOJI_BYTES, PACKAGE_EMOJI_BYTES, PSPF_VERSION},

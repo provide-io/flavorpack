@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # Install Rust toolchain inside the FreeBSD VM via rustup into ./vm-rust-home/
 # (working-dir location so it syncs back to runner and can be cached).
 # Usage: freebsd-prep-rust.sh

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 #
 # compatibility-tests.sh - Test binary compatibility across Linux distributions
 # This tests that our static binaries work on various Linux distributions

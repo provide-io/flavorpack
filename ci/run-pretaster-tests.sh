@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # Run pretaster test suite
 # Usage: run-pretaster-tests.sh <platform> <version> <test_suite> [pretaster_psp]
 

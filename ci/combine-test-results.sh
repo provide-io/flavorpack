@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # Combine test results from all platform builds.
 # Usage: ci/combine-test-results.sh <artifacts_dir> <output_file>
 

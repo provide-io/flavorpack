@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # Policy enforcement tests: platform deny, warn mode, allow mode, SBOM
 # Usage: ./tests/security/test-policy.sh  (run from the pretaster directory)
 

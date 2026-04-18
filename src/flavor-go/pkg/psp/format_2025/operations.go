@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 // Package format_2025 implements PSPF/2025 operation chains
 // Operations can be chained together (up to 8) and packed into a 64-bit integer
 package format_2025
