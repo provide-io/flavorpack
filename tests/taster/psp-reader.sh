@@ -1,4 +1,7 @@
 #!/bin/sh
+# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # PSP Reader - Process PSPF/2025 files using BSD tools, jq, and openssl
 # Works with standard macOS tools (includes jq and openssl)
 

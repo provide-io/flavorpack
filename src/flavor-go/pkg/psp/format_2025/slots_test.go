@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 // Package format_2025 implements PSPF/2025 slot descriptors
 // This file contains tests for slot descriptor packing/unpacking
 package format_2025

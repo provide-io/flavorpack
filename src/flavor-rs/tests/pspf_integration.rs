@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 //! Integration tests for PSPF reader, extraction, debug, and launcher subsystems.
 //!
 //! These tests build real PSPF bundles via the builder, then exercise the reader,

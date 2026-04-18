@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # Build Rust helper binaries for a target platform.
 # Must be run from src/flavor-rs/.
 #

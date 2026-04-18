@@ -1,4 +1,6 @@
 #![no_main]
+// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
 
 use flavor_rs::psp::format_2025::operations::{pack_operations, unpack_operations};
 use libfuzzer_sys::fuzz_target;

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # Generate build-flavor and test-flavor-psp matrices for flavor-pipeline.yml.
 # Usage: build-flavor-matrix.sh [platforms]
 #   platforms: optional comma-separated list (e.g. freebsd_amd64,freebsd_arm64)

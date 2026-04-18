@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 // Regression tests for test vector byte data integrity.
 // These verify the reconstructed byte literals in testdata/vectors_test.go
 // are correct after the fix for malformed byte literals (split hex values,

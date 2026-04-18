@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # Build dash (lightweight POSIX shell) for the current platform.
 # Used as the embedded script executor in pretaster PSP packages.
 #
