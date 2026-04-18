@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # Integrity and enforcement mode tests for Flavorpack pretaster
 # Tests: tamper detection, verify subcommand, age enforcement,
 #        enforcement modes (allow, warn), forward-version compat

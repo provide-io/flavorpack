@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # Print a coverage summary line from coverage.json to GITHUB_STEP_SUMMARY.
 # Usage: summarize-python-coverage.sh [coverage.json]
 # If the file doesn't exist, the script is a no-op.

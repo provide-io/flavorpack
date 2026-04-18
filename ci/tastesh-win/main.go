@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 // tastesh-win: minimal POSIX sh interpreter for Windows, built on mvdan.cc/sh/v3.
 // Used as the embedded shell executor in PSP packages on Windows so that test
 // scripts can run without depending on bash/PowerShell being installed on the host.

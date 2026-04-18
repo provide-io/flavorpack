@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 // Package envvars defines FLAVOR_* environment variable name constants
 // for use by packages that cannot import pkg/psp/format_2025 (e.g. pkg/logging, internal/workenv).
 // All FLAVOR_* env vars must be referenced via these constants, never as inline strings.

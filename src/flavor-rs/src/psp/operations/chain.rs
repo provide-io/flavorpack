@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 // helpers/flavor-rs/src/psp/operations/chain.rs
 // Operation chain packing/unpacking
 

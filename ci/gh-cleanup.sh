@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 # Bulk-delete GitHub Actions runs and/or caches for the current repo.
 # Throttles between API calls to avoid rate limiting.
 #
