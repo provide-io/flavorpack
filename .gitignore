@@ -88,3 +88,119 @@ src/flavor-go/coverage_*.out
 tests/pretaster/logs/
 .claude/worktrees/
 Users/
+
+# Added by release-scrubbing hardening
+# Python caches
+*.pyc
+*.pyo
+*.pyd
+
+# Test / coverage caches
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.coverage.*
+cover/
+
+# Python venvs
+.venv/
+workenv/
+.venv_*/
+
+# Docs builds
+_build/
+.docs_aggregated/
+
+# IDE / OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Editor backups
+*.bak
+*.bak.*
+*.orig
+*~
+
+# Secrets / local config
+.env.*
+!.env.example
+keys/
+*.key
+*.pem
+.secrets/
+
+# Claude / provide.io tooling state
+.claude/
+.provide/
+
+# Session / scratch
+.rsp_context.json
+bundle.txt
+bfiles-*.txt
+chunk_*
+
+# Node
+node_modules/
+
+# Rust
+*.rlib
+*.rmeta
+
+# Go
+*.test
+vendor/
+
+# Archives
+*.zip
+*.tar.gz
+*.tgz
+
+# Generated env scripts (wrknv)
+env.sh
+env.ps1
+
+
+# Added by release-scrubbing hardening
+# Python caches
+*.pyc
+*.pyo
+*.pyd
+
+# Python venvs (alternate names)
+.venv_*/
+
+# Docs builds
+_build/
+.docs_aggregated/
+
+# Editor backups
+*.bak.*
+*.orig
+
+# Secrets / local config
+.env.*
+.secrets/
+
+# Claude / provide.io tooling state
+.claude/
+
+# Session / scratch
+bundle.txt
+chunk_*
+*bfile*
+bf*.txt
+
+# Node
+node_modules/
+
+# Rust
+*.rlib
+*.rmeta
+
+# Archives
+*.zip
+*.tar.gz
+*.tgz
+*.whl
