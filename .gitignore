@@ -204,3 +204,7 @@ node_modules/
 *.tar.gz
 *.tgz
 *.whl
+
+# Tool output / generated artifacts
+src/flavor-rs/.cargo-mutants.out/
+*.cargo-mutants.out/
