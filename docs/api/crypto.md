@@ -2,14 +2,14 @@
 
 Ed25519 key generation and management for PSPF package signing.
 
-!!! note "High-Level API Recommended"
-    Most users should use the CLI tools or [Packaging API](packaging/) which handle cryptography automatically. This page documents the low-level key management API for advanced use cases.
+!!! note "High-Level API Recommended" Most users should use the CLI tools or [Packaging API](packaging/) which handle cryptography automatically. This page documents the low-level key management API for advanced use cases.
 
 ## Overview
 
 Flavorpack uses **Ed25519** digital signatures to ensure package integrity. Every PSPF package can be cryptographically signed, with the signature and public key embedded in the package index block.
 
 **Ed25519 Benefits**:
+
 - **Fast**: Quick signature generation and verification
 - **Small**: 32-byte keys, 64-byte signatures
 - **Secure**: 128-bit security level
@@ -76,6 +76,7 @@ private_key_path, public_key_path = generate_key_pair(keys_dir)
 ```
 
 **Function Signature**:
+
 ```python
 def generate_key_pair(keys_dir: Path) -> tuple[Path, Path]:
     """Generate Ed25519 key pair and save to PEM files.
@@ -106,8 +107,7 @@ assert private_key_bytes == pk2
 assert public_key_bytes == pubk2
 ```
 
-!!! warning "Seed Security"
-    The seed value should be treated as a secret. Anyone with the seed can generate the private key and sign packages. Store seeds securely in CI/CD secret management systems.
+!!! warning "Seed Security" The seed value should be treated as a secret. Anyone with the seed can generate the private key and sign packages. Store seeds securely in CI/CD secret management systems.
 
 ## Loading Keys
 
@@ -198,10 +198,11 @@ flavor verify myapp.psp
 ```
 
 Verification happens automatically when a package is executed. The launcher:
+
 1. Reads the index block to get the public key and signature
-2. Calculates the package checksum
-3. Verifies the signature using the embedded public key
-4. Fails if verification fails (unless `FLAVOR_VALIDATION=none`)
+1. Calculates the package checksum
+1. Verifies the signature using the embedded public key
+1. Fails if verification fails (unless `FLAVOR_VALIDATION=none`)
 
 ## Key Storage Best Practices
 
@@ -252,6 +253,7 @@ keys/flavor-private.key
 ### CI/CD Pipeline
 
 {% raw %}
+
 ```yaml
 # .github/workflows/build.yml
 name: Build Package
@@ -276,6 +278,7 @@ jobs:
       - name: Verify package
         run: flavor verify myapp.psp
 ```
+
 {% endraw %}
 
 ### Key Rotation
@@ -442,9 +445,9 @@ Resolve keys based on configuration priority.
 - **Returns**: `(private_key, public_key)` as raw bytes
 - **Priority Order**:
   1. Explicit keys (if both provided)
-  2. Deterministic from seed
-  3. Load from filesystem path
-  4. Generate ephemeral (default)
+  1. Deterministic from seed
+  1. Load from filesystem path
+  1. Generate ephemeral (default)
 
 ## Security Considerations
 

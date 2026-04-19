@@ -2,8 +2,7 @@
 
 This roadmap shows the current implementation status and planned features for Flavorpack. Use this to understand what works today versus what's coming in future releases.
 
-!!! info "Version Status"
-    Flavorpack is currently in **alpha** stage. APIs, file formats, and commands may change without notice.
+!!! info "Version Status" Flavorpack is currently in **alpha** stage. APIs, file formats, and commands may change without notice.
 
 ## Legend
 
@@ -12,7 +11,7 @@ This roadmap shows the current implementation status and planned features for Fl
 - 📋 **Planned** - Designed but not yet implemented
 - 💡 **Proposed** - Under consideration for future releases
 
----
+______________________________________________________________________
 
 ## What Works Today (Alpha)
 
@@ -73,7 +72,7 @@ map = { OLD = "NEW" }            # ✅ Rename variables
 
 ### Platform Support ✅
 
---8<-- "includes/platform-support.md"
+--8\<-- "includes/platform-support.md"
 
 ### Python Packaging ✅
 
@@ -99,7 +98,7 @@ map = { OLD = "NEW" }            # ✅ Rename variables
 - ✅ Magic markers for format identification
 - ✅ Cross-language format compatibility (Python/Go/Rust)
 
----
+______________________________________________________________________
 
 ## Planned Features
 
@@ -119,8 +118,7 @@ extract_to = "{workenv}/config"
 permissions = "0644"
 ```
 
-**Status**: 📋 Planned
-**Use Case**: Enable custom slot purposes, lifecycles, platform-specific slots, and lazy-loaded content
+**Status**: 📋 Planned **Use Case**: Enable custom slot purposes, lifecycles, platform-specific slots, and lazy-loaded content
 
 #### Python Version Selection
 
@@ -131,13 +129,10 @@ min_version = "3.11"  # Minimum acceptable
 max_version = "3.13"  # Maximum acceptable
 ```
 
-**Status**: 📋 Planned
-**Priority**: High
-**Target Version**: v0.3.0
-**Target Date**: Q1 2026
-**Complexity**: Medium
+**Status**: 📋 Planned **Priority**: High **Target Version**: v0.3.0 **Target Date**: Q1 2026 **Complexity**: Medium
 
 **Planned Capabilities**:
+
 - Detect Python version from `pyproject.toml`
 - Support `requires-python` specification
 - Automatic Python installation if missing
@@ -174,9 +169,7 @@ pre_build_commands = [
 ]
 ```
 
-**Status**: 📋 Planned
-**Priority**: High
-**Complexity**: Medium
+**Status**: 📋 Planned **Priority**: High **Complexity**: Medium
 
 #### Dependency Resolution Options
 
@@ -199,11 +192,9 @@ trusted_hosts = [
 ]
 ```
 
-**Status**: 📋 Planned
-**Priority**: Medium
-**Complexity**: Low-Medium
+**Status**: 📋 Planned **Priority**: Medium **Complexity**: Low-Medium
 
----
+______________________________________________________________________
 
 ### Runtime Optimization
 
@@ -221,9 +212,7 @@ compile_bytecode = true
 strip_docstrings = true
 ```
 
-**Status**: 📋 Planned
-**Priority**: Low
-**Complexity**: Low
+**Status**: 📋 Planned **Priority**: Low **Complexity**: Low
 
 #### Dependency Optimization
 
@@ -243,11 +232,9 @@ no_dev_deps = true
 requirements_file = "requirements.lock"
 ```
 
-**Status**: 📋 Planned
-**Priority**: Medium
-**Complexity**: Medium
+**Status**: 📋 Planned **Priority**: Medium **Complexity**: Medium
 
----
+______________________________________________________________________
 
 ### Advanced Slot Configuration
 
@@ -270,9 +257,7 @@ source = "config/"
 lifecycle = "persistent"  # Keep across runs
 ```
 
-**Status**: 📋 Planned
-**Priority**: Medium
-**Complexity**: High
+**Status**: 📋 Planned **Priority**: Medium **Complexity**: High
 
 #### Platform-Specific Slots
 
@@ -290,11 +275,9 @@ target = "lib/"
 platform = "darwin"
 ```
 
-**Status**: 📋 Planned
-**Priority**: Medium
-**Complexity**: Medium
+**Status**: 📋 Planned **Priority**: Medium **Complexity**: Medium
 
----
+______________________________________________________________________
 
 ### Platform-Specific Builds
 
@@ -314,11 +297,9 @@ env = {
 }
 ```
 
-**Status**: 📋 Planned
-**Priority**: Low
-**Complexity**: Medium
+**Status**: 📋 Planned **Priority**: Low **Complexity**: Medium
 
----
+______________________________________________________________________
 
 ### Environment and Runtime Features
 
@@ -333,9 +314,7 @@ persistent = true
 port = 8000
 ```
 
-**Status**: 📋 Planned
-**Priority**: Medium
-**Complexity**: High
+**Status**: 📋 Planned **Priority**: Medium **Complexity**: High
 
 #### Advanced Environment Control
 
@@ -358,12 +337,9 @@ set = {
 OLD_VAR = "NEW_VAR"
 ```
 
-**Status**: 🟢 Partially Implemented
-**Priority**: High
-**Complexity**: Medium
-**Note**: Basic environment control exists, advanced features planned
+**Status**: 🟢 Partially Implemented **Priority**: High **Complexity**: Medium **Note**: Basic environment control exists, advanced features planned
 
----
+______________________________________________________________________
 
 ## Format Enhancements
 
@@ -379,10 +355,7 @@ compression = "zstd"  # Specific compression
 compression_level = 19  # Maximum compression
 ```
 
-**Status**: 🟡 Basic Implementation
-**Priority**: Low
-**Complexity**: Low
-**Note**: Compression exists but not configurable
+**Status**: 🟡 Basic Implementation **Priority**: Low **Complexity**: Low **Note**: Compression exists but not configurable
 
 #### Encryption Support
 
@@ -394,12 +367,9 @@ encryption = "aes256"
 key_source = "env:ENCRYPTION_KEY"
 ```
 
-**Status**: 🔴 Not Started
-**Priority**: Medium
-**Complexity**: High
-**Note**: See FEP-0001 for encryption operation codes
+**Status**: 🔴 Not Started **Priority**: Medium **Complexity**: High **Note**: See FEP-0001 for encryption operation codes
 
----
+______________________________________________________________________
 
 ### Multi-Platform Packages
 
@@ -420,12 +390,9 @@ platform = "darwin_arm64"
 binary = "dist/bin/launcher-darwin"
 ```
 
-**Status**: 🔴 Not Started
-**Priority**: Low
-**Complexity**: Very High
-**Blockers**: Format specification changes required
+**Status**: 🔴 Not Started **Priority**: Low **Complexity**: Very High **Blockers**: Format specification changes required
 
----
+______________________________________________________________________
 
 ## CLI and Tooling Enhancements
 
@@ -440,10 +407,7 @@ flavor helpers build --platform linux_amd64
 flavor helpers build --platform darwin_arm64 --lang rust
 ```
 
-**Status**: 🔴 Not Started
-**Priority**: Low
-**Complexity**: Medium
-**Note**: Currently documented but not implemented
+**Status**: 🔴 Not Started **Priority**: Low **Complexity**: Medium **Note**: Currently documented but not implemented
 
 #### helpers test
 
@@ -455,10 +419,7 @@ flavor helpers test --helper flavor-rs-launcher-darwin_arm64
 flavor helpers test --verbose
 ```
 
-**Status**: 🟡 Basic Implementation
-**Priority**: Low
-**Complexity**: Low
-**Note**: Command exists but may not be fully functional
+**Status**: 🟡 Basic Implementation **Priority**: Low **Complexity**: Low **Note**: Command exists but may not be fully functional
 
 ### Advanced Inspection
 
@@ -469,9 +430,7 @@ flavor inspect myapp.psp --show-deps
 flavor inspect myapp.psp --dependency-tree
 ```
 
-**Status**: 🔴 Not Started
-**Priority**: Low
-**Complexity**: Medium
+**Status**: 🔴 Not Started **Priority**: Low **Complexity**: Medium
 
 #### Slot Analysis
 
@@ -480,11 +439,9 @@ flavor inspect myapp.psp --slot-details
 flavor inspect myapp.psp --compression-stats
 ```
 
-**Status**: 🔴 Not Started
-**Priority**: Low
-**Complexity**: Low
+**Status**: 🔴 Not Started **Priority**: Low **Complexity**: Low
 
----
+______________________________________________________________________
 
 ## Integration Features
 
@@ -498,10 +455,7 @@ Support for legacy `setup.py` in addition to `pyproject.toml`:
 flavor pack --manifest setup.py
 ```
 
-**Status**: 🔴 Not Started
-**Priority**: Very Low
-**Complexity**: Medium
-**Note**: Modern projects should use pyproject.toml
+**Status**: 🔴 Not Started **Priority**: Very Low **Complexity**: Medium **Note**: Modern projects should use pyproject.toml
 
 #### Poetry Integration
 
@@ -511,9 +465,7 @@ Native support for Poetry configurations:
 flavor pack --manifest poetry.lock
 ```
 
-**Status**: 🔴 Not Started
-**Priority**: Low
-**Complexity**: Medium
+**Status**: 🔴 Not Started **Priority**: Low **Complexity**: Medium
 
 ### CI/CD Templates
 
@@ -523,12 +475,9 @@ Pre-built CI/CD configurations:
 - GitLab CI/CD templates
 - Jenkins pipeline examples
 
-**Status**: 🔴 Not Started
-**Priority**: Medium
-**Complexity**: Low
-**Note**: Documentation task, not implementation
+**Status**: 🔴 Not Started **Priority**: Medium **Complexity**: Low **Note**: Documentation task, not implementation
 
----
+______________________________________________________________________
 
 ## Testing and Quality
 
@@ -546,9 +495,7 @@ purpose = "tests"
 lifecycle = "volatile"
 ```
 
-**Status**: 🔴 Not Started
-**Priority**: Low
-**Complexity**: Low
+**Status**: 🔴 Not Started **Priority**: Low **Complexity**: Low
 
 ### Package Validation
 
@@ -560,11 +507,9 @@ flavor pack --validate-before-sign
 flavor pack --test-command "pytest tests/smoke/"
 ```
 
-**Status**: 🔴 Not Started
-**Priority**: Medium
-**Complexity**: Medium
+**Status**: 🔴 Not Started **Priority**: Medium **Complexity**: Medium
 
----
+______________________________________________________________________
 
 ## Documentation Improvements
 
@@ -577,10 +522,7 @@ Auto-generate API docs from code:
 - Complete `docs/api/reader.md`
 - Complete `docs/api/crypto.md`
 
-**Status**: 🟡 In Progress
-**Priority**: High
-**Complexity**: Low
-**Note**: Stub pages exist, need full content
+**Status**: 🟡 In Progress **Priority**: High **Complexity**: Low **Note**: Stub pages exist, need full content
 
 ### Interactive Examples
 
@@ -593,11 +535,9 @@ flavor demo web-app
 flavor demo cli-tool
 ```
 
-**Status**: 🔴 Not Started
-**Priority**: Low
-**Complexity**: Medium
+**Status**: 🔴 Not Started **Priority**: Low **Complexity**: Medium
 
----
+______________________________________________________________________
 
 ## Advanced Features
 
@@ -610,9 +550,7 @@ See [FEP-0004: Supply Chain JIT](reference/spec/future/fep-0004-supply-chain-jit
 - Provenance tracking
 - Signature chains
 
-**Status**: 🔴 Not Started
-**Priority**: Medium
-**Complexity**: Very High
+**Status**: 🔴 Not Started **Priority**: Medium **Complexity**: Very High
 
 ### Runtime JIT Loading
 
@@ -622,9 +560,7 @@ See [FEP-0005: Runtime JIT Loading](reference/spec/future/fep-0005-runtime-jit-l
 - On-demand extraction
 - Streaming execution
 
-**Status**: 🔴 Not Started
-**Priority**: Low
-**Complexity**: Very High
+**Status**: 🔴 Not Started **Priority**: Low **Complexity**: Very High
 
 ### Staged Payload Architecture
 
@@ -634,11 +570,9 @@ See [FEP-0006: Staged Payload Architecture](reference/spec/future/fep-0006-stage
 - Progressive enhancement
 - Delta updates
 
-**Status**: 🔴 Not Started
-**Priority**: Low
-**Complexity**: Very High
+**Status**: 🔴 Not Started **Priority**: Low **Complexity**: Very High
 
----
+______________________________________________________________________
 
 ## Community and Ecosystem
 
@@ -651,10 +585,7 @@ flavor publish myapp.psp
 flavor install popular-package
 ```
 
-**Status**: 🔴 Not Started
-**Priority**: Low
-**Complexity**: Very High
-**Blockers**: Requires infrastructure
+**Status**: 🔴 Not Started **Priority**: Low **Complexity**: Very High **Blockers**: Requires infrastructure
 
 ### Plugin System
 
@@ -665,11 +596,9 @@ flavor plugin install compression-extras
 flavor plugin install cloud-deploy
 ```
 
-**Status**: 🔴 Not Started
-**Priority**: Low
-**Complexity**: High
+**Status**: 🔴 Not Started **Priority**: Low **Complexity**: High
 
----
+______________________________________________________________________
 
 ## Migration to v1.0
 
@@ -695,33 +624,34 @@ Features required before declaring v1.0 stable:
 - Platform-specific builds
 - CI/CD integration templates
 
----
+______________________________________________________________________
 
 ## Feature Status Summary
 
-| Feature | Status | Priority | Target Version |
-|---------|--------|----------|----------------|
-| Python Version Detection | 📋 Planned | High | v0.3.0 (Q1 2026) |
-| Build Environment Config | 📋 Planned | High | v0.3.0 |
-| Dependency Optimization | 📋 Planned | High | v0.3.0 |
-| Runtime Optimization | 📋 Planned | Medium | v0.4.0 |
-| Advanced Slot Config | 📋 Planned | Medium | v0.4.0 |
-| Platform-Specific Builds | 📋 Planned | Low | v0.4.0 |
-| Persistent Service Mode | 📋 Planned | Medium | v0.4.0 |
-| Compression Options | 🟡 In Progress | Low | v0.3.0 |
-| Encryption Support | 🔴 Not Started | Medium | v0.5.0 |
-| Multi-Platform Packages | 🔴 Not Started | Low | v0.6.0 |
-| Windows Full Support | 🚧 In Progress | High | v0.3.0 |
-| Complete API Docs | 🟡 In Progress | High | v0.3.0 |
-| Supply Chain Security | 🔴 Not Started | Medium | v1.0.0 |
-| Plugin System | 🔴 Not Started | Low | v0.5.0 |
-| Package Registry | 🔴 Not Started | Low | Future |
+| Feature                  | Status         | Priority | Target Version   |
+| ------------------------ | -------------- | -------- | ---------------- |
+| Python Version Detection | 📋 Planned     | High     | v0.3.0 (Q1 2026) |
+| Build Environment Config | 📋 Planned     | High     | v0.3.0           |
+| Dependency Optimization  | 📋 Planned     | High     | v0.3.0           |
+| Runtime Optimization     | 📋 Planned     | Medium   | v0.4.0           |
+| Advanced Slot Config     | 📋 Planned     | Medium   | v0.4.0           |
+| Platform-Specific Builds | 📋 Planned     | Low      | v0.4.0           |
+| Persistent Service Mode  | 📋 Planned     | Medium   | v0.4.0           |
+| Compression Options      | 🟡 In Progress | Low      | v0.3.0           |
+| Encryption Support       | 🔴 Not Started | Medium   | v0.5.0           |
+| Multi-Platform Packages  | 🔴 Not Started | Low      | v0.6.0           |
+| Windows Full Support     | 🚧 In Progress | High     | v0.3.0           |
+| Complete API Docs        | 🟡 In Progress | High     | v0.3.0           |
+| Supply Chain Security    | 🔴 Not Started | Medium   | v1.0.0           |
+| Plugin System            | 🔴 Not Started | Low      | v0.5.0           |
+| Package Registry         | 🔴 Not Started | Low      | Future           |
 
----
+______________________________________________________________________
 
 ## Version History
 
 ### v0.2.0 (Current - Alpha)
+
 - ✅ Core PSPF/2025 format implementation
 - ✅ Basic Python packaging with UV
 - ✅ Cross-platform helpers (macOS, Linux)
@@ -731,6 +661,7 @@ Features required before declaring v1.0 stable:
 - ✅ Comprehensive documentation
 
 ### v0.1.0 (Initial Release)
+
 - Proof of concept
 - Basic PSPF format
 - Single platform support
@@ -738,6 +669,7 @@ Features required before declaring v1.0 stable:
 ### Planned Releases
 
 **v0.3.0** (Q1 2026) - Python Management & Windows
+
 - Python version detection and selection
 - Build environment configuration
 - Dependency optimization
@@ -745,6 +677,7 @@ Features required before declaring v1.0 stable:
 - Complete API documentation
 
 **v0.4.0** (Q2 2026) - Advanced Features
+
 - Runtime optimization
 - Advanced slot configuration
 - Platform-specific builds
@@ -752,43 +685,45 @@ Features required before declaring v1.0 stable:
 - Plugin system foundation
 
 **v0.5.0** (Q3 2026) - Security & Integration
+
 - Encryption support
 - Enhanced CI/CD templates
 - Plugin marketplace
 - Poetry/PDM integration
 
 **v1.0.0** (Q4 2026) - Stable Release
+
 - Production-ready stability
 - Complete test coverage
 - Supply chain security
 - Performance optimizations
 - Long-term support commitment
 
----
+______________________________________________________________________
 
 ## Contributing to Roadmap
 
 Want to help implement roadmap features?
 
 1. **Pick a Feature:** Choose from "Planned" features above
-2. **Discuss Approach:** Open GitHub Discussion
-3. **Create FEP:** Submit Flavorpack Enhancement Proposal if needed
-4. **Submit PR:** Implement with tests and docs
+1. **Discuss Approach:** Open GitHub Discussion
+1. **Create FEP:** Submit Flavorpack Enhancement Proposal if needed
+1. **Submit PR:** Implement with tests and docs
 
 See our [Contributing Guide](development/contributing/) for detailed instructions.
 
----
+______________________________________________________________________
 
 ## Feature Request Process
 
 Have an idea for Flavorpack? Here's how to suggest features:
 
 1. **Check Existing Roadmap:** Review this document first
-2. **Search Issues:** Check if already proposed on [GitHub Issues](https://github.com/provide-io/flavorpack/issues)
-3. **Submit FEP:** Create Flavorpack Enhancement Proposal for major features
-4. **Community Discussion:** Discuss in [GitHub Discussions](https://github.com/provide-io/flavorpack/discussions)
+1. **Search Issues:** Check if already proposed on [GitHub Issues](https://github.com/provide-io/flavorpack/issues)
+1. **Submit FEP:** Create Flavorpack Enhancement Proposal for major features
+1. **Community Discussion:** Discuss in [GitHub Discussions](https://github.com/provide-io/flavorpack/discussions)
 
----
+______________________________________________________________________
 
 ## See Also
 
@@ -797,7 +732,6 @@ Have an idea for Flavorpack? Here's how to suggest features:
 - [Future Enhancement Proposals](reference/spec/pspf-2025/) - Detailed FEPs
 - [Changelog](community/changelog/) - What's been implemented
 
----
+______________________________________________________________________
 
-**Last Updated:** October 30, 2025
-**Next Review:** December 2025
+**Last Updated:** October 30, 2025 **Next Review:** December 2025

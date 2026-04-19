@@ -8,15 +8,15 @@ Flavorpack provides multiple commands for inspecting package contents, from quic
 
 ### Inspection Commands
 
-| Command | Purpose | Output |
-|---------|---------|--------|
-| `flavor inspect` | Quick package overview | Human or JSON |
-| `flavor verify` | Verify integrity and signatures | Validation status |
-| `flavor extract` | Extract specific slot | Slot data file |
-| `flavor extract-all` | Extract all slots | Directory with slots |
-| `flavor workenv inspect` | Inspect cached extraction | Cache metadata |
+| Command                  | Purpose                         | Output               |
+| ------------------------ | ------------------------------- | -------------------- |
+| `flavor inspect`         | Quick package overview          | Human or JSON        |
+| `flavor verify`          | Verify integrity and signatures | Validation status    |
+| `flavor extract`         | Extract specific slot           | Slot data file       |
+| `flavor extract-all`     | Extract all slots               | Directory with slots |
+| `flavor workenv inspect` | Inspect cached extraction       | Cache metadata       |
 
----
+______________________________________________________________________
 
 ## Quick Inspection
 
@@ -49,7 +49,7 @@ Package: myapp.psp (45.2 MB)
 - **Package**: Application name and version from metadata
 - **Slots**: Data slots containing runtime, code, and resources
 
----
+______________________________________________________________________
 
 ## JSON Output
 
@@ -122,7 +122,7 @@ flavor inspect myapp.psp --json | jq -r '.build_metadata.timestamp'
 flavor inspect myapp.psp --json | jq -r '.build_metadata.python_version'
 ```
 
----
+______________________________________________________________________
 
 ## Verification
 
@@ -176,11 +176,9 @@ Signature:
   ⚠️  Package may be tampered or corrupted
 ```
 
-!!! warning "Security"
-    Never run packages that fail verification unless you fully trust the source.
-    Verification failures indicate potential tampering or corruption.
+!!! warning "Security" Never run packages that fail verification unless you fully trust the source. Verification failures indicate potential tampering or corruption.
 
----
+______________________________________________________________________
 
 ## Slot Extraction
 
@@ -245,7 +243,7 @@ cat extracted/metadata.json | jq
 cat extracted/index.json | jq
 ```
 
----
+______________________________________________________________________
 
 ## Cache Inspection
 
@@ -303,7 +301,7 @@ flavor workenv inspect pspf-a3f7b9c2d1e4f5a6
 flavor workenv inspect pspf-a3f7b9c2d1e4f5a6 --json
 ```
 
----
+______________________________________________________________________
 
 ## Inspection Workflows
 
@@ -410,7 +408,7 @@ else
 fi
 ```
 
----
+______________________________________________________________________
 
 ## Inspection Diagram
 
@@ -438,7 +436,7 @@ graph TD
     F --> P[Index Metadata]
 ```
 
----
+______________________________________________________________________
 
 ## Common Inspection Tasks
 
@@ -479,31 +477,19 @@ flavor inspect myapp.psp --json | jq -r '.build_metadata.timestamp'
 flavor verify myapp.psp 2>&1 | grep "Signature:"
 ```
 
----
+______________________________________________________________________
 
 ## Tips and Best Practices
 
-!!! tip "Performance"
-    - Use `--json` for automated processing
-    - Cache inspection is faster than extracting packages
-    - Verification adds minimal overhead (<1 second)
+!!! tip "Performance" - Use `--json` for automated processing - Cache inspection is faster than extracting packages - Verification adds minimal overhead (\<1 second)
 
-!!! tip "Security"
-    - Always verify packages before distribution
-    - Check signatures after downloading packages
-    - Use `flavor verify` in CI/CD pipelines
+!!! tip "Security" - Always verify packages before distribution - Check signatures after downloading packages - Use `flavor verify` in CI/CD pipelines
 
-!!! tip "Debugging"
-    - Extract slots to examine contents
-    - Check cache with `workenv inspect` for runtime issues
-    - Use JSON output for detailed error investigation
+!!! tip "Debugging" - Extract slots to examine contents - Check cache with `workenv inspect` for runtime issues - Use JSON output for detailed error investigation
 
-!!! tip "Automation"
-    - Combine with `jq` for powerful JSON processing
-    - Create verification scripts for CI/CD
-    - Monitor package sizes over time
+!!! tip "Automation" - Combine with `jq` for powerful JSON processing - Create verification scripts for CI/CD - Monitor package sizes over time
 
----
+______________________________________________________________________
 
 ## Troubleshooting
 
@@ -545,7 +531,7 @@ tar -tzf slot.tar.gz  # Check if valid tar.gz
 # If corrupted, re-build package
 ```
 
----
+______________________________________________________________________
 
 ## See Also
 
@@ -555,6 +541,6 @@ tar -tzf slot.tar.gz  # Check if valid tar.gz
 - [Verification Guide](../concepts/security/) - Security model
 - [Package Structure](../concepts/package-structure/) - PSPF format details
 
----
+______________________________________________________________________
 
 **Need help?** Run `flavor inspect --help` or `flavor verify --help` for command-specific documentation.

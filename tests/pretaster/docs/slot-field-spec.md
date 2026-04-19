@@ -32,13 +32,14 @@ The `slot` field has been added to PSPF/2025 manifest slot definitions as an opt
 ## Validation Rules
 
 1. **Optional Field**: If not provided, no validation is performed
-2. **Zero-Based Indexing**: Slot numbers start at 0
-3. **Critical Error on Mismatch**: If `slot` field is present and doesn't match the actual array position, the builder MUST exit with a non-zero status
-4. **Error Message Format**: `❌ Critical: Slot number mismatch - expected {position}, declared {slot} for slot '{name}'`
+1. **Zero-Based Indexing**: Slot numbers start at 0
+1. **Critical Error on Mismatch**: If `slot` field is present and doesn't match the actual array position, the builder MUST exit with a non-zero status
+1. **Error Message Format**: `❌ Critical: Slot number mismatch - expected {position}, declared {slot} for slot '{name}'`
 
 ## Implementation
 
 ### Go Builder (flavor-go)
+
 ```go
 type Slot struct {
     Slot      *int   `json:"slot,omitempty"`  // Pointer to distinguish unset from 0
@@ -53,6 +54,7 @@ if slot.Slot != nil && *slot.Slot != i {
 ```
 
 ### Rust Builder (flavor-rs)
+
 ```rust
 struct ManifestSlot {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -75,30 +77,31 @@ if let Some(declared_slot) = slot.slot {
 
 1. **Well-Formedness Check**: Provides an explicit declaration of expected slot position, catching manifest errors early in the build process
 
-2. **Prevents Silent Reordering**: Without this field, slots could be accidentally reordered in the manifest without detection, potentially breaking assumptions about slot positions
+1. **Prevents Silent Reordering**: Without this field, slots could be accidentally reordered in the manifest without detection, potentially breaking assumptions about slot positions
 
-3. **Documentation**: Makes slot ordering explicit and self-documenting in the manifest
+1. **Documentation**: Makes slot ordering explicit and self-documenting in the manifest
 
-4. **Debugging Aid**: When troubleshooting multi-slot packages, explicit slot numbers make it easier to track which slot is which
+1. **Debugging Aid**: When troubleshooting multi-slot packages, explicit slot numbers make it easier to track which slot is which
 
-5. **Safety for Critical Slots**: Some packages may have dependencies between slots (e.g., slot 0 bootstraps other slots). The slot field ensures these relationships are preserved
+1. **Safety for Critical Slots**: Some packages may have dependencies between slots (e.g., slot 0 bootstraps other slots). The slot field ensures these relationships are preserved
 
 ### Why Make It Optional?
 
 1. **Backward Compatibility**: Existing manifests without the field continue to work
-2. **Simplicity for Basic Cases**: Single-slot packages don't need the extra validation
-3. **Progressive Enhancement**: Teams can adopt the field gradually as needed
+1. **Simplicity for Basic Cases**: Single-slot packages don't need the extra validation
+1. **Progressive Enhancement**: Teams can adopt the field gradually as needed
 
 ### Why Make Mismatches Critical Errors?
 
 1. **Fail Fast**: Catches configuration errors at build time rather than runtime
-2. **Prevents Subtle Bugs**: Slot ordering errors can cause hard-to-debug runtime failures
-3. **Clear Intent**: A declared slot number represents explicit intent that should be honored
-4. **Security**: Prevents potential attacks where slot ordering could be manipulated
+1. **Prevents Subtle Bugs**: Slot ordering errors can cause hard-to-debug runtime failures
+1. **Clear Intent**: A declared slot number represents explicit intent that should be honored
+1. **Security**: Prevents potential attacks where slot ordering could be manipulated
 
 ## Examples
 
 ### Valid Manifest
+
 ```json
 {
   "slots": [
@@ -110,6 +113,7 @@ if let Some(declared_slot) = slot.slot {
 ```
 
 ### Invalid Manifest (Will Fail)
+
 ```json
 {
   "slots": [
@@ -120,6 +124,7 @@ if let Some(declared_slot) = slot.slot {
 ```
 
 ### Mixed Usage (Valid)
+
 ```json
 {
   "slots": [
@@ -133,13 +138,15 @@ if let Some(declared_slot) = slot.slot {
 ## Testing
 
 All four builder/launcher combinations have been tested and validated:
+
 - ✅ Go Builder + Go Launcher
-- ✅ Go Builder + Rust Launcher  
+- ✅ Go Builder + Rust Launcher
 - ✅ Rust Builder + Go Launcher
 - ✅ Rust Builder + Rust Launcher
 
 Test cases include:
+
 1. Correct slot numbering (passes)
-2. Missing slot field (passes - optional)
-3. Incorrect slot numbering (fails with critical error)
-4. Mixed presence/absence of slot field (passes where correct)
+1. Missing slot field (passes - optional)
+1. Incorrect slot numbering (fails with critical error)
+1. Mixed presence/absence of slot field (passes where correct)

@@ -6,7 +6,7 @@ Python API for building PSPF packages programmatically.
 
 The Flavorpack packaging API provides Python functions for creating, verifying, and managing PSPF packages. This API is used internally by the `flavor pack` command but can also be used directly in Python scripts.
 
----
+______________________________________________________________________
 
 ## Main Functions
 
@@ -35,17 +35,17 @@ def build_package_from_manifest(
 
 #### Parameters
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `manifest_path` | `Path` | Required | Path to pyproject.toml or manifest.json |
-| `output_path` | `Path \| None` | `None` | Custom output path (default: dist/<name>.psp) |
-| `launcher_bin` | `Path \| None` | `None` | Custom launcher binary path |
-| `builder_bin` | `Path \| None` | `None` | Custom builder binary path |
-| `strip_binaries` | `bool` | `False` | Strip debug symbols from launcher |
-| `show_progress` | `bool` | `False` | Show progress bars during build |
-| `private_key_path` | `Path \| None` | `None` | Path to Ed25519 private key (PEM) |
-| `public_key_path` | `Path \| None` | `None` | Path to Ed25519 public key (PEM) |
-| `key_seed` | `str \| None` | `None` | Deterministic key generation seed |
+| Parameter          | Type           | Default  | Description                                   |
+| ------------------ | -------------- | -------- | --------------------------------------------- |
+| `manifest_path`    | `Path`         | Required | Path to pyproject.toml or manifest.json       |
+| `output_path`      | `Path \| None` | `None`   | Custom output path (default: dist/<name>.psp) |
+| `launcher_bin`     | `Path \| None` | `None`   | Custom launcher binary path                   |
+| `builder_bin`      | `Path \| None` | `None`   | Custom builder binary path                    |
+| `strip_binaries`   | `bool`         | `False`  | Strip debug symbols from launcher             |
+| `show_progress`    | `bool`         | `False`  | Show progress bars during build               |
+| `private_key_path` | `Path \| None` | `None`   | Path to Ed25519 private key (PEM)             |
+| `public_key_path`  | `Path \| None` | `None`   | Path to Ed25519 public key (PEM)              |
+| `key_seed`         | `str \| None`  | `None`   | Deterministic key generation seed             |
 
 #### Returns
 
@@ -85,7 +85,7 @@ packages = build_package_from_manifest(
 )
 ```
 
----
+______________________________________________________________________
 
 ### verify_package
 
@@ -102,8 +102,8 @@ def verify_package(package_path: Path) -> dict[str, Any]:
 
 #### Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
+| Parameter      | Type   | Description               |
+| -------------- | ------ | ------------------------- |
 | `package_path` | `Path` | Path to .psp package file |
 
 #### Returns
@@ -151,7 +151,7 @@ build_info = result["build"]
 print(f"Built with: {build_info.get('builder_version')}")
 ```
 
----
+______________________________________________________________________
 
 ### generate_keys
 
@@ -171,8 +171,8 @@ def generate_keys(output_dir: Path) -> tuple[Path, Path]:
 
 #### Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
+| Parameter    | Type   | Description                |
+| ------------ | ------ | -------------------------- |
 | `output_dir` | `Path` | Directory to save key pair |
 
 #### Returns
@@ -199,7 +199,7 @@ packages = build_package_from_manifest(
 )
 ```
 
----
+______________________________________________________________________
 
 ### clean_cache
 
@@ -223,7 +223,7 @@ clean_cache()
 print("Cache cleared")
 ```
 
----
+______________________________________________________________________
 
 ## PackagingOrchestrator Class
 
@@ -286,7 +286,7 @@ orchestrator = PackagingOrchestrator(
 orchestrator.build_package()
 ```
 
----
+______________________________________________________________________
 
 ## Complete Workflow Example
 
@@ -452,7 +452,7 @@ if __name__ == "__main__":
         print(f"  - {pkg}")
 ```
 
----
+______________________________________________________________________
 
 ## Error Handling
 
@@ -507,28 +507,17 @@ validate_build_environment()
 packages = build_package_from_manifest(Path("pyproject.toml"))
 ```
 
----
+______________________________________________________________________
 
 ## Best Practices
 
-!!! tip "Security"
-    - Always verify packages after building
-    - Never commit private keys to version control
-    - Use environment variables for keys in CI/CD
-    - Validate signatures before distribution
+!!! tip "Security" - Always verify packages after building - Never commit private keys to version control - Use environment variables for keys in CI/CD - Validate signatures before distribution
 
-!!! tip "Performance"
-    - Use `strip_binaries=True` for production builds
-    - Enable `show_progress=True` for long builds
-    - Clean cache periodically with `clean_cache()`
+!!! tip "Performance" - Use `strip_binaries=True` for production builds - Enable `show_progress=True` for long builds - Clean cache periodically with `clean_cache()`
 
-!!! tip "Reliability"
-    - Always handle exceptions
-    - Validate manifest before building
-    - Check helper binary availability
-    - Verify packages in CI/CD pipelines
+!!! tip "Reliability" - Always handle exceptions - Validate manifest before building - Check helper binary availability - Verify packages in CI/CD pipelines
 
----
+______________________________________________________________________
 
 ## See Also
 
@@ -538,7 +527,6 @@ packages = build_package_from_manifest(Path("pyproject.toml"))
 - [CLI Reference](../guide/usage/cli/) - Command-line tools
 - [Packaging Guide](../guide/packaging/index/) - User guide
 
----
+______________________________________________________________________
 
-**For complete API reference, see the source code:**
-`src/flavor/package.py` and `src/flavor/packaging/`
+**For complete API reference, see the source code:** `src/flavor/package.py` and `src/flavor/packaging/`

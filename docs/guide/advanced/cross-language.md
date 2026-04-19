@@ -44,12 +44,12 @@ graph TB
 
 ### Language Roles
 
-| Component | Language | Purpose |
-|-----------|----------|---------|
-| **Orchestrator** | Python | High-level packaging logic, manifest parsing |
-| **Builder** | Go/Rust | PSPF package assembly, compression, signing |
-| **Launcher** | Go/Rust | Package extraction, verification, execution |
-| **Runtime** | Python | Packaged application execution |
+| Component        | Language | Purpose                                      |
+| ---------------- | -------- | -------------------------------------------- |
+| **Orchestrator** | Python   | High-level packaging logic, manifest parsing |
+| **Builder**      | Go/Rust  | PSPF package assembly, compression, signing  |
+| **Launcher**     | Go/Rust  | Package extraction, verification, execution  |
+| **Runtime**      | Python   | Packaged application execution               |
 
 All helpers produce **identical PSPF/2025 format** packages with full cross-compatibility.
 
@@ -62,6 +62,6 @@ All helpers produce **identical PSPF/2025 format** packages with full cross-comp
 - Performance comparison
 - When to use which helper
 
----
+______________________________________________________________________
 
 **See also:** [Architecture](../../development/architecture/) | [Testing](../../development/testing/cross-language/)

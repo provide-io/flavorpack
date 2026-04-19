@@ -2,13 +2,14 @@
 
 Complete reference for `pyproject.toml` configuration options in Flavorpack packages.
 
-!!! warning "Alpha Release - Limited Configuration Support"
-    **Many configuration options shown in this guide are planned but not yet implemented.**
+!!! warning "Alpha Release - Limited Configuration Support" **Many configuration options shown in this guide are planned but not yet implemented.**
 
-    Flavorpack is in alpha and currently supports a **minimal subset** of the documented configuration.
-    See the ["Currently Supported Configuration"](#currently-supported-configuration) section below for what actually works today.
+```
+Flavorpack is in alpha and currently supports a **minimal subset** of the documented configuration.
+See the ["Currently Supported Configuration"](#currently-supported-configuration) section below for what actually works today.
 
-    Features marked with 📋 are planned for future releases. See the [Roadmap](../roadmap/) for implementation timelines.
+Features marked with 📋 are planned for future releases. See the [Roadmap](../roadmap/) for implementation timelines.
+```
 
 ## Overview
 
@@ -37,32 +38,32 @@ entry_point = "myapp:main"        # ✅ Required (module:function format)
 
 #### `[project]` Section ✅
 
-| Field | Status | Description |
-|-------|--------|-------------|
-| `name` | ✅ **Required** | Package name |
-| `version` | ✅ **Required** | Package version |
-| `dependencies` | ✅ Supported | Runtime dependencies (automatically included) |
-| `scripts` | ✅ Supported | CLI entry points (extracted automatically) |
+| Field          | Status          | Description                                   |
+| -------------- | --------------- | --------------------------------------------- |
+| `name`         | ✅ **Required** | Package name                                  |
+| `version`      | ✅ **Required** | Package version                               |
+| `dependencies` | ✅ Supported    | Runtime dependencies (automatically included) |
+| `scripts`      | ✅ Supported    | CLI entry points (extracted automatically)    |
 
 All other `[project]` fields (description, readme, license, etc.) are preserved but not used by Flavorpack.
 
 #### `[tool.flavor]` Section ✅
 
-| Field | Status | Description |
-|-------|--------|-------------|
-| `entry_point` | ✅ **Required** | Main entry point (`module:function` format) |
-| `package_name` | ✅ Optional | Override package name |
+| Field          | Status          | Description                                 |
+| -------------- | --------------- | ------------------------------------------- |
+| `entry_point`  | ✅ **Required** | Main entry point (`module:function` format) |
+| `package_name` | ✅ Optional     | Override package name                       |
 
 #### `[tool.flavor.metadata]` Section ✅
 
-| Field | Status | Description |
-|-------|--------|-------------|
+| Field          | Status      | Description                       |
+| -------------- | ----------- | --------------------------------- |
 | `package_name` | ✅ Optional | Override package name in metadata |
 
 #### `[tool.flavor.build]` Section ✅
 
-| Field | Status | Description |
-|-------|--------|-------------|
+| Field          | Status       | Description             |
+| -------------- | ------------ | ----------------------- |
 | `dependencies` | ✅ Supported | Build-time dependencies |
 
 #### `[tool.flavor.execution.runtime.env]` Section ✅
@@ -84,27 +85,27 @@ set = { APP_ENV = "production", LOG_LEVEL = "info" }
 map = { HOST_VAR = "APP_VAR" }
 ```
 
-| Field | Status | Description |
-|-------|--------|-------------|
-| `unset` | ✅ Supported | List of variables to remove |
-| `pass` | ✅ Supported | List of variables to pass through |
-| `set` | ✅ Supported | Dict of variables to set |
-| `map` | ✅ Supported | Dict mapping old names to new names |
+| Field   | Status       | Description                         |
+| ------- | ------------ | ----------------------------------- |
+| `unset` | ✅ Supported | List of variables to remove         |
+| `pass`  | ✅ Supported | List of variables to pass through   |
+| `set`   | ✅ Supported | Dict of variables to set            |
+| `map`   | ✅ Supported | Dict mapping old names to new names |
 
 ### CLI-Only Options
 
 Some features are available via CLI flags but not manifest configuration:
 
-| Feature | CLI Flag | Description |
-|---------|----------|-------------|
-| Package signing | `--private-key`, `--public-key` | Ed25519 signing |
-| Key seed | `--key-seed` | Deterministic key generation |
-| Launcher selection | `--launcher-bin` | Custom launcher binary |
-| Builder selection | `--builder-bin` | Custom builder binary |
-| Strip binaries | `--strip` | Remove debug symbols |
-| Verification | `--verify` / `--no-verify` | Post-build verification |
+| Feature            | CLI Flag                        | Description                  |
+| ------------------ | ------------------------------- | ---------------------------- |
+| Package signing    | `--private-key`, `--public-key` | Ed25519 signing              |
+| Key seed           | `--key-seed`                    | Deterministic key generation |
+| Launcher selection | `--launcher-bin`                | Custom launcher binary       |
+| Builder selection  | `--builder-bin`                 | Custom builder binary        |
+| Strip binaries     | `--strip`                       | Remove debug symbols         |
+| Verification       | `--verify` / `--no-verify`      | Post-build verification      |
 
----
+______________________________________________________________________
 
 ## Manifest Structure
 
@@ -206,8 +207,7 @@ description = "Custom package description"
 
 ### Execution Configuration
 
-!!! warning "📋 Planned Feature - Not Yet Implemented"
-    These execution configuration options are **not yet supported**. See [Roadmap](../roadmap/#manifest-configuration-features) for planned implementation.
+!!! warning "📋 Planned Feature - Not Yet Implemented" These execution configuration options are **not yet supported**. See [Roadmap](../roadmap/#manifest-configuration-features) for planned implementation.
 
 ```toml
 # 📋 PLANNED - Not yet implemented
@@ -258,8 +258,7 @@ dependencies = [                  # ✅ Supported
 ]
 ```
 
-!!! warning "📋 Planned Features - Not Yet Implemented"
-    The following build configuration options are **not yet supported**. See [Roadmap](../roadmap/#manifest-configuration-features) for planned implementation.
+!!! warning "📋 Planned Features - Not Yet Implemented" The following build configuration options are **not yet supported**. See [Roadmap](../roadmap/#manifest-configuration-features) for planned implementation.
 
 ```toml
 # 📋 PLANNED - Not yet implemented
@@ -301,8 +300,7 @@ seed = "my-build-seed"
 package_name = "myapp-custom"     # ✅ Supported
 ```
 
-!!! warning "📋 Planned Features - Not Yet Implemented"
-    Additional metadata customization options are **not yet supported**. See [Roadmap](../roadmap/#manifest-configuration-features) for planned implementation.
+!!! warning "📋 Planned Features - Not Yet Implemented" Additional metadata customization options are **not yet supported**. See [Roadmap](../roadmap/#manifest-configuration-features) for planned implementation.
 
 ```toml
 # 📋 PLANNED - Not yet implemented
@@ -320,13 +318,14 @@ git_commit = "${GIT_COMMIT}"
 
 ## Slot Configuration
 
-!!! warning "📋 Planned Feature - Not Yet Implemented"
-    **Slot configuration via `pyproject.toml` is not yet supported.**
+!!! warning "📋 Planned Feature - Not Yet Implemented" **Slot configuration via `pyproject.toml` is not yet supported.**
 
-    Slots are currently created automatically by Flavorpack based on your Python application structure.
-    Manual slot configuration is planned for a future release. See [Roadmap](../roadmap/#slot-configuration) for details.
+```
+Slots are currently created automatically by Flavorpack based on your Python application structure.
+Manual slot configuration is planned for a future release. See [Roadmap](../roadmap/#slot-configuration) for details.
 
-    This entire section documents the **planned slot configuration format** that will be available in future releases.
+This entire section documents the **planned slot configuration format** that will be available in future releases.
+```
 
 ### Basic Slot Definition
 
@@ -470,16 +469,17 @@ optional = true
 
 ## Security Configuration
 
-!!! warning "📋 Planned Feature - Not Yet Implemented"
-    **Security configuration via `pyproject.toml` is not yet supported.**
+!!! warning "📋 Planned Feature - Not Yet Implemented" **Security configuration via `pyproject.toml` is not yet supported.**
 
-    Package signing is currently available via CLI flags only:
+```
+Package signing is currently available via CLI flags only:
 
-    - `--private-key PATH` - Sign with Ed25519 private key
-    - `--public-key PATH` - Include public key in package
-    - `--key-seed TEXT` - Deterministic key generation
+- `--private-key PATH` - Sign with Ed25519 private key
+- `--public-key PATH` - Include public key in package
+- `--key-seed TEXT` - Deterministic key generation
 
-    Manifest-based security configuration is planned for a future release. See [Roadmap](../roadmap/) for details.
+Manifest-based security configuration is planned for a future release. See [Roadmap](../roadmap/) for details.
+```
 
 ### Package Signing
 
@@ -519,10 +519,11 @@ strict_slot_validation = true
 
 ## Advanced Features
 
-!!! warning "📋 Planned Features - Not Yet Implemented"
-    **Advanced features are not yet supported.**
+!!! warning "📋 Planned Features - Not Yet Implemented" **Advanced features are not yet supported.**
 
-    These features are planned for future releases to enable platform-specific builds, custom build steps, and experimental optimizations. See [Roadmap](../roadmap/#advanced-features) for details.
+```
+These features are planned for future releases to enable platform-specific builds, custom build steps, and experimental optimizations. See [Roadmap](../roadmap/#advanced-features) for details.
+```
 
 ### Conditional Configuration
 
@@ -606,15 +607,16 @@ export FLAVOR_RUNTIME_ENV_SET="APP_ENV=production"
 export FLAVOR_KEY_SEED="secret-seed"  # For reproducible builds
 ```
 
-!!! note "Signing Key Configuration"
-    **Private and public keys must be passed via CLI options**, not environment variables:
+!!! note "Signing Key Configuration" **Private and public keys must be passed via CLI options**, not environment variables:
 
-    ```bash
-    flavor pack --private-key keys/flavor-private.key \
-                --public-key keys/flavor-public.key
-    ```
+````
+```bash
+flavor pack --private-key keys/flavor-private.key \
+            --public-key keys/flavor-public.key
+```
 
-    The `FLAVOR_KEY_SEED` environment variable is only for deterministic key generation during the build, not for loading existing keys. See the [Signing Guide](signing/) for details.
+The `FLAVOR_KEY_SEED` environment variable is only for deterministic key generation during the build, not for loading existing keys. See the [Signing Guide](signing/) for details.
+````
 
 ## Validation
 
@@ -623,22 +625,24 @@ export FLAVOR_KEY_SEED="secret-seed"  # For reproducible builds
 Flavorpack validates these required fields:
 
 1. `[project]` section:
+
    - `name`: Package name
    - `version`: Package version
 
-2. `[tool.flavor]` section:
+1. `[tool.flavor]` section:
+
    - `entry_point`: Application entry point
 
 ### Common Validation Errors
 
-| Error | Cause | Solution |
-|-------|-------|----------|
-| Missing entry_point | No entry point specified | Add `entry_point = "module:function"` |
-| Invalid entry_point format | Wrong format | Use `module:function` format |
-| Missing project name | No name in [project] | Add `name = "myapp"` |
-| Invalid slot ID | Duplicate or invalid ID | Use unique, valid identifiers |
-| Invalid lifecycle | Unknown lifecycle value | Use valid lifecycle option |
-| Invalid platform | Unknown platform | Use supported platform string |
+| Error                      | Cause                    | Solution                              |
+| -------------------------- | ------------------------ | ------------------------------------- |
+| Missing entry_point        | No entry point specified | Add `entry_point = "module:function"` |
+| Invalid entry_point format | Wrong format             | Use `module:function` format          |
+| Missing project name       | No name in [project]     | Add `name = "myapp"`                  |
+| Invalid slot ID            | Duplicate or invalid ID  | Use unique, valid identifiers         |
+| Invalid lifecycle          | Unknown lifecycle value  | Use valid lifecycle option            |
+| Invalid platform           | Unknown platform         | Use supported platform string         |
 
 ## Best Practices
 

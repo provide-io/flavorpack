@@ -1,26 +1,24 @@
 # Installation
 
-!!! warning "Alpha Release - Source Installation Only"
-    Flavorpack is in early alpha. PyPI packages and pre-built binaries are not yet available. Check current version with `flavor --version`. **Install from source only.**
+!!! warning "Alpha Release - Source Installation Only" Flavorpack is in early alpha. PyPI packages and pre-built binaries are not yet available. Check current version with `flavor --version`. **Install from source only.**
 
 Get started with Flavorpack, a cross-language packaging system implementing the Progressive Secure Package Format (PSPF/2025) that creates self-contained, portable executables from Python applications.
 
 ## Prerequisites
 
---8<-- ".provide/foundry/docs/_partials/python-requirements.md"
+--8\<-- ".provide/foundry/docs/\_partials/python-requirements.md"
 
-!!! info "UV Version Requirement"
-    Flavorpack requires **UV 0.8.13 or later** for full functionality. Earlier versions may have compatibility issues with modern package management features.
+!!! info "UV Version Requirement" Flavorpack requires **UV 0.8.13 or later** for full functionality. Earlier versions may have compatibility issues with modern package management features.
 
---8<-- ".provide/foundry/docs/_partials/uv-installation.md"
+--8\<-- ".provide/foundry/docs/\_partials/uv-installation.md"
 
---8<-- ".provide/foundry/docs/_partials/python-version-setup.md"
+--8\<-- ".provide/foundry/docs/\_partials/python-version-setup.md"
 
 ### Additional Requirements for Building Helpers
 
 Flavorpack's native launchers and builders require Go and Rust toolchains:
 
---8<-- ".provide/foundry/docs/_partials/go-requirements.md"
+--8\<-- ".provide/foundry/docs/\_partials/go-requirements.md"
 
 **Rust Requirements:**
 
@@ -42,38 +40,32 @@ cargo --version
 
 See [Rust's official installation guide](https://www.rust-lang.org/tools/install) for more details.
 
---8<-- ".provide/foundry/docs/_partials/build-tools-setup.md"
+--8\<-- ".provide/foundry/docs/\_partials/build-tools-setup.md"
 
 ### System Requirements Summary
 
-| Component | Version | Required For |
-|-----------|---------|--------------|
-| Python | 3.11+ | Running Flavorpack |
-| UV | 0.8.13+ | Package management |
-| Go | 1.26+ | Building Go helpers |
-| Rust | 1.86+ | Building Rust helpers (edition 2024) |
-| Git | 2.25+ | Cloning repository |
-| Make | 3.81+ | Build automation |
+| Component | Version | Required For                         |
+| --------- | ------- | ------------------------------------ |
+| Python    | 3.11+   | Running Flavorpack                   |
+| UV        | 0.8.13+ | Package management                   |
+| Go        | 1.26+   | Building Go helpers                  |
+| Rust      | 1.86+   | Building Rust helpers (edition 2024) |
+| Git       | 2.25+   | Cloning repository                   |
+| Make      | 3.81+   | Build automation                     |
 
 ### Supported Platforms
 
-| Platform | Architecture | Status | Binary Type | Notes |
-|----------|-------------|---------|------------|-------|
-| Linux | x86_64 | ✅ Full | Static (musl) | CentOS 7+, Ubuntu, Alpine |
-| Linux | aarch64 | ✅ Full | Static (musl) | ARM64 servers |
-| macOS | x86_64 | ✅ Full | Dynamic | Intel Macs |
-| macOS | arm64 | ✅ Full | Dynamic | Apple Silicon |
-| Windows | x86_64 | ⚠️ Disabled | Dynamic | Currently disabled due to UTF-8 issues |
+| Platform | Architecture | Status      | Binary Type   | Notes                                  |
+| -------- | ------------ | ----------- | ------------- | -------------------------------------- |
+| Linux    | x86_64       | ✅ Full     | Static (musl) | CentOS 7+, Ubuntu, Alpine              |
+| Linux    | aarch64      | ✅ Full     | Static (musl) | ARM64 servers                          |
+| macOS    | x86_64       | ✅ Full     | Dynamic       | Intel Macs                             |
+| macOS    | arm64        | ✅ Full     | Dynamic       | Apple Silicon                          |
+| Windows  | x86_64       | ⚠️ Disabled | Dynamic       | Currently disabled due to UTF-8 issues |
 
-!!! warning "Windows Support Status"
-    Windows support is currently **disabled** in Flavorpack due to UTF-8 encoding issues in the native helpers. Windows support is planned for a future release once these issues are resolved.
+!!! warning "Windows Support Status" Windows support is currently **disabled** in Flavorpack due to UTF-8 encoding issues in the native helpers. Windows support is planned for a future release once these issues are resolved.
 
-!!! info "Binary Compatibility"
-    All Linux binaries are built as static executables:
-    - **Go**: Built with `CGO_ENABLED=0` for static linking
-    - **Rust**: Built with musl libc for static linking
-    - **Compatibility**: Works on CentOS 7+, Amazon Linux 2023, Ubuntu, Alpine, and any Linux distribution
-    - **No glibc dependencies**: Binaries are fully portable
+!!! info "Binary Compatibility" All Linux binaries are built as static executables: - **Go**: Built with `CGO_ENABLED=0` for static linking - **Rust**: Built with musl libc for static linking - **Compatibility**: Works on CentOS 7+, Amazon Linux 2023, Ubuntu, Alpine, and any Linux distribution - **No glibc dependencies**: Binaries are fully portable
 
 ## Installation Methods
 
@@ -83,72 +75,78 @@ Best for developers who want the latest features and ability to build custom hel
 
 === "Linux/macOS"
 
-    ```bash
-    # Install UV package manager
-    curl -LsSf https://astral.sh/uv/install.sh | sh
+````
+```bash
+# Install UV package manager
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-    # Clone the repository
-    git clone https://github.com/provide-io/flavorpack.git
-    cd flavorpack
+# Clone the repository
+git clone https://github.com/provide-io/flavorpack.git
+cd flavorpack
 
-    # Set up environment and install dependencies
-    uv sync
+# Set up environment and install dependencies
+uv sync
 
-    # Build native helpers (Go and Rust binaries)
-    make build-helpers
+# Build native helpers (Go and Rust binaries)
+make build-helpers
 
-    # Verify installation
-    flavor --version
-    ```
+# Verify installation
+flavor --version
+```
+````
 
 === "Windows"
 
-    !!! warning "Windows Not Currently Supported"
-        Windows support is currently **disabled** due to UTF-8 encoding issues in the native helpers. Windows support is planned for a future release.
+````
+!!! warning "Windows Not Currently Supported"
+    Windows support is currently **disabled** due to UTF-8 encoding issues in the native helpers. Windows support is planned for a future release.
 
-        For now, Windows users can use WSL2 (Windows Subsystem for Linux) and follow the Linux installation instructions.
+    For now, Windows users can use WSL2 (Windows Subsystem for Linux) and follow the Linux installation instructions.
 
-    ```powershell
-    # Windows installation is not currently supported
-    # Please use WSL2 and follow Linux instructions instead
+```powershell
+# Windows installation is not currently supported
+# Please use WSL2 and follow Linux instructions instead
 
-    # Install WSL2
-    wsl --install
+# Install WSL2
+wsl --install
 
-    # Then follow Linux installation steps in WSL
-    ```
+# Then follow Linux installation steps in WSL
+```
+````
 
 ### Method 2: Using pip
 
-!!! info "Planned for Future Release"
-    PyPI installation is planned for a future release. Currently unavailable.
+!!! info "Planned for Future Release" PyPI installation is planned for a future release. Currently unavailable.
 
-    **When available**, installation will be:
-    ```bash
-    pip install flavorpack
-    make build-helpers
-    ```
+````
+**When available**, installation will be:
+```bash
+pip install flavorpack
+make build-helpers
+```
 
-    For now, please use source installation (Method 1 above).
+For now, please use source installation (Method 1 above).
+````
 
 ### Method 3: Development Container
 
 For VS Code users with the Remote-Containers extension.
 
 1. Open the repository in VS Code
-2. When prompted, click "Reopen in Container"
-3. The environment will be automatically configured
+1. When prompted, click "Reopen in Container"
+1. The environment will be automatically configured
 
 The devcontainer includes:
+
 - Python 3.11+
 - Go 1.26+
 - Rust 1.86+
 - All required build tools
 - Pre-configured environment
 
---8<-- ".provide/foundry/docs/_partials/virtual-env-setup.md"
+--8\<-- ".provide/foundry/docs/\_partials/virtual-env-setup.md"
 
---8<-- ".provide/foundry/docs/_partials/platform-specific-macos.md"
+--8\<-- ".provide/foundry/docs/\_partials/platform-specific-macos.md"
 
 ## Building Native Helpers
 
@@ -175,35 +173,39 @@ The system automatically selects appropriate builder/launcher combinations based
 
 === "Go Components"
 
-    ```bash
-    cd src/flavor-go
+````
+```bash
+cd src/flavor-go
 
-    # Build launcher
-    go build -o ../../dist/bin/flavor-go-launcher-$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m) \
-      -ldflags="-s -w" \
-      ./cmd/flavor-go-launcher
+# Build launcher
+go build -o ../../dist/bin/flavor-go-launcher-$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m) \
+  -ldflags="-s -w" \
+  ./cmd/flavor-go-launcher
 
-    # Build builder
-    go build -o ../../dist/bin/flavor-go-builder-$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m) \
-      -ldflags="-s -w" \
-      ./cmd/flavor-go-builder
-    ```
+# Build builder
+go build -o ../../dist/bin/flavor-go-builder-$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m) \
+  -ldflags="-s -w" \
+  ./cmd/flavor-go-builder
+```
+````
 
 === "Rust Components"
 
-    ```bash
-    cd src/flavor-rs
+````
+```bash
+cd src/flavor-rs
 
-    # Build launcher
-    cargo build --release --bin flavor-rs-launcher
-    cp target/release/flavor-rs-launcher \
-      ../../dist/bin/flavor-rs-launcher-$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
+# Build launcher
+cargo build --release --bin flavor-rs-launcher
+cp target/release/flavor-rs-launcher \
+  ../../dist/bin/flavor-rs-launcher-$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
 
-    # Build builder
-    cargo build --release --bin flavor-rs-builder
-    cp target/release/flavor-rs-builder \
-      ../../dist/bin/flavor-rs-builder-$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
-    ```
+# Build builder
+cargo build --release --bin flavor-rs-builder
+cp target/release/flavor-rs-builder \
+  ../../dist/bin/flavor-rs-builder-$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
+```
+````
 
 ### Cross-Platform Builds
 
@@ -225,6 +227,7 @@ make build-windows
 ### Basic Verification
 
 **1. Check Flavorpack Version:**
+
 ```bash
 # Verify flavor command is available
 flavor --version
@@ -233,6 +236,7 @@ flavor --version
 ```
 
 **2. List Available Helpers:**
+
 ```bash
 # View installed launchers and builders
 flavor helpers list
@@ -241,6 +245,7 @@ flavor helpers list
 ```
 
 **3. Test Imports:**
+
 ```python
 import flavor
 from flavor.psp.format_2025 import builder, reader
@@ -253,6 +258,7 @@ print("✅ Installation successful!")
 ### Comprehensive Testing
 
 **Run Test Suite:**
+
 ```bash
 # Run all Python tests
 make test
@@ -276,7 +282,7 @@ make validate-pspf-combo
 
 ## Development Workflow
 
---8<-- ".provide/foundry/docs/_partials/testing-setup.md"
+--8\<-- ".provide/foundry/docs/\_partials/testing-setup.md"
 
 **Additional Testing Options:**
 
@@ -294,13 +300,9 @@ uv run pytest -m cross_language
 uv run pytest -m security
 ```
 
-!!! warning "Testing Requirements"
-    - **NEVER use simple tests or ad-hoc test files**
-    - **ALWAYS use pretaster or taster for PSPF tests**
-    - All package tests must validate cross-language compatibility
-    - No hardcoded test manifests or standalone test packages
+!!! warning "Testing Requirements" - **NEVER use simple tests or ad-hoc test files** - **ALWAYS use pretaster or taster for PSPF tests** - All package tests must validate cross-language compatibility - No hardcoded test manifests or standalone test packages
 
---8<-- ".provide/foundry/docs/_partials/code-quality-setup.md"
+--8\<-- ".provide/foundry/docs/\_partials/code-quality-setup.md"
 
 **Additional Code Quality:**
 
@@ -313,11 +315,7 @@ cargo build --release
 uv run mypy src/flavor
 ```
 
-!!! important "Code Quality Standards"
-    - **Trace logging is essential** - Preserve all debug/trace logging for diagnostics
-    - Use structured logging with emoji prefixes (DAS pattern)
-    - Rust code must compile with `--warnings-as-errors` (strict mode)
-    - All implementations must be production-ready and reliable
+!!! important "Code Quality Standards" - **Trace logging is essential** - Preserve all debug/trace logging for diagnostics - Use structured logging with emoji prefixes (DAS pattern) - Rust code must compile with `--warnings-as-errors` (strict mode) - All implementations must be production-ready and reliable
 
 ### Pre-commit Hooks
 
@@ -362,11 +360,9 @@ flavor keygen --out-dir keys/
 # See the Signing Guide for details
 ```
 
-!!! note "Signing Keys"
-    Signing keys are passed via CLI options (`--private-key` and `--public-key`), not environment variables. See the [Signing Guide](../guide/packaging/signing/) for details.
+!!! note "Signing Keys" Signing keys are passed via CLI options (`--private-key` and `--public-key`), not environment variables. See the [Signing Guide](../guide/packaging/signing/) for details.
 
-!!! warning "No Ad-Hoc Signing"
-    **NEVER do ad-hoc signing unless SPECIFICALLY REQUESTED** or after approval. Always use proper key management and signing workflows.
+!!! warning "No Ad-Hoc Signing" **NEVER do ad-hoc signing unless SPECIFICALLY REQUESTED** or after approval. Always use proper key management and signing workflows.
 
 ### 2. Environment Variables
 
@@ -374,12 +370,12 @@ Flavorpack uses environment variables for configuration, caching, and logging. F
 
 Common variables:
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `FLAVOR_CACHE` | Cache directory for work environments | `~/.cache/flavor/workenv` |
-| `FOUNDATION_LOG_LEVEL` | Logging level for Python components | `info` |
-| `FLAVOR_LOG_LEVEL` | Logging level for Go/Rust components | `warn` |
-| `FLAVOR_VALIDATION` | Validation level (strict, standard, relaxed, minimal, none) | `standard` |
+| Variable               | Description                                                 | Default                   |
+| ---------------------- | ----------------------------------------------------------- | ------------------------- |
+| `FLAVOR_CACHE`         | Cache directory for work environments                       | `~/.cache/flavor/workenv` |
+| `FOUNDATION_LOG_LEVEL` | Logging level for Python components                         | `info`                    |
+| `FLAVOR_LOG_LEVEL`     | Logging level for Go/Rust components                        | `warn`                    |
+| `FLAVOR_VALIDATION`    | Validation level (strict, standard, relaxed, minimal, none) | `standard`                |
 
 See the [complete environment variable reference](../guide/usage/environment/) for all available variables and detailed examples.
 
@@ -434,11 +430,7 @@ The project has a polyglot architecture with three main layers:
 - **Protobuf** - All operations defined in .proto files
 - **SlotDescriptor format** - See `docs/reference/spec/SLOT_DESCRIPTOR_SPECIFICATION.md`
 
-!!! important "No Backward Compatibility"
-    - **ABSOLUTELY NO** backward compatibility code, functions, variables, or patterns
-    - **NO** migration logic or versioning checks for old formats
-    - **ALWAYS** implement the end-state solution directly
-    - This is a greenfield project - assume everything is brand new
+!!! important "No Backward Compatibility" - **ABSOLUTELY NO** backward compatibility code, functions, variables, or patterns - **NO** migration logic or versioning checks for old formats - **ALWAYS** implement the end-state solution directly - This is a greenfield project - assume everything is brand new
 
 ## Platform-Specific Notes
 
@@ -456,17 +448,17 @@ The project has a polyglot architecture with three main layers:
 
 ### Windows
 
-!!! warning "Windows Not Currently Supported"
-    Native Windows support is currently disabled. Please use WSL2 (Windows Subsystem for Linux) and follow the Linux instructions above.
+!!! warning "Windows Not Currently Supported" Native Windows support is currently disabled. Please use WSL2 (Windows Subsystem for Linux) and follow the Linux instructions above.
 
 **When using WSL2**:
+
 - Install WSL2 with `wsl --install`
 - Use the Linux installation method
 - All Flavorpack features will work in WSL2
 
 ## Troubleshooting
 
---8<-- ".provide/foundry/docs/_partials/troubleshooting-common.md"
+--8\<-- ".provide/foundry/docs/\_partials/troubleshooting-common.md"
 
 ### Flavorpack-Specific Issues
 
@@ -531,21 +523,16 @@ make validate-pspf
 make validate-pspf-combo
 ```
 
-!!! important "Debug Logging"
-    Use debug logger instead of print statements when debugging:
-    ```python
-    from provide.foundation import logger
-    logger.debug("Processing package", package_path=path)
-    ```
+!!! important "Debug Logging" Use debug logger instead of print statements when debugging: `python     from provide.foundation import logger     logger.debug("Processing package", package_path=path)     `
 
 ### Getting Help
 
 If you encounter issues:
 
 1. **Check the [Troubleshooting Guide](../troubleshooting/common/)**
-2. **Search [existing issues](https://github.com/provide-io/flavorpack/issues)**
-3. **Open a [new issue](https://github.com/provide-io/flavorpack/issues/new)**
-4. **Review [Documentation](../guide/concepts/index/)** for PSPF concepts
+1. **Search [existing issues](https://github.com/provide-io/flavorpack/issues)**
+1. **Open a [new issue](https://github.com/provide-io/flavorpack/issues/new)**
+1. **Review [Documentation](../guide/concepts/index/)** for PSPF concepts
 
 ## Next Steps
 

@@ -5,6 +5,7 @@ This directory contains the Go implementation of Flavorpack helpers (builders an
 ## Overview
 
 The Go helpers provide native implementations for:
+
 - **flavor-go-builder**: Creates PSPF/2025 packages from JSON manifests
 - **flavor-go-launcher**: Executes PSPF packages with runtime extraction and verification
 
@@ -63,6 +64,7 @@ src/flavor-go/
 ### Key Components
 
 **Builder (`cmd/flavor-go-builder/`)**:
+
 - Reads JSON manifest files
 - Assembles PSPF binary structure
 - Packs slots with appropriate operation chains
@@ -70,6 +72,7 @@ src/flavor-go/
 - Writes complete .psp package files
 
 **Launcher (`cmd/flavor-go-launcher/`)**:
+
 - Validates package integrity and signatures
 - Extracts slots to workenv cache
 - Manages workenv lifecycle
@@ -77,6 +80,7 @@ src/flavor-go/
 - Handles signals and cleanup
 
 **Shared Packages (`pkg/`)**:
+
 - `psp/format_2025/`: PSPF/2025 format implementation
 - `logging/`: Structured logging with emoji prefixes (🐹)
 - `utils/`: Common utilities and helpers
@@ -127,6 +131,7 @@ golangci-lint run
 ## Cross-Language Compatibility
 
 The Go helpers are designed to be fully compatible with:
+
 - Python builder/launcher implementations
 - Rust builder/launcher implementations
 
@@ -137,10 +142,12 @@ All helpers produce and consume identical PSPF/2025 binary formats, ensuring pac
 ### Environment Variables
 
 **Build Time**:
+
 - `CGO_ENABLED`: Set to 0 for static linking (Linux)
 - `GOOS`, `GOARCH`: Cross-compilation targets
 
 **Runtime**:
+
 - `FLAVOR_LOG_LEVEL`: Logging level (debug, info, warn, error)
 - `FLAVOR_WORKENV`: Workenv base directory
 - `FLAVOR_VALIDATION`: Validation level (strict, standard, relaxed, minimal, none)
@@ -148,6 +155,7 @@ All helpers produce and consume identical PSPF/2025 binary formats, ensuring pac
 ### Build Flags
 
 Common ldflags for production builds:
+
 ```bash
 -ldflags="-s -w"
 # -s: Strip symbol table
@@ -155,6 +163,7 @@ Common ldflags for production builds:
 ```
 
 For static Linux binaries:
+
 ```bash
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" ...
 ```
@@ -175,10 +184,10 @@ Set `FLAVOR_LOG_LEVEL=debug` for verbose output.
 When contributing to the Go helpers:
 
 1. **Follow Go conventions**: Use `go fmt`, follow idiomatic Go patterns
-2. **No backward compatibility**: Implement current PSPF/2025 spec only
-3. **Test cross-language**: Ensure compatibility with Rust/Python implementations
-4. **Use operations field**: Never use deprecated codec field
-5. **Document changes**: Update comments and documentation
+1. **No backward compatibility**: Implement current PSPF/2025 spec only
+1. **Test cross-language**: Ensure compatibility with Rust/Python implementations
+1. **Use operations field**: Never use deprecated codec field
+1. **Document changes**: Update comments and documentation
 
 ## Testing with Pretaster
 

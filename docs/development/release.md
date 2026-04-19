@@ -67,6 +67,7 @@ make release-all
 ```
 
 This creates wheels in `dist/` with names like:
+
 - `flavorpack-0.0.1023-py3-none-macosx_11_0_arm64.whl`
 - `flavorpack-0.0.1023-py3-none-linux_x86_64.whl`
 
@@ -168,6 +169,7 @@ make release-upload
 ```
 
 **Prerequisites**:
+
 - PyPI account with API token
 - `~/.pypirc` configured or `TWINE_USERNAME`/`TWINE_PASSWORD` set
 
@@ -176,11 +178,11 @@ make release-upload
 ### Create Release
 
 1. Go to [Releases page](https://github.com/provide-io/flavorpack/releases)
-2. Click "Draft a new release"
-3. Select the version tag
-4. Generate release notes or write manually
-5. Attach wheel files from `dist/`
-6. Publish release
+1. Click "Draft a new release"
+1. Select the version tag
+1. Generate release notes or write manually
+1. Attach wheel files from `dist/`
+1. Publish release
 
 ### Release Notes Template
 
@@ -226,11 +228,11 @@ pip install flavorpack==0.1.0
 The release process can be automated through GitHub Actions:
 
 1. **On tag push**: Trigger release build
-2. **Build helpers**: Build for all platforms
-3. **Build wheels**: Create platform-specific wheels
-4. **Validate**: Run validation suite
-5. **Upload**: Publish to PyPI
-6. **Create release**: Auto-create GitHub release
+1. **Build helpers**: Build for all platforms
+1. **Build wheels**: Create platform-specific wheels
+1. **Validate**: Run validation suite
+1. **Upload**: Publish to PyPI
+1. **Create release**: Auto-create GitHub release
 
 See [CI/CD Documentation](ci-cd/) for workflow details.
 
@@ -297,10 +299,10 @@ make release-all
 If a critical issue is found after release:
 
 1. **Yank the release on PyPI** (marks it as unavailable but doesn't delete)
-2. **Create hotfix branch** from the tagged release
-3. **Fix the issue** and bump patch version
-4. **Create new release** following normal process
-5. **Announce the issue** and new fixed version
+1. **Create hotfix branch** from the tagged release
+1. **Fix the issue** and bump patch version
+1. **Create new release** following normal process
+1. **Announce the issue** and new fixed version
 
 ```bash
 # Yank a release (requires PyPI permissions)
@@ -308,9 +310,10 @@ pip install twine
 twine upload --repository pypi --yank dist/flavorpack-X.Y.Z-*.whl
 ```
 
----
+______________________________________________________________________
 
 **See also:**
+
 - [CI/CD](ci-cd/) - Automated release workflows
 - [Contributing](contributing/) - Development guidelines
 - [Testing](testing/index/) - Test requirements before release

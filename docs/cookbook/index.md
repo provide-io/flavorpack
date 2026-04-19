@@ -7,9 +7,11 @@ Practical, real-world examples and recipes for packaging applications with Flavo
 The cookbook contains two types of content:
 
 ### 📚 **Examples**
+
 Complete, working examples of packaging different types of applications. Each example includes full source code, configuration, and step-by-step instructions.
 
 ### 🧪 **Recipes**
+
 Short, focused how-to guides for specific integration scenarios and workflows.
 
 ## Examples
@@ -21,6 +23,7 @@ Package command-line applications and utilities.
 **[CLI Tools Example →](examples/cli-tool/)**
 
 Learn how to package:
+
 - Click-based CLI tools
 - Argument parsing
 - Multi-command applications
@@ -33,6 +36,7 @@ Package FastAPI, Flask, and other web applications.
 **[Web Applications Example →](examples/web-app/)**
 
 Learn how to package:
+
 - FastAPI APIs
 - Flask web apps
 - Static file handling
@@ -47,6 +51,7 @@ Use Flavorpack packages in Docker containers.
 **[Docker Integration Recipe →](recipes/docker/)**
 
 Learn about:
+
 - Minimal Docker images
 - Multi-stage builds
 - Volume mounts
@@ -59,6 +64,7 @@ Automate packaging in CI/CD.
 **[CI/CD Pipelines Recipe →](recipes/ci-cd/)**
 
 Learn about:
+
 - GitHub Actions
 - GitLab CI
 - CircleCI
@@ -88,9 +94,9 @@ Learn about:
 Have a great example or recipe? We'd love to include it!
 
 1. Create your example with complete code
-2. Test it thoroughly
-3. Submit a pull request
-4. Include clear documentation
+1. Test it thoroughly
+1. Submit a pull request
+1. Include clear documentation
 
 See [Contributing Guide](../development/contributing/) for details.
 
@@ -133,6 +139,6 @@ Related examples and topics
 - 💬 Ask in [Community Support](../community/support/)
 - 🐛 Report issues on [GitHub](https://github.com/provide-io/flavorpack/issues)
 
----
+______________________________________________________________________
 
 **Ready to start?** Try the [CLI Tools Example](examples/cli-tool/) or [Web Applications Example](examples/web-app/).

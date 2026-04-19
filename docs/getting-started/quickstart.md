@@ -1,7 +1,6 @@
 # Quick Start
 
-!!! success "5 minutes to your first package"
-    This guide will have you creating and running your first PSPF package in under 5 minutes.
+!!! success "5 minutes to your first package" This guide will have you creating and running your first PSPF package in under 5 minutes.
 
 ## Prerequisites
 
@@ -11,8 +10,7 @@ Before you begin, ensure you have:
 - **UV package manager** ([Install](https://docs.astral.sh/uv/))
 - **Git** for cloning the repository
 
-!!! info "Need More Details?"
-    See the complete [System Requirements](../reference/requirements/) for detailed version information and platform support.
+!!! info "Need More Details?" See the complete [System Requirements](../reference/requirements/) for detailed version information and platform support.
 
 ## Installation
 
@@ -44,8 +42,7 @@ make build-helpers
 # Built binaries will be in dist/bin/ with platform suffixes
 ```
 
-!!! tip "Pre-built binaries"
-    Pre-built binaries for common platforms will be available in future releases.
+!!! tip "Pre-built binaries" Pre-built binaries for common platforms will be available in future releases.
 
 ## Your First Package
 
@@ -117,9 +114,9 @@ chmod +x hello.psp
 You've created a **self-contained executable** that:
 
 1. **Includes everything** - Python runtime, dependencies, and your code
-2. **Runs anywhere** - No Python installation required on the target system
-3. **Is cryptographically signed** - Ensures package integrity
-4. **Uses smart caching** - Extracts only once for fast subsequent runs
+1. **Runs anywhere** - No Python installation required on the target system
+1. **Is cryptographically signed** - Ensures package integrity
+1. **Uses smart caching** - Extracts only once for fast subsequent runs
 
 ## Understanding the Package Structure
 
@@ -183,33 +180,29 @@ ls extracted/
 Now that you've created your first package:
 
 ### Learn More
+
 - 📖 [Core Concepts](../guide/concepts/pspf-format/) - Understand the PSPF format
 - 🎯 [Package Configuration](../guide/packaging/configuration/) - Advanced packaging options
 - 🔧 [Python Packaging Guide](../guide/packaging/python/) - Python-specific features
 
 ### Try Examples
+
 - 💻 [CLI Tool Example](../cookbook/examples/cli-tool/) - Package a CLI application
 - 🌐 [Web App Example](../cookbook/examples/web-app/) - Package a Flask/FastAPI app
 
 ### Get Help
+
 - 🐛 [Troubleshooting](../troubleshooting/common/) - Common issues and solutions
 - 💬 [Community](../community/support/) - Get help from the community
 - 📝 [FAQ](../troubleshooting/faq/) - Frequently asked questions
 
 ## Tips for Success
 
-!!! tip "Best Practices"
-    - **Keep packages small** - Use `--exclude` to skip unnecessary files
-    - **Sign your packages** - Always use signing keys for production
-    - **Test on target platforms** - Ensure compatibility before deployment
-    - **Use version tags** - Include version in package filename
+!!! tip "Best Practices" - **Keep packages small** - Use `--exclude` to skip unnecessary files - **Sign your packages** - Always use signing keys for production - **Test on target platforms** - Ensure compatibility before deployment - **Use version tags** - Include version in package filename
 
-!!! warning "Common Pitfalls"
-    - **Missing dependencies** - Ensure all imports are in requirements
-    - **File permissions** - Remember to make packages executable
-    - **Path issues** - Use absolute imports in your Python code
+!!! warning "Common Pitfalls" - **Missing dependencies** - Ensure all imports are in requirements - **File permissions** - Remember to make packages executable - **Path issues** - Use absolute imports in your Python code
 
----
+______________________________________________________________________
 
 ## Related Pages
 
@@ -232,6 +225,6 @@ Now that you've created your first package:
 - 💬 [Community](../community/support/) - Get help from the community
 - 📝 [FAQ](../troubleshooting/faq/) - Frequently asked questions
 
----
+______________________________________________________________________
 
 **Congratulations!** 🎉 You've successfully created and run your first Flavorpack package. You're now ready to package and distribute Python applications as single, self-contained executables.

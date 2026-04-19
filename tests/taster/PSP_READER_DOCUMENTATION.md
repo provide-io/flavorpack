@@ -20,6 +20,7 @@ A portable shell script for processing PSPF/2025 package files using standard BS
 ## Commands
 
 ### `info` (default)
+
 Show package information including index details and structure.
 
 ```bash
@@ -27,6 +28,7 @@ Show package information including index details and structure.
 ```
 
 ### `meta`
+
 Extract and display the package metadata (formatted JSON).
 
 ```bash
@@ -34,6 +36,7 @@ Extract and display the package metadata (formatted JSON).
 ```
 
 ### `query`
+
 Query metadata using jq expressions.
 
 ```bash
@@ -43,6 +46,7 @@ Query metadata using jq expressions.
 ```
 
 ### `launcher`
+
 Extract the launcher binary.
 
 ```bash
@@ -50,6 +54,7 @@ Extract the launcher binary.
 ```
 
 ### `slots`
+
 List all slots in the package.
 
 ```bash
@@ -57,6 +62,7 @@ List all slots in the package.
 ```
 
 ### `extract`
+
 Extract a specific slot.
 
 ```bash
@@ -64,6 +70,7 @@ Extract a specific slot.
 ```
 
 ### `verify`
+
 Verify package integrity and signature.
 
 ```bash
@@ -71,6 +78,7 @@ Verify package integrity and signature.
 ```
 
 ### `hexdump`
+
 Show hex dump of the PSPF index block.
 
 ```bash
@@ -78,6 +86,7 @@ Show hex dump of the PSPF index block.
 ```
 
 ### `json`
+
 Output complete package information as JSON.
 
 ```bash
@@ -87,11 +96,13 @@ Output complete package information as JSON.
 ## Examples
 
 ### Get package name and version
+
 ```bash
 ./psp-reader.sh taster.psp query '.package | "\(.name) v\(.version)"'
 ```
 
 ### Extract all slots
+
 ```bash
 for i in $(seq 0 2); do
   ./psp-reader.sh package.psp extract -s $i -o slot$i.bin
@@ -99,11 +110,13 @@ done
 ```
 
 ### Check if package is signed
+
 ```bash
 ./psp-reader.sh package.psp verify 2>&1 | grep "Signature"
 ```
 
 ### Get launcher size
+
 ```bash
 ./psp-reader.sh package.psp json | jq '.launcher_size'
 ```
@@ -113,10 +126,12 @@ done
 The script understands the PSPF/2025 package format:
 
 1. **Launcher Binary** (0 to launcher_size)
+
    - Native executable for the platform
    - Typically 1-5 MB for Go/Rust launchers
 
-2. **PSPF Index** (256 bytes at launcher_size offset)
+1. **PSPF Index** (256 bytes at launcher_size offset)
+
    - Magic: "PSPF2025" (8 bytes)
    - Version: 1.0 (2 bytes)
    - Checksum: CRC32 (4 bytes)
@@ -127,17 +142,20 @@ The script understands the PSPF/2025 package format:
    - Ed25519 public key (32 bytes)
    - Integrity signature (512 bytes, first 64 used)
 
-3. **Metadata** (gzipped JSON)
+1. **Metadata** (gzipped JSON)
+
    - Package information
    - Execution configuration
    - Slot definitions
    - Build metadata
 
-4. **Slots** (application data)
+1. **Slots** (application data)
+
    - Numbered data segments
    - Can be archives, scripts, binaries, etc.
 
-5. **Emoji Magic** (last 4 bytes)
+1. **Emoji Magic** (last 4 bytes)
+
    - 🪄 (0xF0 0x9F 0xAA 0x84)
    - Package terminator and validity marker
 
@@ -153,6 +171,7 @@ The script understands the PSPF/2025 package format:
 ## Technical Details
 
 The script uses:
+
 - **dd** for precise byte-level reading
 - **xxd** for hex conversion
 - **jq** for JSON parsing and queries
@@ -168,6 +187,7 @@ The script uses:
 ## Error Handling
 
 The script provides colored output with status indicators:
+
 - ✅ Success (green)
 - ⚠️ Warning (yellow)
 - ❌ Error (red)

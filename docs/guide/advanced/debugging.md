@@ -6,7 +6,7 @@ Deep debugging techniques for Flavorpack packages, builds, and runtime issues.
 
 This guide covers advanced debugging techniques for diagnosing complex issues in Flavorpack packages, from build failures to runtime errors.
 
----
+______________________________________________________________________
 
 ## Logging Levels
 
@@ -62,7 +62,7 @@ FLAVOR_LOG_STDERR=1 flavor pack
 FLAVOR_LOG_FORMAT=json flavor pack
 ```
 
----
+______________________________________________________________________
 
 ## Build Debugging
 
@@ -136,7 +136,7 @@ flavor pack \
   --builder-bin dist/bin/flavor-rs-builder-linux_amd64
 ```
 
----
+______________________________________________________________________
 
 ## Runtime Debugging
 
@@ -212,7 +212,7 @@ FLAVOR_LAUNCHER_CLI=1 ./myapp.psp shell
 >>> exit()
 ```
 
----
+______________________________________________________________________
 
 ## System-Level Debugging
 
@@ -272,7 +272,7 @@ lsof -p $PID | grep -E "(\.psp|\.cache|flavor)"
 valgrind --leak-check=full --track-origins=yes ./myapp.psp
 ```
 
----
+______________________________________________________________________
 
 ## Package Integrity Debugging
 
@@ -333,7 +333,7 @@ EOF
 diff <(jq -S . expected.json) <(jq -S '.package' actual.json)
 ```
 
----
+______________________________________________________________________
 
 ## Helper Debugging
 
@@ -379,7 +379,7 @@ lldb dist/bin/flavor-rs-launcher-darwin_arm64
 (lldb) bt
 ```
 
----
+______________________________________________________________________
 
 ## Network Debugging
 
@@ -409,7 +409,7 @@ pip download -d .cache/pip -r requirements.txt
 PIP_FIND_LINKS=.cache/pip PIP_NO_INDEX=1 flavor pack
 ```
 
----
+______________________________________________________________________
 
 ## Advanced Techniques
 
@@ -465,7 +465,7 @@ make build-helpers
 flavor pack --manifest pyproject.toml
 ```
 
----
+______________________________________________________________________
 
 ## Debugging Checklist
 
@@ -482,22 +482,22 @@ When debugging issues:
 - [ ] Check for platform-specific issues
 - [ ] Verify all dependencies declared
 
----
+______________________________________________________________________
 
 ## Debugging Tools Reference
 
-| Tool | Purpose | Example |
-|------|---------|---------|
-| `strace` | Trace system calls (Linux) | `strace -f ./myapp.psp` |
-| `dtruss` | Trace system calls (macOS) | `sudo dtruss -f ./myapp.psp` |
-| `lsof` | List open files | `lsof -p PID` |
-| `gdb` | Debug native code (Linux) | `gdb ./myapp.psp` |
-| `lldb` | Debug native code (macOS) | `lldb ./myapp.psp` |
-| `valgrind` | Memory debugging | `valgrind --leak-check=full ./myapp.psp` |
-| `xxd` | Hex dump | `xxd myapp.psp \| head` |
-| `jq` | JSON processing | `flavor inspect myapp.psp --json \| jq` |
+| Tool       | Purpose                    | Example                                  |
+| ---------- | -------------------------- | ---------------------------------------- |
+| `strace`   | Trace system calls (Linux) | `strace -f ./myapp.psp`                  |
+| `dtruss`   | Trace system calls (macOS) | `sudo dtruss -f ./myapp.psp`             |
+| `lsof`     | List open files            | `lsof -p PID`                            |
+| `gdb`      | Debug native code (Linux)  | `gdb ./myapp.psp`                        |
+| `lldb`     | Debug native code (macOS)  | `lldb ./myapp.psp`                       |
+| `valgrind` | Memory debugging           | `valgrind --leak-check=full ./myapp.psp` |
+| `xxd`      | Hex dump                   | `xxd myapp.psp \| head`                  |
+| `jq`       | JSON processing            | `flavor inspect myapp.psp --json \| jq`  |
 
----
+______________________________________________________________________
 
 ## See Also
 
@@ -506,6 +506,6 @@ When debugging issues:
 - [Testing Guide](../../development/testing/index/) - Testing techniques
 - [Environment Variables](../usage/environment/) - Logging configuration
 
----
+______________________________________________________________________
 
 **Need more help?** Check the [troubleshooting guide](../../troubleshooting/common/) or report issues on GitHub.

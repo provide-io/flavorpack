@@ -7,10 +7,10 @@ Helpers are the native binary components that power Flavorpack's cross-language 
 Flavorpack uses "helpers" - specialized binaries written in Go and Rust - to handle package building and launching. This architecture provides:
 
 1. **Cross-platform support**: Native binaries for each OS/architecture
-2. **Performance**: Compiled code for fast execution
-3. **Language independence**: Launchers work with any payload
-4. **Small footprint**: Minimal binary sizes
-5. **Security**: Signature verification in native code
+1. **Performance**: Compiled code for fast execution
+1. **Language independence**: Launchers work with any payload
+1. **Small footprint**: Minimal binary sizes
+1. **Security**: Signature verification in native code
 
 ## Helper Types
 
@@ -18,29 +18,30 @@ Flavorpack uses "helpers" - specialized binaries written in Go and Rust - to han
 
 Launchers are the executable headers of PSPF packages:
 
-| Launcher | Language | Typical Size | Features |
-|----------|----------|--------------|----------|
-| `flavor-rs-launcher` | Rust | ~1 MB | Fast, memory-safe, default |
-| `flavor-go-launcher` | Go | ~3-4 MB | Cross-platform, mature |
+| Launcher             | Language | Typical Size | Features                   |
+| -------------------- | -------- | ------------ | -------------------------- |
+| `flavor-rs-launcher` | Rust     | ~1 MB        | Fast, memory-safe, default |
+| `flavor-go-launcher` | Go       | ~3-4 MB      | Cross-platform, mature     |
 
 ### Builders
 
 Builders create PSPF packages from manifests:
 
-| Builder | Language | Typical Size | Features |
-|---------|----------|--------------|----------|
-| `flavor-go-builder` | Go | ~3-4 MB | Default, full-featured |
-| `flavor-rs-builder` | Rust | ~1 MB | Fast, compact |
+| Builder             | Language | Typical Size | Features               |
+| ------------------- | -------- | ------------ | ---------------------- |
+| `flavor-go-builder` | Go       | ~3-4 MB      | Default, full-featured |
+| `flavor-rs-builder` | Rust     | ~1 MB        | Fast, compact          |
 
-!!! info "Binary Size Variations"
-    Sizes shown are typical for macOS ARM64 builds. Actual sizes vary by:
+!!! info "Binary Size Variations" Sizes shown are typical for macOS ARM64 builds. Actual sizes vary by:
 
-    - **Platform**: Linux static builds (musl) may be larger
-    - **Architecture**: x86_64 vs ARM64 differences
-    - **Build mode**: Debug vs release, stripped vs unstripped
-    - **Compression**: UPX compression can reduce size further
+```
+- **Platform**: Linux static builds (musl) may be larger
+- **Architecture**: x86_64 vs ARM64 differences
+- **Build mode**: Debug vs release, stripped vs unstripped
+- **Compression**: UPX compression can reduce size further
 
-    Check your platform: `ls -lh dist/bin/flavor-*-$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)`
+Check your platform: `ls -lh dist/bin/flavor-*-$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)`
+```
 
 ## Directory Structure
 
@@ -79,10 +80,12 @@ Makefile                   # Build automation
 ### Prerequisites
 
 #### For Go Helpers
+
 - Go 1.26 or higher
 - Make (optional)
 
 #### For Rust Helpers
+
 - Rust 1.86 or higher (edition 2024)
 - Cargo
 - Make (optional)
@@ -298,6 +301,7 @@ make validate-pspf-combo
 The helper build is automated in CI:
 
 {% raw %}
+
 ```yaml
 # .github/workflows/01-helper-prep.yml
 name: Build Helpers
@@ -343,6 +347,7 @@ jobs:
           name: helpers-${{ matrix.platform }}
           path: dist/bin/
 ```
+
 {% endraw %}
 
 ## Development Workflow
@@ -350,16 +355,17 @@ jobs:
 ### Local Development
 
 1. **Make changes** to helper source
-2. **Build locally**: `./build.sh`
-3. **Test with real package**: `flavor pack --launcher-bin dist/bin/flavor-rs-launcher-*`
-4. **Run tests**: `./test.sh`
-5. **Commit changes**
+1. **Build locally**: `./build.sh`
+1. **Test with real package**: `flavor pack --launcher-bin dist/bin/flavor-rs-launcher-*`
+1. **Run tests**: `./test.sh`
+1. **Commit changes**
 
 ### Adding New Features
 
 Example: Adding compression support to launcher
 
 1. **Modify launcher code**:
+
 ```rust
 // src/flavor-rs/src/launcher/extract.rs
 use flavor::psp::format_2025::operations::unpack_operations;
@@ -383,9 +389,9 @@ fn extract_slot(data: &[u8], operations: u64) -> Result<Vec<u8>> {
 ```
 
 2. **Update builder** to support new operation
-3. **Add tests**
-4. **Update version**
-5. **Rebuild and test**
+1. **Add tests**
+1. **Update version**
+1. **Rebuild and test**
 
 ## Versioning
 
@@ -414,27 +420,30 @@ const VERSION: &str = env!("VERSION");
 
 ### Compatibility Matrix
 
-| Launcher Version | Builder Version | PSPF Format | Status |
-|-----------------|-----------------|-------------|--------|
-| 0.3.x | 0.3.x | 2025 | Current |
-| 0.2.x | 0.2.x | 2024 | Deprecated |
-| 0.1.x | 0.1.x | 2023 | Unsupported |
+| Launcher Version | Builder Version | PSPF Format | Status      |
+| ---------------- | --------------- | ----------- | ----------- |
+| 0.3.x            | 0.3.x           | 2025        | Current     |
+| 0.2.x            | 0.2.x           | 2024        | Deprecated  |
+| 0.1.x            | 0.1.x           | 2023        | Unsupported |
 
 ## Troubleshooting
 
 ### Common Build Issues
 
 **Go build fails**: Check Go version
+
 ```bash
 go version  # Should be 1.26+
 ```
 
 **Rust build fails**: Update Rust
+
 ```bash
 rustup update  # Should be 1.86+
 ```
 
 **Missing dependencies**: Install build tools
+
 ```bash
 # Debian/Ubuntu
 apt-get install build-essential
@@ -446,6 +455,7 @@ xcode-select --install
 ### Binary Not Found
 
 Ensure helpers are built:
+
 ```bash
 ls -la dist/bin/
 # Should show all helper binaries with platform suffixes
@@ -456,6 +466,7 @@ Helpers are automatically discovered by Flavorpack - no need to add to PATH.
 ### Platform Mismatch
 
 Verify binary architecture:
+
 ```bash
 file dist/bin/flavor-go-launcher-*
 # Should match your system architecture
@@ -494,12 +505,12 @@ perf report
 ## Best Practices
 
 1. **Test all platforms**: Use CI matrix builds
-2. **Keep binaries small**: Strip debug info
-3. **Version everything**: Embed version info
-4. **Document changes**: Update changelog
-5. **Profile performance**: Monitor binary size and speed
-6. **Static link when possible**: Reduce dependencies
-7. **Cross-compile in CI**: Ensure reproducible builds
+1. **Keep binaries small**: Strip debug info
+1. **Version everything**: Embed version info
+1. **Document changes**: Update changelog
+1. **Profile performance**: Monitor binary size and speed
+1. **Static link when possible**: Reduce dependencies
+1. **Cross-compile in CI**: Ensure reproducible builds
 
 ## Related Documentation
 

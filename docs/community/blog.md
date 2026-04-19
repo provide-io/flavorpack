@@ -34,6 +34,6 @@ Want to write for the blog?
 
 Contact us via [GitHub Discussions](https://github.com/provide-io/flavorpack/discussions).
 
----
+______________________________________________________________________
 
 **Stay tuned for updates!**

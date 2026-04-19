@@ -22,12 +22,12 @@ make test BUILDER=go LAUNCHER=rust
 
 ## Test Matrix
 
-| Builder | Launcher | Status |
-|---------|----------|--------|
-| Go | Go | ✅ Tested |
-| Go | Rust | ✅ Tested |
-| Rust | Go | ✅ Tested |
-| Rust | Rust | ✅ Tested |
+| Builder | Launcher | Status    |
+| ------- | -------- | --------- |
+| Go      | Go       | ✅ Tested |
+| Go      | Rust     | ✅ Tested |
+| Rust    | Go       | ✅ Tested |
+| Rust    | Rust     | ✅ Tested |
 
 ## Topics to be Covered
 
@@ -37,6 +37,6 @@ make test BUILDER=go LAUNCHER=rust
 - Test infrastructure
 - Adding new tests
 
----
+______________________________________________________________________
 
-**See also:** [Testing Guide](index/) | [Pretaster README
+**See also:** [Testing Guide](index/) | \[Pretaster README

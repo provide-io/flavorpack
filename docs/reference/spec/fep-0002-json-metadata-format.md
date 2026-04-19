@@ -1,10 +1,10 @@
 # FEP-0002: PSPF/2025 JSON Metadata Format Specification
 
-**Status**: Standards Track  
-**Type**: Core Protocol  
-**Created**: 2025-01-08  
-**Version**: v0.1  
-**Category**: Standards Track  
+**Status**: Standards Track\
+**Type**: Core Protocol\
+**Created**: 2025-01-08\
+**Version**: v0.1\
+**Category**: Standards Track
 
 ## Abstract
 
@@ -13,19 +13,19 @@ This document specifies the JSON-based metadata format for PSPF/2025 packages. T
 ## Table of Contents
 
 1. [Introduction](#1-introduction)
-2. [Conventions and Terminology](#2-conventions-and-terminology)
-3. [JSON Metadata Structure](#3-json-metadata-structure)
-4. [Field Specifications](#4-field-specifications)
-5. [Validation Rules](#5-validation-rules)
-6. [Encoding and Serialization](#6-encoding-and-serialization)
-7. [ABNF Grammar](#7-abnf-grammar)
-8. [JSON Schema Definition](#8-json-schema-definition)
-9. [Processing Algorithms](#9-processing-algorithms)
-10. [Error Handling](#10-error-handling)
-11. [Security Considerations](#11-security-considerations)
-12. [Implementation Requirements](#12-implementation-requirements)
-13. [Test Vectors](#13-test-vectors)
-14. [References](#14-references)
+1. [Conventions and Terminology](#2-conventions-and-terminology)
+1. [JSON Metadata Structure](#3-json-metadata-structure)
+1. [Field Specifications](#4-field-specifications)
+1. [Validation Rules](#5-validation-rules)
+1. [Encoding and Serialization](#6-encoding-and-serialization)
+1. [ABNF Grammar](#7-abnf-grammar)
+1. [JSON Schema Definition](#8-json-schema-definition)
+1. [Processing Algorithms](#9-processing-algorithms)
+1. [Error Handling](#10-error-handling)
+1. [Security Considerations](#11-security-considerations)
+1. [Implementation Requirements](#12-implementation-requirements)
+1. [Test Vectors](#13-test-vectors)
+1. [References](#14-references)
 
 ## 1. Introduction
 
@@ -36,6 +36,7 @@ PSPF/2025 packages require structured metadata to describe their contents, execu
 ### 1.2 Scope
 
 This specification defines:
+
 - Complete JSON schema for PSPF/2025 package metadata
 - Validation rules and semantic constraints
 - Encoding and normalization requirements
@@ -43,6 +44,7 @@ This specification defines:
 - Extension mechanisms for vendor-specific fields
 
 This specification does NOT define:
+
 - Binary wire format (reserved for future versions)
 - Network transmission protocols
 - Metadata compression algorithms (handled at package level)
@@ -63,11 +65,7 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 ### 2.1 Definitions
 
-**Metadata**: Structured information describing package contents and requirements
-**Slot Definition**: JSON object describing a single data slot in the package
-**Operation String**: Human-readable representation of an operation chain
-**Canonical Form**: Normalized JSON representation for signature verification
-**Extension Field**: Vendor-specific field prefixed with "x-"
+**Metadata**: Structured information describing package contents and requirements **Slot Definition**: JSON object describing a single data slot in the package **Operation String**: Human-readable representation of an operation chain **Canonical Form**: Normalized JSON representation for signature verification **Extension Field**: Vendor-specific field prefixed with "x-"
 
 ### 2.2 Notation Conventions
 
@@ -88,13 +86,13 @@ Regular expressions use PCRE syntax.
 ### 2.3 Data Type Definitions
 
 | JSON Type | PSPF Type  | Range/Format                           |
-|-----------|------------|-----------------------------------------|
-| string    | identifier | `^[a-z0-9][a-z0-9_-]*$` max 255 chars |
+| --------- | ---------- | -------------------------------------- |
+| string    | identifier | `^[a-z0-9][a-z0-9_-]*$` max 255 chars  |
 | string    | version    | Semantic versioning or custom format   |
 | string    | checksum   | Hex string, lowercase, no prefix       |
 | string    | operations | Operation chain string (see Section 7) |
-| number    | uint32     | 0 to 4,294,967,295                    |
-| number    | uint64     | 0 to 18,446,744,073,709,551,615      |
+| number    | uint32     | 0 to 4,294,967,295                     |
+| number    | uint64     | 0 to 18,446,744,073,709,551,615        |
 | number    | timestamp  | Unix timestamp (seconds since epoch)   |
 | string    | path       | Forward slashes, no ".." traversal     |
 
@@ -202,47 +200,47 @@ root
 
 #### 4.1.1 format_version (REQUIRED)
 
-**Type**: string  
-**Pattern**: `^\d{4}\.\d+\.\d+$`  
-**Example**: "2025.0.0"  
+**Type**: string\
+**Pattern**: `^\d{4}\.\d+\.\d+$`\
+**Example**: "2025.0.0"
 
 Identifies the metadata format version. For v0, this MUST be "2025.0.0".
 
 #### 4.1.2 package (REQUIRED)
 
-**Type**: object  
+**Type**: object
 
 Contains basic package identification and information.
 
 #### 4.1.3 build (OPTIONAL)
 
-**Type**: object  
+**Type**: object
 
 Contains build-time information for reproducibility and provenance.
 
 #### 4.1.4 slots (REQUIRED)
 
-**Type**: array of objects  
-**Min Items**: 0  
-**Max Items**: 65535  
+**Type**: array of objects\
+**Min Items**: 0\
+**Max Items**: 65535
 
 Array of slot definitions. MAY be empty for launcher-only packages.
 
 #### 4.1.5 execution (OPTIONAL)
 
-**Type**: object  
+**Type**: object
 
 Runtime execution parameters and environment configuration.
 
 #### 4.1.6 dependencies (OPTIONAL)
 
-**Type**: object  
+**Type**: object
 
 External dependencies required or recommended for package execution.
 
 #### 4.1.7 extensions (OPTIONAL)
 
-**Type**: object  
+**Type**: object
 
 Vendor-specific extensions. All keys MUST begin with "x-".
 
@@ -250,53 +248,53 @@ Vendor-specific extensions. All keys MUST begin with "x-".
 
 #### 4.2.1 name (REQUIRED)
 
-**Type**: string  
-**Pattern**: `^[a-z0-9][a-z0-9_-]*$`  
-**Min Length**: 1  
-**Max Length**: 255  
-**Example**: "my-application"  
+**Type**: string\
+**Pattern**: `^[a-z0-9][a-z0-9_-]*$`\
+**Min Length**: 1\
+**Max Length**: 255\
+**Example**: "my-application"
 
 Package identifier. MUST be lowercase alphanumeric with hyphens and underscores.
 
 #### 4.2.2 version (REQUIRED)
 
-**Type**: string  
-**Pattern**: `^[0-9]+(\.[0-9]+)*([+-].+)?$`  
-**Max Length**: 255  
-**Example**: "1.2.3-beta+build.456"  
+**Type**: string\
+**Pattern**: `^[0-9]+(\.[0-9]+)*([+-].+)?$`\
+**Max Length**: 255\
+**Example**: "1.2.3-beta+build.456"
 
 Package version. SHOULD follow semantic versioning but MAY use custom schemes.
 
 #### 4.2.3 description (OPTIONAL)
 
-**Type**: string  
-**Max Length**: 4096  
-**Example**: "A high-performance web server"  
+**Type**: string\
+**Max Length**: 4096\
+**Example**: "A high-performance web server"
 
 Human-readable package description.
 
 #### 4.2.4 author (OPTIONAL)
 
-**Type**: string  
-**Max Length**: 255  
-**Example**: "Jane Doe <jane@example.com>"  
+**Type**: string\
+**Max Length**: 255\
+**Example**: "Jane Doe <jane@example.com>"
 
 Package author or maintainer.
 
 #### 4.2.5 license (OPTIONAL)
 
-**Type**: string  
-**Max Length**: 255  
-**Example**: "MIT" or "Apache-2.0"  
+**Type**: string\
+**Max Length**: 255\
+**Example**: "MIT" or "Apache-2.0"
 
 SPDX license identifier or custom license name.
 
 #### 4.2.6 homepage (OPTIONAL)
 
-**Type**: string  
-**Format**: URI  
-**Max Length**: 2048  
-**Example**: "https://example.com/project"  
+**Type**: string\
+**Format**: URI\
+**Max Length**: 2048\
+**Example**: "https://example.com/project"
 
 Project homepage or documentation URL.
 
@@ -304,29 +302,30 @@ Project homepage or documentation URL.
 
 #### 4.3.1 id (REQUIRED)
 
-**Type**: number  
-**Minimum**: 0  
-**Maximum**: 4294967295  
-**Example**: 0  
+**Type**: number\
+**Minimum**: 0\
+**Maximum**: 4294967295\
+**Example**: 0
 
 Unique slot identifier within the package. MUST be unique across all slots.
 
 #### 4.3.2 name (REQUIRED)
 
-**Type**: string  
-**Pattern**: `^[a-zA-Z0-9][a-zA-Z0-9_.-]*$`  
-**Max Length**: 255  
-**Example**: "python-runtime"  
+**Type**: string\
+**Pattern**: `^[a-zA-Z0-9][a-zA-Z0-9_.-]*$`\
+**Max Length**: 255\
+**Example**: "python-runtime"
 
 Human-readable slot name.
 
 #### 4.3.3 purpose (REQUIRED)
 
-**Type**: string  
-**Enum**: ["code", "data", "config", "media"]  
-**Example**: "code"  
+**Type**: string\
+**Enum**: ["code", "data", "config", "media"]\
+**Example**: "code"
 
 Slot content classification:
+
 - `code`: Executable binaries or scripts
 - `data`: Application data files
 - `config`: Configuration files
@@ -334,63 +333,61 @@ Slot content classification:
 
 #### 4.3.4 lifecycle (REQUIRED)
 
-**Type**: string  
-**Enum**: See table below  
-**Example**: "runtime"  
+**Type**: string\
+**Enum**: See table below\
+**Example**: "runtime"
 
-| Value      | Description                              | Extraction Behavior           |
-|------------|------------------------------------------|-------------------------------|
-| init       | First run only, then removed            | Extract once, delete after    |
-| startup    | Extract at every startup                | Always extract fresh          |
-| runtime    | Extract on first use (default)          | Extract once, keep cached     |
-| shutdown   | Extract during cleanup                  | Extract at termination        |
-| cache      | Performance cache, can regenerate       | Extract if missing            |
-| temporary  | Remove after session ends               | Extract, delete at exit       |
-| lazy       | Load on-demand                          | Extract when accessed         |
-| eager      | Load immediately on startup             | Extract before execution      |
-| dev        | Development mode only                   | Extract if DEV flag set       |
-| config     | User-modifiable config files           | Extract if not present        |
-| platform   | Platform/OS specific content            | Extract if platform matches  |
+| Value     | Description                       | Extraction Behavior         |
+| --------- | --------------------------------- | --------------------------- |
+| init      | First run only, then removed      | Extract once, delete after  |
+| startup   | Extract at every startup          | Always extract fresh        |
+| runtime   | Extract on first use (default)    | Extract once, keep cached   |
+| shutdown  | Extract during cleanup            | Extract at termination      |
+| cache     | Performance cache, can regenerate | Extract if missing          |
+| temporary | Remove after session ends         | Extract, delete at exit     |
+| lazy      | Load on-demand                    | Extract when accessed       |
+| eager     | Load immediately on startup       | Extract before execution    |
+| dev       | Development mode only             | Extract if DEV flag set     |
+| config    | User-modifiable config files      | Extract if not present      |
+| platform  | Platform/OS specific content      | Extract if platform matches |
 
 #### 4.3.5 operations (REQUIRED)
 
-**Type**: string  
-**Pattern**: See Section 7  
-**Example**: "tar.gz" or "tar|gzip"  
+**Type**: string\
+**Pattern**: See Section 7\
+**Example**: "tar.gz" or "tar|gzip"
 
 Operation chain string describing transformations applied to slot data.
 
 #### 4.3.6 size (REQUIRED)
 
-**Type**: number  
-**Minimum**: 0  
-**Maximum**: 2^53-1 (JSON safe integer)  
-**Example**: 1048576  
+**Type**: number\
+**Minimum**: 0\
+**Maximum**: 2^53-1 (JSON safe integer)\
+**Example**: 1048576
 
 Size of slot data as stored in package (after operations applied).
 
 #### 4.3.7 original_size (OPTIONAL)
 
-**Type**: number  
-**Minimum**: 0  
-**Maximum**: 2^53-1  
-**Example**: 4194304  
+**Type**: number\
+**Minimum**: 0\
+**Maximum**: 2^53-1\
+**Example**: 4194304
 
 Original size before operations applied. If omitted, assumed equal to `size`.
 
 #### 4.3.8 checksum (REQUIRED)
 
-**Type**: string
-**Pattern**: `^[a-f0-9]{16}$`
-**Example**: "deadbeef01234567"
+**Type**: string **Pattern**: `^[a-f0-9]{16}$` **Example**: "deadbeef01234567"
 
 SHA-256 hash of stored slot data (first 8 bytes) as 16-character hex string.
 
 #### 4.3.9 permissions (OPTIONAL)
 
-**Type**: string  
-**Pattern**: `^[0-7]{3,4}$`  
-**Example**: "755" or "0644"  
+**Type**: string\
+**Pattern**: `^[0-7]{3,4}$`\
+**Example**: "755" or "0644"
 
 Unix-style permissions as octal string.
 
@@ -398,39 +395,39 @@ Unix-style permissions as octal string.
 
 #### 4.4.1 timestamp (OPTIONAL)
 
-**Type**: number  
-**Example**: 1704067200  
+**Type**: number\
+**Example**: 1704067200
 
 Unix timestamp of package creation.
 
 #### 4.4.2 platform (OPTIONAL)
 
-**Type**: string  
-**Pattern**: `^[a-z]+_[a-z0-9]+$`  
-**Example**: "linux_x86_64", "darwin_arm64", "windows_amd64"  
+**Type**: string\
+**Pattern**: `^[a-z]+_[a-z0-9]+$`\
+**Example**: "linux_x86_64", "darwin_arm64", "windows_amd64"
 
 Target platform identifier.
 
 #### 4.4.3 builder (OPTIONAL)
 
-**Type**: string  
-**Max Length**: 255  
-**Example**: "flavorpack-0.1.0"  
+**Type**: string\
+**Max Length**: 255\
+**Example**: "flavorpack-0.1.0"
 
 Tool and version used to create package.
 
 #### 4.4.4 source_hash (OPTIONAL)
 
-**Type**: string  
-**Pattern**: `^[a-f0-9]{64}$`  
-**Example**: "abc123..."  
+**Type**: string\
+**Pattern**: `^[a-f0-9]{64}$`\
+**Example**: "abc123..."
 
 SHA-256 hash of source code tree.
 
 #### 4.4.5 reproducible (OPTIONAL)
 
-**Type**: boolean  
-**Example**: true  
+**Type**: boolean\
+**Example**: true
 
 Whether package was built reproducibly.
 
@@ -438,33 +435,33 @@ Whether package was built reproducibly.
 
 #### 4.5.1 entry_point (OPTIONAL)
 
-**Type**: string  
-**Max Length**: 4096  
-**Example**: "./bin/app"  
+**Type**: string\
+**Max Length**: 4096\
+**Example**: "./bin/app"
 
 Path to main executable within extracted package.
 
 #### 4.5.2 args (OPTIONAL)
 
-**Type**: array of strings  
-**Max Items**: 1024  
-**Example**: ["--config", "app.conf"]  
+**Type**: array of strings\
+**Max Items**: 1024\
+**Example**: ["--config", "app.conf"]
 
 Default command-line arguments.
 
 #### 4.5.3 env (OPTIONAL)
 
-**Type**: object  
-**Max Properties**: 1024  
-**Example**: {"PATH": "/app/bin:$PATH"}  
+**Type**: object\
+**Max Properties**: 1024\
+**Example**: {"PATH": "/app/bin:$PATH"}
 
 Environment variables to set. Values MAY contain variable references.
 
 #### 4.5.4 working_directory (OPTIONAL)
 
-**Type**: string  
-**Default**: "."  
-**Example**: "./data"  
+**Type**: string\
+**Default**: "."\
+**Example**: "./data"
 
 Working directory for execution relative to extraction root.
 
@@ -473,11 +470,12 @@ Working directory for execution relative to extraction root.
 ### 5.1 Structural Validation
 
 The JSON document MUST:
+
 1. Be valid JSON according to [RFC7159]
-2. Have a single root object
-3. Include all required fields
-4. Not exceed 10MB when uncompressed
-5. Use UTF-8 encoding without BOM
+1. Have a single root object
+1. Include all required fields
+1. Not exceed 10MB when uncompressed
+1. Use UTF-8 encoding without BOM
 
 ### 5.2 Semantic Validation
 
@@ -491,6 +489,7 @@ The JSON document MUST:
 #### 5.2.2 Path Validation
 
 All path strings MUST:
+
 - Use forward slashes as separators
 - Not contain ".." components
 - Not begin with "/" (relative paths only)
@@ -506,6 +505,7 @@ All path strings MUST:
 ### 5.3 Extension Field Validation
 
 Extension fields in the `extensions` object:
+
 - MUST begin with "x-" prefix
 - MAY contain any valid JSON value
 - SHOULD use lowercase names with hyphens
@@ -516,6 +516,7 @@ Extension fields in the `extensions` object:
 ### 6.1 JSON Encoding Rules
 
 Metadata MUST be encoded as:
+
 - UTF-8 without byte order mark (BOM)
 - No trailing whitespace
 - No comments (not valid JSON)
@@ -526,12 +527,13 @@ Metadata MUST be encoded as:
 For signature verification, metadata MUST be normalized to canonical form:
 
 1. **Object Key Ordering**: All object keys MUST be sorted lexicographically
-2. **Whitespace**: No unnecessary whitespace (compact form)
-3. **Number Format**: No leading zeros, no trailing decimal points
-4. **String Escaping**: Minimal escaping (only required characters)
-5. **Unicode Normalization**: NFC normalization for all strings
+1. **Whitespace**: No unnecessary whitespace (compact form)
+1. **Number Format**: No leading zeros, no trailing decimal points
+1. **String Escaping**: Minimal escaping (only required characters)
+1. **Unicode Normalization**: NFC normalization for all strings
 
 Canonical encoding:
+
 ```
 jsonCanonical = json.dumps(
     metadata,
@@ -544,6 +546,7 @@ jsonCanonical = json.dumps(
 ### 6.3 Compression
 
 When stored in packages, metadata SHOULD be compressed using GZIP with:
+
 - Compression level: 9 (best compression)
 - No embedded filename or timestamp
 - CRC32 verification enabled
@@ -893,19 +896,21 @@ function verifyMetadataChecksum(metadata, expectedHash):
 Implementations SHOULD attempt graceful degradation:
 
 1. **Missing Optional Fields**: Use defaults where sensible
-2. **Unknown Extension Fields**: Ignore "x-" prefixed fields
-3. **Version Mismatch**: Attempt compatibility if minor version
-4. **Encoding Issues**: Try alternative encodings (UTF-16, Latin-1)
+1. **Unknown Extension Fields**: Ignore "x-" prefixed fields
+1. **Version Mismatch**: Attempt compatibility if minor version
+1. **Encoding Issues**: Try alternative encodings (UTF-16, Latin-1)
 
 ### 10.3 Diagnostic Output
 
 Error messages MUST include:
+
 - Error code
 - Field path (e.g., "slots[2].checksum")
 - Expected vs actual values
 - Line/column number if available
 
 Example:
+
 ```json
 {
   "error": 1102,
@@ -925,17 +930,20 @@ Example:
 Implementations MUST protect against:
 
 **JSON Bombs**: Deeply nested structures or large expansions
+
 - Maximum nesting depth: 100 levels
 - Maximum string length: 10MB
 - Maximum array size: 65535 items
 - Maximum object properties: 10000
 
-**Resource Exhaustion**: 
+**Resource Exhaustion**:
+
 - Limit total metadata size to 10MB uncompressed
 - Timeout parsing after 5 seconds
 - Limit memory usage during parsing
 
 **Injection Attacks**:
+
 - Sanitize all strings before use in commands
 - Validate paths to prevent directory traversal
 - Escape special characters in environment variables
@@ -945,18 +953,20 @@ Implementations MUST protect against:
 Metadata is untrusted input until verified:
 
 1. Parse and validate structure
-2. Verify metadata checksum from index block
-3. Verify package signature
-4. Only then trust content
+1. Verify metadata checksum from index block
+1. Verify package signature
+1. Only then trust content
 
 ### 11.3 Information Disclosure
 
 Sensitive information in metadata:
+
 - Build paths may reveal system layout
 - Environment variables may contain secrets
 - Source hashes may reveal proprietary code structure
 
 Implementations SHOULD:
+
 - Redact sensitive paths in logs
 - Not expose full metadata to untrusted code
 - Sanitize error messages
@@ -966,15 +976,17 @@ Implementations SHOULD:
 ### 12.1 Parser Requirements
 
 All implementations MUST:
+
 1. Accept any valid JSON according to schema
-2. Reject invalid JSON with appropriate errors
-3. Handle UTF-8, UTF-16, and UTF-32 encodings
-4. Support full Unicode range including emoji
-5. Parse numbers up to 2^53-1 accurately
+1. Reject invalid JSON with appropriate errors
+1. Handle UTF-8, UTF-16, and UTF-32 encodings
+1. Support full Unicode range including emoji
+1. Parse numbers up to 2^53-1 accurately
 
 ### 12.2 Cross-Language Compatibility
 
 #### Python Implementation
+
 ```python
 import json
 import jsonschema
@@ -998,6 +1010,7 @@ def canonicalize(metadata: Dict[str, Any]) -> bytes:
 ```
 
 #### Go Implementation
+
 ```go
 package pspf
 
@@ -1030,6 +1043,7 @@ func ParseMetadata(data []byte) (*Metadata, error) {
 ```
 
 #### Rust Implementation
+
 ```rust
 use serde::{Deserialize, Serialize};
 use serde_json;
@@ -1070,6 +1084,7 @@ Implementations SHOULD meet these targets:
 ### 13.1 Minimal Valid Metadata
 
 **Input**:
+
 ```json
 {
   "format_version": "2025.0.0",
@@ -1082,6 +1097,7 @@ Implementations SHOULD meet these targets:
 ```
 
 **Canonical Form** (hex):
+
 ```
 7b22666f726d61745f76657273696f6e223a22323032352e302e30222c227061636b616765223a7b226e616d65223a2274657374222c2276657273696f6e223a22312e302e30227d2c22736c6f7473223a5b5d7d
 ```
@@ -1091,6 +1107,7 @@ Implementations SHOULD meet these targets:
 ### 13.2 Complete Metadata Example
 
 **Input**:
+
 ```json
 {
   "format_version": "2025.0.0",
@@ -1156,6 +1173,7 @@ Implementations SHOULD meet these targets:
 ### 13.3 Invalid Examples
 
 **Duplicate Slot ID**:
+
 ```json
 {
   "format_version": "2025.0.0",
@@ -1166,9 +1184,11 @@ Implementations SHOULD meet these targets:
   ]
 }
 ```
+
 Expected Error: `ERROR_DUPLICATE_SLOT_ID (1200)`
 
 **Invalid Operation String**:
+
 ```json
 {
   "format_version": "2025.0.0",
@@ -1180,9 +1200,11 @@ Expected Error: `ERROR_DUPLICATE_SLOT_ID (1200)`
   }]
 }
 ```
+
 Expected Error: `ERROR_INVALID_OPERATIONS (1201)`
 
 **Path Traversal Attempt**:
+
 ```json
 {
   "execution": {
@@ -1190,6 +1212,7 @@ Expected Error: `ERROR_INVALID_OPERATIONS (1201)`
   }
 }
 ```
+
 Expected Error: `ERROR_PATH_TRAVERSAL (1300)`
 
 ## 14. References
@@ -1218,7 +1241,7 @@ Expected Error: `ERROR_PATH_TRAVERSAL (1300)`
 
 [SPDX] "Software Package Data Exchange (SPDX) Specification", https://spdx.org/specifications
 
----
+______________________________________________________________________
 
 **Authors' Addresses**
 
