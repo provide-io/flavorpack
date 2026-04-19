@@ -2,10 +2,11 @@
 
 The Flavorpack Builder API provides tools for creating PSPF packages programmatically.
 
-!!! note "Low-Level API"
-    This is a low-level API for advanced use cases. Most users should use the [Packaging API](packaging/) instead.
+!!! note "Low-Level API" This is a low-level API for advanced use cases. Most users should use the [Packaging API](packaging/) instead.
 
-    The Builder API gives you fine-grained control over the PSPF package creation process, including slot management, operation chains, and binary format assembly.
+```
+The Builder API gives you fine-grained control over the PSPF package creation process, including slot management, operation chains, and binary format assembly.
+```
 
 ## Overview
 
@@ -147,10 +148,11 @@ builder.set_metadata({
 
 ### Signing Packages
 
-!!! note "Signing via CLI"
-    Package signing is typically handled via CLI options (`--private-key`, `--public-key`) rather than programmatically. The Builder API automatically integrates with the signing system when keys are provided.
+!!! note "Signing via CLI" Package signing is typically handled via CLI options (`--private-key`, `--public-key`) rather than programmatically. The Builder API automatically integrates with the signing system when keys are provided.
 
-    For manual signing workflows, see `src/flavor/psp/format_2025/writer.py` which uses `provide.foundation.crypto.Ed25519Signer`.
+```
+For manual signing workflows, see `src/flavor/psp/format_2025/writer.py` which uses `provide.foundation.crypto.Ed25519Signer`.
+```
 
 ```python
 # Signing is typically handled via the Packaging API or CLI:

@@ -5,11 +5,12 @@ Optimize Flavorpack package size, build time, and runtime performance.
 ## Overview
 
 Flavorpack packages can be optimized across three dimensions:
-1. **Package Size** - Reduce distribution size
-2. **Build Time** - Speed up packaging process
-3. **Runtime Performance** - Faster package startup and execution
 
----
+1. **Package Size** - Reduce distribution size
+1. **Build Time** - Speed up packaging process
+1. **Runtime Performance** - Faster package startup and execution
+
+______________________________________________________________________
 
 ## Package Size Optimization
 
@@ -67,14 +68,14 @@ operations = ["tar", "gzip"]  # Quick compression
 
 ### Size Comparison
 
-| Technique | Size Reduction | Build Time Impact |
-|-----------|----------------|-------------------|
-| Minimal deps | 20-50% | Faster |
-| `--strip` | 5-10% | None |
-| xz compression | 10-20% | Slower |
-| zstd compression | 5-10% | Minimal |
+| Technique        | Size Reduction | Build Time Impact |
+| ---------------- | -------------- | ----------------- |
+| Minimal deps     | 20-50%         | Faster            |
+| `--strip`        | 5-10%          | None              |
+| xz compression   | 10-20%         | Slower            |
+| zstd compression | 5-10%          | Minimal           |
 
----
+______________________________________________________________________
 
 ## Build Performance
 
@@ -99,6 +100,7 @@ flavor pack --launcher-bin dist/bin/flavor-rs-launcher-*
 ### Parallel Processing
 
 Flavorpack automatically parallelizes:
+
 - Dependency installation
 - Slot creation
 - Compression
@@ -122,7 +124,7 @@ FOUNDATION_LOG_LEVEL=trace flavor pack 2>&1 | ts > build-profile.log
 grep -E "(took|duration)" build-profile.log
 ```
 
----
+______________________________________________________________________
 
 ## Runtime Performance
 
@@ -163,7 +165,7 @@ FLAVOR_LOG_LEVEL=trace ./myapp.psp 2>&1 | ts | head -100
 # - Clean up after extraction
 ```
 
----
+______________________________________________________________________
 
 ## Profiling and Benchmarking
 
@@ -210,7 +212,7 @@ echo "Third run (warm cache):"
 time $PACKAGE --version
 ```
 
----
+______________________________________________________________________
 
 ## Best Practices
 
@@ -232,45 +234,45 @@ time $PACKAGE --version
 
 ### Size vs Speed Trade-offs
 
-| Optimization | Size | Build Time | Runtime |
-|--------------|------|------------|---------|
-| `.flavorignore` | ✅ Smaller | ✅ Faster | ➖ Same |
-| `--strip` | ✅ Smaller | ➖ Same | ➖ Same |
-| `--compress 9` | ✅ Smaller | ❌ Slower | ➖ Same |
-| Minimal deps | ✅ Smaller | ✅ Faster | ✅ Faster |
-| Cache enabled | ➖ Same | ➖ Same | ✅ Much faster |
+| Optimization    | Size       | Build Time | Runtime        |
+| --------------- | ---------- | ---------- | -------------- |
+| `.flavorignore` | ✅ Smaller | ✅ Faster  | ➖ Same        |
+| `--strip`       | ✅ Smaller | ➖ Same    | ➖ Same        |
+| `--compress 9`  | ✅ Smaller | ❌ Slower  | ➖ Same        |
+| Minimal deps    | ✅ Smaller | ✅ Faster  | ✅ Faster      |
+| Cache enabled   | ➖ Same    | ➖ Same    | ✅ Much faster |
 
----
+______________________________________________________________________
 
 ## Performance Metrics
 
 ### Typical Package Sizes
 
-| Component | Unoptimized | Optimized | Reduction |
-|-----------|-------------|-----------|-----------|
-| Launcher | 3-5 MB | 2-3 MB | 30-40% |
-| Python runtime | 45-55 MB | 35-45 MB | 20% |
-| Dependencies | 20-100 MB | 10-50 MB | 50% |
-| Application code | 1-10 MB | 0.5-5 MB | 50% |
-| **Total** | **70-170 MB** | **50-100 MB** | **30-40%** |
+| Component        | Unoptimized   | Optimized     | Reduction  |
+| ---------------- | ------------- | ------------- | ---------- |
+| Launcher         | 3-5 MB        | 2-3 MB        | 30-40%     |
+| Python runtime   | 45-55 MB      | 35-45 MB      | 20%        |
+| Dependencies     | 20-100 MB     | 10-50 MB      | 50%        |
+| Application code | 1-10 MB       | 0.5-5 MB      | 50%        |
+| **Total**        | **70-170 MB** | **50-100 MB** | **30-40%** |
 
 ### Build Time Targets
 
-| Project Size | Typical Build Time | Optimized |
-|--------------|-------------------|-----------|
-| Small (<10 deps) | 30-60s | 15-30s |
-| Medium (10-50 deps) | 1-3 min | 30s-2 min |
-| Large (>50 deps) | 3-10 min | 1-5 min |
+| Project Size        | Typical Build Time | Optimized |
+| ------------------- | ------------------ | --------- |
+| Small (\<10 deps)   | 30-60s             | 15-30s    |
+| Medium (10-50 deps) | 1-3 min            | 30s-2 min |
+| Large (>50 deps)    | 3-10 min           | 1-5 min   |
 
 ### Runtime Performance
 
-| Metric | Cold Cache | Warm Cache |
-|--------|------------|------------|
-| First startup | 2-10s | 0.1-0.5s |
-| Subsequent runs | 0.1-0.5s | 0.1-0.5s |
-| Memory overhead | +50-100 MB | Minimal |
+| Metric          | Cold Cache | Warm Cache |
+| --------------- | ---------- | ---------- |
+| First startup   | 2-10s      | 0.1-0.5s   |
+| Subsequent runs | 0.1-0.5s   | 0.1-0.5s   |
+| Memory overhead | +50-100 MB | Minimal    |
 
----
+______________________________________________________________________
 
 ## Troubleshooting Performance Issues
 
@@ -315,7 +317,7 @@ du -sh /tmp/analyze/slot_*
 tar -tzf /tmp/analyze/slot_1.tar.gz | xargs ls -lh | sort -k5 -h | tail -20
 ```
 
----
+______________________________________________________________________
 
 ## See Also
 

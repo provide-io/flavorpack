@@ -18,10 +18,10 @@ When a PSPF package runs for the first time, it extracts its contents to a cache
 
 Default cache locations:
 
-| Platform | Default Path |
-|----------|--------------|
-| **Linux** | `~/.cache/flavor/workenv/` |
-| **macOS** | `~/.cache/flavor/workenv/` |
+| Platform    | Default Path                     |
+| ----------- | -------------------------------- |
+| **Linux**   | `~/.cache/flavor/workenv/`       |
+| **macOS**   | `~/.cache/flavor/workenv/`       |
 | **Windows** | `%LOCALAPPDATA%\flavor\workenv\` |
 
 **Custom locations:**
@@ -35,7 +35,7 @@ export XDG_CACHE_HOME=/custom/xdg/cache
 # Cache will be: /custom/xdg/cache/flavor/workenv
 ```
 
----
+______________________________________________________________________
 
 ## Cache Commands
 
@@ -166,7 +166,7 @@ flavor workenv inspect pspf-a3f7b9c2d1e4f5a6
 flavor workenv inspect pspf-a3f7b9c2d1e4f5a6 --json
 ```
 
----
+______________________________________________________________________
 
 ## Cache Structure
 
@@ -203,11 +203,12 @@ pspf-{first-16-chars-of-sha256}
 ```
 
 This ensures:
+
 - **Uniqueness**: Different packages have different IDs
 - **Consistency**: Same package always has the same ID
 - **Collision resistance**: SHA-256 prefix provides high uniqueness
 
----
+______________________________________________________________________
 
 ## Cache Validation
 
@@ -241,7 +242,7 @@ Cached extractions are validated using:
 
 If validation fails, the cache is automatically regenerated.
 
----
+______________________________________________________________________
 
 ## Cache Management Strategies
 
@@ -300,7 +301,7 @@ flavor workenv remove pspf-large-id -y
 flavor workenv clean -y
 ```
 
----
+______________________________________________________________________
 
 ## Cache Troubleshooting
 
@@ -366,17 +367,17 @@ flavor workenv remove pspf-conflicted-id -y
 ./myapp.psp
 ```
 
----
+______________________________________________________________________
 
 ## Environment Variables
 
 ### Cache Configuration
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `FLAVOR_CACHE` | `~/.cache/flavor/workenv` | Override cache directory |
-| `XDG_CACHE_HOME` | `~/.cache` | XDG Base Directory specification |
-| `FLAVOR_CACHE_VALIDATION` | `true` | Enable/disable cache validation |
+| Variable                  | Default                   | Description                      |
+| ------------------------- | ------------------------- | -------------------------------- |
+| `FLAVOR_CACHE`            | `~/.cache/flavor/workenv` | Override cache directory         |
+| `XDG_CACHE_HOME`          | `~/.cache`                | XDG Base Directory specification |
+| `FLAVOR_CACHE_VALIDATION` | `true`                    | Enable/disable cache validation  |
 
 ### Examples
 
@@ -394,7 +395,7 @@ export FLAVOR_CACHE_VALIDATION=false
 ./myapp.psp
 ```
 
----
+______________________________________________________________________
 
 ## Cache Lifecycle
 
@@ -438,7 +439,7 @@ Cache is invalidated when:
 - Cache directory is corrupted
 - Manual removal
 
----
+______________________________________________________________________
 
 ## Monitoring Cache Usage
 
@@ -471,36 +472,21 @@ export FOUNDATION_LOG_LEVEL=debug
 ./myapp.psp --version 2>&1 | grep cache
 ```
 
----
+______________________________________________________________________
 
 ## Best Practices
 
-!!! tip "Development"
-    - Keep caches during active development
-    - Clean weekly or when switching projects
-    - Use `workenv list` to see what's cached
+!!! tip "Development" - Keep caches during active development - Clean weekly or when switching projects - Use `workenv list` to see what's cached
 
-!!! tip "CI/CD"
-    - Clean cache before builds for reproducibility
-    - Or use job-specific cache directories
-    - Consider caching between pipeline stages
+!!! tip "CI/CD" - Clean cache before builds for reproducibility - Or use job-specific cache directories - Consider caching between pipeline stages
 
-!!! tip "Production"
-    - Keep caches for faster startup
-    - Monitor disk usage regularly
-    - Only clean when necessary
+!!! tip "Production" - Keep caches for faster startup - Monitor disk usage regularly - Only clean when necessary
 
-!!! tip "Performance"
-    - Cache dramatically improves startup time
-    - Validation adds minimal overhead
-    - First run is slower (extraction required)
+!!! tip "Performance" - Cache dramatically improves startup time - Validation adds minimal overhead - First run is slower (extraction required)
 
-!!! warning "Security"
-    - Cache validation prevents tampering
-    - Never disable validation in production
-    - Cache checksums protect integrity
+!!! warning "Security" - Cache validation prevents tampering - Never disable validation in production - Cache checksums protect integrity
 
----
+______________________________________________________________________
 
 ## Advanced Usage
 
@@ -543,7 +529,7 @@ chmod -R 555 ~/.cache/flavor/workenv/
 ./myapp.psp
 ```
 
----
+______________________________________________________________________
 
 ## See Also
 
@@ -553,6 +539,6 @@ chmod -R 555 ~/.cache/flavor/workenv/
 - [CLI Reference](cli/) - Cache commands
 - [Troubleshooting](../../troubleshooting/index/) - Common issues
 
----
+______________________________________________________________________
 
 **Need help?** Run `flavor workenv --help` for command-specific documentation.

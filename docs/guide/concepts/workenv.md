@@ -7,10 +7,10 @@ Work environments are the temporary extraction and execution directories where P
 When a PSPF package executes, it creates a "work environment" - a temporary directory structure where slots are extracted and the application runs. This system provides:
 
 1. **Isolation**: Each package runs in its own directory
-2. **Caching**: Reuse extracted content across runs
-3. **Cleanup**: Automatic lifecycle management
-4. **Platform Support**: OS-specific cache locations
-5. **Performance**: Skip re-extraction when possible
+1. **Caching**: Reuse extracted content across runs
+1. **Cleanup**: Automatic lifecycle management
+1. **Platform Support**: OS-specific cache locations
+1. **Performance**: Skip re-extraction when possible
 
 ## Directory Structure
 
@@ -36,16 +36,17 @@ When a PSPF package executes, it creates a "work environment" - a temporary dire
 
 Flavorpack follows the XDG Base Directory specification for cache directories:
 
-| Platform | Default Location | Environment Variable Override |
-|----------|-----------------|------------------------------|
-| macOS | `~/.cache/flavor/workenv` | `FLAVOR_CACHE` or `XDG_CACHE_HOME` |
-| Linux | `~/.cache/flavor/workenv` | `FLAVOR_CACHE` or `XDG_CACHE_HOME` |
-| Windows | `%USERPROFILE%\.cache\flavor\workenv` | `FLAVOR_CACHE` |
+| Platform | Default Location                      | Environment Variable Override      |
+| -------- | ------------------------------------- | ---------------------------------- |
+| macOS    | `~/.cache/flavor/workenv`             | `FLAVOR_CACHE` or `XDG_CACHE_HOME` |
+| Linux    | `~/.cache/flavor/workenv`             | `FLAVOR_CACHE` or `XDG_CACHE_HOME` |
+| Windows  | `%USERPROFILE%\.cache\flavor\workenv` | `FLAVOR_CACHE`                     |
 
 **Priority order:**
+
 1. `FLAVOR_CACHE` environment variable (if set)
-2. `XDG_CACHE_HOME/flavor/workenv` (if `XDG_CACHE_HOME` is set)
-3. `~/.cache/flavor/workenv` (default)
+1. `XDG_CACHE_HOME/flavor/workenv` (if `XDG_CACHE_HOME` is set)
+1. `~/.cache/flavor/workenv` (default)
 
 ## Lifecycle Management
 
@@ -93,21 +94,21 @@ def extract_slot(slot, work_dir):
 Extracted content is cached for reuse:
 
 1. **Cache Key**: Based on package checksum
-2. **Validation**: Verify integrity before reuse
-3. **Invalidation**: Clear on package update
-4. **Completion Marker**: Track successful extraction
+1. **Validation**: Verify integrity before reuse
+1. **Invalidation**: Clear on package update
+1. **Completion Marker**: Track successful extraction
 
 ### Cleanup
 
 Automatic cleanup based on lifecycle:
 
-| Lifecycle | Cleanup Trigger | Behavior |
-|-----------|----------------|----------|
-| `persistent` | Manual only | Never auto-removed |
-| `volatile` | After init | Removed after startup |
-| `temporary` | On exit | Removed when done |
-| `cached` | Cache clear | Based on policy |
-| `init-only` | After first run | One-time setup |
+| Lifecycle    | Cleanup Trigger | Behavior              |
+| ------------ | --------------- | --------------------- |
+| `persistent` | Manual only     | Never auto-removed    |
+| `volatile`   | After init      | Removed after startup |
+| `temporary`  | On exit         | Removed when done     |
+| `cached`     | Cache clear     | Based on policy       |
+| `init-only`  | After first run | One-time setup        |
 
 ## CLI Commands
 
@@ -233,18 +234,21 @@ os.environ["FLAVOR_CACHE"] = "/my/custom/cache"
 ### Step-by-Step
 
 1. **Package Execution Starts**
+
    ```
    ./myapp.psp --some-args
    ```
 
-2. **Generate Work Environment ID**
+1. **Generate Work Environment ID**
+
    ```python
    package_id = hashlib.sha256(
        f"{name}:{version}:{checksum}".encode()
    ).hexdigest()[:16]
    ```
 
-3. **Check Existing Cache**
+1. **Check Existing Cache**
+
    ```python
    work_dir = cache_dir / package_id
    if (work_dir / ".complete").exists():
@@ -252,20 +256,23 @@ os.environ["FLAVOR_CACHE"] = "/my/custom/cache"
        return work_dir
    ```
 
-4. **Extract Slots**
+1. **Extract Slots**
+
    ```python
    for slot in metadata["slots"]:
        if matches_platform(slot):
            extract_slot(slot, work_dir)
    ```
 
-5. **Mark Complete**
+1. **Mark Complete**
+
    ```python
    completion_marker = meta_dir / "instance/extract/complete"
    completion_marker.touch()
    ```
 
-6. **Execute Application**
+1. **Execute Application**
+
    ```python
    os.chdir(work_dir)
    exec(python_command)
@@ -350,12 +357,12 @@ with ThreadPoolExecutor(max_workers=4) as executor:
 
 ### Cache Strategies
 
-| Strategy | Use Case | Configuration |
-|----------|----------|---------------|
-| **Aggressive** | Development | Keep everything |
-| **Balanced** | Default | 30-day retention |
-| **Conservative** | CI/CD | Clean after each run |
-| **Minimal** | Containers | No caching |
+| Strategy         | Use Case    | Configuration        |
+| ---------------- | ----------- | -------------------- |
+| **Aggressive**   | Development | Keep everything      |
+| **Balanced**     | Default     | 30-day retention     |
+| **Conservative** | CI/CD       | Clean after each run |
+| **Minimal**      | Containers  | No caching           |
 
 ## Security Considerations
 
@@ -380,12 +387,12 @@ with ThreadPoolExecutor(max_workers=4) as executor:
 ## Best Practices
 
 1. **Regular Cleanup**: Schedule periodic cache cleaning
-2. **Monitor Size**: Track cache growth in production
-3. **Custom Locations**: Use appropriate directories for your OS
-4. **Error Handling**: Gracefully handle extraction failures
-5. **Logging**: Enable debug logging for troubleshooting
-6. **Testing**: Verify cache behavior in tests
-7. **Documentation**: Document cache requirements
+1. **Monitor Size**: Track cache growth in production
+1. **Custom Locations**: Use appropriate directories for your OS
+1. **Error Handling**: Gracefully handle extraction failures
+1. **Logging**: Enable debug logging for troubleshooting
+1. **Testing**: Verify cache behavior in tests
+1. **Documentation**: Document cache requirements
 
 ## Related Documentation
 

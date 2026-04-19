@@ -20,14 +20,14 @@ This page is under development. In the meantime, see:
 
 ## Current Platform Support
 
-| Platform | Architecture | Status |
-|----------|-------------|---------|
-| Linux | x86_64 | ✅ Full Support |
-| Linux | aarch64 | ✅ Full Support |
-| macOS | x86_64 | ✅ Full Support |
-| macOS | arm64 | ✅ Full Support |
-| Windows | x86_64 | 🚧 Beta |
+| Platform | Architecture | Status          |
+| -------- | ------------ | --------------- |
+| Linux    | x86_64       | ✅ Full Support |
+| Linux    | aarch64      | ✅ Full Support |
+| macOS    | x86_64       | ✅ Full Support |
+| macOS    | arm64        | ✅ Full Support |
+| Windows  | x86_64       | 🚧 Beta         |
 
----
+______________________________________________________________________
 
 **Need help now?** See [Getting Started](../../getting-started/index/) or [Architecture](../../development/architecture/).

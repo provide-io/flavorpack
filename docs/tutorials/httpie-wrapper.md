@@ -1,12 +1,10 @@
 # Tutorial: Packaging an HTTPie Wrapper
 
-**Time to Complete:** 20-25 minutes
-**Difficulty:** Intermediate
-**Prerequisites:** Python 3.11+, Flavorpack installed
+**Time to Complete:** 20-25 minutes **Difficulty:** Intermediate **Prerequisites:** Python 3.11+, Flavorpack installed
 
 This tutorial demonstrates how to package a Python CLI application that wraps HTTPie (a popular HTTP client) into a self-contained executable using Flavorpack.
 
----
+______________________________________________________________________
 
 ## What You'll Build
 
@@ -18,7 +16,7 @@ A custom HTTP client tool called `api-tool` that:
 - Works without requiring Python or pip on target systems
 - Includes environment-specific API configurations
 
----
+______________________________________________________________________
 
 ## Why This Example?
 
@@ -29,7 +27,7 @@ This tutorial demonstrates several important Flavorpack capabilities:
 - **Environment configuration**: Managing API endpoints per environment
 - **Cross-platform distribution**: Single file that works anywhere
 
----
+______________________________________________________________________
 
 ## Step 1: Project Setup
 
@@ -52,7 +50,7 @@ api-tool/
 └── pyproject.toml
 ```
 
----
+______________________________________________________________________
 
 ## Step 2: Create the Application
 
@@ -304,7 +302,7 @@ if __name__ == "__main__":
     cli()
 ```
 
----
+______________________________________________________________________
 
 ## Step 3: Configure the Package
 
@@ -367,7 +365,7 @@ license = "MIT"
 keywords = ["http", "api", "cli", "httpie"]
 ```
 
----
+______________________________________________________________________
 
 ## Step 4: Build the Package
 
@@ -414,7 +412,7 @@ flavor pack --manifest pyproject.toml --output api-tool.psp
    🔑 Signed: yes
 ```
 
----
+______________________________________________________________________
 
 ## Step 5: Test the Package
 
@@ -449,7 +447,7 @@ Available environments:
 Current: dev
 ```
 
----
+______________________________________________________________________
 
 ## Step 6: Using Your Tool
 
@@ -494,7 +492,7 @@ Current: dev
 ./api-tool.psp raw --method POST --header "X-API-Key:secret" --data '{"test":true}' /endpoint
 ```
 
----
+______________________________________________________________________
 
 ## Step 7: Distribution
 
@@ -521,7 +519,7 @@ api-tool get /users
 - ✅ **Reproducible** - Same build everywhere
 - ✅ **Secure** - Cryptographically signed
 
----
+______________________________________________________________________
 
 ## Understanding the Configuration
 
@@ -571,7 +569,7 @@ pass = [       # Only pass these variables
 
 This creates a clean, reproducible environment for the application.
 
----
+______________________________________________________________________
 
 ## Advanced Customization
 
@@ -635,7 +633,7 @@ def load_custom_environments():
             ENVIRONMENTS.update(custom.get("environments", {}))
 ```
 
----
+______________________________________________________________________
 
 ## Troubleshooting
 
@@ -644,8 +642,8 @@ def load_custom_environments():
 If the package size is too large (>100MB), you can:
 
 1. **Use slim Python build** (if available)
-2. **Exclude unnecessary dependencies**
-3. **Use `--exclude-tests` flag** when packaging
+1. **Exclude unnecessary dependencies**
+1. **Use `--exclude-tests` flag** when packaging
 
 ```bash
 flavor pack --exclude-tests --manifest pyproject.toml --output api-tool.psp
@@ -684,20 +682,15 @@ dependencies = [
 ]
 ```
 
----
+______________________________________________________________________
 
 ## What You've Learned
 
 Congratulations! You've successfully:
 
-✅ Created a Python CLI application that wraps HTTPie
-✅ Managed multiple API environments
-✅ Packaged third-party dependencies (httpie, click)
-✅ Built a self-contained executable with Flavorpack
-✅ Distributed a tool without requiring Python installation
-✅ Configured environment isolation and security
+✅ Created a Python CLI application that wraps HTTPie ✅ Managed multiple API environments ✅ Packaged third-party dependencies (httpie, click) ✅ Built a self-contained executable with Flavorpack ✅ Distributed a tool without requiring Python installation ✅ Configured environment isolation and security
 
----
+______________________________________________________________________
 
 ## Next Steps
 
@@ -715,7 +708,7 @@ Congratulations! You've successfully:
 - **[Advanced Topics](../guide/advanced/index/)** - Custom builders, performance
 - **[HTTPie Documentation](https://httpie.io/docs/cli)** - Complete HTTPie reference
 
----
+______________________________________________________________________
 
 ## Complete Project Files
 
@@ -741,11 +734,8 @@ api-tool/
 - [ ] POST requests succeed
 - [ ] Authentication headers work
 - [ ] Error handling displays messages
-- [ ] Package size is reasonable (<100MB)
+- [ ] Package size is reasonable (\<100MB)
 
----
+______________________________________________________________________
 
-**Tutorial Version:** 1.0
-**Last Updated:** October 30, 2025
-**Flavorpack Version:** 0.2.0+
-**Python Version:** 3.11+
+**Tutorial Version:** 1.0 **Last Updated:** October 30, 2025 **Flavorpack Version:** 0.2.0+ **Python Version:** 3.11+

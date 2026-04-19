@@ -1,10 +1,10 @@
 # FEP-0004: PSPF/2025 Supply Chain Just-In-Time Compilation
 
-**Status**: Experimental  
-**Type**: Standards Track  
-**Created**: 2025-01-08  
-**Version**: v0.1  
-**Category**: Future Enhancement  
+**Status**: Experimental\
+**Type**: Standards Track\
+**Created**: 2025-01-08\
+**Version**: v0.1\
+**Category**: Future Enhancement\
 **Target**: PSPF/2025 v1.0
 
 ## Abstract
@@ -14,30 +14,32 @@ This document specifies the Supply Chain Just-In-Time (JIT) compilation system f
 ## Table of Contents
 
 1. [Introduction](#1-introduction)
-2. [Architecture Overview](#2-architecture-overview)
-3. [Compilation Service Protocol](#3-compilation-service-protocol)
-4. [Package Manifest Extensions](#4-package-manifest-extensions)
-5. [Platform Detection and Targeting](#5-platform-detection-and-targeting)
-6. [Optimization Strategies](#6-optimization-strategies)
-7. [Caching and Distribution](#7-caching-and-distribution)
-8. [Security Model](#8-security-model)
-9. [Implementation Requirements](#9-implementation-requirements)
-10. [Performance Considerations](#10-performance-considerations)
-11. [Deployment Scenarios](#11-deployment-scenarios)
-12. [Migration Path](#12-migration-path)
-13. [Security Considerations](#13-security-considerations)
-14. [References](#14-references)
+1. [Architecture Overview](#2-architecture-overview)
+1. [Compilation Service Protocol](#3-compilation-service-protocol)
+1. [Package Manifest Extensions](#4-package-manifest-extensions)
+1. [Platform Detection and Targeting](#5-platform-detection-and-targeting)
+1. [Optimization Strategies](#6-optimization-strategies)
+1. [Caching and Distribution](#7-caching-and-distribution)
+1. [Security Model](#8-security-model)
+1. [Implementation Requirements](#9-implementation-requirements)
+1. [Performance Considerations](#10-performance-considerations)
+1. [Deployment Scenarios](#11-deployment-scenarios)
+1. [Migration Path](#12-migration-path)
+1. [Security Considerations](#13-security-considerations)
+1. [References](#14-references)
 
 ## 1. Introduction
 
 ### 1.1 Motivation
 
 Traditional software distribution faces a fundamental trade-off:
+
 - **Universal packages** work everywhere but are suboptimal everywhere
 - **Platform-specific packages** are optimal but require maintaining multiple variants
 - **Source distribution** enables optimization but requires build tools on target systems
 
 Supply Chain JIT resolves this trade-off by performing compilation at distribution edges:
+
 - Single source package maintained by developers
 - Platform-optimized binaries generated on-demand
 - Transparent caching for repeated requests
@@ -46,10 +48,10 @@ Supply Chain JIT resolves this trade-off by performing compilation at distributi
 ### 1.2 Design Principles
 
 1. **Separation of Concerns**: Developers ship source, edges compile, users run binaries
-2. **Progressive Enhancement**: Systems work without JIT, perform better with it
-3. **Transparent Operation**: No changes to existing PSPF package structure
-4. **Security by Default**: Cryptographic verification throughout pipeline
-5. **Edge Computing**: Leverage CDN and edge infrastructure for compilation
+1. **Progressive Enhancement**: Systems work without JIT, perform better with it
+1. **Transparent Operation**: No changes to existing PSPF package structure
+1. **Security by Default**: Cryptographic verification throughout pipeline
+1. **Edge Computing**: Leverage CDN and edge infrastructure for compilation
 
 ### 1.3 Requirements Language
 
@@ -85,12 +87,12 @@ Compilation → Optimization → Packaging → Signing → Caching → Delivery
 
 ### 2.3 Package Types
 
-| Type               | Description                          | Use Case                    |
-|--------------------|--------------------------------------|-----------------------------|
-| SOURCE_ONLY        | Source code, requires compilation   | Libraries, interpreted code |
-| UNIVERSAL_BINARY   | Pre-compiled for common platforms   | Fallback when JIT unavailable |
-| JIT_ELIGIBLE       | Source + universal binary           | Optimal: JIT with fallback |
-| PLATFORM_SPECIFIC  | Pre-compiled for single platform    | Embedded systems           |
+| Type              | Description                       | Use Case                      |
+| ----------------- | --------------------------------- | ----------------------------- |
+| SOURCE_ONLY       | Source code, requires compilation | Libraries, interpreted code   |
+| UNIVERSAL_BINARY  | Pre-compiled for common platforms | Fallback when JIT unavailable |
+| JIT_ELIGIBLE      | Source + universal binary         | Optimal: JIT with fallback    |
+| PLATFORM_SPECIFIC | Pre-compiled for single platform  | Embedded systems              |
 
 ## 3. Compilation Service Protocol
 
@@ -371,13 +373,13 @@ custom-variant = 1*( ALPHA / DIGIT / "_" )
 
 ### 6.1 Optimization Levels
 
-| Level       | Focus                | Compile Time | Binary Size | Performance |
-|-------------|----------------------|--------------|-------------|-------------|
-| DEBUG       | Debuggability        | Fast         | Large       | Slow        |
-| RELEASE     | Balanced             | Moderate     | Medium      | Good        |
-| SIZE        | Minimal size         | Moderate     | Small       | Moderate    |
-| SPEED       | Maximum performance  | Slow         | Large       | Fast        |
-| NATIVE      | CPU-specific         | Slow         | Medium      | Fastest     |
+| Level   | Focus               | Compile Time | Binary Size | Performance |
+| ------- | ------------------- | ------------ | ----------- | ----------- |
+| DEBUG   | Debuggability       | Fast         | Large       | Slow        |
+| RELEASE | Balanced            | Moderate     | Medium      | Good        |
+| SIZE    | Minimal size        | Moderate     | Small       | Moderate    |
+| SPEED   | Maximum performance | Slow         | Large       | Fast        |
+| NATIVE  | CPU-specific        | Slow         | Medium      | Fastest     |
 
 ### 6.2 Profile-Guided Optimization (PGO)
 
@@ -603,34 +605,36 @@ compilation_environment:
 ### 9.1 Edge Compiler Requirements
 
 Edge compilers MUST:
+
 1. Support all PSPF v0 required operations
-2. Verify source package signatures
-3. Generate reproducible builds when possible
-4. Provide compilation attestation
-5. Implement resource limits and timeouts
-6. Support incremental compilation
-7. Cache intermediate artifacts
+1. Verify source package signatures
+1. Generate reproducible builds when possible
+1. Provide compilation attestation
+1. Implement resource limits and timeouts
+1. Support incremental compilation
+1. Cache intermediate artifacts
 
 ### 9.2 Client Requirements
 
 Clients SHOULD:
+
 1. Detect platform capabilities accurately
-2. Prefer JIT-compiled packages when available
-3. Fall back to universal binaries gracefully
-4. Cache compiled packages locally
-5. Verify compilation attestations
-6. Report telemetry for PGO
+1. Prefer JIT-compiled packages when available
+1. Fall back to universal binaries gracefully
+1. Cache compiled packages locally
+1. Verify compilation attestations
+1. Report telemetry for PGO
 
 ### 9.3 Language Support Matrix
 
-| Language | Build System | JIT Support | Notes                        |
-|----------|--------------|-------------|------------------------------|
-| C/C++    | CMake, Make  | FULL        | GCC, Clang, MSVC            |
-| Rust     | Cargo        | FULL        | rustc with LLVM backend      |
-| Go       | go build     | FULL        | Official Go compiler         |
-| Python   | setuptools   | PARTIAL     | C extensions only            |
-| Java     | Maven, Gradle| PARTIAL     | Native components via GraalVM |
-| .NET     | dotnet       | PARTIAL     | NativeAOT compilation        |
+| Language | Build System  | JIT Support | Notes                         |
+| -------- | ------------- | ----------- | ----------------------------- |
+| C/C++    | CMake, Make   | FULL        | GCC, Clang, MSVC              |
+| Rust     | Cargo         | FULL        | rustc with LLVM backend       |
+| Go       | go build      | FULL        | Official Go compiler          |
+| Python   | setuptools    | PARTIAL     | C extensions only             |
+| Java     | Maven, Gradle | PARTIAL     | Native components via GraalVM |
+| .NET     | dotnet        | PARTIAL     | NativeAOT compilation         |
 
 ## 10. Performance Considerations
 
@@ -657,14 +661,14 @@ Clients SHOULD:
 
 ### 10.2 Optimization Impact
 
-| Optimization      | Compile Time | Size Impact | Performance Gain |
-|-------------------|--------------|-------------|------------------|
-| Basic (-O2)       | 1.0x         | 1.0x        | Baseline         |
-| Full (-O3)        | 1.5x         | 1.1x        | +15-20%          |
-| LTO               | 2.0x         | 0.9x        | +5-10%           |
-| PGO               | 2.5x         | 1.0x        | +10-30%          |
-| Native CPU        | 1.2x         | 1.0x        | +5-15%           |
-| Size (-Os)        | 1.1x         | 0.7x        | -5-10%           |
+| Optimization | Compile Time | Size Impact | Performance Gain |
+| ------------ | ------------ | ----------- | ---------------- |
+| Basic (-O2)  | 1.0x         | 1.0x        | Baseline         |
+| Full (-O3)   | 1.5x         | 1.1x        | +15-20%          |
+| LTO          | 2.0x         | 0.9x        | +5-10%           |
+| PGO          | 2.5x         | 1.0x        | +10-30%          |
+| Native CPU   | 1.2x         | 1.0x        | +5-15%           |
+| Size (-Os)   | 1.1x         | 0.7x        | -5-10%           |
 
 ### 10.3 Caching Effectiveness
 
@@ -776,21 +780,25 @@ deployment:
 ### 12.1 Adoption Phases
 
 #### Phase 1: Metadata Addition (v0.5)
+
 - Add JIT metadata to packages
 - No behavioral changes
 - Collect platform telemetry
 
 #### Phase 2: Opt-in JIT (v1.0)
+
 - Enable JIT for specific packages
 - Manual compilation triggering
 - Limited platform support
 
 #### Phase 3: Automatic JIT (v1.5)
+
 - Automatic compilation for popular packages
 - Expanded platform coverage
 - PGO data collection
 
 #### Phase 4: Universal JIT (v2.0)
+
 - JIT by default for all eligible packages
 - Full optimization pipeline
 - Advanced caching strategies
@@ -849,8 +857,8 @@ bool detect_jit_support(struct JITCapabilities *caps) {
 
 ### 13.1 Supply Chain Attacks
 
-**Threat**: Malicious code injection during compilation
-**Mitigation**: 
+**Threat**: Malicious code injection during compilation **Mitigation**:
+
 - Reproducible builds with multiple compilers
 - Source package signature verification
 - Compilation attestation chain
@@ -858,8 +866,8 @@ bool detect_jit_support(struct JITCapabilities *caps) {
 
 ### 13.2 Resource Exhaustion
 
-**Threat**: DoS through expensive compilation requests
-**Mitigation**:
+**Threat**: DoS through expensive compilation requests **Mitigation**:
+
 - Rate limiting per client
 - Compilation cost estimation
 - Resource quotas
@@ -867,8 +875,8 @@ bool detect_jit_support(struct JITCapabilities *caps) {
 
 ### 13.3 Cache Poisoning
 
-**Threat**: Serving malicious compiled packages from cache
-**Mitigation**:
+**Threat**: Serving malicious compiled packages from cache **Mitigation**:
+
 - Cryptographic cache keys
 - Cache entry signatures
 - Periodic cache validation
@@ -876,8 +884,8 @@ bool detect_jit_support(struct JITCapabilities *caps) {
 
 ### 13.4 Platform Fingerprinting
 
-**Threat**: Information disclosure through platform detection
-**Mitigation**:
+**Threat**: Information disclosure through platform detection **Mitigation**:
+
 - Generic platform options
 - Optional platform detection
 - Minimal information collection
@@ -885,8 +893,8 @@ bool detect_jit_support(struct JITCapabilities *caps) {
 
 ### 13.5 Compiler Vulnerabilities
 
-**Threat**: Exploiting compiler bugs to generate malicious code
-**Mitigation**:
+**Threat**: Exploiting compiler bugs to generate malicious code **Mitigation**:
+
 - Compiler diversity
 - Regular compiler updates
 - Sandboxed compilation
@@ -918,7 +926,7 @@ bool detect_jit_support(struct JITCapabilities *caps) {
 
 [LTO] "Link Time Optimization", LLVM Documentation, https://llvm.org/docs/LinkTimeOptimization.html
 
----
+______________________________________________________________________
 
 **Authors' Addresses**
 

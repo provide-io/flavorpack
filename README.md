@@ -1,10 +1,6 @@
 # Flavorpack: Progressive Secure Polyglot Packaging Toolchain
 
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![uv](https://img.shields.io/badge/uv-package_manager-FF6B35.svg)](https://github.com/astral-sh/uv)
-[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-[![CI](https://github.com/provide-io/flavorpack/actions/workflows/flavor-pipeline.yml/badge.svg)](https://github.com/provide-io/flavorpack/actions/workflows/flavor-pipeline.yml)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/) [![uv](https://img.shields.io/badge/uv-package_manager-FF6B35.svg)](https://github.com/astral-sh/uv) [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff) [![CI](https://github.com/provide-io/flavorpack/actions/workflows/flavor-pipeline.yml/badge.svg)](https://github.com/provide-io/flavorpack/actions/workflows/flavor-pipeline.yml)
 
 > **Beta**: Flavorpack is under active development. The PSPF 2025 format is stable, and core packaging workflows are tested across 6 platforms (Linux, macOS, Windows, FreeBSD — amd64/arm64). APIs may still evolve before 1.0.
 
@@ -80,11 +76,13 @@ See the [PSPF Format Specification](https://foundry.provide.io/flavorpack/refere
 Flavorpack consists of three main components:
 
 1. **Python Orchestrator** (`src/flavor/`)
+
    - Manages the build process and dependency resolution
    - Creates manifests and handles Python packaging
    - Provides CLI interface for package operations
 
-2. **Native Helpers** (`src/flavor-go/`, `src/flavor-rs/`)
+1. **Native Helpers** (`src/flavor-go/`, `src/flavor-rs/`)
+
    - **Launchers**: Extract and execute packages at runtime, perform Ed25519 signature verification, manage workenv caching
    - **Builders**: Assemble PSPF packages from manifests, implement the PSPF/2025 binary format, handle slot packing and metadata encoding
    - Built binaries are placed in `dist/bin/` for distribution
@@ -176,9 +174,10 @@ The tools run in strict mode. In this rollout phase, the dedicated quality-obser
 ## 🙏 Acknowledgments
 
 Flavorpack is built on the shoulders of giants:
+
 - [UV](https://github.com/astral-sh/uv) for fast Python package management
 - The Python, Go, and Rust communities for excellent tooling
 
----
+______________________________________________________________________
 
 **Built with ❤️ by the provide.io team**

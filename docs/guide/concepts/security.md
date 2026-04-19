@@ -37,11 +37,11 @@ graph TD
 ### Security Layers
 
 1. **Cryptographic Signatures**: Ed25519 digital signatures for authenticity
-2. **Integrity Verification**: SHA-256 checksums for all components
-3. **Format Validation**: PSPF structure verification
-4. **Isolation**: Sandboxed execution environments
-5. **Access Control**: Permission-based slot extraction
-6. **Audit Trail**: Comprehensive logging and verification
+1. **Integrity Verification**: SHA-256 checksums for all components
+1. **Format Validation**: PSPF structure verification
+1. **Isolation**: Sandboxed execution environments
+1. **Access Control**: Permission-based slot extraction
+1. **Audit Trail**: Comprehensive logging and verification
 
 ## Threat Model
 
@@ -49,14 +49,14 @@ graph TD
 
 Flavorpack's security model defends against:
 
-| Threat | Protection |
-|--------|------------|
-| **Package Tampering** | Ed25519 signatures detect modification |
+| Threat                   | Protection                                  |
+| ------------------------ | ------------------------------------------- |
+| **Package Tampering**    | Ed25519 signatures detect modification      |
 | **Supply Chain Attacks** | Signature verification ensures authenticity |
-| **Data Corruption** | SHA-256 checksums validate integrity |
-| **Path Traversal** | Sanitized extraction paths |
-| **Code Injection** | No dynamic code generation |
-| **Privilege Escalation** | Restricted permissions |
+| **Data Corruption**      | SHA-256 checksums validate integrity        |
+| **Path Traversal**       | Sanitized extraction paths                  |
+| **Code Injection**       | No dynamic code generation                  |
+| **Privilege Escalation** | Restricted permissions                      |
 
 ### Out of Scope
 
@@ -97,16 +97,19 @@ except InvalidSignature:
 #### Key Generation Options
 
 1. **Random Keys** (Recommended for production)
+
    ```bash
    flavor keygen --out-dir keys/
    ```
 
-2. **Deterministic Keys** (For CI/CD)
+1. **Deterministic Keys** (For CI/CD)
+
    ```bash
    flavor pack --key-seed "$SECRET_SEED"
    ```
 
-3. **External Keys** (Enterprise)
+1. **External Keys** (Enterprise)
+
    ```bash
    flavor pack --private-key /secure/private.pem
    ```
@@ -148,12 +151,12 @@ def verify_package(package_path):
 
 Every component has SHA-256 checksums:
 
-| Component | Checksum Location | Validation |
-|-----------|------------------|------------|
-| **Index Block** | Magic trailer | CRC32 |
-| **Metadata** | Index block | SHA-256 |
-| **Slots** | Metadata JSON | SHA-256 |
-| **Extracted Files** | Cache manifest | SHA-256 |
+| Component           | Checksum Location | Validation |
+| ------------------- | ----------------- | ---------- |
+| **Index Block**     | Magic trailer     | CRC32      |
+| **Metadata**        | Index block       | SHA-256    |
+| **Slots**           | Metadata JSON     | SHA-256    |
+| **Extracted Files** | Cache manifest    | SHA-256    |
 
 ### Verification Levels
 
@@ -165,6 +168,7 @@ flavor verify package.psp
 ```
 
 The verify command performs comprehensive validation:
+
 - Validates PSPF format structure
 - Verifies index block integrity
 - Checks metadata consistency
@@ -283,13 +287,11 @@ FLAVOR_LOG_LEVEL=debug          # Verbose security logging
 FOUNDATION_LOG_LEVEL=debug      # Python component logging
 ```
 
-!!! warning "Security Configuration"
-    For signature verification configuration, use CLI flags (`--private-key`, `--public-key`, `--key-seed`) rather than environment variables. See the [Environment Variables Guide](../../guide/usage/environment/) for the complete list of available variables.
+!!! warning "Security Configuration" For signature verification configuration, use CLI flags (`--private-key`, `--public-key`, `--key-seed`) rather than environment variables. See the [Environment Variables Guide](../../guide/usage/environment/) for the complete list of available variables.
 
 ### Configuration File
 
-!!! info "📋 Planned Feature - Not Yet Implemented"
-    Configuration file support is planned for a future release. Currently, all configuration is done via environment variables and CLI flags.
+!!! info "📋 Planned Feature - Not Yet Implemented" Configuration file support is planned for a future release. Currently, all configuration is done via environment variables and CLI flags.
 
 #### Current Configuration Methods
 
@@ -381,21 +383,25 @@ logger.info("security.extraction",
 ### For Package Creators
 
 1. **Sign all production packages**
+
    ```bash
    flavor pack --private-key prod.pem manifest.toml
    ```
 
-2. **Use deterministic builds**
+1. **Use deterministic builds**
+
    ```bash
    FLAVOR_DETERMINISTIC=1 flavor pack --manifest manifest.toml
    ```
 
-3. **Verify after building**
+1. **Verify after building**
+
    ```bash
    flavor verify package.psp
    ```
 
-4. **Document security requirements**
+1. **Document security requirements**
+
    ```toml
    [tool.flavor.security]
    minimum_version = "0.3.0"
@@ -405,22 +411,26 @@ logger.info("security.extraction",
 ### For Package Users
 
 1. **Always verify packages**
+
    ```bash
    # Verify before running
    flavor verify package.psp
    ```
 
-2. **Check key fingerprints**
+1. **Check key fingerprints**
+
    ```bash
    flavor inspect package.psp | grep "Public Key"
    ```
 
-3. **Use audit logging**
+1. **Use audit logging**
+
    ```bash
    FLAVOR_AUDIT_LOG=audit.log ./package.psp
    ```
 
-4. **Regular cache cleanup**
+1. **Regular cache cleanup**
+
    ```bash
    flavor workenv clean --older-than 7
    ```
@@ -428,23 +438,27 @@ logger.info("security.extraction",
 ### For System Administrators
 
 1. **Restrict execution**
+
    ```bash
    # AppArmor/SELinux policies
    aa-enforce /usr/local/bin/flavor
    ```
 
-2. **Monitor audit logs**
+1. **Monitor audit logs**
+
    ```bash
    tail -f /var/log/flavor-audit.log | grep "failed"
    ```
 
-3. **Manage allowed keys**
+1. **Manage allowed keys**
+
    ```bash
    # Whitelist specific keys
    export FLAVOR_ALLOWED_KEYS="fingerprint1,fingerprint2"
    ```
 
-4. **Network isolation**
+1. **Network isolation**
+
    ```bash
    # Firewall rules for package downloads
    iptables -A OUTPUT -p tcp --dport 443 -j ACCEPT
@@ -455,6 +469,7 @@ logger.info("security.extraction",
 ### Responsible Disclosure
 
 Report security issues to:
+
 - Email: security@provide.io
 - PGP Key: [public key]
 - Response time: 48 hours
@@ -462,6 +477,7 @@ Report security issues to:
 ### Security Updates
 
 Stay informed:
+
 - Security advisories: GitHub Security tab
 - Mailing list: flavor-security@provide.io
 - RSS feed: /security/feed.xml
@@ -471,6 +487,7 @@ Stay informed:
 ### Standards
 
 Flavorpack follows:
+
 - **NIST** cryptographic standards
 - **OWASP** secure coding practices
 - **CIS** benchmark configurations
@@ -478,6 +495,7 @@ Flavorpack follows:
 ### Certifications
 
 Working towards:
+
 - SOC 2 Type II
 - ISO 27001
 - FedRAMP authorization
@@ -496,7 +514,7 @@ flavor inspect --provenance package.psp
 
 The PSPF index field `attestation_sbom_digest` holds the raw SHA-256 of the attestation slot content. This digest is written at build time and re-verified at runtime, so the SBOM cannot be replaced without invalidating the package signature.
 
----
+______________________________________________________________________
 
 ## Launch-Time Policy Enforcement
 
@@ -505,24 +523,24 @@ Execution policies restrict when and where a package may run. Policy checks are 
 **Enforcement sequence** (first failure aborts execution):
 
 1. **Platform** — `OS_arch` of the current host must be in the package's `platforms` list (if set)
-2. **Root/Admin** — if `refuse_root = true`, the launcher refuses to run as root on Unix or as Administrator on Windows
-3. **Age** — the build timestamp embedded in the package must be no older than `max_age_days`
-4. **Environment** — every name listed in `require_env` must resolve to a non-empty value in the current environment
-5. **SBOM** — if the operator policy sets `require_sbom = true`, the package must contain an attestation slot
+1. **Root/Admin** — if `refuse_root = true`, the launcher refuses to run as root on Unix or as Administrator on Windows
+1. **Age** — the build timestamp embedded in the package must be no older than `max_age_days`
+1. **Environment** — every name listed in `require_env` must resolve to a non-empty value in the current environment
+1. **SBOM** — if the operator policy sets `require_sbom = true`, the package must contain an attestation slot
 
 **Package policy vs. operator policy:**
 
 A package embeds its own policy at build time. At runtime the launcher also reads the operator policy from disk (`/etc/flavor/policy.toml` or `~/.config/flavor/policy.toml`) and merges the two using the "stricter wins" rule:
 
-| Field | Merge rule |
-|-------|-----------|
-| `refuse_root` | `package OR operator` |
-| `max_age_days` | `min(package, operator)` |
-| `platforms` | intersection of both lists |
-| `require_env` | package list only |
-| `require_sbom` | operator only |
+| Field          | Merge rule                 |
+| -------------- | -------------------------- |
+| `refuse_root`  | `package OR operator`      |
+| `max_age_days` | `min(package, operator)`   |
+| `platforms`    | intersection of both lists |
+| `require_env`  | package list only          |
+| `require_sbom` | operator only              |
 
----
+______________________________________________________________________
 
 ## Operator Policy
 
@@ -530,10 +548,10 @@ System administrators and users can enforce site-wide or per-user constraints th
 
 **File locations:**
 
-| Scope | Path |
-|-------|------|
-| System | `/etc/flavor/policy.toml` |
-| User | `~/.config/flavor/policy.toml` |
+| Scope  | Path                           |
+| ------ | ------------------------------ |
+| System | `/etc/flavor/policy.toml`      |
+| User   | `~/.config/flavor/policy.toml` |
 
 **File format:**
 
@@ -563,24 +581,23 @@ flavor policy init --global
 flavor policy show
 ```
 
----
+______________________________________________________________________
 
 ## Attestation Index Fields
 
 Three fields are written into the PSPF index block at build time and re-verified at runtime. They bind security metadata to the package in a tamper-evident way.
 
-| Field | Type | Description |
-|-------|------|-------------|
+| Field                     | Type               | Description                                                                                                                                              |
+| ------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `attestation_policy_hash` | 64-byte hex string | SHA-256 of the canonical policy JSON (`json.dumps(policy, sort_keys=True, separators=(",", ":"))`, hex-encoded). Lets launchers detect policy tampering. |
-| `attestation_key_fp` | 32-byte field | First 32 bytes of the hex-encoded SHA-256 fingerprint of the signer's Ed25519 public key. Cross-referenced by `flavor trust verify`. |
-| `attestation_sbom_digest` | 32 bytes (binary) | Raw SHA-256 of the attestation slot content. Verified by `flavor inspect --sbom`. |
+| `attestation_key_fp`      | 32-byte field      | First 32 bytes of the hex-encoded SHA-256 fingerprint of the signer's Ed25519 public key. Cross-referenced by `flavor trust verify`.                     |
+| `attestation_sbom_digest` | 32 bytes (binary)  | Raw SHA-256 of the attestation slot content. Verified by `flavor inspect --sbom`.                                                                        |
 
 These fields are set once at `flavor pack` time and are covered by the Ed25519 signature. Any post-build modification will cause `flavor verify` to fail.
 
-!!! info "PKI / X.509 (Future)"
-    Integration with X.509 certificate chains and external PKI infrastructure is not yet implemented. The `trust_model = "pki"` configuration shown in older documentation refers to a planned future capability.
+!!! info "PKI / X.509 (Future)" Integration with X.509 certificate chains and external PKI infrastructure is not yet implemented. The `trust_model = "pki"` configuration shown in older documentation refers to a planned future capability.
 
----
+______________________________________________________________________
 
 ## Related Documentation
 

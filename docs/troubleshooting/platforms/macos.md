@@ -11,6 +11,7 @@ Platform-specific issues and solutions for macOS users.
 **Symptom**: "Cannot be opened because the developer cannot be verified"
 
 **Solution**:
+
 ```bash
 # Remove quarantine attribute
 xattr -d com.apple.quarantine myapp.psp
@@ -24,9 +25,10 @@ xattr -d com.apple.quarantine myapp.psp
 **Symptom**: macOS Gatekeeper prevents package execution
 
 **Solutions**:
+
 1. Sign your packages with an Apple Developer ID
-2. Notarize packages for distribution
-3. For development, bypass temporarily:
+1. Notarize packages for distribution
+1. For development, bypass temporarily:
 
 ```bash
 # Bypass Gatekeeper for testing (development only)
@@ -41,6 +43,7 @@ sudo spctl --master-disable
 **Symptom**: Permission denied errors on Apple Silicon (M1/M2/M3)
 
 **Solution**:
+
 ```bash
 # Ensure correct architecture
 file myapp.psp  # Should show "arm64"
@@ -59,6 +62,7 @@ xattr -c myapp.psp
 **Symptom**: "Bad CPU type in executable"
 
 **Solution**: Build for the correct architecture:
+
 ```bash
 # Check your architecture
 uname -m  # Returns "arm64" or "x86_64"
@@ -74,6 +78,7 @@ flavor pack --manifest pyproject.toml --platform darwin_x86_64
 **Symptom**: x86_64 packages on Apple Silicon
 
 **Solution**:
+
 ```bash
 # Install Rosetta 2 if needed
 softwareupdate --install-rosetta
@@ -89,6 +94,7 @@ arch -x86_64 ./myapp.psp
 **Symptom**: `flavor: command not found`
 
 **Solution**: Add to PATH:
+
 ```bash
 # Add to ~/.zshrc or ~/.bash_profile
 export PATH="$HOME/.local/bin:$PATH"
@@ -102,6 +108,7 @@ source ~/.zshrc
 **Symptom**: Wrong Python version being used
 
 **Solution**:
+
 ```bash
 # Use specific Python version
 python3.11 -m flavor pack --manifest pyproject.toml
@@ -119,6 +126,7 @@ uv python pin 3.11
 **Symptom**: Multiple Python installations causing conflicts
 
 **Solution**:
+
 ```bash
 # Check installations
 brew list | grep python
@@ -136,9 +144,10 @@ source venv/bin/activate
 **Symptom**: Cannot download dependencies during packaging
 
 **Solution**:
+
 1. Check firewall settings
-2. Allow Terminal/IDE in firewall
-3. Use proxy if required:
+1. Allow Terminal/IDE in firewall
+1. Use proxy if required:
 
 ```bash
 export HTTP_PROXY=http://proxy.example.com:8080
@@ -152,6 +161,7 @@ export HTTPS_PROXY=http://proxy.example.com:8080
 **Symptom**: Package fails to extract or run
 
 **Solution**:
+
 ```bash
 # Clear Flavorpack cache
 rm -rf ~/.cache/flavor/workenv/
@@ -168,6 +178,7 @@ flavor pack --manifest pyproject.toml --force
 ### Using macOS Keychain
 
 Store signing keys securely:
+
 ```bash
 # Add key to keychain
 security add-generic-password -a "$USER" -s "flavorpack-key" -w
@@ -179,6 +190,7 @@ KEY=$(security find-generic-password -a "$USER" -s "flavorpack-key" -w)
 ### App Bundle Creation
 
 Convert to macOS app bundle:
+
 ```bash
 # Create app structure
 mkdir -p MyApp.app/Contents/MacOS
@@ -207,6 +219,7 @@ EOF
 ## Debug Commands
 
 ### System Information
+
 ```bash
 # Check system version
 sw_vers
@@ -222,6 +235,7 @@ otool -L myapp.psp
 ```
 
 ### Verbose Logging
+
 ```bash
 # Enable debug logging
 export FLAVOR_LOG_LEVEL=debug

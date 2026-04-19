@@ -31,6 +31,7 @@ make test-rust       # Rust tests (src/flavor-rs)
 ```
 
 Requirements:
+
 - **100% branch coverage** on `src/flavor/**` (enforced).
 - **mypy strict mode**. No `type: ignore` without an inline justification.
 - **ruff** lint + format must pass.
@@ -47,6 +48,6 @@ Requirements:
 ## Pull Requests
 
 1. Run `make quality` (must pass).
-2. For parity-sensitive changes, run `tests/parity/` explicitly.
-3. Pretaster fixtures updated where applicable.
-4. PR description notes any PSPF spec impact.
+1. For parity-sensitive changes, run `tests/parity/` explicitly.
+1. Pretaster fixtures updated where applicable.
+1. PR description notes any PSPF spec impact.

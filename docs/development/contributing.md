@@ -5,13 +5,13 @@ This guide provides comprehensive instructions for setting up the development en
 ## Table of Contents
 
 1. [Prerequisites](#prerequisites)
-2. [Environment Setup](#environment-setup)
-3. [Building Helpers](#building-helpers)
-4. [Development Workflow](#development-workflow)
-5. [Testing](#testing)
-6. [Code Quality](#code-quality)
-7. [Common Tasks](#common-tasks)
-8. [Troubleshooting](#troubleshooting)
+1. [Environment Setup](#environment-setup)
+1. [Building Helpers](#building-helpers)
+1. [Development Workflow](#development-workflow)
+1. [Testing](#testing)
+1. [Code Quality](#code-quality)
+1. [Common Tasks](#common-tasks)
+1. [Troubleshooting](#troubleshooting)
 
 ## Prerequisites
 
@@ -37,13 +37,13 @@ uv sync
 ```
 
 This command will:
-1. Create a virtual environment (`.venv/` by default)
-2. Install Flavorpack in editable mode
-3. Install all dependencies including `provide-foundation[all]`
-4. Set up the development environment
 
-!!! tip "Virtual Environment Location"
-    The virtual environment is created in `.venv/` by default. You can use `uv run` to execute commands in this environment, or activate it manually with `source .venv/bin/activate`.
+1. Create a virtual environment (`.venv/` by default)
+1. Install Flavorpack in editable mode
+1. Install all dependencies including `provide-foundation[all]`
+1. Set up the development environment
+
+!!! tip "Virtual Environment Location" The virtual environment is created in `.venv/` by default. You can use `uv run` to execute commands in this environment, or activate it manually with `source .venv/bin/activate`.
 
 ## Building Helpers
 
@@ -79,6 +79,7 @@ cp target/release/flavor-rs-launcher \
 ```
 
 Helper binaries are installed to `dist/bin/` with platform suffixes:
+
 - `dist/bin/flavor-go-builder-{platform}` - Go builder
 - `dist/bin/flavor-go-launcher-{platform}` - Go launcher
 - `dist/bin/flavor-rs-builder-{platform}` - Rust builder
@@ -89,26 +90,30 @@ Helper binaries are installed to `dist/bin/` with platform suffixes:
 ### Daily Workflow
 
 1. **Start your day**:
+
    ```bash
    uv sync
    make build-helpers  # If helpers changed
    ```
 
-2. **Make changes**: Edit code in `src/` or `tests/`
+1. **Make changes**: Edit code in `src/` or `tests/`
 
-3. **Run tests**:
+1. **Run tests**:
+
    ```bash
    uv run pytest tests/ -xvs
    ```
 
-4. **Check code quality**:
+1. **Check code quality**:
+
    ```bash
    uv run ruff format src/
    uv run ruff check src/
    uv run mypy src/flavor
    ```
 
-5. **Test your changes**:
+1. **Test your changes**:
+
    ```bash
    # Build a test package
    uv run flavor pack \
@@ -125,6 +130,7 @@ Helper binaries are installed to `dist/bin/` with platform suffixes:
 ### Test Categories
 
 Tests are organized with pytest markers:
+
 - `unit`: Fast unit tests (no I/O)
 - `integration`: Integration tests (may use filesystem)
 - `security`: Security and cryptography tests
@@ -293,6 +299,7 @@ uv run flavor helpers clean --yes
 ### Common Issues
 
 **Helper not found**:
+
 ```bash
 # Rebuild helpers
 make build-helpers
@@ -302,6 +309,7 @@ uv run flavor helpers list
 ```
 
 **Import errors**:
+
 ```bash
 # Reinstall environment
 rm -rf .venv/
@@ -309,6 +317,7 @@ uv sync
 ```
 
 **Test failures**:
+
 ```bash
 # Run with verbose output
 uv run pytest -xvs --tb=short
@@ -319,6 +328,7 @@ dist/bin/flavor-rs-launcher-* --version
 ```
 
 **Package verification fails**:
+
 ```bash
 # Build with deterministic keys
 uv run flavor pack \
@@ -355,6 +365,7 @@ export XDG_CACHE_HOME=/custom/cache
 ### Commit Messages
 
 Follow conventional commits:
+
 - `feat:` New feature
 - `fix:` Bug fix
 - `docs:` Documentation
@@ -365,10 +376,10 @@ Follow conventional commits:
 ### Pull Request Process
 
 1. Create feature branch from `develop`
-2. Make changes and add tests
-3. Run full test suite
-4. Update documentation if needed
-5. Submit PR with clear description
+1. Make changes and add tests
+1. Run full test suite
+1. Update documentation if needed
+1. Submit PR with clear description
 
 ### Important Notes
 

@@ -7,6 +7,7 @@ Understanding the fundamental concepts behind Flavorpack and the PSPF format.
 Flavorpack is a packaging system that solves modern software distribution challenges. It takes your entire application—code, dependencies, assets, and all—and bundles it into a **single, executable file**.
 
 Instead of complex installation procedures:
+
 ```bash
 tar -xzf myapp.tar.gz
 cd myapp/
@@ -15,6 +16,7 @@ pip install -r requirements.txt
 ```
 
 You get a simple, portable executable:
+
 ```bash
 ./myapp
 ```
@@ -22,18 +24,23 @@ You get a simple, portable executable:
 ## Why Flavorpack?
 
 ### True Portability
+
 Your application "just works" - no external dependencies, no configuration required. The package contains everything needed to run.
 
 ### Secure by Default
+
 Every package is automatically signed and verified with Ed25519 cryptography. Package integrity is guaranteed.
 
 ### Language Agnostic
+
 Bundle Python, React, Rust, or any combination. Flavorpack doesn't care what's inside—it just packages and runs it.
 
 ### Efficient & Smart
+
 Progressive extraction only unpacks what's needed, when needed. Smart caching reuses work environments across runs.
 
 ### Built for CI/CD
+
 Self-contained packages with reproducible builds. Perfect for continuous deployment pipelines.
 
 ## What Flavorpack Is Not
@@ -47,7 +54,7 @@ Self-contained packages with reproducible builds. Perfect for continuous deploym
 A Flavorpack package uses the Progressive Secure Package Format (PSPF/2025). It's two things at once:
 
 1. A **native executable** that your OS can run directly
-2. A **structured archive** containing your application
+1. A **structured archive** containing your application
 
 ### Package Structure
 
@@ -78,10 +85,10 @@ A Flavorpack package uses the Progressive Secure Package Format (PSPF/2025). It'
 The launcher is the native binary at the beginning of the file. It:
 
 1. **Finds and reads** the package structure
-2. **Verifies** the cryptographic signature
-3. **Extracts** necessary slots to a work environment
-4. **Configures** the runtime environment
-5. **Executes** your application
+1. **Verifies** the cryptographic signature
+1. **Extracts** necessary slots to a work environment
+1. **Configures** the runtime environment
+1. **Executes** your application
 
 ### Launcher Types
 
@@ -96,35 +103,35 @@ Slots are the building blocks of a package. Each slot contains a specific type o
 
 ### Slot Purposes
 
-| Purpose | Description | Example |
-|---------|-------------|---------|
-| `package-metadata` | Package information | metadata.json |
-| `python-environment` | Python virtual environment | venv.tar.gz |
-| `application-code` | Your application code | app.tar.gz |
-| `configuration` | Config files | settings.json |
-| `static-resources` | Assets, images, fonts | assets.tar.gz |
-| `native-binary` | Compiled executables | bin.tar.gz |
-| `data-files` | Databases, models | data.tar.gz |
+| Purpose              | Description                | Example       |
+| -------------------- | -------------------------- | ------------- |
+| `package-metadata`   | Package information        | metadata.json |
+| `python-environment` | Python virtual environment | venv.tar.gz   |
+| `application-code`   | Your application code      | app.tar.gz    |
+| `configuration`      | Config files               | settings.json |
+| `static-resources`   | Assets, images, fonts      | assets.tar.gz |
+| `native-binary`      | Compiled executables       | bin.tar.gz    |
+| `data-files`         | Databases, models          | data.tar.gz   |
 
 ### Slot Lifecycles
 
-| Lifecycle | Description | When Cleaned |
-|-----------|-------------|--------------|
-| `persistent` | Kept for entire execution | Never |
-| `volatile` | Deleted after initialization | After setup |
-| `temporary` | Deleted after session | On exit |
-| `cached` | Can be regenerated | On cache clear |
-| `lazy` | Load on demand | When needed |
-| `eager` | Load immediately | At startup |
+| Lifecycle    | Description                  | When Cleaned   |
+| ------------ | ---------------------------- | -------------- |
+| `persistent` | Kept for entire execution    | Never          |
+| `volatile`   | Deleted after initialization | After setup    |
+| `temporary`  | Deleted after session        | On exit        |
+| `cached`     | Can be regenerated           | On cache clear |
+| `lazy`       | Load on demand               | When needed    |
+| `eager`      | Load immediately             | At startup     |
 
 ## Work Environments
 
 A work environment is where Flavorpack extracts and runs your application. It's a temporary directory structure that:
 
 1. **Isolates** each package execution
-2. **Caches** persistent data between runs
-3. **Manages** slot extraction and cleanup
-4. **Provides** a consistent runtime environment
+1. **Caches** persistent data between runs
+1. **Manages** slot extraction and cleanup
+1. **Provides** a consistent runtime environment
 
 ### Environment Structure
 
@@ -147,10 +154,10 @@ A work environment is where Flavorpack extracts and runs your application. It's 
 Every Flavorpack package is cryptographically signed using Ed25519:
 
 1. **Key Generation**: Create a public/private key pair
-2. **Metadata Hashing**: Hash the package metadata
-3. **Signature Creation**: Sign the hash with private key
-4. **Signature Embedding**: Store signature in index block
-5. **Verification**: Launcher verifies with public key
+1. **Metadata Hashing**: Hash the package metadata
+1. **Signature Creation**: Sign the hash with private key
+1. **Signature Embedding**: Store signature in index block
+1. **Verification**: Launcher verifies with public key
 
 ### Deterministic Keys
 
@@ -161,6 +168,7 @@ flavor pack --key-seed "my-stable-seed"
 ```
 
 This generates the same key pair every time, enabling:
+
 - Reproducible builds
 - Consistent signatures
 - CI/CD integration
@@ -186,18 +194,18 @@ graph TD
 Flavorpack supports multiple platforms through:
 
 1. **Platform-specific launchers**: Native binaries for each OS/architecture
-2. **Cross-platform packages**: Same package data works everywhere
-3. **Architecture matrix**: x86_64, ARM64, and more
+1. **Cross-platform packages**: Same package data works everywhere
+1. **Architecture matrix**: x86_64, ARM64, and more
 
 ### Supported Platforms
 
-| Platform | Architecture | Status |
-|----------|-------------|--------|
-| Linux | x86_64 | ✅ Supported |
-| Linux | ARM64 | ✅ Supported |
-| macOS | x86_64 | ✅ Supported |
-| macOS | ARM64 | ✅ Supported |
-| Windows | x86_64 | ⚠️ Beta |
+| Platform | Architecture | Status       |
+| -------- | ------------ | ------------ |
+| Linux    | x86_64       | ✅ Supported |
+| Linux    | ARM64        | ✅ Supported |
+| macOS    | x86_64       | ✅ Supported |
+| macOS    | ARM64        | ✅ Supported |
+| Windows  | x86_64       | ⚠️ Beta      |
 
 ## Compression
 
@@ -213,18 +221,18 @@ Flavorpack uses multiple compression strategies:
 Smart caching improves performance:
 
 1. **Work environment caching**: Reuse extracted environments
-2. **Python environment caching**: Share virtual environments
-3. **Lazy extraction**: Only extract what's needed
-4. **Cache invalidation**: Automatic cleanup of old data
+1. **Python environment caching**: Share virtual environments
+1. **Lazy extraction**: Only extract what's needed
+1. **Cache invalidation**: Automatic cleanup of old data
 
 ## Security Model
 
 Flavorpack's security is built on:
 
 1. **Cryptographic signatures**: Ed25519 for integrity
-2. **No elevation**: Runs with user permissions
-3. **Transparent operation**: All actions are auditable
-4. **Secure defaults**: Verification enabled by default
+1. **No elevation**: Runs with user permissions
+1. **Transparent operation**: All actions are auditable
+1. **Secure defaults**: Verification enabled by default
 
 ## Next Steps
 

@@ -6,7 +6,7 @@ Advanced packaging configuration options for Flavorpack.
 
 Flavorpack provides extensive configuration options through manifest files, command-line flags, and environment variables. This guide covers advanced configuration topics beyond basic packaging.
 
----
+______________________________________________________________________
 
 ## Build Configuration
 
@@ -27,10 +27,10 @@ flavor pack --manifest pyproject.toml
 
 **Launcher Comparison:**
 
-| Launcher | Size | Startup | Use Case |
-|----------|------|---------|----------|
-| Rust | ~1 MB | Fastest | Production (default) |
-| Go | ~3-4 MB | Fast | Maximum compatibility |
+| Launcher | Size    | Startup | Use Case              |
+| -------- | ------- | ------- | --------------------- |
+| Rust     | ~1 MB   | Fastest | Production (default)  |
+| Go       | ~3-4 MB | Fast    | Maximum compatibility |
 
 ### Builder Selection
 
@@ -67,13 +67,13 @@ operations = ["tar", "zstd"]  # tar.zstd (better compression)
 
 **Available Operations:**
 
-| Operation | Code | Description | Speed | Ratio |
-|-----------|------|-------------|-------|-------|
-| `tar` | 0x01 | TAR archive | Fast | 1.0x |
-| `gzip` | 0x10 | GZIP compression | Fast | 3-5x |
-| `bzip2` | 0x13 | BZIP2 compression | Slow | 5-7x |
-| `xz` | 0x16 | XZ/LZMA2 compression | Slowest | 7-10x |
-| `zstd` | 0x1B | Zstandard compression | Fastest | 4-6x |
+| Operation | Code | Description           | Speed   | Ratio |
+| --------- | ---- | --------------------- | ------- | ----- |
+| `tar`     | 0x01 | TAR archive           | Fast    | 1.0x  |
+| `gzip`    | 0x10 | GZIP compression      | Fast    | 3-5x  |
+| `bzip2`   | 0x13 | BZIP2 compression     | Slow    | 5-7x  |
+| `xz`      | 0x16 | XZ/LZMA2 compression  | Slowest | 7-10x |
+| `zstd`    | 0x1B | Zstandard compression | Fastest | 4-6x  |
 
 **Recommendations:**
 
@@ -82,7 +82,7 @@ operations = ["tar", "zstd"]  # tar.zstd (better compression)
 - **Maximum compression**: Use `xz` for smallest packages
 - **No compression**: Use `["tar"]` only for pre-compressed data
 
----
+______________________________________________________________________
 
 ## Python Configuration
 
@@ -127,7 +127,7 @@ system_site_packages = false  # Isolated environment
 clear = true  # Start fresh each build
 ```
 
----
+______________________________________________________________________
 
 ## Environment Configuration
 
@@ -167,9 +167,9 @@ map = {
 **Environment Processing Order:**
 
 1. `unset` - Remove variables (supports wildcards)
-2. `pass` - Preserve specific variables
-3. `map` - Rename variables
-4. `set` - Set new variables
+1. `pass` - Preserve specific variables
+1. `map` - Rename variables
+1. `set` - Set new variables
 
 ### Path Configuration
 
@@ -184,7 +184,7 @@ path_append = ["/opt/bin", "/usr/local/bin"]
 path_prepend = ["{workenv}/bin"]
 ```
 
----
+______________________________________________________________________
 
 ## Slot Configuration
 
@@ -210,28 +210,28 @@ extract_to = "."  # Extract to workenv root
 
 **Lifecycle Options:**
 
-| Lifecycle | Value | Description | Use Case |
-|-----------|-------|-------------|----------|
-| `init` | 0 | First run only, then removed | One-time setup |
-| `startup` | 1 | Extract at every startup | Initialization data |
-| `runtime` | 2 | Extract on first use (default) | Application code, libraries |
-| `shutdown` | 3 | Extract during cleanup | Cleanup scripts |
-| `cache` | 4 | Performance cache, can regenerate | Compiled assets |
-| `temporary` | 5 | Remove after session ends | Build artifacts |
-| `lazy` | 6 | Load on-demand | Large optional resources |
-| `eager` | 7 | Load immediately on startup | Critical dependencies |
-| `dev` | 8 | Development mode only | Debug tools |
-| `config` | 9 | User-modifiable config files | Settings |
-| `platform` | 10 | Platform/OS specific content | Platform binaries |
+| Lifecycle   | Value | Description                       | Use Case                    |
+| ----------- | ----- | --------------------------------- | --------------------------- |
+| `init`      | 0     | First run only, then removed      | One-time setup              |
+| `startup`   | 1     | Extract at every startup          | Initialization data         |
+| `runtime`   | 2     | Extract on first use (default)    | Application code, libraries |
+| `shutdown`  | 3     | Extract during cleanup            | Cleanup scripts             |
+| `cache`     | 4     | Performance cache, can regenerate | Compiled assets             |
+| `temporary` | 5     | Remove after session ends         | Build artifacts             |
+| `lazy`      | 6     | Load on-demand                    | Large optional resources    |
+| `eager`     | 7     | Load immediately on startup       | Critical dependencies       |
+| `dev`       | 8     | Development mode only             | Debug tools                 |
+| `config`    | 9     | User-modifiable config files      | Settings                    |
+| `platform`  | 10    | Platform/OS specific content      | Platform binaries           |
 
 **Purpose Classification:**
 
-| Purpose | Value | Description |
-|---------|-------|-------------|
-| `code` | 0 | Executable code |
-| `data` | 1 | Application data files |
-| `config` | 2 | Configuration files |
-| `media` | 3 | Media assets |
+| Purpose  | Value | Description            |
+| -------- | ----- | ---------------------- |
+| `code`   | 0     | Executable code        |
+| `data`   | 1     | Application data files |
+| `config` | 2     | Configuration files    |
+| `media`  | 3     | Media assets           |
 
 ### Platform-Specific Slots
 
@@ -251,7 +251,7 @@ operations = ["tar", "gzip"]
 platform = "darwin"  # Only on macOS
 ```
 
----
+______________________________________________________________________
 
 ## Security Configuration
 
@@ -298,7 +298,7 @@ flavor pack --validation minimal
 flavor pack --validation none
 ```
 
----
+______________________________________________________________________
 
 ## Performance Tuning
 
@@ -330,7 +330,7 @@ cache_validation = true
 use_mmap = true
 ```
 
----
+______________________________________________________________________
 
 ## Execution Configuration
 
@@ -355,10 +355,10 @@ shell = false  # Direct execution (faster)
 
 **Placeholder Variables:**
 
-| Placeholder | Expands To | Example |
-|-------------|------------|---------|
-| `{workenv}` | Cache directory | `/REDACTED_ABS_PATH` |
-| `{slot:N}` | Slot N path | `/REDACTED_ABS_PATH` |
+| Placeholder | Expands To        | Example              |
+| ----------- | ----------------- | -------------------- |
+| `{workenv}` | Cache directory   | `/REDACTED_ABS_PATH` |
+| `{slot:N}`  | Slot N path       | `/REDACTED_ABS_PATH` |
 | `{package}` | Package file path | `/path/to/myapp.psp` |
 
 ### Signal Handling
@@ -377,7 +377,7 @@ shutdown_timeout = 30
 handle = ["SIGTERM", "SIGINT", "SIGHUP"]
 ```
 
----
+______________________________________________________________________
 
 ## Multi-Platform Configuration
 
@@ -418,7 +418,7 @@ flavor pack --launcher-bin dist/bin/flavor-rs-launcher-darwin_arm64 \
             --output dist/myapp-darwin-arm64.psp
 ```
 
----
+______________________________________________________________________
 
 ## Validation Configuration
 
@@ -457,7 +457,7 @@ verify_cache = true
 verify_slots = true
 ```
 
----
+______________________________________________________________________
 
 ## Output Configuration
 
@@ -499,7 +499,7 @@ commit_sha = "abc123"
 environment = "production"
 ```
 
----
+______________________________________________________________________
 
 ## Cache Configuration
 
@@ -518,7 +518,7 @@ export FLAVOR_CACHE_VALIDATION=false
 flavor pack --clean-cache
 ```
 
----
+______________________________________________________________________
 
 ## Example Configurations
 
@@ -604,35 +604,19 @@ lifecycle = "persistent"  # Keep cached
 priority = 200  # High priority
 ```
 
----
+______________________________________________________________________
 
 ## Configuration Best Practices
 
-!!! tip "Development"
-    - Use `gzip` compression for faster builds
-    - Enable verbose logging with `--verbose`
-    - Use `--validation minimal` for speed
-    - Use project-local cache
+!!! tip "Development" - Use `gzip` compression for faster builds - Enable verbose logging with `--verbose` - Use `--validation minimal` for speed - Use project-local cache
 
-!!! tip "Production"
-    - Use `zstd` compression for best balance
-    - Enable signature verification
-    - Use `--validation strict`
-    - Set appropriate lifecycle for slots
+!!! tip "Production" - Use `zstd` compression for best balance - Enable signature verification - Use `--validation strict` - Set appropriate lifecycle for slots
 
-!!! tip "CI/CD"
-    - Use `--output-format json` for parsing
-    - Use `--validation standard`
-    - Clean cache between builds
-    - Use deterministic metadata (commit SHA, build number)
+!!! tip "CI/CD" - Use `--output-format json` for parsing - Use `--validation standard` - Clean cache between builds - Use deterministic metadata (commit SHA, build number)
 
-!!! tip "Security"
-    - Always sign production packages
-    - Use environment `unset` to remove sensitive variables
-    - Use `pass` to explicitly allow safe variables
-    - Validate packages before deployment
+!!! tip "Security" - Always sign production packages - Use environment `unset` to remove sensitive variables - Use `pass` to explicitly allow safe variables - Validate packages before deployment
 
----
+______________________________________________________________________
 
 ## Troubleshooting
 
@@ -672,12 +656,11 @@ ls dist/bin/flavor-*-launcher-*
 flavor pack --platform $(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m)
 ```
 
----
+______________________________________________________________________
 
 ## Execution Policy
 
-Packages can declare an execution policy that restricts when and where they run.
-Policies are enforced by the launcher at start-up — before any payload code executes.
+Packages can declare an execution policy that restricts when and where they run. Policies are enforced by the launcher at start-up — before any payload code executes.
 
 ### Declaring a policy in `pyproject.toml`
 
@@ -716,25 +699,24 @@ require_env = []
 The launcher enforces policies in this order; the first violation aborts execution:
 
 1. **Platform** — `GOOS_GOARCH` of the current host must be in `platforms` (if set)
-2. **Root/Admin** — if `refuse_root = true`, refuses root on Unix and Administrator on Windows
-3. **Age** — build timestamp vs. `max_age_days`
-4. **Environment** — each name in `require_env` must have a non-empty value
-5. **SBOM** — if the operator policy sets `require_sbom = true`, the package must have an attestation slot
+1. **Root/Admin** — if `refuse_root = true`, refuses root on Unix and Administrator on Windows
+1. **Age** — build timestamp vs. `max_age_days`
+1. **Environment** — each name in `require_env` must have a non-empty value
+1. **SBOM** — if the operator policy sets `require_sbom = true`, the package must have an attestation slot
 
 ### "Stricter wins" merge
 
-The package policy is merged with the operator policy (`/etc/flavor/policy.toml` or
-`~/.config/flavor/policy.toml`). The stricter constraint always wins:
+The package policy is merged with the operator policy (`/etc/flavor/policy.toml` or `~/.config/flavor/policy.toml`). The stricter constraint always wins:
 
-| Field | Merge rule |
-|-------|-----------|
-| `refuse_root` | `package OR operator` |
-| `max_age_days` | `min(package, operator)` |
-| `platforms` | intersection of both lists |
-| `require_env` | package list (operator cannot add env requirements) |
-| `require_sbom` | operator only |
+| Field          | Merge rule                                          |
+| -------------- | --------------------------------------------------- |
+| `refuse_root`  | `package OR operator`                               |
+| `max_age_days` | `min(package, operator)`                            |
+| `platforms`    | intersection of both lists                          |
+| `require_env`  | package list (operator cannot add env requirements) |
+| `require_sbom` | operator only                                       |
 
----
+______________________________________________________________________
 
 ## See Also
 
@@ -744,6 +726,6 @@ The package policy is merged with the operator policy (`/etc/flavor/policy.toml`
 - [Environment Variables](../usage/environment/) - All variables
 - [CLI Reference](../usage/cli/) - Command-line options
 
----
+______________________________________________________________________
 
 **Need help?** Run `flavor pack --help` for all available options.

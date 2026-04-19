@@ -10,14 +10,14 @@ Linux offers excellent support for Flavorpack packages with native performance, 
 
 ### Officially Tested
 
-| Distribution | Versions | Architecture | Notes |
-|-------------|----------|--------------|-------|
-| Ubuntu | 20.04, 22.04, 24.04 | amd64, arm64 | Primary development platform |
-| Debian | 10, 11, 12 | amd64, arm64 | Stable, wide compatibility |
-| RHEL/CentOS | 8, 9 | amd64, arm64 | Enterprise support |
-| Fedora | 37, 38, 39 | amd64, arm64 | Latest features |
-| Alpine | 3.16, 3.17, 3.18 | amd64, arm64 | Minimal, container-friendly |
-| Arch | Rolling | amd64, arm64 | Bleeding edge |
+| Distribution | Versions            | Architecture | Notes                        |
+| ------------ | ------------------- | ------------ | ---------------------------- |
+| Ubuntu       | 20.04, 22.04, 24.04 | amd64, arm64 | Primary development platform |
+| Debian       | 10, 11, 12          | amd64, arm64 | Stable, wide compatibility   |
+| RHEL/CentOS  | 8, 9                | amd64, arm64 | Enterprise support           |
+| Fedora       | 37, 38, 39          | amd64, arm64 | Latest features              |
+| Alpine       | 3.16, 3.17, 3.18    | amd64, arm64 | Minimal, container-friendly  |
+| Arch         | Rolling             | amd64, arm64 | Bleeding edge                |
 
 ### Minimum Requirements
 
@@ -202,14 +202,14 @@ mount -o remount,size=2G /tmp
 
 **Compatibility by filesystem**:
 
-| Filesystem | Support | Notes |
-|------------|---------|-------|
-| ext4 | ✅ Excellent | Default for most distros |
-| xfs | ✅ Excellent | Good for large files |
-| btrfs | ✅ Good | COW can affect performance |
-| zfs | ✅ Good | Compression beneficial |
-| nfs | ⚠️ Limited | Network latency issues |
-| cifs/smb | ⚠️ Limited | Permission mapping issues |
+| Filesystem | Support      | Notes                      |
+| ---------- | ------------ | -------------------------- |
+| ext4       | ✅ Excellent | Default for most distros   |
+| xfs        | ✅ Excellent | Good for large files       |
+| btrfs      | ✅ Good      | COW can affect performance |
+| zfs        | ✅ Good      | Compression beneficial     |
+| nfs        | ⚠️ Limited   | Network latency issues     |
+| cifs/smb   | ⚠️ Limited   | Permission mapping issues  |
 
 ### Case Sensitivity
 

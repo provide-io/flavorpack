@@ -7,11 +7,11 @@ Understanding the internal structure of PSPF packages and how they organize cont
 A PSPF package is a self-contained executable file that combines:
 
 1. **Native Launcher**: Platform-specific executable header
-2. **Index Block**: Fixed-size metadata and signature block
-3. **Slot Table**: Directory of content slots
-4. **Metadata**: Compressed JSON manifest
-5. **Content Slots**: Application code, data, and resources
-6. **Magic Trailer**: Package validation footer
+1. **Index Block**: Fixed-size metadata and signature block
+1. **Slot Table**: Directory of content slots
+1. **Metadata**: Compressed JSON manifest
+1. **Content Slots**: Application code, data, and resources
+1. **Magic Trailer**: Package validation footer
 
 ## Binary Layout
 
@@ -47,15 +47,15 @@ A PSPF package is a self-contained executable file that combines:
 
 Typical package sizes:
 
-| Component | Size | Percentage |
-|-----------|------|------------|
-| Launcher | 2.5 MB | 5% |
-| Index Block | 8 KB | <1% |
-| Metadata | 10 KB | <1% |
-| Python venv | 25 MB | 50% |
-| Application | 20 MB | 40% |
-| Resources | 2.5 MB | 5% |
-| **Total** | **50 MB** | **100%** |
+| Component   | Size      | Percentage |
+| ----------- | --------- | ---------- |
+| Launcher    | 2.5 MB    | 5%         |
+| Index Block | 8 KB      | \<1%       |
+| Metadata    | 10 KB     | \<1%       |
+| Python venv | 25 MB     | 50%        |
+| Application | 20 MB     | 40%        |
+| Resources   | 2.5 MB    | 5%         |
+| **Total**   | **50 MB** | **100%**   |
 
 ## Component Details
 
@@ -74,6 +74,7 @@ type Launcher struct {
 ```
 
 **Responsibilities:**
+
 - Find and read index block
 - Verify package signature
 - Extract slots to work environment
@@ -187,16 +188,16 @@ slots/
 
 ### Slot Purposes
 
-| Purpose | Description | Typical Content |
-|---------|-------------|-----------------|
-| `python-environment` | Python venv | site-packages, pip |
-| `application-code` | Main code | Python modules |
-| `configuration` | Settings | JSON, YAML, TOML |
-| `static-resources` | Assets | Images, fonts |
-| `native-binary` | Compiled code | .so, .dll files |
-| `data-files` | Application data | SQLite, models |
-| `documentation` | Docs | README, help |
-| `scripts` | Utilities | Shell, Python |
+| Purpose              | Description      | Typical Content    |
+| -------------------- | ---------------- | ------------------ |
+| `python-environment` | Python venv      | site-packages, pip |
+| `application-code`   | Main code        | Python modules     |
+| `configuration`      | Settings         | JSON, YAML, TOML   |
+| `static-resources`   | Assets           | Images, fonts      |
+| `native-binary`      | Compiled code    | .so, .dll files    |
+| `data-files`         | Application data | SQLite, models     |
+| `documentation`      | Docs             | README, help       |
+| `scripts`            | Utilities        | Shell, Python      |
 
 ### Slot Lifecycles
 
@@ -321,14 +322,14 @@ flowchart TD
 **Step Details:**
 
 1. **Parse Manifest**: Read and validate `pyproject.toml` configuration
-2. **Select Helpers**: Choose appropriate launcher/builder for target platform
-3. **Build Environment**: Create isolated Python virtual environment with UV
-4. **Prepare Slots**: Organize content into numbered slots (0=runtime, 1=app, 2+=resources)
-5. **Compress & Hash**: Apply operations (tar.gz, etc.) and compute SHA-256 checksums
-6. **Generate Metadata**: Create JSON manifest with package info and slot descriptors
-7. **Sign Package**: Generate Ed25519 signature for integrity verification
-8. **Assemble Binary**: Combine launcher + index + metadata + slots into single file
-9. **Add Trailer**: Append magic bytes (`📦🪄`) and CRC32 for format identification
+1. **Select Helpers**: Choose appropriate launcher/builder for target platform
+1. **Build Environment**: Create isolated Python virtual environment with UV
+1. **Prepare Slots**: Organize content into numbered slots (0=runtime, 1=app, 2+=resources)
+1. **Compress & Hash**: Apply operations (tar.gz, etc.) and compute SHA-256 checksums
+1. **Generate Metadata**: Create JSON manifest with package info and slot descriptors
+1. **Sign Package**: Generate Ed25519 signature for integrity verification
+1. **Assemble Binary**: Combine launcher + index + metadata + slots into single file
+1. **Add Trailer**: Append magic bytes (`📦🪄`) and CRC32 for format identification
 
 ## Execution Flow
 
@@ -389,13 +390,14 @@ flowchart TD
 **Startup Phases:**
 
 1. **Validation** (0.1s): Verify magic bytes, index block, and Ed25519 signature
-2. **Cache Check** (0.01s): Calculate package ID and check if work environment exists
-3. **Extraction** (2-5s first run, 0s cached): Extract slots to `~/.cache/flavor/workenv/`
-4. **Execution** (<0.1s): Set environment variables and launch Python interpreter
+1. **Cache Check** (0.01s): Calculate package ID and check if work environment exists
+1. **Extraction** (2-5s first run, 0s cached): Extract slots to `~/.cache/flavor/workenv/`
+1. **Execution** (\<0.1s): Set environment variables and launch Python interpreter
 
 **Performance:**
+
 - **First run**: 2-5 seconds (extraction time)
-- **Subsequent runs**: <1 second (cached workenv)
+- **Subsequent runs**: \<1 second (cached workenv)
 - **Cache hit**: Near-instant startup
 
 ### Extraction Strategy
@@ -423,11 +425,13 @@ def extract_package(metadata, work_dir):
 ### Size Optimization
 
 1. **Compression**: Use appropriate operations
+
    - `tar.gz` for text-heavy content
    - `tar` for already-compressed data
    - `raw` for small files
 
-2. **Deduplication**: Share common libraries
+1. **Deduplication**: Share common libraries
+
    ```toml
    [[tool.flavor.slots]]
    id = "shared-libs"
@@ -435,7 +439,8 @@ def extract_package(metadata, work_dir):
    lifecycle = "cached"
    ```
 
-3. **Lazy Loading**: Defer optional content
+1. **Lazy Loading**: Defer optional content
+
    ```toml
    [[tool.flavor.slots]]
    id = "docs"
@@ -446,9 +451,9 @@ def extract_package(metadata, work_dir):
 ### Performance Optimization
 
 1. **Parallel Extraction**: Extract slots concurrently
-2. **Memory Mapping**: Use mmap for large files
-3. **Caching**: Reuse extracted environments
-4. **Streaming**: Process without full extraction
+1. **Memory Mapping**: Use mmap for large files
+1. **Caching**: Reuse extracted environments
+1. **Streaming**: Process without full extraction
 
 ## Security Features
 
@@ -484,22 +489,22 @@ FLAVOR_LOG_LEVEL=debug ./package.psp
 
 ### Common Issues
 
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| Large package size | Uncompressed slots | Use compression |
-| Slow startup | Re-extraction | Enable caching |
-| Missing files | Wrong lifecycle | Check slot config |
-| Signature failure | Corruption | Rebuild package |
+| Issue              | Cause              | Solution          |
+| ------------------ | ------------------ | ----------------- |
+| Large package size | Uncompressed slots | Use compression   |
+| Slow startup       | Re-extraction      | Enable caching    |
+| Missing files      | Wrong lifecycle    | Check slot config |
+| Signature failure  | Corruption         | Rebuild package   |
 
 ## Best Practices
 
 1. **Organize Slots Logically**: Group related content
-2. **Choose Appropriate Lifecycles**: Match usage patterns
-3. **Compress Efficiently**: Balance size vs speed
-4. **Version Carefully**: Use semantic versioning
-5. **Test Extraction**: Verify all platforms
-6. **Document Structure**: Include README in package
-7. **Monitor Performance**: Profile extraction times
+1. **Choose Appropriate Lifecycles**: Match usage patterns
+1. **Compress Efficiently**: Balance size vs speed
+1. **Version Carefully**: Use semantic versioning
+1. **Test Extraction**: Verify all platforms
+1. **Document Structure**: Include README in package
+1. **Monitor Performance**: Profile extraction times
 
 ## Related Documentation
 

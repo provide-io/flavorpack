@@ -35,61 +35,62 @@ Offset | Size | Type   | Field              | Description
 ### Core Fields (56 bytes - 7 × uint64)
 
 1. **id** (uint64): Unique slot identifier within the package
-2. **name_hash** (uint64): SHA-256 hash of slot name (first 8 bytes, little-endian) for fast lookup
-3. **offset** (uint64): Byte offset from the start of the package file where slot data begins
-4. **size** (uint64): Size of the slot data as stored in the package (after compression)
-5. **original_size** (uint64): Original uncompressed size of the slot data
-6. **operations** (uint64): Packed operation chain specifying transformations applied to the data
-7. **checksum** (uint64): SHA-256 hash of stored slot data (first 8 bytes, little-endian)
+1. **name_hash** (uint64): SHA-256 hash of slot name (first 8 bytes, little-endian) for fast lookup
+1. **offset** (uint64): Byte offset from the start of the package file where slot data begins
+1. **size** (uint64): Size of the slot data as stored in the package (after compression)
+1. **original_size** (uint64): Original uncompressed size of the slot data
+1. **operations** (uint64): Packed operation chain specifying transformations applied to the data
+1. **checksum** (uint64): SHA-256 hash of stored slot data (first 8 bytes, little-endian)
 
 ### Metadata Fields (8 bytes - 8 × uint8)
 
 8. **purpose** (uint8): Purpose classification
-9. **lifecycle** (uint8): Lifecycle management hint (when to extract/use the slot)
-10. **priority** (uint8): Cache priority hint (0-255, higher = keep in memory longer)
-11. **platform** (uint8): Platform requirements
-12. **reserved1** (uint8): Reserved for future format extensions
-13. **reserved2** (uint8): Reserved for future format extensions
-14. **permissions** (uint8): Unix-style permissions (lower 8 bits)
-15. **permissions_high** (uint8): Unix-style permissions (upper 8 bits)
+1. **lifecycle** (uint8): Lifecycle management hint (when to extract/use the slot)
+1. **priority** (uint8): Cache priority hint (0-255, higher = keep in memory longer)
+1. **platform** (uint8): Platform requirements
+1. **reserved1** (uint8): Reserved for future format extensions
+1. **reserved2** (uint8): Reserved for future format extensions
+1. **permissions** (uint8): Unix-style permissions (lower 8 bits)
+1. **permissions_high** (uint8): Unix-style permissions (upper 8 bits)
 
 ### Purpose Values
 
-| Value | Name       | Description                              |
-|-------|------------|------------------------------------------|
-| 0     | DATA       | General data files                       |
-| 1     | CODE       | Executable code or bytecode              |
-| 2     | CONFIG     | Configuration files                      |
-| 3     | MEDIA      | Media files (images, audio, video)       |
+| Value | Name   | Description                        |
+| ----- | ------ | ---------------------------------- |
+| 0     | DATA   | General data files                 |
+| 1     | CODE   | Executable code or bytecode        |
+| 2     | CONFIG | Configuration files                |
+| 3     | MEDIA  | Media files (images, audio, video) |
 
 ### Lifecycle Values
 
-| Value | Name       | Description                                      |
-|-------|------------|--------------------------------------------------|
-| 0     | INIT       | First run only, then removed                     |
-| 1     | STARTUP    | Extract at every startup                         |
-| 2     | RUNTIME    | Extract on first use (default)                   |
-| 3     | SHUTDOWN   | Extract during cleanup                           |
-| 4     | CACHE      | Performance cache, can regenerate                |
-| 5     | TEMPORARY  | Remove after session ends                        |
-| 6     | LAZY       | Load on-demand                                   |
-| 7     | EAGER      | Load immediately on startup                      |
-| 8     | DEV        | Development mode only                            |
-| 9     | CONFIG     | User-modifiable config files                     |
-| 10    | PLATFORM   | Platform/OS specific content                     |
+| Value | Name      | Description                       |
+| ----- | --------- | --------------------------------- |
+| 0     | INIT      | First run only, then removed      |
+| 1     | STARTUP   | Extract at every startup          |
+| 2     | RUNTIME   | Extract on first use (default)    |
+| 3     | SHUTDOWN  | Extract during cleanup            |
+| 4     | CACHE     | Performance cache, can regenerate |
+| 5     | TEMPORARY | Remove after session ends         |
+| 6     | LAZY      | Load on-demand                    |
+| 7     | EAGER     | Load immediately on startup       |
+| 8     | DEV       | Development mode only             |
+| 9     | CONFIG    | User-modifiable config files      |
+| 10    | PLATFORM  | Platform/OS specific content      |
 
 ### Platform Values
 
-| Value | Name       | Description                              |
-|-------|------------|------------------------------------------|
-| 0     | ANY        | Platform-independent                     |
-| 1     | LINUX      | Linux-specific                           |
-| 2     | MACOS      | macOS (Darwin) specific                  |
-| 3     | WINDOWS    | Windows-specific                         |
+| Value | Name    | Description             |
+| ----- | ------- | ----------------------- |
+| 0     | ANY     | Platform-independent    |
+| 1     | LINUX   | Linux-specific          |
+| 2     | MACOS   | macOS (Darwin) specific |
+| 3     | WINDOWS | Windows-specific        |
 
 ### Priority Values
 
 The **priority** field uses the full uint8 range (0-255):
+
 - **0**: Lowest priority, first to evict from cache
 - **128**: Default priority
 - **255**: Highest priority, keep in cache as long as possible
@@ -97,6 +98,7 @@ The **priority** field uses the full uint8 range (0-255):
 ### Permissions
 
 The **permissions** and **permissions_high** fields combine to form a 16-bit Unix-style permission value:
+
 - Standard Unix permission bits (user/group/other read/write/execute)
 - Special bits (setuid/setgid/sticky) in upper byte
 - Typical values: 0644 (rw-r--r--), 0755 (rwxr-xr-x)
@@ -113,7 +115,7 @@ Operation:     O8 O7 O6 O5 O4 O3 O2 O1
 ### V0 Required Operations
 
 | Operation | Code | Description           |
-|-----------|------|-----------------------|
+| --------- | ---- | --------------------- |
 | OP_NONE   | 0x00 | No operation          |
 | OP_TAR    | 0x01 | POSIX TAR archive     |
 | OP_GZIP   | 0x10 | GZIP compression      |
@@ -123,19 +125,20 @@ Operation:     O8 O7 O6 O5 O4 O3 O2 O1
 
 ### Common Operation Chains
 
-| Chain Name | Operations      | Packed Value        |
-|------------|-----------------|---------------------|
-| raw        | []              | 0x0000000000000000  |
-| tar        | [0x01]          | 0x0000000000000001  |
-| gzip       | [0x10]          | 0x0000000000000010  |
-| tar.gz     | [0x01, 0x10]    | 0x0000000000001001  |
-| tar.bz2    | [0x01, 0x13]    | 0x0000000000001301  |
-| tar.xz     | [0x01, 0x16]    | 0x0000000000001601  |
-| tar.zst    | [0x01, 0x1B]    | 0x0000000000001B01  |
+| Chain Name | Operations   | Packed Value       |
+| ---------- | ------------ | ------------------ |
+| raw        | []           | 0x0000000000000000 |
+| tar        | [0x01]       | 0x0000000000000001 |
+| gzip       | [0x10]       | 0x0000000000000010 |
+| tar.gz     | [0x01, 0x10] | 0x0000000000001001 |
+| tar.bz2    | [0x01, 0x13] | 0x0000000000001301 |
+| tar.xz     | [0x01, 0x16] | 0x0000000000001601 |
+| tar.zst    | [0x01, 0x1B] | 0x0000000000001B01 |
 
 ## Cross-Language Implementation
 
 ### Python Implementation
+
 ```python
 import struct
 
@@ -151,6 +154,7 @@ class SlotDescriptor:
 ```
 
 ### Go Implementation
+
 ```go
 func (d *SlotDescriptor) Pack() []byte {
     buf := make([]byte, 64)
@@ -174,6 +178,7 @@ func (d *SlotDescriptor) Pack() []byte {
 ```
 
 ### Rust Implementation
+
 ```rust
 impl SlotDescriptor {
     pub fn pack(&self) -> [u8; 64] {
