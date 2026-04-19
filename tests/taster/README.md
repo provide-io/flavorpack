@@ -118,32 +118,41 @@ Taster provides a rich set of commands for testing different aspects of Flavorpa
 ### Core Information
 
 #### `info` - System Information
+
 ```bash
 ./taster.psp info
 ```
+
 Displays package metadata, system information, and runtime configuration.
 
 #### `metadata` - Package Metadata
+
 ```bash
 ./taster.psp metadata
 ```
+
 Shows detailed PSPF package metadata including build info and slot details.
 
 #### `argv` - Command Information
+
 ```bash
 ./taster.psp argv [args...]
 ```
+
 Tests argv[0] handling and displays command-line argument processing.
 
 ### Testing Commands
 
 #### `test` - Run Test Suite
+
 ```bash
 ./taster.psp test [options]
 ```
+
 Executes the internal test management system for Flavor functionality.
 
 #### `crosslang` - Cross-Language Testing
+
 ```bash
 ./taster.psp crosslang [options]
 
@@ -152,9 +161,11 @@ Options:
   --json                  Output results as JSON
   -o, --output-file PATH  Write output to file
 ```
+
 Comprehensive testing of compatibility between Python, Go, and Rust implementations.
 
 #### `verify` - Package Verification
+
 ```bash
 ./taster.psp verify <package.psp> [options]
 
@@ -162,31 +173,39 @@ Options:
   --json                  Output results as JSON
   -o, --output-file PATH  Write output to file
 ```
+
 Verifies PSPF package integrity, signatures, and format compliance.
 
 ### Environment & Runtime
 
 #### `env` - Environment Variables
+
 ```bash
 ./taster.psp env
 ```
+
 Tests environment variable processing and displays runtime configuration from `tool.flavor.execution.runtime.env`.
 
 #### `shell` - Interactive Shell
+
 ```bash
 ./taster.psp shell
 ```
+
 Starts an interactive Python shell within the package environment for debugging.
 
 #### `exec-test` - Execution Testing
+
 ```bash
 ./taster.psp exec-test
 ```
+
 Tests direct binary execution vs script execution patterns.
 
 ### I/O & Data Processing
 
 #### `pipe` - Pipeline Testing
+
 ```bash
 # Process stdin data
 echo "test data" | ./taster.psp pipe stdin --format raw
@@ -205,40 +224,51 @@ echo '{"key": "value"}' | ./taster.psp pipe validate --schema json
 ```
 
 #### `file` - File Operations
+
 ```bash
 ./taster.psp file [operations]
 ```
+
 Tests file I/O operations and workenv persistence.
 
 #### `mmap` - Memory-Mapped I/O
+
 ```bash
 ./taster.psp mmap
 ```
+
 Tests and verifies memory-mapped I/O usage for efficient file operations.
 
 ### System & Process Testing
 
 #### `signals` - Signal Handling
+
 ```bash
 ./taster.psp signals [signal_type]
 ```
+
 Tests signal handling including SIGTERM/SIGINT and sleep/timeout behavior.
 
 #### `exit` - Exit Code Testing
+
 ```bash
 ./taster.psp exit [code]
 ```
+
 Tests exit codes and error handling for various scenarios.
 
 #### `echo` - Argument Testing
+
 ```bash
 ./taster.psp echo [args...]
 ```
+
 Echoes arguments back for testing argument passing and processing.
 
 ### Advanced Features
 
 #### `cache` - Cache Management
+
 ```bash
 ./taster.psp cache info      # Show cache information
 ./taster.psp cache clean     # Clean cache
@@ -246,27 +276,35 @@ Echoes arguments back for testing argument passing and processing.
 ```
 
 #### `features` - Feature Parity
+
 ```bash
 ./taster.psp features
 ```
+
 Compares Go vs Rust launcher/builder feature parity and compatibility.
 
 #### `launcher-test` - Launcher Testing
+
 ```bash
 ./taster.psp launcher-test
 ```
+
 Tests launcher execution with minimal Python package scenarios.
 
 #### `package` - Package Management
+
 ```bash
 ./taster.psp package [operations]
 ```
+
 Package management operations using Flavor.
 
 #### `slot-test` - Slot Substitution
+
 ```bash
 ./taster.psp slot-test
 ```
+
 Tests `{slot:N}` substitution patterns in package metadata.
 
 ## Development Workflow
@@ -274,28 +312,29 @@ Tests `{slot:N}` substitution patterns in package metadata.
 ### Adding New Tests
 
 1. **Create test file** in `tests/` following the naming convention `test_*.py`
-2. **Use appropriate markers** to categorize the test:
+1. **Use appropriate markers** to categorize the test:
    ```python
    import pytest
-   
+
    @pytest.mark.cross_language
    @pytest.mark.integration
    def test_new_functionality():
        # Test implementation
    ```
-3. **Follow existing patterns** for mock usage and test structure
-4. **Run tests** to ensure they pass: `python -m pytest tests/test_new_file.py -v`
+1. **Follow existing patterns** for mock usage and test structure
+1. **Run tests** to ensure they pass: `python -m pytest tests/test_new_file.py -v`
 
 ### Adding New Commands
 
 1. **Implement command** in the appropriate module under `src/taster/commands/`
-2. **Add tests** in `tests/` with appropriate markers
-3. **Update this README** with command documentation
-4. **Rebuild package** for testing
+1. **Add tests** in `tests/` with appropriate markers
+1. **Update this README** with command documentation
+1. **Rebuild package** for testing
 
 ### Debugging
 
 Use the shell command for interactive debugging:
+
 ```bash
 # Start interactive shell in package environment
 ./taster.psp shell
@@ -321,6 +360,7 @@ map = { "OLD_VAR" = "NEW_VAR" }  # Example variable mapping
 ```
 
 This configuration demonstrates:
+
 - **Environment cleaning** - Removes all variables except essential ones
 - **Selective passing** - Allows specific variables and patterns
 - **Variable setting** - Sets taster-specific variables
@@ -329,6 +369,7 @@ This configuration demonstrates:
 ## Examples
 
 ### Cross-Language Compatibility Testing
+
 ```bash
 # Run comprehensive cross-language tests
 ./taster.psp crosslang --verbose --json --output-file results.json
@@ -338,6 +379,7 @@ cat results.json | jq '.summary.overall_success'
 ```
 
 ### Package Verification Pipeline
+
 ```bash
 # Build a test package
 flavor pack --manifest some-app/pyproject.toml --output test.psp
@@ -350,6 +392,7 @@ jq '.verification_status' verification.json
 ```
 
 ### Data Pipeline Testing
+
 ```bash
 # Test data corruption detection
 echo "important data" | ./taster.psp pipe corrupt --probability 0.5 | ./taster.psp pipe validate --schema raw
@@ -359,6 +402,7 @@ echo "important data" | ./taster.psp pipe corrupt --probability 0.5 | ./taster.p
 ```
 
 ### Environment Variable Testing
+
 ```bash
 # Test environment processing
 CUSTOM_VAR=test ./taster.psp env
@@ -372,21 +416,25 @@ OLD_VAR=original ./taster.psp env | grep NEW_VAR
 ### Common Issues
 
 **Package not found**: Ensure taster.psp is built in `dist/` directory
+
 ```bash
 ls -la dist/taster.psp
 ```
 
 **Permission errors**: Make sure the package is executable
+
 ```bash
 chmod +x dist/taster.psp
 ```
 
 **Test failures**: Run with insecure mode for development
+
 ```bash
 FLAVOR_VALIDATION=none python -m pytest tests/ -v
 ```
 
 **Import errors**: Ensure you're in the correct directory and environment
+
 ```bash
 source env.sh  # From flavorpack root
 cd helpers/taster
@@ -395,6 +443,7 @@ cd helpers/taster
 ### Debug Mode
 
 Enable detailed logging for troubleshooting:
+
 ```bash
 FLAVOR_LOG_LEVEL=trace ./taster.psp command
 ```
@@ -402,6 +451,7 @@ FLAVOR_LOG_LEVEL=trace ./taster.psp command
 ### Getting Help
 
 Each command provides detailed help:
+
 ```bash
 ./taster.psp --help
 ./taster.psp command --help

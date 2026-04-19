@@ -19,6 +19,7 @@ Comprehensive troubleshooting for Linux distributions:
 - **System Integration**: systemd, cron, startup scripts
 
 **Supported Distributions**:
+
 - Ubuntu 20.04+, Debian 10+
 - RHEL/CentOS 8+, Fedora 37+
 - Alpine 3.16+, Arch Linux
@@ -34,6 +35,7 @@ macOS-specific issues and solutions:
 - **System Integration**: LaunchAgents, startup items
 
 **Supported Versions**:
+
 - macOS 10.15 (Catalina) and newer
 - Both Intel and Apple Silicon
 
@@ -55,28 +57,15 @@ Windows-specific issues and solutions:
 
 All platforms require execute permission:
 
-=== "Linux"
-    ```bash
-    chmod +x package.psp
-    ```
+=== "Linux" `bash     chmod +x package.psp     `
 
-=== "macOS"
-    ```bash
-    chmod +x package.psp
-    xattr -c package.psp  # Clear quarantine
-    ```
+=== "macOS" `bash     chmod +x package.psp     xattr -c package.psp  # Clear quarantine     `
 
-=== "Windows"
-    ```powershell
-    # Usually no action needed, but may need:
-    Unblock-File -Path .\package.psp
-    ```
+=== "Windows" `powershell     # Usually no action needed, but may need:     Unblock-File -Path .\package.psp     `
 
 ### Missing Dependencies
 
-**Linux**: May need shared libraries (libssl, libz, etc.)
-**macOS**: Usually self-contained, may need Rosetta 2
-**Windows**: May need Visual C++ Redistributable
+**Linux**: May need shared libraries (libssl, libz, etc.) **macOS**: Usually self-contained, may need Rosetta 2 **Windows**: May need Visual C++ Redistributable
 
 ### Architecture Mismatches
 
@@ -95,26 +84,27 @@ flavor pack --platform windows_amd64  # Windows x64
 
 ## Platform Comparison
 
-| Feature | Linux | macOS | Windows |
-|---------|-------|-------|---------|
-| **Support Level** | ✅ Full | ✅ Full | 🚧 Beta |
-| **Static Binaries** | ✅ Yes (musl) | ❌ Dynamic | ❌ Dynamic |
-| **Code Signing** | ⚪ Optional | ⚠️ Required for distribution | ⚪ Optional |
-| **Containers** | ✅ Excellent | ✅ Good | 🚧 Limited |
-| **Architectures** | x86_64, ARM64 | x86_64, ARM64 | x86_64 |
+| Feature             | Linux         | macOS                        | Windows     |
+| ------------------- | ------------- | ---------------------------- | ----------- |
+| **Support Level**   | ✅ Full       | ✅ Full                      | 🚧 Beta     |
+| **Static Binaries** | ✅ Yes (musl) | ❌ Dynamic                   | ❌ Dynamic  |
+| **Code Signing**    | ⚪ Optional   | ⚠️ Required for distribution | ⚪ Optional |
+| **Containers**      | ✅ Excellent  | ✅ Good                      | 🚧 Limited  |
+| **Architectures**   | x86_64, ARM64 | x86_64, ARM64                | x86_64      |
 
 ## Getting Help
 
 If you can't resolve a platform-specific issue:
 
 1. **Check the platform guide** above for detailed troubleshooting
-2. **Search GitHub Issues** for similar problems
-3. **Ask in Discussions** with platform details
-4. **File an Issue** with full diagnostic output
+1. **Search GitHub Issues** for similar problems
+1. **Ask in Discussions** with platform details
+1. **File an Issue** with full diagnostic output
 
----
+______________________________________________________________________
 
 **See Also**:
+
 - [Common Issues](../common/) - Cross-platform troubleshooting
 - [Error Reference](../errors/) - Error message explanations
 - [FAQ](../faq/) - Frequently asked questions

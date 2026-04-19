@@ -46,14 +46,15 @@ mypy src/
 ## CI Workflows
 
 Numbered pipeline stages, each triggering the next:
+
 1. `01-helper-prep.yml` - Build Go/Rust helpers for all 6 platforms
-2. `02-pretaster-pipeline.yml` - Cross-language validation with pretaster
-3. `03-flavor-pipeline.yml` - Main CI: tests, wheels, Flavor PSP builds (badge workflow)
-4. `04-taster-pipeline.yml` - End-to-end taster tests
-5. `05-code-quality.yml` - Linting, type checking, complexity
-6. `06-security-scan.yml` - Security scanning
-7. `07-dependency-audit.yml` - Dependency auditing
-8. `08-license-compliance.yml` - License compliance
+1. `02-pretaster-pipeline.yml` - Cross-language validation with pretaster
+1. `03-flavor-pipeline.yml` - Main CI: tests, wheels, Flavor PSP builds (badge workflow)
+1. `04-taster-pipeline.yml` - End-to-end taster tests
+1. `05-code-quality.yml` - Linting, type checking, complexity
+1. `06-security-scan.yml` - Security scanning
+1. `07-dependency-audit.yml` - Dependency auditing
+1. `08-license-compliance.yml` - License compliance
 
 ## Cross-Platform
 

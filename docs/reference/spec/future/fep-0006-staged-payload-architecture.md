@@ -1,8 +1,8 @@
 # FEP-0006: Staged Payload Architecture (SPA)
 
-**Status**: Future  
-**Type**: Standards Track  
-**Created**: 2025-01-11  
+**Status**: Future\
+**Type**: Standards Track\
+**Created**: 2025-01-11\
 **Requires**: FEP-0001, FEP-0004, FEP-0005
 
 ## Abstract
@@ -12,21 +12,21 @@ This document specifies the Staged Payload Architecture (SPA) for PSPF/2025 pack
 ## Table of Contents
 
 1. [Introduction](#1-introduction)
-2. [Architectural Overview](#2-architectural-overview)
-3. [Stage Definition Model](#3-stage-definition-model)
-4. [Dependency Resolution](#4-dependency-resolution)
-5. [Progressive Loading Protocol](#5-progressive-loading-protocol)
-6. [Stage Activation Mechanisms](#6-stage-activation-mechanisms)
-7. [Caching and Persistence](#7-caching-and-persistence)
-8. [Security Model](#8-security-model)
-9. [Performance Optimization](#9-performance-optimization)
-10. [Platform Integration](#10-platform-integration)
-11. [Monitoring and Telemetry](#11-monitoring-and-telemetry)
-12. [Implementation Requirements](#12-implementation-requirements)
-13. [Test Vectors](#13-test-vectors)
-14. [Security Considerations](#14-security-considerations)
-15. [IANA Considerations](#15-iana-considerations)
-16. [References](#16-references)
+1. [Architectural Overview](#2-architectural-overview)
+1. [Stage Definition Model](#3-stage-definition-model)
+1. [Dependency Resolution](#4-dependency-resolution)
+1. [Progressive Loading Protocol](#5-progressive-loading-protocol)
+1. [Stage Activation Mechanisms](#6-stage-activation-mechanisms)
+1. [Caching and Persistence](#7-caching-and-persistence)
+1. [Security Model](#8-security-model)
+1. [Performance Optimization](#9-performance-optimization)
+1. [Platform Integration](#10-platform-integration)
+1. [Monitoring and Telemetry](#11-monitoring-and-telemetry)
+1. [Implementation Requirements](#12-implementation-requirements)
+1. [Test Vectors](#13-test-vectors)
+1. [Security Considerations](#14-security-considerations)
+1. [IANA Considerations](#15-iana-considerations)
+1. [References](#16-references)
 
 ## 1. Introduction
 
@@ -37,11 +37,11 @@ Modern applications often contain substantial amounts of code and resources that
 ### 1.2. Design Goals
 
 1. **Minimal Initial Load**: Core functionality available with smallest possible payload
-2. **Progressive Enhancement**: Additional features load as needed
-3. **Cryptographic Integrity**: All stages verified before execution
-4. **Zero-Copy Loading**: Memory-mapped stages for efficient access
-5. **Network Awareness**: Support for remote stage fetching
-6. **Offline Capability**: Graceful degradation when stages unavailable
+1. **Progressive Enhancement**: Additional features load as needed
+1. **Cryptographic Integrity**: All stages verified before execution
+1. **Zero-Copy Loading**: Memory-mapped stages for efficient access
+1. **Network Awareness**: Support for remote stage fetching
+1. **Offline Capability**: Graceful degradation when stages unavailable
 
 ### 1.3. Requirements Language
 
@@ -1158,39 +1158,39 @@ class StageTelemetry:
 Launchers implementing SPA MUST:
 
 1. Support progressive stage loading
-2. Implement dependency resolution
-3. Provide stage isolation mechanisms
-4. Support hot patching
-5. Implement caching strategies
-6. Collect telemetry data
-7. Handle network failures gracefully
-8. Support offline operation
+1. Implement dependency resolution
+1. Provide stage isolation mechanisms
+1. Support hot patching
+1. Implement caching strategies
+1. Collect telemetry data
+1. Handle network failures gracefully
+1. Support offline operation
 
 ### 12.2. Builder Requirements
 
 Builders creating SPA packages MUST:
 
 1. Generate stage manifests
-2. Calculate dependency graphs
-3. Optimize stage boundaries
-4. Sign individual stages
-5. Generate prefetch hints
-6. Create activation policies
-7. Embed telemetry hooks
-8. Support incremental updates
+1. Calculate dependency graphs
+1. Optimize stage boundaries
+1. Sign individual stages
+1. Generate prefetch hints
+1. Create activation policies
+1. Embed telemetry hooks
+1. Support incremental updates
 
 ### 12.3. Runtime Requirements
 
 The SPA runtime MUST:
 
 1. Memory-map stages efficiently
-2. Implement W^X protection
-3. Support atomic stage swaps
-4. Handle concurrent loading
-5. Implement garbage collection
-6. Support debugging interfaces
-7. Provide performance counters
-8. Enable security auditing
+1. Implement W^X protection
+1. Support atomic stage swaps
+1. Handle concurrent loading
+1. Implement garbage collection
+1. Support debugging interfaces
+1. Provide performance counters
+1. Enable security auditing
 
 ## 13. Test Vectors
 
@@ -1271,42 +1271,50 @@ def test_dependency_resolution():
 ### 14.1. Attack Vectors
 
 1. **Stage Injection**: Attacker replaces legitimate stage
+
    - Mitigation: Cryptographic verification of all stages
 
-2. **Dependency Confusion**: Attacker manipulates dependency graph
+1. **Dependency Confusion**: Attacker manipulates dependency graph
+
    - Mitigation: Signed dependency manifests
 
-3. **Cache Poisoning**: Attacker corrupts cached stages
+1. **Cache Poisoning**: Attacker corrupts cached stages
+
    - Mitigation: Integrity checks on cache access
 
-4. **Memory Disclosure**: Attacker reads other stage memory
+1. **Memory Disclosure**: Attacker reads other stage memory
+
    - Mitigation: Process isolation and ASLR
 
-5. **Timing Attacks**: Attacker infers stage contents via timing
+1. **Timing Attacks**: Attacker infers stage contents via timing
+
    - Mitigation: Constant-time operations for sensitive paths
 
 ### 14.2. Security Requirements
 
 1. All stages MUST be cryptographically signed
-2. Stage signatures MUST be verified before execution
-3. Stages MUST run with minimal privileges
-4. Inter-stage communication MUST be authenticated
-5. Cache entries MUST include integrity checks
-6. Hot patches MUST be signed by trusted authority
-7. Telemetry MUST NOT leak sensitive information
-8. Debug interfaces MUST be disabled in production
+1. Stage signatures MUST be verified before execution
+1. Stages MUST run with minimal privileges
+1. Inter-stage communication MUST be authenticated
+1. Cache entries MUST include integrity checks
+1. Hot patches MUST be signed by trusted authority
+1. Telemetry MUST NOT leak sensitive information
+1. Debug interfaces MUST be disabled in production
 
 ## 15. IANA Considerations
 
 This document requests IANA registration of:
 
 1. **Media Type**: `application/vnd.pspf.spa+json`
+
    - For SPA manifest files
 
-2. **URI Scheme**: `spa://`
+1. **URI Scheme**: `spa://`
+
    - For referencing stages within packages
 
-3. **Well-Known URI**: `/.well-known/spa-manifest`
+1. **Well-Known URI**: `/.well-known/spa-manifest`
+
    - For discovering SPA capabilities
 
 ## 16. References
@@ -1325,9 +1333,9 @@ This document requests IANA registration of:
 - [W^X] Write XOR Execute Protection
 - [SECCOMP] Secure Computing Mode
 
----
+______________________________________________________________________
 
-**Document Version**: 2025.1.0  
-**Last Updated**: 2025-01-11  
-**Status**: Future (Post-v1.0)  
+**Document Version**: 2025.1.0\
+**Last Updated**: 2025-01-11\
+**Status**: Future (Post-v1.0)\
 **Implementation Timeline**: 2026+

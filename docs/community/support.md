@@ -37,9 +37,9 @@ Search the documentation first.
 ## Before Asking
 
 1. **Search existing discussions and issues**
-2. **Check the documentation**
-3. **Try the troubleshooting guide**
-4. **Prepare a minimal reproduction**
+1. **Check the documentation**
+1. **Try the troubleshooting guide**
+1. **Prepare a minimal reproduction**
 
 ## How to Ask Good Questions
 
@@ -67,6 +67,6 @@ Include:
 - Provide context and details
 - Give back by helping others
 
----
+______________________________________________________________________
 
 **Ready to get help?** [Start a Discussion](https://github.com/provide-io/flavorpack/discussions)

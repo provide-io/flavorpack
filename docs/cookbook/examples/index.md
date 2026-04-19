@@ -2,21 +2,22 @@
 
 Practical examples demonstrating how to use Flavorpack for various packaging scenarios.
 
-!!! warning "Examples Need Verification"
-    These cookbook examples demonstrate Flavorpack's intended usage patterns. However, some advanced configuration options shown here (such as `[tool.flavor.slots]` arrays, `[tool.flavor.targets]`, and `[tool.flavor.environment]` tables) may not yet be fully implemented.
+!!! warning "Examples Need Verification" These cookbook examples demonstrate Flavorpack's intended usage patterns. However, some advanced configuration options shown here (such as `[tool.flavor.slots]` arrays, `[tool.flavor.targets]`, and `[tool.flavor.environment]` tables) may not yet be fully implemented.
 
-    **Verified to work**:
-    - Basic `pyproject.toml` with `[tool.flavor]` and `entry_point`
-    - `[project.scripts]` definitions
-    - Simple packaging with `flavor pack`
+```
+**Verified to work**:
+- Basic `pyproject.toml` with `[tool.flavor]` and `entry_point`
+- `[project.scripts]` definitions
+- Simple packaging with `flavor pack`
 
-    **Needs verification** (may not be implemented):
-    - `[tool.flavor.slots.*]` configuration
-    - `[tool.flavor.environment]` table
-    - `[tool.flavor.targets]` multi-platform builds
-    - `--compress`, `--jobs` CLI flags
+**Needs verification** (may not be implemented):
+- `[tool.flavor.slots.*]` configuration
+- `[tool.flavor.environment]` table
+- `[tool.flavor.targets]` multi-platform builds
+- `--compress`, `--jobs` CLI flags
 
-    Before relying on any example, test it with your Flavorpack installation. If a configuration option doesn't work, check the current [manifest documentation](../../guide/packaging/manifest/) for supported options.
+Before relying on any example, test it with your Flavorpack installation. If a configuration option doesn't work, check the current [manifest documentation](../../guide/packaging/manifest/) for supported options.
+```
 
 ## Quick Examples
 

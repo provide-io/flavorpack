@@ -2,10 +2,11 @@
 
 The Flavorpack Reader API provides tools for reading and extracting PSPF packages.
 
-!!! note "Low-Level API"
-    This is a low-level API for advanced use cases. For package inspection, see the [CLI Reference](../guide/usage/cli/).
+!!! note "Low-Level API" This is a low-level API for advanced use cases. For package inspection, see the [CLI Reference](../guide/usage/cli/).
 
-    The Reader API gives you programmatic access to package contents, metadata, slot extraction, and integrity verification.
+```
+The Reader API gives you programmatic access to package contents, metadata, slot extraction, and integrity verification.
+```
 
 ## Overview
 
@@ -107,10 +108,11 @@ for slot in reader.read_slots():
 
 ### Verifying Package Integrity
 
-!!! note "Verification via CLI"
-    Package verification is typically handled via the `flavor verify` CLI command or the high-level `verify_package()` function. The Reader API provides access to signature data, but verification logic is in `flavor.psp.security`.
+!!! note "Verification via CLI" Package verification is typically handled via the `flavor verify` CLI command or the high-level `verify_package()` function. The Reader API provides access to signature data, but verification logic is in `flavor.psp.security`.
 
-    For manual verification workflows, see `src/flavor/psp/security.py` which uses `provide.foundation.crypto.Ed25519Verifier`.
+```
+For manual verification workflows, see `src/flavor/psp/security.py` which uses `provide.foundation.crypto.Ed25519Verifier`.
+```
 
 ```python
 # Verification is typically handled via the high-level API:

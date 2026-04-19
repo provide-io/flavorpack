@@ -16,23 +16,21 @@ Flavorpack uses native helper binaries (written in Go and Rust) for high-perform
 
 Create PSPF packages from prepared slots:
 
-| Helper | Language | Size | Performance |
-|--------|----------|------|-------------|
-| `flavor-go-builder` | Go | ~3-4 MB | Fast |
-| `flavor-rs-builder` | Rust | ~1 MB | Fastest |
+| Helper              | Language | Size    | Performance |
+| ------------------- | -------- | ------- | ----------- |
+| `flavor-go-builder` | Go       | ~3-4 MB | Fast        |
+| `flavor-rs-builder` | Rust     | ~1 MB   | Fastest     |
 
 ### Launchers
 
 Embedded executables that extract and run packages:
 
-| Helper | Language | Size | Memory |
-|--------|----------|------|--------|
-| `flavor-go-launcher` | Go | ~3-4 MB | Low |
-| `flavor-rs-launcher` | Rust | ~1 MB | Lowest |
+| Helper               | Language | Size    | Memory |
+| -------------------- | -------- | ------- | ------ |
+| `flavor-go-launcher` | Go       | ~3-4 MB | Low    |
+| `flavor-rs-launcher` | Rust     | ~1 MB   | Lowest |
 
-!!! note "Platform Variations"
-    Binary sizes vary by platform and build configuration. Sizes shown are for darwin_arm64.
-    Linux static binaries may be larger. Use `ls -lh dist/bin/` to see actual sizes for your platform.
+!!! note "Platform Variations" Binary sizes vary by platform and build configuration. Sizes shown are for darwin_arm64. Linux static binaries may be larger. Use `ls -lh dist/bin/` to see actual sizes for your platform.
 
 ## Platform Support
 
@@ -70,9 +68,9 @@ flavor pack  # Uses best available helper for current platform
 The orchestrator selects helpers in this order:
 
 1. **User-specified** via `--launcher-bin` or `--builder-bin` flags
-2. **Rust helpers** for current platform (preferred for size)
-3. **Go helpers** for current platform (fallback)
-4. **Error** if no compatible helper found
+1. **Rust helpers** for current platform (preferred for size)
+1. **Go helpers** for current platform (fallback)
+1. **Error** if no compatible helper found
 
 ```mermaid
 flowchart TD
@@ -115,11 +113,11 @@ flowchart TD
 
 **Selection Examples:**
 
-| Platform | Available Helpers | Selected | Why |
-|----------|------------------|----------|-----|
-| macOS ARM64 | Rust + Go | Rust | Smaller size (1 MB vs 3-4 MB) |
-| Linux x64 | Go only | Go | Only available option |
-| Custom | Both | User choice | CLI flag overrides |
+| Platform    | Available Helpers | Selected    | Why                           |
+| ----------- | ----------------- | ----------- | ----------------------------- |
+| macOS ARM64 | Rust + Go         | Rust        | Smaller size (1 MB vs 3-4 MB) |
+| Linux x64   | Go only           | Go          | Only available option         |
+| Custom      | Both              | User choice | CLI flag overrides            |
 
 ### Manual Selection
 
@@ -171,16 +169,19 @@ Understanding how helpers are linked is critical for cross-platform compatibilit
 All Linux binaries are built as **static executables** using musl libc:
 
 **Go Helpers:**
+
 ```bash
 CGO_ENABLED=0 go build -ldflags="-s -w" ./cmd/flavor-go-launcher
 ```
 
 **Rust Helpers:**
+
 ```bash
 cargo build --release --target x86_64-unknown-linux-musl
 ```
 
 **Why Static Linking?**
+
 - ✅ Works on any Linux distribution (CentOS 7+, Ubuntu, Alpine, etc.)
 - ✅ No glibc version dependencies
 - ✅ No runtime library conflicts
@@ -205,13 +206,13 @@ Windows helpers link dynamically to Windows system DLLs:
 
 ## Platform Compatibility Matrix
 
-| Platform | Architecture | Binary Type | Min OS Version | Notes |
-|----------|-------------|-------------|----------------|-------|
-| Linux | x86_64 (amd64) | Static (musl) | CentOS 7+ | Universal compatibility |
-| Linux | aarch64 (arm64) | Static (musl) | - | ARM64 servers |
-| macOS | x86_64 | Dynamic | macOS 11+ | Intel Macs |
-| macOS | arm64 | Dynamic | macOS 11+ | Apple Silicon |
-| Windows | x86_64 | Dynamic | Windows 10+ | 64-bit only |
+| Platform | Architecture    | Binary Type   | Min OS Version | Notes                   |
+| -------- | --------------- | ------------- | -------------- | ----------------------- |
+| Linux    | x86_64 (amd64)  | Static (musl) | CentOS 7+      | Universal compatibility |
+| Linux    | aarch64 (arm64) | Static (musl) | -              | ARM64 servers           |
+| macOS    | x86_64          | Dynamic       | macOS 11+      | Intel Macs              |
+| macOS    | arm64           | Dynamic       | macOS 11+      | Apple Silicon           |
+| Windows  | x86_64          | Dynamic       | Windows 10+    | 64-bit only             |
 
 ## Helper Embedding
 
@@ -229,6 +230,7 @@ myapp.psp structure:
 ```
 
 This means:
+
 - **Package size** includes launcher (~1-5 MB base overhead)
 - **No external dependencies** required to run the package
 - **Platform-specific** - Linux packages need Linux launchers
@@ -254,6 +256,7 @@ make build-rust-helpers
 Platform mismatch - you're trying to run a Linux package on macOS (or vice versa).
 
 **Solution**: Build platform-specific packages:
+
 ```bash
 # For Linux
 flavor pack --launcher-bin dist/bin/flavor-rs-launcher-linux_amd64

@@ -5,6 +5,7 @@ Deep dive into Flavorpack's advanced features and customization options.
 ## Overview
 
 These topics are for users who want to:
+
 - Customize launchers and builders
 - Optimize performance
 - Debug complex issues
@@ -70,24 +71,28 @@ Troubleshoot complex issues.
 ## When to Use Advanced Features
 
 ### Custom Launchers
+
 - Need platform-specific behavior
 - Require specialized extraction logic
 - Want custom security checks
 - Building domain-specific tools
 
 ### Custom Builders
+
 - Package non-Python applications
 - Need custom compression
 - Require specialized slot types
 - Extending format capabilities
 
 ### Performance Tuning
+
 - Packages are too large
 - Startup time is slow
 - Cache misses are frequent
 - Running in constrained environments
 
 ### Debugging
+
 - Build failures
 - Runtime errors
 - Integration issues
@@ -98,9 +103,9 @@ Troubleshoot complex issues.
 Before diving into advanced topics, you should:
 
 1. ✅ Understand [Core Concepts](../concepts/index/)
-2. ✅ Be comfortable with [Building Packages](../packaging/index/)
-3. ✅ Have experience [Using Packages](../usage/index/)
-4. ✅ Know Go or Rust (for helper development)
+1. ✅ Be comfortable with [Building Packages](../packaging/index/)
+1. ✅ Have experience [Using Packages](../usage/index/)
+1. ✅ Know Go or Rust (for helper development)
 
 ## Next Steps
 
@@ -111,6 +116,6 @@ Choose your path:
 - **Problems** → [Debugging](debugging/)
 - **Integration** → [Cross-Language Support](cross-language/)
 
----
+______________________________________________________________________
 
 **Need help?** Join the discussion on [GitHub](https://github.com/provide-io/flavorpack/discussions) or check [Troubleshooting](../../troubleshooting/index/).

@@ -97,6 +97,6 @@ If you can't find what you're looking for:
 - 💬 Ask in [Community Support](../community/support/)
 - 🐛 Report issues on [GitHub](https://github.com/provide-io/flavorpack/issues)
 
----
+______________________________________________________________________
 
 **Ready to start?** Jump to [Core Concepts](concepts/index/) or try the [Quick Start](../getting-started/quickstart/).

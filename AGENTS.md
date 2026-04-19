@@ -9,6 +9,7 @@ Flavorpack is a cross-language packaging system implementing the Progressive Sec
 ## Binary Compatibility
 
 All Linux binaries are built as static executables:
+
 - **Go**: Built with `CGO_ENABLED=0` for static linking
 - **Rust**: Built with musl libc for static linking
 - **Compatibility**: Works on CentOS 7+, Amazon Linux 2023, Ubuntu, Alpine, and any Linux distribution
@@ -17,6 +18,7 @@ All Linux binaries are built as static executables:
 ## Development Commands
 
 ### Environment Setup
+
 ```bash
 # Build Go and Rust helpers (required for packaging)
 make build-helpers
@@ -25,6 +27,7 @@ make build-helpers
 ```
 
 ### Testing
+
 ```bash
 # Run all Python tests
 make test
@@ -57,6 +60,7 @@ make test-slow
 ```
 
 ### Quality Workflows
+
 ```bash
 # Run the strict observational quality workflows locally
 make quality-python-fast
@@ -71,6 +75,7 @@ make quality-ci
 Use the root `make quality-*` targets instead of ad hoc coverage, mutation, fuzzing, or property-test commands when validating cross-language quality behavior.
 
 ### Linting and Formatting
+
 ```bash
 # Format code
 uv run ruff format src/ tests/
@@ -83,6 +88,7 @@ uv run mypy src/flavor
 ```
 
 ### Package Operations
+
 ```bash
 # Create a package
 flavor pack --manifest pyproject.toml --output myapp.psp
@@ -101,6 +107,7 @@ flavor keygen --output keys/
 ```
 
 ### Release Management
+
 ```bash
 # Build platform-specific wheel
 make wheel PLATFORM=darwin_arm64
@@ -120,6 +127,7 @@ make release-clean
 The project has a polyglot architecture with three main layers:
 
 1. **Python Orchestrator** (`src/flavor/`)
+
    - `packaging/orchestrator.py` - Main build coordinator
    - `packaging/python_packager.py` - Python-specific packaging
    - `psp/format_2025/builder.py` - PSPF package assembly
@@ -127,12 +135,14 @@ The project has a polyglot architecture with three main layers:
    - `psp/format_2025/launcher.py` - Launcher management
    - `psp/format_2025/crypto.py` - Ed25519 signing/verification
 
-2. **Native Helpers** (`src/`)
+1. **Native Helpers** (`src/`)
+
    - `flavor-go/` - Go builder and launcher implementations
    - `flavor-rs/` - Rust builder and launcher implementations
    - Built binaries are placed in `dist/bin/` and embedded during packaging
 
-3. **PSPF Package Structure**
+1. **PSPF Package Structure**
+
    - See `docs/reference/spec/` for complete binary format specification
    - SlotDescriptor: 64-byte binary format (see `docs/reference/spec/SLOT_DESCRIPTOR_SPECIFICATION.md`)
    - Operations: 64-bit packed operation chains (see `docs/reference/spec/fep-0001-core-format-and-operation-chains.md`)
@@ -140,18 +150,23 @@ The project has a polyglot architecture with three main layers:
 ## Key Patterns
 
 ### Helper Selection
+
 The system automatically selects appropriate builder/launcher combinations based on platform and availability. See `src/flavor/packaging/orchestrator_helpers.py` for the selection logic.
 
 ### Slot System
+
 Packages use numbered slots for different components:
+
 - Slot 0: Usually Python runtime/environment
 - Slot 1: Application code
 - Slot 2+: Additional resources
 
 ### Workenv Management
+
 Packages extract to cached work environments for efficiency. The cache is validated using checksums and signatures. See `src/flavor/psp/format_2025/launcher.py`.
 
 ### Cross-Language Testing
+
 The `tests/pretaster/` tool validates PSPF packages across all builder/launcher combinations to ensure compatibility.
 
 ## Important Files
@@ -175,6 +190,7 @@ The `tests/pretaster/` tool validates PSPF packages across all builder/launcher 
 - **Packaging tests**: End-to-end package creation and execution
 
 Use pytest markers to run specific test categories:
+
 ```bash
 uv run pytest -m unit
 uv run pytest -m integration
@@ -186,6 +202,7 @@ uv run pytest -m "fast and not slow"
 ```
 
 Shared taxonomy:
+
 - `unit`, `integration`, `cross_language`
 - `security`: intended security behavior
 - `adversarial`: hostile inputs and trust-boundary violations
@@ -203,14 +220,16 @@ Shared taxonomy:
 ## CRITICAL REQUIREMENTS - NEVER FORGET
 
 ### NO BACKWARD COMPATIBILITY - EVER
+
 - **ABSOLUTELY NO** backward compatibility code, functions, variables, or patterns
-- **NO** migration logic or versioning checks for old formats  
+- **NO** migration logic or versioning checks for old formats
 - **NO** "if old_version then..." type code
 - **ALWAYS** implement the end-state solution directly
 - This is a greenfield project - assume everything is brand new
 - If something needs changing, replace it entirely - don't add compatibility layers
 
 ### Code Quality Standards
+
 - **Trace logging is essential** - preserve all debug/trace logging for diagnostics
 - Only remove logging if there's a proven detrimental performance impact
 - Use structured logging with emoji prefixes (DAS pattern)
@@ -218,12 +237,14 @@ Shared taxonomy:
 - Rust code must compile with `--warnings-as-errors` (strict mode)
 
 ### SCHEMA IS OPERATIONS-ONLY
+
 - **Operations field** - 64-bit uint64, the only encoding mechanism
 - **Operation chains** - Up to 8 operations packed into single integer
 - **Protobuf** - All operations defined in .proto files
 - **SlotDescriptor format** - See `docs/reference/spec/SLOT_DESCRIPTOR_SPECIFICATION.md` for exact binary layout
 
 ### Testing Requirements
+
 - **ALL tests MUST use pretaster or taster** - NEVER create standalone test files
 - **NO test manifests in /tmp** - use pretaster/taster infrastructure only
 - **NO simple/quick tests** - use the proper testing framework

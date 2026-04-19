@@ -251,9 +251,9 @@ kubectl run myapp --image=alpine --command -- /app/myapp.psp
 ## Performance Tips
 
 1. **First run is slower** - Extracts to cache
-2. **Subsequent runs are fast** - Uses cached workenv
-3. **Cache persists** - Survives reboots
-4. **SSD recommended** - For faster extraction
+1. **Subsequent runs are fast** - Uses cached workenv
+1. **Cache persists** - Survives reboots
+1. **SSD recommended** - For faster extraction
 
 ## Security Notes
 
@@ -262,6 +262,6 @@ kubectl run myapp --image=alpine --command -- /app/myapp.psp
 - ✅ **Isolated execution** - Work environment per package
 - ⚠️ **Trust the source** - Only run packages from trusted sources
 
----
+______________________________________________________________________
 
 **See also:** [CLI Reference](cli/) | [Environment Variables](environment/) | [Cache Management](cache/)

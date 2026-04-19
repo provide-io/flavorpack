@@ -1,10 +1,6 @@
 # FEP-0004: PSPF/2025 Security Attestation Extension
 
-**Status**: Standards Track
-**Type**: Extension Protocol
-**Created**: 2026-03-30
-**Version**: v0.1
-**Requires**: FEP-0001, FEP-0002
+**Status**: Standards Track **Type**: Extension Protocol **Created**: 2026-03-30 **Version**: v0.1 **Requires**: FEP-0001, FEP-0002
 
 ## Abstract
 
@@ -15,19 +11,19 @@ The format version `0x20250001` is unchanged. No format version bump is required
 ## Table of Contents
 
 1. [Introduction](#1-introduction)
-2. [Conventions and Terminology](#2-conventions-and-terminology)
-3. [Attestation Lifecycle Value](#3-attestation-lifecycle-value)
-4. [Index Block Attestation Section](#4-index-block-attestation-section)
-5. [Attestation Slot Contents](#5-attestation-slot-contents)
-6. [Trusted Key Store](#6-trusted-key-store)
-7. [Operator Policy](#7-operator-policy)
-8. [Package-Declared Policy](#8-package-declared-policy)
-9. [Launch Sequence](#9-launch-sequence)
-10. [flavor init Command](#10-flavor-init-command)
-11. [Backwards Compatibility](#11-backwards-compatibility)
-12. [Non-Goals](#12-non-goals)
-13. [Security Considerations](#13-security-considerations)
-14. [References](#14-references)
+1. [Conventions and Terminology](#2-conventions-and-terminology)
+1. [Attestation Lifecycle Value](#3-attestation-lifecycle-value)
+1. [Index Block Attestation Section](#4-index-block-attestation-section)
+1. [Attestation Slot Contents](#5-attestation-slot-contents)
+1. [Trusted Key Store](#6-trusted-key-store)
+1. [Operator Policy](#7-operator-policy)
+1. [Package-Declared Policy](#8-package-declared-policy)
+1. [Launch Sequence](#9-launch-sequence)
+1. [flavor init Command](#10-flavor-init-command)
+1. [Backwards Compatibility](#11-backwards-compatibility)
+1. [Non-Goals](#12-non-goals)
+1. [Security Considerations](#13-security-considerations)
+1. [References](#14-references)
 
 ## 1. Introduction
 
@@ -45,6 +41,7 @@ This extension provides all four capabilities as an opt-in, backwards-compatible
 ### 1.2 Scope
 
 This specification defines:
+
 - The `attestation` lifecycle value (11) and its slot structure
 - Three attestation fields within the FEP-0001 reserved index region
 - CycloneDX 1.6 SBOM embedding and provenance record schema
@@ -65,20 +62,15 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 ## 2. Conventions and Terminology
 
-**Attestation slot**: A slot with lifecycle value 11, containing SBOM and provenance data.
-**Key fingerprint**: SHA-256 of the raw 32-byte Ed25519 public key, encoded as 64 lowercase hex ASCII characters. When stored in binary index fields (`attestation_key_fp`), fingerprints are 64 lowercase hex ASCII characters with no prefix. When stored in JSON fields (e.g., `signing_attestation_key_fp` in provenance records), fingerprints use the `sha256:` prefix (e.g., `sha256:abc123...`). Implementations MUST strip the `sha256:` prefix before comparing a provenance JSON fingerprint against a binary index field.
-**Operator policy**: Host-level TOML configuration that may tighten package-declared constraints.
-**Package-declared policy**: Constraints expressed by the package author in `pyproject.toml`.
-**SBOM**: Software Bill of Materials — a structured inventory of software components.
-**Trusted key store**: A host-managed directory of approved Ed25519 public keys.
+**Attestation slot**: A slot with lifecycle value 11, containing SBOM and provenance data. **Key fingerprint**: SHA-256 of the raw 32-byte Ed25519 public key, encoded as 64 lowercase hex ASCII characters. When stored in binary index fields (`attestation_key_fp`), fingerprints are 64 lowercase hex ASCII characters with no prefix. When stored in JSON fields (e.g., `signing_attestation_key_fp` in provenance records), fingerprints use the `sha256:` prefix (e.g., `sha256:abc123...`). Implementations MUST strip the `sha256:` prefix before comparing a provenance JSON fingerprint against a binary index field. **Operator policy**: Host-level TOML configuration that may tighten package-declared constraints. **Package-declared policy**: Constraints expressed by the package author in `pyproject.toml`. **SBOM**: Software Bill of Materials — a structured inventory of software components. **Trusted key store**: A host-managed directory of approved Ed25519 public keys.
 
 ## 3. Attestation Lifecycle Value
 
 FEP-0001 defines a `lifecycle` field in the slot descriptor (§4.5) with values 0–10 assigned by FEP-0001. This extension adds one new value:
 
-| Value | Constant | Name | Description |
-|---|---|---|---|
-| 11 | `LIFECYCLE_ATTESTATION` | `attestation` | Security attestation slot containing SBOM and build provenance |
+| Value | Constant                | Name          | Description                                                    |
+| ----- | ----------------------- | ------------- | -------------------------------------------------------------- |
+| 11    | `LIFECYCLE_ATTESTATION` | `attestation` | Security attestation slot containing SBOM and build provenance |
 
 A launcher implementing only FEP-0001 (not this extension) will treat an attestation slot as an `init`-lifecycle slot, since lifecycle value 11 is within the unassigned range for FEP-0001. It will extract the slot on first run and remove it after execution per the FEP-0001 init lifecycle semantics. This is the expected forward-compatible behaviour.
 
@@ -88,11 +80,11 @@ The slot identifier for the attestation slot is `"_attestation"` and its target 
 
 The FEP-0001 index block contains a 6816-byte reserved region (see FEP-0001 §4.3). The first 192 bytes of this region are now defined as the **attestation section**:
 
-| Offset within reserved | Size | Field | Description |
-|---|---|---|---|
-| 0 | 64 bytes | `attestation_key_fp` | SHA-256 of the Ed25519 public key (raw 32 bytes), hex-encoded ASCII |
-| 64 | 64 bytes | `attestation_sbom_digest` | SHA-256 of the entire attestation slot content (the full JSON bytes of the top-level object), hex-encoded ASCII |
-| 128 | 64 bytes | `attestation_policy_hash` | SHA-256 of the package-declared policy JSON (canonical form), hex-encoded ASCII |
+| Offset within reserved | Size     | Field                     | Description                                                                                                     |
+| ---------------------- | -------- | ------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| 0                      | 64 bytes | `attestation_key_fp`      | SHA-256 of the Ed25519 public key (raw 32 bytes), hex-encoded ASCII                                             |
+| 64                     | 64 bytes | `attestation_sbom_digest` | SHA-256 of the entire attestation slot content (the full JSON bytes of the top-level object), hex-encoded ASCII |
+| 128                    | 64 bytes | `attestation_policy_hash` | SHA-256 of the package-declared policy JSON (canonical form), hex-encoded ASCII                                 |
 
 All three fields are optional. A zero-filled field (all 64 bytes are `0x00`) indicates that the field is absent. A launcher implementing this extension MUST skip the associated check for any absent field.
 
@@ -107,10 +99,11 @@ All three digest fields are encoded as lowercase hexadecimal ASCII. Builders MUS
 ### 4.2 Builder Requirements
 
 A builder implementing this extension MUST:
+
 1. Compute `attestation_key_fp` as `SHA-256(raw_ed25519_public_key_bytes)`, hex-encoded.
-2. Compute `attestation_sbom_digest` as `SHA-256(attestation_slot_content_bytes)` after serialising the attestation slot content to canonical JSON (RFC 8785 or equivalent: sorted keys, no insignificant whitespace).
-3. Compute `attestation_policy_hash` as `SHA-256(canonical_policy_json_bytes)` where the policy JSON is derived from the `[tool.flavor.policy]` section of `pyproject.toml`, serialised to canonical JSON.
-4. Write all three fields into the attestation section before computing the Ed25519 signature, so the signature covers the attestation fields.
+1. Compute `attestation_sbom_digest` as `SHA-256(attestation_slot_content_bytes)` after serialising the attestation slot content to canonical JSON (RFC 8785 or equivalent: sorted keys, no insignificant whitespace).
+1. Compute `attestation_policy_hash` as `SHA-256(canonical_policy_json_bytes)` where the policy JSON is derived from the `[tool.flavor.policy]` section of `pyproject.toml`, serialised to canonical JSON.
+1. Write all three fields into the attestation section before computing the Ed25519 signature, so the signature covers the attestation fields.
 
 ## 5. Attestation Slot Contents
 
@@ -128,6 +121,7 @@ Either key MAY be absent (but not both — an empty attestation slot SHOULD NOT 
 ### 5.1 SBOM Format
 
 The `sbom` value MUST be a valid CycloneDX 1.6 JSON object. The `components` array SHOULD include:
+
 - All Python packages installed into the package (name, version, PURL)
 - The Python runtime (version, implementation)
 - The launcher binary (language, version, content hash)
@@ -167,17 +161,17 @@ The `provenance` value MUST be a JSON object conforming to the following schema:
 
 Field semantics:
 
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `builder` | string | REQUIRED | Identifies the builder implementation (e.g. `"flavor-python"`) |
-| `builder_version` | string | REQUIRED | SemVer of the builder |
-| `build_timestamp` | string | REQUIRED | ISO 8601 UTC timestamp of build completion |
-| `source_date_epoch` | integer | RECOMMENDED | Unix timestamp for reproducible builds; used as `SOURCE_DATE_EPOCH` |
-| `platform` | object | REQUIRED | `os` and `arch` of the build host |
-| `python` | object | REQUIRED | `version` (string) and `implementation` (string) of the embedded Python |
-| `launcher` | object | REQUIRED | `language`, `version`, and `hash` (prefixed with `sha256:`) of the embedded launcher |
-| `signing_attestation_key_fp` | string | REQUIRED | `sha256:` prefixed hex fingerprint of the Ed25519 signing key |
-| `reproducible` | boolean | RECOMMENDED | `true` if the build used `SOURCE_DATE_EPOCH` and deterministic settings |
+| Field                        | Type    | Required    | Description                                                                          |
+| ---------------------------- | ------- | ----------- | ------------------------------------------------------------------------------------ |
+| `builder`                    | string  | REQUIRED    | Identifies the builder implementation (e.g. `"flavor-python"`)                       |
+| `builder_version`            | string  | REQUIRED    | SemVer of the builder                                                                |
+| `build_timestamp`            | string  | REQUIRED    | ISO 8601 UTC timestamp of build completion                                           |
+| `source_date_epoch`          | integer | RECOMMENDED | Unix timestamp for reproducible builds; used as `SOURCE_DATE_EPOCH`                  |
+| `platform`                   | object  | REQUIRED    | `os` and `arch` of the build host                                                    |
+| `python`                     | object  | REQUIRED    | `version` (string) and `implementation` (string) of the embedded Python              |
+| `launcher`                   | object  | REQUIRED    | `language`, `version`, and `hash` (prefixed with `sha256:`) of the embedded launcher |
+| `signing_attestation_key_fp` | string  | REQUIRED    | `sha256:` prefixed hex fingerprint of the Ed25519 signing key                        |
+| `reproducible`               | boolean | RECOMMENDED | `true` if the build used `SOURCE_DATE_EPOCH` and deterministic settings              |
 
 The `signing_attestation_key_fp` in the provenance record MUST match the `attestation_key_fp` field in the index attestation section (§4), without the `sha256:` prefix. A launcher MUST verify this consistency and MUST reject a package where they differ.
 
@@ -186,9 +180,9 @@ The `signing_attestation_key_fp` in the provenance record MUST match the `attest
 A **trusted key store** is a host-managed directory containing approved Ed25519 public keys. Launchers implementing this extension MUST support the following resolution order for the user-level store:
 
 1. Directory named by `FLAVOR_TRUSTED_KEYS_DIR` environment variable (if set and non-empty)
-2. `$FLAVOR_CONFIG_DIR/trusted-keys/` if `FLAVOR_CONFIG_DIR` is set and non-empty
-3. `$XDG_CONFIG_HOME/flavor/trusted-keys/` if `XDG_CONFIG_HOME` is set and non-empty
-4. `~/.config/flavor/trusted-keys/` (XDG default)
+1. `$FLAVOR_CONFIG_DIR/trusted-keys/` if `FLAVOR_CONFIG_DIR` is set and non-empty
+1. `$XDG_CONFIG_HOME/flavor/trusted-keys/` if `XDG_CONFIG_HOME` is set and non-empty
+1. `~/.config/flavor/trusted-keys/` (XDG default)
 
 The system-wide store is always `/etc/flavor/trusted-keys/`. Both stores are consulted; a key present in either is considered trusted.
 
@@ -197,6 +191,7 @@ The system-wide store is always `/etc/flavor/trusted-keys/`. Both stores are con
 Each file in a trusted-keys directory MUST have the `.pub` extension. The file content MUST be an Ed25519 public key in PEM SubjectPublicKeyInfo format. An optional comment line beginning with `# Name:` MAY appear before the PEM block to provide a human-readable label for the key.
 
 Example:
+
 ```
 # Name: release-signing-key-2026
 -----BEGIN PUBLIC KEY-----
@@ -207,6 +202,7 @@ MCowBQYDK2VwAyEA...
 ### 6.2 Key Fingerprint Computation
 
 The fingerprint of a key is computed as:
+
 ```
 fingerprint = hex(SHA-256(raw_ed25519_public_key_bytes))
 ```
@@ -215,12 +211,12 @@ where `raw_ed25519_public_key_bytes` is the 32-byte raw key material extracted f
 
 ### 6.3 Enforcement at Launch
 
-| State | Behaviour |
-|---|---|
-| No trusted-keys directory exists and no policy requiring trusted key | Signature verified against embedded key; execution proceeds |
-| Package key fingerprint matches a key in the store | Trusted — proceed |
-| Package key not in store; `require_trusted_key = false` | SHOULD emit a warning to stderr; proceed |
-| Package key not in store; `require_trusted_key = true` | MUST hard block; exit with non-zero status and descriptive error |
+| State                                                                | Behaviour                                                        |
+| -------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| No trusted-keys directory exists and no policy requiring trusted key | Signature verified against embedded key; execution proceeds      |
+| Package key fingerprint matches a key in the store                   | Trusted — proceed                                                |
+| Package key not in store; `require_trusted_key = false`              | SHOULD emit a warning to stderr; proceed                         |
+| Package key not in store; `require_trusted_key = true`               | MUST hard block; exit with non-zero status and descriptive error |
 
 Launchers MUST NOT proceed past key store checks if the Ed25519 signature (FEP-0001 §7) has already failed verification.
 
@@ -228,13 +224,13 @@ Launchers MUST NOT proceed past key store checks if the Ed25519 signature (FEP-0
 
 An operator policy file named `policy.toml` configures enforcement at the host level. Two locations are consulted, resolved according to the table below:
 
-| Scenario | Policy file path |
-|---|---|
-| System-wide (Linux/macOS) | `/etc/flavor/policy.toml` |
-| System-wide (Windows) | `%PROGRAMDATA%\flavor\policy.toml` |
-| User-level (Linux/macOS) | `$XDG_CONFIG_HOME/flavor/policy.toml` → `~/.config/flavor/policy.toml` |
-| User-level (Windows) | `%APPDATA%\flavor\policy.toml` |
-| Override (all platforms) | `$FLAVOR_CONFIG_DIR/policy.toml` (highest user-level precedence when set) |
+| Scenario                  | Policy file path                                                          |
+| ------------------------- | ------------------------------------------------------------------------- |
+| System-wide (Linux/macOS) | `/etc/flavor/policy.toml`                                                 |
+| System-wide (Windows)     | `%PROGRAMDATA%\flavor\policy.toml`                                        |
+| User-level (Linux/macOS)  | `$XDG_CONFIG_HOME/flavor/policy.toml` → `~/.config/flavor/policy.toml`    |
+| User-level (Windows)      | `%APPDATA%\flavor\policy.toml`                                            |
+| Override (all platforms)  | `$FLAVOR_CONFIG_DIR/policy.toml` (highest user-level precedence when set) |
 
 The resolution order for the user-level path mirrors the trusted key store (§6): `FLAVOR_CONFIG_DIR` takes priority, then `XDG_CONFIG_HOME/flavor/` (or `%APPDATA%\flavor\` on Windows), then the XDG default `~/.config/flavor/`.
 
@@ -258,14 +254,14 @@ require_sbom = false          # true = block packages that have no attestation s
 
 ### 7.2 Field Semantics
 
-| Section | Field | Type | Default | Description |
-|---|---|---|---|---|
-| `[trust]` | `require_trusted_key` | boolean | `false` | Hard-block packages whose signing key is not in the trusted store |
-| `[trust]` | `use_os_keychain` | boolean | `false` | Treat OS certificate store keys as trusted |
-| `[execution]` | `refuse_root` | boolean | `false` | Block execution when the effective UID is 0 (or Administrator on Windows) |
-| `[execution]` | `max_age_days` | integer | absent | Block packages older than this many days relative to `build_timestamp` |
-| `[execution]` | `allow_platforms` | string array | absent | Block packages built for platforms not in this list |
-| `[attestation]` | `require_sbom` | boolean | `false` | Block packages with no attestation slot or absent `sbom` key |
+| Section         | Field                 | Type         | Default | Description                                                               |
+| --------------- | --------------------- | ------------ | ------- | ------------------------------------------------------------------------- |
+| `[trust]`       | `require_trusted_key` | boolean      | `false` | Hard-block packages whose signing key is not in the trusted store         |
+| `[trust]`       | `use_os_keychain`     | boolean      | `false` | Treat OS certificate store keys as trusted                                |
+| `[execution]`   | `refuse_root`         | boolean      | `false` | Block execution when the effective UID is 0 (or Administrator on Windows) |
+| `[execution]`   | `max_age_days`        | integer      | absent  | Block packages older than this many days relative to `build_timestamp`    |
+| `[execution]`   | `allow_platforms`     | string array | absent  | Block packages built for platforms not in this list                       |
+| `[attestation]` | `require_sbom`        | boolean      | `false` | Block packages with no attestation slot or absent `sbom` key              |
 
 Absent fields imply no additional constraint from the operator. A launcher MUST treat a missing `policy.toml` identically to a file containing only default values.
 
@@ -281,12 +277,12 @@ max_age_days = 365
 require_env = ["MYAPP_LICENSE_KEY"]
 ```
 
-| Field | Type | Description |
-|---|---|---|
-| `platforms` | string array | List of target platform identifiers the package is permitted to run on |
-| `refuse_root` | boolean | If `true`, the launcher MUST refuse to execute as root/Administrator |
-| `max_age_days` | integer | If set, the launcher MUST refuse if `now - build_timestamp > max_age_days` |
-| `require_env` | string array | List of environment variable names that MUST be present and non-empty at launch |
+| Field          | Type         | Description                                                                     |
+| -------------- | ------------ | ------------------------------------------------------------------------------- |
+| `platforms`    | string array | List of target platform identifiers the package is permitted to run on          |
+| `refuse_root`  | boolean      | If `true`, the launcher MUST refuse to execute as root/Administrator            |
+| `max_age_days` | integer      | If set, the launcher MUST refuse if `now - build_timestamp > max_age_days`      |
+| `require_env`  | string array | List of environment variable names that MUST be present and non-empty at launch |
 
 A launcher MUST enforce package-declared policy before applying operator policy. When both define the same constraint (e.g. `refuse_root`), the stricter value — i.e. `true` over `false`, smaller `max_age_days` — applies.
 
@@ -295,13 +291,13 @@ A launcher MUST enforce package-declared policy before applying operator policy.
 A launcher implementing this extension MUST enforce the following steps in order. The first failure MUST cause the launcher to exit with a non-zero status and a human-readable diagnostic message. The launcher MUST NOT proceed to a subsequent step if an earlier step fails.
 
 1. **Signature verification** (FEP-0001 §7): Verify the Ed25519 signature over the entire package content. Reject if invalid.
-2. **Attestation consistency** (§5.2): If `attestation_key_fp` in the index is non-zero and an attestation slot is present, verify that `provenance.signing_attestation_key_fp` (stripped of `sha256:` prefix) matches the index field. Reject if they differ.
-3. **Key store check** (§6.3): If a trusted-keys directory exists or `require_trusted_key = true` (from either policy source), check the package's signing key fingerprint against the store. Apply enforcement per §6.3.
-4. **Package-declared policy** (§8): Evaluate all constraints declared in the package metadata.
-5. **Policy hash verification** (§4): If `attestation_policy_hash` in the index is non-zero, the launcher MUST re-serialise the package-declared policy (as embedded in the signed FEP-0002 metadata, under the `"policy"` key) to canonical JSON (sorted keys, no extra whitespace) and compute its SHA-256 hex digest. If the digest does not match `attestation_policy_hash`, execution MUST fail. If the `"policy"` key is absent from the metadata and `attestation_policy_hash` is non-zero, execution MUST fail.
-6. **Operator policy overlay** (§7): Evaluate operator policy fields, applying the stricter value for any field also declared by the package.
-7. **SBOM digest verification** (§4): If `attestation_sbom_digest` in the index is non-zero, re-serialise the attestation slot content to canonical JSON, compute `SHA-256`, and compare to `attestation_sbom_digest`. Reject if they differ.
-8. **Execute**: Proceed with normal FEP-0001 extraction and execution.
+1. **Attestation consistency** (§5.2): If `attestation_key_fp` in the index is non-zero and an attestation slot is present, verify that `provenance.signing_attestation_key_fp` (stripped of `sha256:` prefix) matches the index field. Reject if they differ.
+1. **Key store check** (§6.3): If a trusted-keys directory exists or `require_trusted_key = true` (from either policy source), check the package's signing key fingerprint against the store. Apply enforcement per §6.3.
+1. **Package-declared policy** (§8): Evaluate all constraints declared in the package metadata.
+1. **Policy hash verification** (§4): If `attestation_policy_hash` in the index is non-zero, the launcher MUST re-serialise the package-declared policy (as embedded in the signed FEP-0002 metadata, under the `"policy"` key) to canonical JSON (sorted keys, no extra whitespace) and compute its SHA-256 hex digest. If the digest does not match `attestation_policy_hash`, execution MUST fail. If the `"policy"` key is absent from the metadata and `attestation_policy_hash` is non-zero, execution MUST fail.
+1. **Operator policy overlay** (§7): Evaluate operator policy fields, applying the stricter value for any field also declared by the package.
+1. **SBOM digest verification** (§4): If `attestation_sbom_digest` in the index is non-zero, re-serialise the attestation slot content to canonical JSON, compute `SHA-256`, and compare to `attestation_sbom_digest`. Reject if they differ.
+1. **Execute**: Proceed with normal FEP-0001 extraction and execution.
 
 ## 10. `flavor init` Command
 
@@ -312,10 +308,11 @@ flavor init [--global]
 ```
 
 This command is idempotent. It MUST:
+
 1. Create the trusted-keys directory (user-level by default; system-level with `--global`) if it does not exist.
-2. Create a commented-out `policy.toml` scaffold in the same config directory, explaining all available fields, if the file does not already exist.
-3. Print the paths of the created or pre-existing directories/files.
-4. Exit with status 0.
+1. Create a commented-out `policy.toml` scaffold in the same config directory, explaining all available fields, if the file does not already exist.
+1. Print the paths of the created or pre-existing directories/files.
+1. Exit with status 0.
 
 `--global` targets `/etc/flavor/` on Linux/macOS and `%ProgramData%\flavor\` on Windows. On systems where the process lacks write permission to the system directory, the command MUST fail with a clear error message rather than silently falling back to the user directory.
 
@@ -328,6 +325,7 @@ Packages built with FEP-0004 support set the three attestation index fields with
 ### 11.2 New launchers reading old packages
 
 Packages built without FEP-0004 support have zero-filled attestation index fields and no attestation slot. A launcher implementing this extension MUST handle this gracefully:
+
 - Zero-filled `attestation_key_fp`, `attestation_sbom_digest`, and `attestation_policy_hash` fields MUST be treated as absent; no associated checks are performed.
 - Absence of an attestation slot is not an error unless `require_sbom = true` in operator policy (§7.2), in which case the launcher MUST block with a descriptive message.
 

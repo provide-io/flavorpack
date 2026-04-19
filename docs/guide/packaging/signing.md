@@ -35,8 +35,7 @@ flavor pack --manifest pyproject.toml --private-key keys/flavor-private.key --pu
 flavor verify myapp-1.0.0.psp
 ```
 
-!!! info "Trusted Key Verification"
-    The `verify` command checks the signature against the public key embedded in the package. To check whether a package was signed by a key in your local trusted key store, use `flavor trust verify package.psp`.
+!!! info "Trusted Key Verification" The `verify` command checks the signature against the public key embedded in the package. To check whether a package was signed by a key in your local trusted key store, use `flavor trust verify package.psp`.
 
 ## Key Management
 
@@ -82,6 +81,7 @@ chmod 600 ~/.flavor/keys/flavor-private.key
 #### Production
 
 1. **Encrypted Storage**
+
    ```bash
    # Encrypt private key for storage
    openssl enc -aes-256-cbc -salt -in keys/flavor-private.key -out keys/flavor-private.key.enc
@@ -91,7 +91,8 @@ chmod 600 ~/.flavor/keys/flavor-private.key
    chmod 600 keys/flavor-private.key
    ```
 
-2. **Secret Management**
+1. **Secret Management**
+
    - Store private key in secret manager (AWS Secrets Manager, HashiCorp Vault, etc.)
    - Retrieve at build time via environment variables or secret injection
    - Never commit private keys to version control
@@ -99,6 +100,7 @@ chmod 600 ~/.flavor/keys/flavor-private.key
 #### CI/CD
 
 {% raw %}
+
 ```yaml
 # GitHub Actions with secrets
 - name: Sign package
@@ -107,6 +109,7 @@ chmod 600 ~/.flavor/keys/flavor-private.key
   run: |
     flavor pack --manifest pyproject.toml --key-seed "$FLAVOR_KEY_SEED"
 ```
+
 {% endraw %}
 
 ```yaml
@@ -142,9 +145,9 @@ mv keys/2023-12 keys/archive/
 ### How Signing Works
 
 1. **Metadata Hash**: Package metadata is serialized and hashed with SHA-256
-2. **Digital Signature**: Hash is signed with Ed25519 private key
-3. **Embedding**: Public key and signature are embedded in package index block
-4. **Verification**: Signature can be verified using embedded or external public key
+1. **Digital Signature**: Hash is signed with Ed25519 private key
+1. **Embedding**: Public key and signature are embedded in package index block
+1. **Verification**: Signature can be verified using embedded or external public key
 
 ### Build-Time Signing
 
@@ -162,8 +165,7 @@ flavor pack --manifest pyproject.toml --key-seed "secret-seed"
 # Signing is automatic - no separate sign command needed
 ```
 
-!!! note "No Post-Build Signing"
-    Flavorpack does not support signing packages after they've been built. Signing happens only during `flavor pack`. To re-sign a package, rebuild it with new keys.
+!!! note "No Post-Build Signing" Flavorpack does not support signing packages after they've been built. Signing happens only during `flavor pack`. To re-sign a package, rebuild it with new keys.
 
 ### Batch Building with Signing
 
@@ -276,11 +278,13 @@ trust_model = "self-signed"
 ```
 
 **Use Cases**:
+
 - Internal distribution
 - Development packages
 - Personal projects
 
 **Verification**:
+
 ```bash
 # Verifies integrity only
 flavor verify package.psp
@@ -325,8 +329,7 @@ flavor trust verify package.psp
 
 ### 3. Web of Trust (Future)
 
-!!! info "Planned Feature"
-    Multiple signatures from trusted parties (N-of-M threshold schemes) are planned for a future release. Currently Flavorpack supports a single signer per package with trusted key store verification.
+!!! info "Planned Feature" Multiple signatures from trusted parties (N-of-M threshold schemes) are planned for a future release. Currently Flavorpack supports a single signer per package with trusted key store verification.
 
 ### 4. Certificate Authority (Future)
 
@@ -355,8 +358,7 @@ cat keys/flavor-public.key
 # -----END PUBLIC KEY-----
 ```
 
-!!! info "Key Format Conversion"
-    For other formats (SSH, JWK, etc.), use standard tools like `ssh-keygen` or `openssl` to convert the PEM-formatted public key.
+!!! info "Key Format Conversion" For other formats (SSH, JWK, etc.), use standard tools like `ssh-keygen` or `openssl` to convert the PEM-formatted public key.
 
 ### Distribution Channels
 
@@ -398,12 +400,14 @@ git commit -m "Add signing public keys"
 ### Do's ✅
 
 1. **Generate keys on secure systems**
+
    ```bash
    # Use air-gapped machine for production keys
    flavor keygen --out-dir /secure/usb/prod-keys
    ```
 
-2. **Use unique keys per environment**
+1. **Use unique keys per environment**
+
    ```bash
    ~/.flavor/keys/
    ├── dev.pem       # Development
@@ -411,22 +415,25 @@ git commit -m "Add signing public keys"
    └── prod.pem      # Production
    ```
 
-3. **Rotate keys regularly**
+1. **Rotate keys regularly**
+
    ```bash
    # Quarterly rotation for production
    flavor keygen --out-dir "keys/$(date +%Y-Q%q)"
    ```
 
-4. **Verify packages before distribution**
+1. **Verify packages before distribution**
+
    ```bash
    # CI/CD verification step
    flavor verify dist/*.psp || exit 1
    ```
 
-5. **Log signature verification**
+1. **Log signature verification**
+
    ```python
    import logging
-   
+
    logger.info("Package verified", 
                package=package_path,
                key_fingerprint=fingerprint)
@@ -435,40 +442,44 @@ git commit -m "Add signing public keys"
 ### Don'ts ❌
 
 1. **Never commit private keys**
+
    ```bash
    # .gitignore
    *.pem
    !*.pem.pub
    ```
 
-2. **Never share private keys**
+1. **Never share private keys**
+
    ```bash
    # Wrong: Shared key
    team-key.pem
-   
+
    # Right: Individual keys
    alice-key.pem
    bob-key.pem
    ```
 
-3. **Never use weak seeds**
+1. **Never use weak seeds**
+
    ```bash
    # Bad seeds:
    "password123"
    "company-name"
-   
+
    # Good seeds:
    "$(openssl rand -hex 32)"
    ```
 
-4. **Never ignore verification failures**
+1. **Never ignore verification failures**
+
    ```python
    # Wrong:
    try:
        verify_package(package)
    except:
        pass  # Never do this!
-   
+
    # Right:
    if not verify_package(package):
        raise SecurityError("Invalid signature")
@@ -552,10 +563,10 @@ The PSPF index block stores the first 32 bytes of this fingerprint string in the
 
 **Key store locations:**
 
-| Scope | Path |
-|-------|------|
-| User | `~/.config/flavor/trusted-keys/` |
-| System | `/etc/flavor/trusted-keys/` |
+| Scope  | Path                             |
+| ------ | -------------------------------- |
+| User   | `~/.config/flavor/trusted-keys/` |
+| System | `/etc/flavor/trusted-keys/`      |
 
 Both directories are scanned; either match is sufficient.
 
@@ -585,37 +596,38 @@ flavor trust remove <64-hex-char fingerprint>
 
 ### Multi-Signature Packages (Planned)
 
-!!! info "Future Feature"
-    Threshold signature schemes (N-of-M signatures required) are planned for a future release. Currently Flavorpack supports a single signer per package with trusted key store verification.
+!!! info "Future Feature" Threshold signature schemes (N-of-M signatures required) are planned for a future release. Currently Flavorpack supports a single signer per package with trusted key store verification.
 
 ### Hardware Token Integration (Planned)
 
-!!! info "Future Feature"
-    PKCS#11 hardware token support (YubiKey, HSM, etc.) is planned for a future release.
+!!! info "Future Feature" PKCS#11 hardware token support (YubiKey, HSM, etc.) is planned for a future release.
 
-    **Planned workflow:**
-    ```bash
-    # YubiKey signing (not yet implemented)
-    flavor pack --manifest pyproject.toml --pkcs11-module /usr/lib/opensc-pkcs11.so
-    ```
+````
+**Planned workflow:**
+```bash
+# YubiKey signing (not yet implemented)
+flavor pack --manifest pyproject.toml --pkcs11-module /usr/lib/opensc-pkcs11.so
+```
+````
 
 ### Notarization (Platform-Specific)
 
-!!! info "Platform-Specific"
-    For macOS code signing and notarization, use Apple's standard tools after building:
+!!! info "Platform-Specific" For macOS code signing and notarization, use Apple's standard tools after building:
 
-    ```bash
-    # Build package
-    flavor pack --manifest pyproject.toml --output myapp.psp
+````
+```bash
+# Build package
+flavor pack --manifest pyproject.toml --output myapp.psp
 
-    # Sign with codesign (macOS only)
-    codesign --sign "Developer ID" myapp.psp
+# Sign with codesign (macOS only)
+codesign --sign "Developer ID" myapp.psp
 
-    # Notarize with Apple (macOS only)
-    xcrun notarytool submit myapp.psp \
-      --apple-id "developer@example.com" \
-      --team-id "TEAMID"
-    ```
+# Notarize with Apple (macOS only)
+xcrun notarytool submit myapp.psp \
+  --apple-id "developer@example.com" \
+  --team-id "TEAMID"
+```
+````
 
 ## Related Documentation
 

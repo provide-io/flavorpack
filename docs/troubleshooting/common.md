@@ -37,6 +37,7 @@ graph TD
 **Error**: `Helper binary 'flavor-rs-launcher' not found`
 
 **Solutions**:
+
 ```bash
 # Rebuild helpers
 make build-helpers
@@ -53,6 +54,7 @@ ls -la dist/bin/
 **Error**: Package sizes differ between builds
 
 **Solutions**:
+
 ```bash
 # Use deterministic key seed
 flavor pack --key-seed stable-seed-123
@@ -66,6 +68,7 @@ export SOURCE_DATE_EPOCH=$(date +%s)
 **Problem**: Package is larger than expected
 
 **Solutions**:
+
 - Exclude development dependencies from your manifest
 - Configure compression in manifest (use `xz` or `zstd` operations)
 - Use `--strip` to remove debug symbols from launcher
@@ -78,6 +81,7 @@ export SOURCE_DATE_EPOCH=$(date +%s)
 **Error**: `./myapp.psp: Permission denied`
 
 **Solutions**:
+
 ```bash
 # Make executable
 chmod +x myapp.psp
@@ -94,6 +98,7 @@ uname -sm  # Check your platform
 **Error**: `Package signature verification failed`
 
 **Solutions**:
+
 ```bash
 # Rebuild with known key seed
 flavor pack --key-seed test123
@@ -110,6 +115,7 @@ FLAVOR_VALIDATION=none ./myapp.psp
 **Error**: `ModuleNotFoundError: No module named 'xxx'`
 
 **Solutions**:
+
 - Add missing dependency to `pyproject.toml`
 - Ensure `requires-python` version is correct
 - Check if dependency needs system libraries
@@ -124,6 +130,7 @@ FLAVOR_VALIDATION=none ./myapp.psp
 **Problem**: UV binary extracted to wrong path
 
 **Solutions**:
+
 ```bash
 # Rebuild helpers to get latest fixes
 make build-helpers
@@ -138,6 +145,7 @@ flavor pack --manifest pyproject.toml
 **Error**: `No space left on device`
 
 **Solutions**:
+
 ```bash
 # Clean Flavorpack cache
 flavor clean --all --yes
@@ -156,6 +164,7 @@ export XDG_CACHE_HOME=/path/with/space
 **Error**: `UnicodeDecodeError` on Windows
 
 **Solutions**:
+
 ```bash
 # Set UTF-8 environment
 set PYTHONUTF8=1
@@ -171,6 +180,7 @@ $env:PYTHONIOENCODING="utf-8"
 **Error**: `"myapp.psp" cannot be opened because the developer cannot be verified`
 
 **Solutions**:
+
 ```bash
 # Remove quarantine attribute
 xattr -d com.apple.quarantine myapp.psp
@@ -183,6 +193,7 @@ xattr -d com.apple.quarantine myapp.psp
 **Error**: `error while loading shared libraries`
 
 **Solutions**:
+
 ```bash
 # Check dependencies
 ldd myapp.psp
@@ -199,6 +210,7 @@ sudo yum install openssl-devel   # RHEL/CentOS
 **Error**: `ImportError: cannot import name 'xxx' from 'flavor'`
 
 **Solutions**:
+
 ```bash
 # Reinstall environment
 rm -rf workenv/
@@ -213,6 +225,7 @@ uv run python -c "import flavor; print(flavor.__version__)"
 **Error**: Tests failing locally but not in CI
 
 **Solutions**:
+
 ```bash
 # Clean test cache
 rm -rf .pytest_cache/
@@ -229,6 +242,7 @@ pytest tests/test_specific.py -xvs --tb=short
 **Error**: Go or Rust compilation errors
 
 **Solutions**:
+
 ```bash
 # Check Go version
 go version  # Should be 1.26+
@@ -310,6 +324,7 @@ dtruss ./myapp.psp 2>&1 | grep -E "open|stat"
 ### Slow Package Building
 
 **Solutions**:
+
 - Use `--jobs` flag for parallel processing
 - Exclude unnecessary files early
 - Pre-download dependencies
@@ -318,6 +333,7 @@ dtruss ./myapp.psp 2>&1 | grep -E "open|stat"
 ### Slow Package Startup
 
 **Solutions**:
+
 - Mark large init-only files as `volatile`
 - Use `lazy` lifecycle for optional components
 - Enable extraction caching
@@ -326,6 +342,7 @@ dtruss ./myapp.psp 2>&1 | grep -E "open|stat"
 ### High Memory Usage
 
 **Solutions**:
+
 - Stream large files instead of loading
 - Use memory-mapped I/O for large slots
 - Clean up volatile slots after setup
@@ -334,11 +351,13 @@ dtruss ./myapp.psp 2>&1 | grep -E "open|stat"
 ## Getting Help
 
 ### Check Documentation
+
 1. Review [User Guide](../guide/index/)
-2. Check [API Reference](../api/index/)
-3. Read [Architecture](../development/architecture/)
+1. Check [API Reference](../api/index/)
+1. Read [Architecture](../development/architecture/)
 
 ### Debugging Checklist
+
 - [ ] Using latest version?
 - [ ] Helpers built correctly?
 - [ ] Platform supported?
@@ -350,22 +369,24 @@ dtruss ./myapp.psp 2>&1 | grep -E "open|stat"
 ### Report Issues
 
 When reporting issues, include:
+
 1. Flavor version: `flavor --version`
-2. Platform: `uname -a`
-3. Python version: `python --version`
-4. Helper versions: `flavor helpers list`
-5. Error message and stack trace
-6. Minimal reproduction steps
+1. Platform: `uname -a`
+1. Python version: `python --version`
+1. Helper versions: `flavor helpers list`
+1. Error message and stack trace
+1. Minimal reproduction steps
 
 Report at: https://github.com/provide-io/flavorpack/issues
 
----
+______________________________________________________________________
 
 ## Advanced Troubleshooting
 
 ### Package Won't Extract
 
 **Symptoms:**
+
 - Package hangs during first run
 - Extraction timeout errors
 - Incomplete cache directory
@@ -392,6 +413,7 @@ ls -la /tmp/test-extract/
 ```
 
 **Solutions:**
+
 - Remove corrupted cache: `flavor workenv clean -y`
 - Rebuild package: `flavor pack --manifest pyproject.toml && flavor verify myapp.psp`
 - Check available disk space: `df -h ~/.cache/flavor`
@@ -423,6 +445,7 @@ cat extracted/metadata.json | jq '.package.dependencies'
 ```
 
 **Common Causes:**
+
 - Missing dependency in `pyproject.toml`
 - Implicit dependency not declared
 - Development-only import in production code
@@ -453,6 +476,7 @@ dependencies = [
 **Problem:** Package keeps asking for verification or fails repeatedly
 
 **Symptoms:**
+
 ```
 🔍 Verifying package signature...
 ❌ Signature verification failed
@@ -461,9 +485,10 @@ dependencies = [
 ```
 
 **Causes:**
+
 1. Public key mismatch
-2. Package tampered/corrupted
-3. Different builder used for signing
+1. Package tampered/corrupted
+1. Different builder used for signing
 
 **Debug:**
 
@@ -625,31 +650,31 @@ make test-helpers
 make install-helpers
 ```
 
----
+______________________________________________________________________
 
 ## Error Message Reference
 
 ### Build Errors
 
-| Error | Cause | Solution |
-|-------|-------|----------|
-| `Helper binary not found` | Missing helper | Run `make build-helpers` |
-| `Invalid manifest` | Bad pyproject.toml | Validate TOML syntax |
-| `Dependency resolution failed` | Incompatible deps | Check dependency versions |
-| `Builder execution failed` | Helper crashed | Check logs, rebuild helpers |
-| `Checksum mismatch` | Corrupted file | Re-download source files |
+| Error                          | Cause              | Solution                    |
+| ------------------------------ | ------------------ | --------------------------- |
+| `Helper binary not found`      | Missing helper     | Run `make build-helpers`    |
+| `Invalid manifest`             | Bad pyproject.toml | Validate TOML syntax        |
+| `Dependency resolution failed` | Incompatible deps  | Check dependency versions   |
+| `Builder execution failed`     | Helper crashed     | Check logs, rebuild helpers |
+| `Checksum mismatch`            | Corrupted file     | Re-download source files    |
 
 ### Runtime Errors
 
-| Error | Cause | Solution |
-|-------|-------|----------|
-| `Permission denied` | Not executable | Run `chmod +x package.psp` |
-| `Signature verification failed` | Wrong keys | Rebuild with correct keys |
-| `ModuleNotFoundError` | Missing dependency | Add to pyproject.toml |
-| `Extraction failed` | Disk space/permissions | Check `df -h` and permissions |
-| `Cache corrupted` | Interrupted extraction | Run `flavor workenv clean` |
+| Error                           | Cause                  | Solution                      |
+| ------------------------------- | ---------------------- | ----------------------------- |
+| `Permission denied`             | Not executable         | Run `chmod +x package.psp`    |
+| `Signature verification failed` | Wrong keys             | Rebuild with correct keys     |
+| `ModuleNotFoundError`           | Missing dependency     | Add to pyproject.toml         |
+| `Extraction failed`             | Disk space/permissions | Check `df -h` and permissions |
+| `Cache corrupted`               | Interrupted extraction | Run `flavor workenv clean`    |
 
----
+______________________________________________________________________
 
 ## Platform-Specific Guides
 
@@ -659,7 +684,7 @@ See detailed troubleshooting for your platform:
 - [macOS](platforms/macos/)
 - [Windows](platforms/windows/)
 
----
+______________________________________________________________________
 
 ## See Also
 

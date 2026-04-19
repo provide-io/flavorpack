@@ -2,8 +2,7 @@
 
 Python API reference documentation for Flavorpack.
 
-!!! note "Package Name vs Tool Name"
-    **Flavorpack** (or `flavorpack`) is the Python package name. The command-line tool and API is called **`flavor`**. Import with `from flavor import ...`.
+!!! note "Package Name vs Tool Name" **Flavorpack** (or `flavorpack`) is the Python package name. The command-line tool and API is called **`flavor`**. Import with `from flavor import ...`.
 
 ## Overview
 
@@ -51,6 +50,7 @@ packages = build_package_from_manifest(
 ```
 
 **Function Signature:**
+
 ```python
 def build_package_from_manifest(
     manifest_path: Path,
@@ -68,17 +68,17 @@ def build_package_from_manifest(
 
 **Parameters:**
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `manifest_path` | `Path` | *Required* | Path to `pyproject.toml` or JSON manifest file |
-| `output_path` | `Path \| None` | `None` | Custom output path (default: `dist/{package_name}.psp`) |
-| `launcher_bin` | `Path \| None` | `None` | Path to specific launcher binary (auto-selected if not provided) |
-| `builder_bin` | `Path \| None` | `None` | Path to specific builder binary (auto-selected if not provided) |
-| `strip_binaries` | `bool` | `False` | Strip debug symbols from launcher to reduce size |
-| `show_progress` | `bool` | `False` | Show progress bars during build |
-| `private_key_path` | `Path \| None` | `None` | Path to Ed25519 private key (PEM format) for signing |
-| `public_key_path` | `Path \| None` | `None` | Path to Ed25519 public key (PEM format) for signing |
-| `key_seed` | `str \| None` | `None` | Deterministic seed for key generation (reproducible builds) |
+| Parameter          | Type           | Default    | Description                                                      |
+| ------------------ | -------------- | ---------- | ---------------------------------------------------------------- |
+| `manifest_path`    | `Path`         | *Required* | Path to `pyproject.toml` or JSON manifest file                   |
+| `output_path`      | `Path \| None` | `None`     | Custom output path (default: `dist/{package_name}.psp`)          |
+| `launcher_bin`     | `Path \| None` | `None`     | Path to specific launcher binary (auto-selected if not provided) |
+| `builder_bin`      | `Path \| None` | `None`     | Path to specific builder binary (auto-selected if not provided)  |
+| `strip_binaries`   | `bool`         | `False`    | Strip debug symbols from launcher to reduce size                 |
+| `show_progress`    | `bool`         | `False`    | Show progress bars during build                                  |
+| `private_key_path` | `Path \| None` | `None`     | Path to Ed25519 private key (PEM format) for signing             |
+| `public_key_path`  | `Path \| None` | `None`     | Path to Ed25519 public key (PEM format) for signing              |
+| `key_seed`         | `str \| None`  | `None`     | Deterministic seed for key generation (reproducible builds)      |
 
 **Returns:**
 
@@ -101,9 +101,11 @@ result = verify_package(Path("myapp.psp"))
 ```
 
 **Parameters:**
+
 - `package_path` (Path): Path to the .psp package file
 
 **Returns:** `dict[str, Any]` - Verification results including:
+
 - Signature validity
 - Checksum verification
 - Format validation
@@ -157,10 +159,7 @@ Source code documentation auto-generated with mkdocstrings:
 
 - **[Auto-Generated API Reference](../reference/)** - Complete API reference extracted from source code docstrings
 
-!!! tip "Which Should I Use?"
-    - **New users**: Start with the manual guides above for examples and context
-    - **API developers**: Use the auto-generated reference for exact signatures and source code
-    - **Everyone**: The manual guides are more complete but may lag behind code changes
+!!! tip "Which Should I Use?" - **New users**: Start with the manual guides above for examples and context - **API developers**: Use the auto-generated reference for exact signatures and source code - **Everyone**: The manual guides are more complete but may lag behind code changes
 
 ### Module Organization
 
@@ -176,7 +175,7 @@ flavor/
 │       └── crypto.py  → See: crypto.md
 ```
 
----
+______________________________________________________________________
 
 ## Related Pages
 
