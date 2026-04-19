@@ -76,7 +76,6 @@ Learn about:
 
 - **Docker** → [Docker Recipe](recipes/docker/)
 - **CI/CD** → [CI/CD Recipe](recipes/ci-cd/)
-- **wrknv** → [wrknv Integration](../guide/integration/wrknv/)
 
 ### By Use Case
 
