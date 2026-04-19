@@ -232,8 +232,6 @@ Shared taxonomy:
 - Do not write custom examples. Always use pretaster for testing.
 - Rather than "no hardcoded defaults" i mean "no inline defaults." defaults may be stored in a common file for the project. either defaults.py or constants.py, and THOSE will ALWAYS be used instead of inline defaults.
 - "import annotations" is okay so I can use the unquoted types.
-- After writing each Python file, run the code quality tools:
-  - If `we` commands available: `we format`, `we lint`, `we typecheck`
-  - Otherwise: `ruff format`, `ruff check --fix`, `mypy`%
+- After writing each Python file, run the code quality tools: `ruff format`, `ruff check --fix`, `mypy`%
 - no print ever for debug. use the debug logger.
 - When you want the CI pipeline to work, you must manually start the Helper Prep action.
