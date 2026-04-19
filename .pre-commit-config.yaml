@@ -117,3 +117,14 @@ repos:
         always_run: true
         files: (VERSION|Cargo\.toml|main\.go|version\.rs|pyproject\.toml)$
         stages: [pre-commit, pre-push]
+
+  - repo: https://github.com/hukkin/mdformat
+    rev: 0.7.22
+    hooks:
+      - id: mdformat
+        additional_dependencies:
+          - mdformat-gfm
+          - mdformat-frontmatter
+          - mdformat-tables
+        args: [--wrap, 'no']
+        exclude: '\.tmpl\.md$'
