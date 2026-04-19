@@ -7,6 +7,7 @@ The **Progressive Secure Package Format (PSPF) 2025 Edition** is the core innova
 ### The Polyglot Magic ✨
 
 PSPF files are simultaneously:
+
 - **Native executables** that can be run directly by the OS
 - **Structured packages** containing your application and dependencies
 - **Cryptographically signed** archives ensuring integrity
@@ -143,19 +144,9 @@ sequenceDiagram
     Launcher-->>User: Return exit code
 ```
 
-=== "Go Launcher"
-    ```go
-    // Lightweight and fast
-    // ~3-4 MB binary size
-    // Cross-platform support
-    ```
+=== "Go Launcher" `go     // Lightweight and fast     // ~3-4 MB binary size     // Cross-platform support     `
 
-=== "Rust Launcher"
-    ```rust
-    // Memory-safe and efficient
-    // ~1 MB binary size
-    // Optimal performance
-    ```
+=== "Rust Launcher" `rust     // Memory-safe and efficient     // ~1 MB binary size     // Optimal performance     `
 
 ### 2. Index Block (8192 bytes)
 
@@ -234,14 +225,15 @@ Comprehensive package information:
 
 Slots are numbered containers for different components:
 
-| Slot | Purpose | Contents | Typical Size |
-|------|---------|----------|--------------|
-| 0 | Runtime | Python interpreter + stdlib | 35-45 MB |
-| 1 | Application | Your code + dependencies | Variable |
-| 2 | Data | Static assets, configs | Variable |
-| 3+ | Extensions | Additional resources | Variable |
+| Slot | Purpose     | Contents                    | Typical Size |
+| ---- | ----------- | --------------------------- | ------------ |
+| 0    | Runtime     | Python interpreter + stdlib | 35-45 MB     |
+| 1    | Application | Your code + dependencies    | Variable     |
+| 2    | Data        | Static assets, configs      | Variable     |
+| 3+   | Extensions  | Additional resources        | Variable     |
 
 Each slot has:
+
 - **Purpose type**: runtime, code, config, media
 - **Encoding**: raw, tar, gzip, tar.gz
 - **Lifecycle**: persistent, ephemeral, cached
@@ -249,26 +241,25 @@ Each slot has:
 
 #### Slot Descriptor Binary Layout (64 bytes)
 
-!!! info "Complete Specification"
-    The slot descriptor is a precisely defined 64-byte binary structure. For the complete specification including all fields, byte offsets, cross-language implementations, and detailed field descriptions, see [**Slot Descriptor Specification**](../../reference/spec/SLOT_DESCRIPTOR_SPECIFICATION/).
+!!! info "Complete Specification" The slot descriptor is a precisely defined 64-byte binary structure. For the complete specification including all fields, byte offsets, cross-language implementations, and detailed field descriptions, see [**Slot Descriptor Specification**](../../reference/spec/SLOT_DESCRIPTOR_SPECIFICATION/).
 
 **Quick Reference - Field Layout:**
 
-| Offset | Size | Field | Description |
-|--------|------|-------|-------------|
-| 0x00 | 8 bytes | `id` | Unique slot identifier |
-| 0x08 | 8 bytes | `name_hash` | SHA-256 of slot name (first 8 bytes, little-endian) |
-| 0x10 | 8 bytes | `offset` | Byte offset in package file |
-| 0x18 | 8 bytes | `size` | Compressed/stored size |
-| 0x20 | 8 bytes | `original_size` | Uncompressed size |
-| 0x28 | 8 bytes | `operations` | Packed operation chain |
-| 0x30 | 8 bytes | `checksum` | SHA-256 of slot data (first 8 bytes, little-endian) |
-| 0x38 | 1 byte | `purpose` | Purpose classification (code, data, config, media) |
-| 0x39 | 1 byte | `lifecycle` | Lifecycle hint (init, startup, runtime, etc.) |
-| 0x3A | 1 byte | `priority` | Cache priority (0-255) |
-| 0x3B | 1 byte | `platform` | Platform requirements (any, linux, macos, windows) |
-| 0x3C-0x3D | 2 bytes | `reserved` | Reserved for future use |
-| 0x3E-0x3F | 2 bytes | `permissions` | Unix-style permissions (16-bit) |
+| Offset    | Size    | Field           | Description                                         |
+| --------- | ------- | --------------- | --------------------------------------------------- |
+| 0x00      | 8 bytes | `id`            | Unique slot identifier                              |
+| 0x08      | 8 bytes | `name_hash`     | SHA-256 of slot name (first 8 bytes, little-endian) |
+| 0x10      | 8 bytes | `offset`        | Byte offset in package file                         |
+| 0x18      | 8 bytes | `size`          | Compressed/stored size                              |
+| 0x20      | 8 bytes | `original_size` | Uncompressed size                                   |
+| 0x28      | 8 bytes | `operations`    | Packed operation chain                              |
+| 0x30      | 8 bytes | `checksum`      | SHA-256 of slot data (first 8 bytes, little-endian) |
+| 0x38      | 1 byte  | `purpose`       | Purpose classification (code, data, config, media)  |
+| 0x39      | 1 byte  | `lifecycle`     | Lifecycle hint (init, startup, runtime, etc.)       |
+| 0x3A      | 1 byte  | `priority`      | Cache priority (0-255)                              |
+| 0x3B      | 1 byte  | `platform`      | Platform requirements (any, linux, macos, windows)  |
+| 0x3C-0x3D | 2 bytes | `reserved`      | Reserved for future use                             |
+| 0x3E-0x3F | 2 bytes | `permissions`   | Unix-style permissions (16-bit)                     |
 
 **Operations Field Encoding** (64-bit packed, up to 8 operations of 8 bits each):
 
@@ -341,6 +332,7 @@ Flavorpack uses intelligent caching:
 ```
 
 Benefits:
+
 - **Fast startup**: No extraction after first run
 - **Shared runtimes**: Multiple apps can share Python
 - **Automatic cleanup**: Old versions removed
@@ -374,8 +366,8 @@ def verify_package(package_path, public_key):
 Multiple layers of integrity checking:
 
 1. **Package checksum**: SHA-256 of entire package
-2. **Slot checksums**: Individual slot verification
-3. **Runtime checks**: Continuous integrity monitoring
+1. **Slot checksums**: Individual slot verification
+1. **Runtime checks**: Continuous integrity monitoring
 
 ## Advanced Features
 
@@ -409,46 +401,39 @@ Custom metadata fields:
 
 ### Platform-Specific Optimizations
 
-=== "Linux"
-    - Static musl binaries
-    - No glibc dependencies
-    - Works on any Linux
+=== "Linux" - Static musl binaries - No glibc dependencies - Works on any Linux
 
-=== "macOS"
-    - Universal binaries
-    - Code signing support
-    - Notarization ready
+=== "macOS" - Universal binaries - Code signing support - Notarization ready
 
-=== "Windows"
-    - PE executable format
-    - UAC manifests
-    - Anti-virus friendly
+=== "Windows" - PE executable format - UAC manifests - Anti-virus friendly
 
 ## Format Comparison
 
 How PSPF compares to alternatives:
 
-| Feature | PSPF | AppImage | Snap | Docker |
-|---------|------|----------|------|--------|
-| Single file | ✅ | ✅ | ❌ | ❌ |
-| No dependencies | ✅ | ❌ | ❌ | ❌ |
-| Cryptographic signing | ✅ | ✅ | ✅ | ✅ |
-| Cross-platform | ✅ | ❌ | ❌ | ✅ |
-| Direct execution | ✅ | ✅ | ❌ | ❌ |
-| Smart caching | ✅ | ❌ | ✅ | ✅ |
-| Python-optimized | ✅ | ❌ | ❌ | ❌ |
+| Feature               | PSPF | AppImage | Snap | Docker |
+| --------------------- | ---- | -------- | ---- | ------ |
+| Single file           | ✅   | ✅       | ❌   | ❌     |
+| No dependencies       | ✅   | ❌       | ❌   | ❌     |
+| Cryptographic signing | ✅   | ✅       | ✅   | ✅     |
+| Cross-platform        | ✅   | ❌       | ❌   | ✅     |
+| Direct execution      | ✅   | ✅       | ❌   | ❌     |
+| Smart caching         | ✅   | ❌       | ✅   | ✅     |
+| Python-optimized      | ✅   | ❌       | ❌   | ❌     |
 
 ## Best Practices
 
 ### Package Organization
 
 ✅ **DO:**
+
 - Keep slots focused on single purposes
 - Use compression for text/code
 - Include only necessary files
 - Sign production packages
 
 ❌ **DON'T:**
+
 - Mix runtime and application code
 - Include development files
 - Store secrets in packages
@@ -459,21 +444,25 @@ How PSPF compares to alternatives:
 Tips for smaller packages:
 
 1. **Exclude unnecessary files**
+
    ```bash
    flavor pack --exclude "__pycache__" --exclude "*.pyc"
    ```
 
-2. **Use slot compression**
+1. **Use slot compression**
+
    ```python
    slot_encoding = "tar.gz"  # Better than "tar"
    ```
 
-3. **Strip debug symbols**
+1. **Strip debug symbols**
+
    ```bash
    flavor pack --strip-debug
    ```
 
-4. **Optimize Python bytecode**
+1. **Optimize Python bytecode**
+
    ```bash
    flavor pack --optimize 2  # -OO flag
    ```
@@ -482,13 +471,13 @@ Tips for smaller packages:
 
 ### Constants and Limits
 
-| Constant | Value | Description |
-|----------|-------|-------------|
-| `PSPF_VERSION` | `0x20250001` | Format version |
-| `INDEX_SIZE` | 8192 bytes | Fixed index size |
-| `MAX_SLOTS` | 256 | Maximum slot count |
-| `SIGNATURE_SIZE` | 64 bytes | Ed25519 signature |
-| `MAX_METADATA` | 1 MB | Metadata size limit |
+| Constant         | Value        | Description         |
+| ---------------- | ------------ | ------------------- |
+| `PSPF_VERSION`   | `0x20250001` | Format version      |
+| `INDEX_SIZE`     | 8192 bytes   | Fixed index size    |
+| `MAX_SLOTS`      | 256          | Maximum slot count  |
+| `SIGNATURE_SIZE` | 64 bytes     | Ed25519 signature   |
+| `MAX_METADATA`   | 1 MB         | Metadata size limit |
 
 ### Binary Alignment
 

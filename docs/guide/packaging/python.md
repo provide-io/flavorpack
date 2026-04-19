@@ -2,36 +2,38 @@
 
 Complete guide to packaging Python applications with Flavorpack, including dependencies, virtual environments, and Python-specific optimizations.
 
-!!! tip "Prerequisites"
-    Before packaging Python apps, ensure you have:
+!!! tip "Prerequisites" Before packaging Python apps, ensure you have:
 
-    - [Flavorpack installed](../../getting-started/installation/) from source
-    - [Helpers built](../usage/cli/#helpers-build) (`make build-helpers`)
-    - A Python project with valid `pyproject.toml`
+```
+- [Flavorpack installed](../../getting-started/installation/) from source
+- [Helpers built](../usage/cli/#helpers-build) (`make build-helpers`)
+- A Python project with valid `pyproject.toml`
 
-    See [System Requirements](../../reference/requirements/) for detailed version information.
+See [System Requirements](../../reference/requirements/) for detailed version information.
+```
 
-!!! warning "Alpha Release - Many Features Not Yet Implemented"
-    **This guide shows both working features and planned future features.**
+!!! warning "Alpha Release - Many Features Not Yet Implemented" **This guide shows both working features and planned future features.**
 
-    Flavorpack's Python packaging is in alpha. Basic packaging works today, but many advanced features documented here are **planned for future releases**.
+```
+Flavorpack's Python packaging is in alpha. Basic packaging works today, but many advanced features documented here are **planned for future releases**.
 
-    **✅ What Works Today**:
+**✅ What Works Today**:
 
-    - Basic dependency packaging from `pyproject.toml`
-    - Standard entry points and scripts (`[project.scripts]`)
-    - Automatic dependency resolution via UV
-    - Simple package structure
+- Basic dependency packaging from `pyproject.toml`
+- Standard entry points and scripts (`[project.scripts]`)
+- Automatic dependency resolution via UV
+- Simple package structure
 
-    **📋 Planned for Future Releases** (see [Roadmap](../roadmap/)):
+**📋 Planned for Future Releases** (see [Roadmap](../roadmap/)):
 
-    - Python version selection
-    - Build environment customization
-    - Runtime optimizations
-    - Platform-specific builds
-    - Advanced dependency configuration
+- Python version selection
+- Build environment customization
+- Runtime optimizations
+- Platform-specific builds
+- Advanced dependency configuration
 
-    Features marked with 📋 are **not yet implemented**.
+Features marked with 📋 are **not yet implemented**.
+```
 
 ## Overview
 
@@ -75,18 +77,19 @@ Flavorpack itself requires **Python 3.11 or higher** to run the packaging tools.
 
 Packaged applications currently use whatever Python version is available in your build environment. This Python runtime gets embedded into the package.
 
-| Your Build Environment | Packaged Python Version |
-|------------------------|------------------------|
-| Python 3.12 | ✅ Package includes Python 3.12 |
-| Python 3.11 | ✅ Package includes Python 3.11 |
-| Python 3.10 or older | ❌ Flavorpack won't run |
+| Your Build Environment | Packaged Python Version         |
+| ---------------------- | ------------------------------- |
+| Python 3.12            | ✅ Package includes Python 3.12 |
+| Python 3.11            | ✅ Package includes Python 3.11 |
+| Python 3.10 or older   | ❌ Flavorpack won't run         |
 
-!!! info "Current Limitation"
-    **Python version selection is not yet implemented.** You cannot specify a different Python version than what's in your build environment.
+!!! info "Current Limitation" **Python version selection is not yet implemented.** You cannot specify a different Python version than what's in your build environment.
 
-    For example, if you build on Python 3.12, your package will use Python 3.12 - you cannot target Python 3.11.
+```
+For example, if you build on Python 3.12, your package will use Python 3.12 - you cannot target Python 3.11.
 
-    **Planned**: Future releases will support specifying target Python versions via manifest configuration (see [Roadmap](../roadmap/)).
+**Planned**: Future releases will support specifying target Python versions via manifest configuration (see [Roadmap](../roadmap/)).
+```
 
 ### Dependency Management ✅
 
@@ -126,7 +129,7 @@ entry_point = "myapp.cli:main"  # Main entry point for the package
 
 The `[tool.flavor].entry_point` is required and specifies which function runs when you execute the `.psp` file.
 
----
+______________________________________________________________________
 
 ## Planned Python Features
 
@@ -134,9 +137,7 @@ The following features are planned but **not yet implemented**. See the [Flavorp
 
 ### Python Version Selection 📋
 
-!!! note "Planned Feature"
-    Automatic Python version selection is planned for **v0.3.0 (Q1 2026)**.
-    See [Roadmap - Python Version Management](../../roadmap/#python-version-selection) for full details.
+!!! note "Planned Feature" Automatic Python version selection is planned for **v0.3.0 (Q1 2026)**. See [Roadmap - Python Version Management](../../roadmap/#python-version-selection) for full details.
 
 **Current Workaround:** Packages use the Python version from your build environment. If you build on Python 3.12, your package will use Python 3.12.
 
@@ -208,10 +209,11 @@ dependencies = [
 
 ### Build Environment
 
-!!! note "Planned Feature"
-    Flavorpack creates a basic isolated virtual environment during build. Advanced configuration options (custom venv path, build-time environment variables, pre-install commands) are **planned for v0.3.0 (Q1 2026)**.
+!!! note "Planned Feature" Flavorpack creates a basic isolated virtual environment during build. Advanced configuration options (custom venv path, build-time environment variables, pre-install commands) are **planned for v0.3.0 (Q1 2026)**.
 
-    See [Roadmap - Build Environment Configuration](../../roadmap/#build-environment-configuration) for full details.
+```
+See [Roadmap - Build Environment Configuration](../../roadmap/#build-environment-configuration) for full details.
+```
 
 **Current Behavior:** Flavorpack automatically creates a virtual environment and installs dependencies using UV.
 
@@ -402,14 +404,16 @@ dependencies = [
 
 ## Optimization Techniques
 
-!!! note "Planned Feature"
-    Runtime optimization configuration (code optimization levels, bytecode compilation, dependency optimization, lazy loading) is **planned for v0.4.0 (Q2 2026)**.
+!!! note "Planned Feature" Runtime optimization configuration (code optimization levels, bytecode compilation, dependency optimization, lazy loading) is **planned for v0.4.0 (Q2 2026)**.
 
-    See [Roadmap - Runtime Optimization](../../roadmap/#runtime-optimization) and [Roadmap - Advanced Slot Configuration](../../roadmap/#advanced-slot-configuration) for full details.
+```
+See [Roadmap - Runtime Optimization](../../roadmap/#runtime-optimization) and [Roadmap - Advanced Slot Configuration](../../roadmap/#advanced-slot-configuration) for full details.
+```
 
 **Current Behavior:** Flavorpack packages all dependencies and Python code as-is, with basic compression.
 
 **Current Workaround:**
+
 - Pre-compile bytecode in your project before packaging
 - Use `.flavor-ignore` or similar to exclude unnecessary files
 - Minimize dependencies in your `pyproject.toml`

@@ -48,6 +48,6 @@ Official announcements from the team.
 - Performance optimization
 - Security considerations
 
----
+______________________________________________________________________
 
 **Join the conversation:** [GitHub Discussions](https://github.com/provide-io/flavorpack/discussions)

@@ -1,10 +1,10 @@
 # FEP-0001: Progressive Secure Package Format (PSPF/2025) - Core Specification
 
-**Status**: Standards Track  
-**Type**: Core Protocol  
-**Created**: 2025-01-08  
-**Version**: v0.1  
-**Category**: Informational → Standards Track  
+**Status**: Standards Track\
+**Type**: Core Protocol\
+**Created**: 2025-01-08\
+**Version**: v0.1\
+**Category**: Informational → Standards Track
 
 ## Abstract
 
@@ -15,24 +15,25 @@ The format supports deterministic builds, Ed25519 digital signatures, composable
 ## Table of Contents
 
 1. [Introduction](#1-introduction)
-2. [Conventions and Terminology](#2-conventions-and-terminology)  
-3. [Protocol Overview](#3-protocol-overview)
-4. [Binary Format Specification](#4-binary-format-specification)
-5. [Operation Chain System](#5-operation-chain-system)
-6. [Processing Algorithms](#6-processing-algorithms)
-7. [Security Model](#7-security-model)
-8. [Error Handling](#8-error-handling)
-9. [Implementation Requirements](#9-implementation-requirements)
-10. [Security Considerations](#10-security-considerations)
-11. [IANA Considerations](#11-iana-considerations)
-12. [Examples and Test Vectors](#12-examples-and-test-vectors)
-13. [References](#13-references)
+1. [Conventions and Terminology](#2-conventions-and-terminology)
+1. [Protocol Overview](#3-protocol-overview)
+1. [Binary Format Specification](#4-binary-format-specification)
+1. [Operation Chain System](#5-operation-chain-system)
+1. [Processing Algorithms](#6-processing-algorithms)
+1. [Security Model](#7-security-model)
+1. [Error Handling](#8-error-handling)
+1. [Implementation Requirements](#9-implementation-requirements)
+1. [Security Considerations](#10-security-considerations)
+1. [IANA Considerations](#11-iana-considerations)
+1. [Examples and Test Vectors](#12-examples-and-test-vectors)
+1. [References](#13-references)
 
 ## 1. Introduction
 
 ### 1.1 Motivation
 
 Modern software distribution faces several challenges:
+
 - **Portability**: Applications must run across diverse operating systems and architectures
 - **Security**: Packages require cryptographic verification and tamper detection
 - **Efficiency**: Large applications need selective extraction and memory-mapped access
@@ -44,6 +45,7 @@ PSPF/2025 addresses these challenges by embedding a native launcher directly int
 ### 1.2 Scope and Applicability
 
 This specification defines:
+
 - Binary layout and parsing requirements for PSPF/2025 packages
 - Operation chain system for composable archive and compression operations
 - Cryptographic security model using Ed25519 signatures
@@ -51,8 +53,9 @@ This specification defines:
 - Compatibility and extensibility mechanisms
 
 This specification does NOT define:
+
 - Higher-level packaging workflows or build systems
-- Network distribution protocols or package repositories  
+- Network distribution protocols or package repositories
 - Application runtime environments or execution models
 - Operating system integration or installation procedures
 
@@ -63,25 +66,21 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 ### 1.4 Related Documents
 
 This document is part of a series:
+
 - **FEP-0001** (this document): Core binary format and operation chains
-- **FEP-0002**: JSON Metadata Format Specification  
+- **FEP-0002**: JSON Metadata Format Specification
 - **FEP-0003**: Operation Registry and Allocation Policy
 
 ## 2. Conventions and Terminology
 
 ### 2.1 Definitions
 
-**Package**: A single binary file containing a launcher, metadata, and data slots
-**Launcher**: Platform-specific native executable embedded at the start of the package
-**Slot**: A numbered data container with associated metadata and operations
-**Operation Chain**: A sequence of up to 8 operations (archive, compress, encrypt, etc.)
-**Index Block**: 8192-byte structure containing package metadata and offsets
-**Magic Trailer**: The index block plus surrounding 4-byte emoji markers
-**Workenv**: Temporary directory where package contents are extracted during execution
+**Package**: A single binary file containing a launcher, metadata, and data slots **Launcher**: Platform-specific native executable embedded at the start of the package **Slot**: A numbered data container with associated metadata and operations **Operation Chain**: A sequence of up to 8 operations (archive, compress, encrypt, etc.) **Index Block**: 8192-byte structure containing package metadata and offsets **Magic Trailer**: The index block plus surrounding 4-byte emoji markers **Workenv**: Temporary directory where package contents are extracted during execution
 
 ### 2.2 Notation Conventions
 
 Binary layouts use C-style struct notation with explicit sizes:
+
 ```c
 struct Example {
     uint32_t field1;    // 4 bytes, little-endian
@@ -160,18 +159,20 @@ MAX_PACKAGE_SIZE    = 2^63-1         // 64-bit size limit
 ### 3.3 Processing Model
 
 **Package Creation**:
+
 1. Prepare launcher binary for target platform
-2. Process input files through operation chains (e.g., TAR → GZIP)
-3. Generate slot descriptors with checksums
-4. Create JSON metadata
-5. Assemble binary package with index block
-6. Sign package with Ed25519 private key
+1. Process input files through operation chains (e.g., TAR → GZIP)
+1. Generate slot descriptors with checksums
+1. Create JSON metadata
+1. Assemble binary package with index block
+1. Sign package with Ed25519 private key
 
 **Package Execution**:
+
 1. Launcher validates magic trailer and signature
-2. Index block provides metadata and slot table offsets
-3. Required slots are extracted to workenv on demand
-4. Application executes from workenv with proper environment
+1. Index block provides metadata and slot table offsets
+1. Required slots are extracted to workenv on demand
+1. Application executes from workenv with proper environment
 
 ## 4. Binary Format Specification
 
@@ -194,14 +195,16 @@ struct MagicTrailer {
 ```
 
 **Field Descriptions**:
+
 - `start_magic`: UTF-8 encoded 📦 emoji marking trailer start
-- `index_block`: Fixed-size metadata block (see Section 4.3) 
+- `index_block`: Fixed-size metadata block (see Section 4.3)
 - `end_magic`: UTF-8 encoded 🪄 emoji marking trailer end
 
 **Validation Requirements**:
+
 1. Both magic sequences MUST be present and correct
-2. Index block MUST pass checksum validation
-3. Package size MUST match `package_size` field in index
+1. Index block MUST pass checksum validation
+1. Package size MUST match `package_size` field in index
 
 ### 4.3 Index Block Structure
 
@@ -270,6 +273,7 @@ struct IndexBlock {
 **Field Validation Requirements**:
 
 All offset fields MUST point to valid locations within the package file:
+
 - `0 ≤ metadata_offset ≤ package_size - metadata_size`
 - `0 ≤ slot_table_offset ≤ package_size - slot_table_size`
 - `launcher_size ≤ package_size - 8200`
@@ -322,6 +326,7 @@ struct SlotDescriptor {
 ```
 
 **Field Descriptions**:
+
 - `id`: 64-bit unique identifier for the slot
 - `name_hash`: SHA-256 hash of slot name (first 8 bytes, little-endian) for fast lookup
 - `offset`: Byte offset from the beginning of the package file to the slot data
@@ -346,35 +351,38 @@ Total size: **64 bytes exactly**
 
 Operations are 8-bit values organized into functional categories. Each category occupies a fixed range of the 256-value operation space:
 
-| Range     | Category    | v0 Status | Description                    |
-|-----------|-------------|-----------|--------------------------------|
-| 0x00      | NONE        | REQUIRED  | No operation (pass-through)    |
-| 0x01-0x0F | BUNDLE      | PARTIAL   | Archive formats (TAR required) |
-| 0x10-0x2F | COMPRESS    | PARTIAL   | Compression algorithms         |
-| 0x30-0x4F | ENCRYPT     | FUTURE    | Encryption and key management  |
-| 0x50-0x6F | ENCODE      | FUTURE    | Encoding transformations       |
-| 0x70-0x8F | HASH        | FUTURE    | Cryptographic hash functions   |
-| 0x90-0xAF | SIGNATURE   | FUTURE    | Digital signature algorithms   |
-| 0xB0-0xCF | TRANSFORM   | FUTURE    | Data transformation operations |
-| 0xD0-0xEF | CUSTOM      | FUTURE    | Implementation-specific ops    |
-| 0xF0-0xFF | RESERVED    | FUTURE    | Reserved for specification use |
+| Range     | Category  | v0 Status | Description                    |
+| --------- | --------- | --------- | ------------------------------ |
+| 0x00      | NONE      | REQUIRED  | No operation (pass-through)    |
+| 0x01-0x0F | BUNDLE    | PARTIAL   | Archive formats (TAR required) |
+| 0x10-0x2F | COMPRESS  | PARTIAL   | Compression algorithms         |
+| 0x30-0x4F | ENCRYPT   | FUTURE    | Encryption and key management  |
+| 0x50-0x6F | ENCODE    | FUTURE    | Encoding transformations       |
+| 0x70-0x8F | HASH      | FUTURE    | Cryptographic hash functions   |
+| 0x90-0xAF | SIGNATURE | FUTURE    | Digital signature algorithms   |
+| 0xB0-0xCF | TRANSFORM | FUTURE    | Data transformation operations |
+| 0xD0-0xEF | CUSTOM    | FUTURE    | Implementation-specific ops    |
+| 0xF0-0xFF | RESERVED  | FUTURE    | Reserved for specification use |
 
 ### 5.2 v0 Required Operations
 
 All v0-compliant implementations MUST support these operations:
 
 #### Core Operations
+
 ```
 0x00  OP_NONE      No operation (identity transform)
 ```
 
-#### Bundle Operations  
+#### Bundle Operations
+
 ```
 0x01  OP_TAR       POSIX TAR archive format (required)
 ```
 
 #### Compression Operations
-```  
+
+```
 0x10  OP_GZIP      GZIP compression (RFC 1952)
 0x13  OP_BZIP2     BZIP2 compression  
 0x16  OP_XZ        XZ/LZMA2 compression
@@ -386,6 +394,7 @@ All v0-compliant implementations MUST support these operations:
 Operation chains are encoded as 64-bit little-endian integers with each operation occupying one byte. Operations are applied in sequence during package creation and reversed during extraction.
 
 **Encoding Format**:
+
 ```
 Bytes:    7    6    5    4    3    2    1    0
         ┌────┬────┬────┬────┬────┬────┬────┬────┐
@@ -395,17 +404,20 @@ Bytes:    7    6    5    4    3    2    1    0
 ```
 
 **Processing Order**:
+
 - **Creation**: Input → Op1 → Op2 → ... → Op8 → Stored Data
 - **Extraction**: Stored Data → Op8⁻¹ → ... → Op2⁻¹ → Op1⁻¹ → Output
 
 **Encoding Rules**:
+
 1. Operations MUST be stored in application order (LSB first)
-2. Unused positions MUST be filled with `OP_NONE` (0x00)
-3. The first `OP_NONE` encountered terminates the chain
-4. Maximum chain length is 8 operations
-5. Empty chains (all zeros) represent raw data
+1. Unused positions MUST be filled with `OP_NONE` (0x00)
+1. The first `OP_NONE` encountered terminates the chain
+1. Maximum chain length is 8 operations
+1. Empty chains (all zeros) represent raw data
 
 **Examples**:
+
 ```
 TAR only:       0x0000000000000001
 GZIP only:      0x0000000000000010  
@@ -420,9 +432,9 @@ TAR→ZSTD:       0x0000000000001B01
 Implementations MUST validate operation chains before processing:
 
 1. **Supported Operations**: All operations in chain MUST be supported by implementation
-2. **Chain Length**: Chain MUST NOT exceed 8 operations  
-3. **Termination**: First `OP_NONE` terminates chain; subsequent bytes ignored
-4. **Compatibility**: Operation combinations MUST be compatible (e.g., compression after archive)
+1. **Chain Length**: Chain MUST NOT exceed 8 operations
+1. **Termination**: First `OP_NONE` terminates chain; subsequent bytes ignored
+1. **Compatibility**: Operation combinations MUST be compatible (e.g., compression after archive)
 
 Invalid chains MUST cause package rejection with appropriate error codes.
 
@@ -568,11 +580,13 @@ function applyReverseOperation(operation, data):
 PSPF/2025 uses modern cryptographic algorithms for integrity and authenticity:
 
 **Digital Signatures**: Ed25519 (RFC 8032)
+
 - Public key: 32 bytes
 - Signature: 64 bytes (stored in first 64 bytes of 512-byte field)
 - Provides non-repudiation and tamper detection
 
 **Hash Functions**:
+
 - SHA-256 for metadata integrity (32 bytes full hash)
 - SHA-256 for slot data integrity (first 8 bytes)
 - Adler-32 for index block checksums (4 bytes, fast validation)
@@ -603,26 +617,27 @@ function verifyPackageSignature(packageData, publicKey):
 PSPF/2025 implements a explicit trust model:
 
 1. **Package Integrity**: Signatures prevent modification after creation
-2. **Publisher Authentication**: Public keys identify package creators  
-3. **Content Isolation**: Each slot has independent checksums
-4. **Replay Protection**: Build timestamps prevent rollback attacks
+1. **Publisher Authentication**: Public keys identify package creators
+1. **Content Isolation**: Each slot has independent checksums
+1. **Replay Protection**: Build timestamps prevent rollback attacks
 
 **Trust Establishment**: Out of band through:
+
 - Secure distribution channels (HTTPS)
-- Public key infrastructure (PKI) 
+- Public key infrastructure (PKI)
 - Web of trust systems
 - Hardware security modules (HSMs)
 
 ### 7.4 Threat Mitigation
 
-| Threat                 | Mitigation                           |
-|------------------------|--------------------------------------|
-| Package tampering      | Ed25519 signatures                   |
-| Content corruption     | Per-slot SHA-256 checksums (8 bytes)|
-| Rollback attacks       | Build timestamps                     |
-| Directory traversal    | Path validation during extraction    |
-| Resource exhaustion    | Size limits and memory bounds       |
-| Malicious operations   | Operation whitelist validation       |
+| Threat               | Mitigation                           |
+| -------------------- | ------------------------------------ |
+| Package tampering    | Ed25519 signatures                   |
+| Content corruption   | Per-slot SHA-256 checksums (8 bytes) |
+| Rollback attacks     | Build timestamps                     |
+| Directory traversal  | Path validation during extraction    |
+| Resource exhaustion  | Size limits and memory bounds        |
+| Malicious operations | Operation whitelist validation       |
 
 ## 8. Error Handling
 
@@ -668,9 +683,9 @@ Error codes are organized by category:
 Implementations SHOULD attempt recovery when possible:
 
 1. **Checksum Failures**: Retry with different compression levels
-2. **Partial Extraction**: Continue with available slots 
-3. **Memory Pressure**: Fall back to streaming extraction
-4. **Network Issues**: Implement exponential backoff
+1. **Partial Extraction**: Continue with available slots
+1. **Memory Pressure**: Fall back to streaming extraction
+1. **Network Issues**: Implement exponential backoff
 
 ### 8.3 Diagnostic Information
 
@@ -690,17 +705,20 @@ struct ErrorInfo {
 
 ### 9.1 Conformance Levels
 
-**Level 1 - Basic Reader**: 
+**Level 1 - Basic Reader**:
+
 - MUST validate package format and signatures
 - MUST extract slots with required operations
 - MUST handle standard operation chains
 
 **Level 2 - Full Implementation**:
+
 - MUST support package creation
-- MUST implement all required operations  
+- MUST implement all required operations
 - MUST generate valid signatures
 
 **Level 3 - Extended Implementation**:
+
 - MAY support future operations
 - MAY implement streaming extraction
 - MAY support memory-mapped access
@@ -710,9 +728,9 @@ struct ErrorInfo {
 Implementations in different languages MUST:
 
 1. **Produce Identical Output**: Same input MUST generate byte-identical packages
-2. **Interoperate Completely**: Packages created by one implementation MUST be readable by all others
-3. **Handle Edge Cases**: Consistent behavior for boundary conditions
-4. **Use Standard Libraries**: Cryptographic operations MUST use well-tested libraries
+1. **Interoperate Completely**: Packages created by one implementation MUST be readable by all others
+1. **Handle Edge Cases**: Consistent behavior for boundary conditions
+1. **Use Standard Libraries**: Cryptographic operations MUST use well-tested libraries
 
 ### 9.3 Performance Requirements
 
@@ -728,10 +746,10 @@ Implementations SHOULD meet these performance targets:
 Implementations MUST pass a standardized test suite including:
 
 1. **Format Validation**: Valid and invalid package structures
-2. **Cryptographic Tests**: Signature generation and verification
-3. **Operation Tests**: All required operation combinations  
-4. **Cross-Language Tests**: Interoperability between implementations
-5. **Security Tests**: Malformed input and attack vectors
+1. **Cryptographic Tests**: Signature generation and verification
+1. **Operation Tests**: All required operation combinations
+1. **Cross-Language Tests**: Interoperability between implementations
+1. **Security Tests**: Malformed input and attack vectors
 
 ## 10. Security Considerations
 
@@ -740,7 +758,7 @@ Implementations MUST pass a standardized test suite including:
 Implementations MUST validate all input data to prevent:
 
 - **Buffer Overflows**: Bounds checking on all array accesses
-- **Integer Overflows**: Validation of size calculations  
+- **Integer Overflows**: Validation of size calculations
 - **Path Traversal**: Sanitization of extraction paths
 - **Resource Exhaustion**: Limits on memory and disk usage
 
@@ -749,9 +767,9 @@ Implementations MUST validate all input data to prevent:
 Security-critical operations require careful implementation:
 
 1. **Constant-Time Operations**: Signature verification MUST be constant-time
-2. **Secure Key Handling**: Private keys MUST be zeroized after use
-3. **Random Number Quality**: Use cryptographically secure PRNGs
-4. **Side-Channel Resistance**: Consider timing and power analysis attacks
+1. **Secure Key Handling**: Private keys MUST be zeroized after use
+1. **Random Number Quality**: Use cryptographically secure PRNGs
+1. **Side-Channel Resistance**: Consider timing and power analysis attacks
 
 ### 10.3 Execution Environment
 
@@ -778,13 +796,15 @@ PSPF/2025 supports supply chain security through:
 This document establishes the PSPF Operation Code Registry managed by IANA. The registry contains 256 8-bit operation codes organized into categories.
 
 **Registry Structure**:
+
 - **Operation Code**: 8-bit value (0x00-0xFF)
-- **Category**: Functional grouping  
+- **Category**: Functional grouping
 - **Name**: Human-readable identifier
 - **Specification**: Reference to defining document
 - **Status**: Required, Optional, or Reserved
 
 **Allocation Policy**:
+
 - **Standards Action**: Required operations (0x00-0x7F)
 - **Specification Required**: Optional operations (0x80-0xEF)
 - **Private Use**: Implementation-specific (0xF0-0xFE)
@@ -792,17 +812,8 @@ This document establishes the PSPF Operation Code Registry managed by IANA. The 
 
 ### 11.2 Media Type Registration
 
-**Type name**: application
-**Subtype name**: pspf
-**Required parameters**: version
-**Optional parameters**: charset (for metadata)
-**Encoding considerations**: binary
-**Security considerations**: See Section 10
-**Interoperability considerations**: Cross-language compatibility required
-**Published specification**: This document
-**Applications**: Software packaging and distribution
-**Fragment identifier considerations**: Not applicable
-**Additional information**:
+**Type name**: application **Subtype name**: pspf **Required parameters**: version **Optional parameters**: charset (for metadata) **Encoding considerations**: binary **Security considerations**: See Section 10 **Interoperability considerations**: Cross-language compatibility required **Published specification**: This document **Applications**: Software packaging and distribution **Fragment identifier considerations**: Not applicable **Additional information**:
+
 - **Magic number**: 0xF0 0x9F 0x93 0xA6 (📦 emoji)
 - **File extension**: .psp
 - **Person/organization**: [Contact Information]
@@ -818,16 +829,19 @@ PSPF/2025 does not require dedicated port numbers as it operates on files rather
 This section provides a complete minimal package for testing implementations:
 
 **Input Files**:
+
 ```
 hello.txt: "Hello, PSPF!\n" (14 bytes)
 ```
 
 **Package Configuration**:
+
 - Launcher: Generic x86_64 Linux launcher (8192 bytes)
 - Operations: Raw (no compression)
 - Signature: Ed25519 with test key pair
 
 **Test Key Pair** (for testing only):
+
 ```
 Private Key (hex): 
 9d61b19deffd5e56c2d6b61b1fb2c6c5b7e7e1e5a2a9b5e0e9f5e5f5a5a5a5a5
@@ -837,6 +851,7 @@ d75a9801426b7e3e80f2a9f4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4
 ```
 
 **Expected Package Structure** (hex dump):
+
 ```
 Offset  Content                                    Description
 0000    7f 45 4c 46 02 01 01 00 ...             Launcher binary (8192 bytes)
@@ -851,6 +866,7 @@ Offset  Content                                    Description
 **Multi-slot package with compression**:
 
 **Input Structure**:
+
 ```
 app/
 ├── bin/myapp         (executable, 1MB)
@@ -859,6 +875,7 @@ app/
 ```
 
 **Slot Configuration**:
+
 ```
 Slot 0: bin/myapp      → TAR+GZIP → 300KB
 Slot 1: lib/runtime.so → TAR+ZSTD → 400KB  
@@ -866,6 +883,7 @@ Slot 2: config/app.yaml → GZIP    → 500B
 ```
 
 **Expected Operation Chains**:
+
 ```
 Slot 0: 0x0000000000001001 (TAR|GZIP)
 Slot 1: 0x0000000000001B01 (TAR|ZSTD)  
@@ -877,12 +895,14 @@ Slot 2: 0x0000000000000010 (GZIP)
 **Signature Test Case**:
 
 Input package (without signature):
+
 ```
 Package data: [complete package with signature field zeroed]
 Private key:  9d61b19deffd5e56c2d6b61b1fb2c6c5b7e7e1e5a2a9b5e0e9f5e5f5a5a5a5a5
 ```
 
 Expected Ed25519 signature:
+
 ```
 Signature: e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b
 ```
@@ -890,6 +910,7 @@ Signature: e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb88
 **Checksum Test Cases**:
 
 Adler-32 checksums for common data:
+
 ```
 Input: ""                    → Checksum: 0x00000001
 Input: "a"                   → Checksum: 0x00620062  
@@ -925,7 +946,7 @@ Input: [1024 zero bytes]     → Checksum: 0x04000001
 
 [FEP-0003] "PSPF/2025 Operation Registry and Allocation Policy", FEP-0003, January 2025.
 
----
+______________________________________________________________________
 
 **Authors' Addresses**
 

@@ -43,6 +43,7 @@ git checkout -b feature/your-feature-name
 Follow the coding standards:
 
 **Python:**
+
 ```bash
 # Format code
 ruff format src/ tests/
@@ -55,6 +56,7 @@ mypy src/flavor
 ```
 
 **Go:**
+
 ```bash
 cd src/flavor-go
 go fmt ./...
@@ -63,6 +65,7 @@ golangci-lint run
 ```
 
 **Rust:**
+
 ```bash
 cd src/flavor-rs
 cargo fmt
@@ -139,6 +142,7 @@ Fixes #123
 ```
 
 **Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation
@@ -176,14 +180,15 @@ Look for issues labeled `good-first-issue` on GitHub.
 ## Code Review Process
 
 1. **Automated Checks**: CI must pass
-2. **Code Review**: At least one maintainer approval
-3. **Testing**: All tests must pass
-4. **Documentation**: Must be updated
-5. **Changelog**: User-facing changes noted
+1. **Code Review**: At least one maintainer approval
+1. **Testing**: All tests must pass
+1. **Documentation**: Must be updated
+1. **Changelog**: User-facing changes noted
 
 ## Recognition
 
 Contributors are recognized in:
+
 - CONTRIBUTORS.md file
 - Release notes
 - Documentation credits

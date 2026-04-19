@@ -84,24 +84,28 @@ make debug
 ### Manual Test Execution
 
 #### Run All Core Tests
+
 ```bash
 cd tests/pretaster
 ./tests/test-pretaster.sh
 ```
 
 #### Test All Builder/Launcher Combinations
+
 ```bash
 cd tests/pretaster
 ./tests/combination-tests.sh
 ```
 
 This script automatically logs all test output to timestamped files in the `logs/` directory:
+
 - `logs/pretaster-b_rs-l_rs.<timestamp>.log` - Rust builder + Rust launcher
 - `logs/pretaster-b_rs-l_go.<timestamp>.log` - Rust builder + Go launcher
 - `logs/pretaster-b_go-l_rs.<timestamp>.log` - Go builder + Rust launcher
 - `logs/pretaster-b_go-l_go.<timestamp>.log` - Go builder + Go launcher
 
 #### Test Direct PSP Execution
+
 ```bash
 cd tests/pretaster
 ./tests/direct-execution-tests.sh
@@ -110,24 +114,28 @@ cd tests/pretaster
 ## Test Scenarios
 
 ### 1. Simple Echo Test (`test-echo.json`)
+
 - **Builder**: Go / **Launcher**: Rust (default in test script)
 - Single Python script that echoes arguments
 - Tests basic packaging, execution, and command substitution
 - Validates `{workenv}` placeholder replacement
 
 ### 2. Shell Script Test (`test-shell.json`)
+
 - **Builder**: Rust / **Launcher**: Go (default in test script)
 - Shell script with environment variables
 - Tests bash script execution and environment passing
 - Validates `TEST_MODE` environment variable
 
 ### 3. Environment Filtering Test (`test-env.json`)
+
 - **Builder**: Go / **Launcher**: Rust (default in test script)
 - Python script that validates environment filtering
 - Tests `runtime.env` whitelist/blacklist functionality
 - Validates environment variable isolation
 
 ### 4. Multi-Slot Orchestration (`test-orchestrate.json`)
+
 - **Builder**: Rust / **Launcher**: Go (default in test script)
 - Complex multi-slot package with:
   - Slot 0: Orchestrator script (`orchestrate.sh`)
@@ -137,12 +145,14 @@ cd tests/pretaster
 - Tests slot extraction, different encodings, and inter-slot coordination
 
 ### 5. Pretaster Commands (`test-taster-lite.json`)
+
 - Implements core pretaster commands in shell script
 - Commands: info, env, argv, exit, echo, file, signals
 - Tests with all 4 builder/launcher combinations
 - Validates argument parsing, exit codes, and file persistence
 
 ### 6. Slot Field Validation (`test-bad-slot.json`)
+
 - Tests the optional `slot` field for well-formedness checks
 - Validates that slot number mismatches cause critical errors
 - Ensures manifest integrity
@@ -191,20 +201,24 @@ FLAVOR_LOG_LEVEL=debug ./echo-test.psp
 ## Log Level Testing
 
 The test suite validates the log level priority chain:
+
 1. CLI flag `--log-level` (highest priority)
-2. `FLAVOR_LAUNCHER_LOG_LEVEL` or `FLAVOR_BUILDER_LOG_LEVEL`
-3. `FLAVOR_LOG_LEVEL` (fallback)
-4. Default: `info`
+1. `FLAVOR_LAUNCHER_LOG_LEVEL` or `FLAVOR_BUILDER_LOG_LEVEL`
+1. `FLAVOR_LOG_LEVEL` (fallback)
+1. Default: `info`
 
 ### Language-Specific Log Prefixes
+
 - **Rust helpers**: All log lines prefixed with 🦀
 - **Go helpers**: All log lines prefixed with 🐹
 
 ### Exit Code Propagation
+
 - Exit codes are properly propagated through all launchers
 - Test scripts use `${PIPESTATUS[0]}` to capture exit codes from pipelines
 
 Example output:
+
 ```
 🦀 [2025-08-20T11:35:34Z INFO flavor::psp::format_2025::launcher] PSPF Rust Launcher starting...
 🐹 2025-08-20T11:35:34.460-0700 [INFO]  flavor-go-builder: 📦 Processing slots: count=1
@@ -214,37 +228,39 @@ Example output:
 
 All combinations are tested to ensure cross-language compatibility:
 
-| Builder | Launcher | Test Coverage |
-|---------|----------|---------------|
-| Go | Go | ✅ All scenarios |
-| Go | Rust | ✅ All scenarios |
-| Rust | Go | ✅ All scenarios |
-| Rust | Rust | ✅ All scenarios |
+| Builder | Launcher | Test Coverage    |
+| ------- | -------- | ---------------- |
+| Go      | Go       | ✅ All scenarios |
+| Go      | Rust     | ✅ All scenarios |
+| Rust    | Go       | ✅ All scenarios |
+| Rust    | Rust     | ✅ All scenarios |
 
 ## Key Features Validated
 
 1. **Command Execution**: Proper command substitution with `{workenv}`
-2. **Environment Variables**: Filtering, whitelisting, custom vars
-3. **Multi-Slot Packages**: Different encodings, extraction order
-4. **Logging**: Language emojis, log level priority
-5. **Security**: Ed25519 signatures with deterministic keys (`--key-seed`)
-6. **Slot Lifecycles**: `cached`, `volatile`, `persistent`
-7. **Encodings**: `none`, `gzip`, tarball extraction
-8. **Slot Field**: Optional well-formedness validation
-9. **Extract To**: Files extracted to correct subdirectories
+1. **Environment Variables**: Filtering, whitelisting, custom vars
+1. **Multi-Slot Packages**: Different encodings, extraction order
+1. **Logging**: Language emojis, log level priority
+1. **Security**: Ed25519 signatures with deterministic keys (`--key-seed`)
+1. **Slot Lifecycles**: `cached`, `volatile`, `persistent`
+1. **Encodings**: `none`, `gzip`, tarball extraction
+1. **Slot Field**: Optional well-formedness validation
+1. **Extract To**: Files extracted to correct subdirectories
 
 ## Package Structure
 
 The pretaster package (`dist/pretaster.psp`) contains:
+
 - Main entry point script extracted to `{workenv}/bin/pretaster`
 - Command implementation in `{workenv}/scripts/taster_lite.sh`
 - Both scripts work together to provide the full pretaster functionality
 
 When executed, pretaster.psp:
+
 1. Extracts files to the workenv directory
-2. Places the main entry point in `{workenv}/bin/`
-3. Places supporting scripts in `{workenv}/scripts/`
-4. Executes via `/bin/bash {workenv}/bin/pretaster`
+1. Places the main entry point in `{workenv}/bin/`
+1. Places supporting scripts in `{workenv}/scripts/`
+1. Executes via `/bin/bash {workenv}/bin/pretaster`
 
 ```bash
 # Run pretaster directly
@@ -257,12 +273,14 @@ When executed, pretaster.psp:
 Pretaster is used extensively in the CI pipeline to validate cross-language compatibility:
 
 ### Pretaster Pipeline (`.github/workflows/pretaster-pipeline.yml`)
+
 - Downloads helper artifacts from helper pipeline
 - Builds pretaster PSP package using helpers
 - Executes pretaster to validate PSP functionality
 - Tests all builder/launcher combinations
 
 ### Key Behaviors
+
 - **FLAVOR_WORKENV Detection**: When running as PSP, pretaster detects `FLAVOR_WORKENV` and skips helper rebuilding
 - **Honest Validation**: Test output clearly states what's validated vs what would require full testing
 - **No Fake Success**: Scripts report actual validation status, not pretend success
@@ -270,19 +288,25 @@ Pretaster is used extensively in the CI pipeline to validate cross-language comp
 ## Recent Updates
 
 ### PSP Execution Validation
+
 Pretaster now provides honest validation output when running as a PSP package, clearly stating:
+
 - ✓ PSP is executing (proven by output)
 - ✓ Launcher successfully extracted package
 - ✓ Environment variables properly set
 - ⚠️ Full cross-language tests require building test packages
 
 ### Windows Platform
+
 Windows support is temporarily disabled in CI due to UTF-8 encoding issues. When re-enabled:
+
 - Set `PYTHONUTF8=1` and `PYTHONIOENCODING=utf-8`
 - Ensure proper encoding in all Python scripts
 
 ### Manifest Format
+
 All builders now use the nested PSPF/2025 format exclusively:
+
 ```json
 {
   "package": { "name": "...", "version": "..." },

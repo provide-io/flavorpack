@@ -209,13 +209,13 @@ Your source code is packaged separately:
 
 Organize content into logical slots:
 
-| Slot Type | Purpose | Example Content |
-|-----------|---------|-----------------|
-| `python-environment` | Python venv | Dependencies |
-| `application-code` | Your code | Python modules |
-| `configuration` | Settings | JSON, YAML files |
-| `static-resources` | Assets | Images, CSS, JS |
-| `data-files` | Data | Databases, models |
+| Slot Type            | Purpose     | Example Content   |
+| -------------------- | ----------- | ----------------- |
+| `python-environment` | Python venv | Dependencies      |
+| `application-code`   | Your code   | Python modules    |
+| `configuration`      | Settings    | JSON, YAML files  |
+| `static-resources`   | Assets      | Images, CSS, JS   |
+| `data-files`         | Data        | Databases, models |
 
 ## Build Options
 
@@ -344,12 +344,12 @@ flavor pack --manifest pyproject.toml --key-seed "my-secret-seed"
 
 ### Common Issues
 
-| Issue | Solution |
-|-------|----------|
-| Large package size | Use compression, exclude unnecessary files |
-| Missing dependencies | Check pyproject.toml dependencies |
-| Entry point not found | Verify module:function syntax |
-| Platform incompatibility | Build for specific platform |
+| Issue                    | Solution                                   |
+| ------------------------ | ------------------------------------------ |
+| Large package size       | Use compression, exclude unnecessary files |
+| Missing dependencies     | Check pyproject.toml dependencies          |
+| Entry point not found    | Verify module:function syntax              |
+| Platform incompatibility | Build for specific platform                |
 
 ### Debug Mode
 

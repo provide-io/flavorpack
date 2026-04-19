@@ -2,8 +2,7 @@
 
 This roadmap shows the current implementation status and planned features for Flavorpack. Use this to understand what works today versus what's coming in future releases.
 
-!!! info "Version Status"
-    Flavorpack is currently in **alpha** stage. APIs, file formats, and commands may change without notice.
+!!! info "Version Status" Flavorpack is currently in **alpha** stage. APIs, file formats, and commands may change without notice.
 
 ## Legend
 
@@ -12,7 +11,7 @@ This roadmap shows the current implementation status and planned features for Fl
 - 📋 **Planned** - Designed but not yet implemented
 - 💡 **Proposed** - Under consideration for future releases
 
----
+______________________________________________________________________
 
 ## What Works Today (Alpha)
 
@@ -73,7 +72,7 @@ map = { OLD = "NEW" }            # ✅ Rename variables
 
 ### Platform Support ✅
 
---8<-- "includes/platform-support.md"
+--8\<-- "includes/platform-support.md"
 
 ### Python Packaging ✅
 
@@ -99,7 +98,7 @@ map = { OLD = "NEW" }            # ✅ Rename variables
 - ✅ Magic markers for format identification
 - ✅ Cross-language format compatibility (Python/Go/Rust)
 
----
+______________________________________________________________________
 
 ## Planned Features
 
@@ -119,8 +118,7 @@ extract_to = "{workenv}/config"
 permissions = "0644"
 ```
 
-**Status**: 📋 Planned
-**Use Case**: Enable custom slot purposes, lifecycles, platform-specific slots, and lazy-loaded content
+**Status**: 📋 Planned **Use Case**: Enable custom slot purposes, lifecycles, platform-specific slots, and lazy-loaded content
 
 #### Python Version Selection
 
@@ -131,9 +129,7 @@ min_version = "3.11"  # Minimum acceptable
 max_version = "3.13"  # Maximum acceptable
 ```
 
-**Status**: 🔶 Planned
-**Priority**: Medium
-**Complexity**: Medium
+**Status**: 🔶 Planned **Priority**: Medium **Complexity**: Medium
 
 #### Build Environment Configuration
 
@@ -164,9 +160,7 @@ pre_build_commands = [
 ]
 ```
 
-**Status**: 🔶 Planned
-**Priority**: High
-**Complexity**: Medium
+**Status**: 🔶 Planned **Priority**: High **Complexity**: Medium
 
 #### Dependency Resolution Options
 
@@ -189,11 +183,9 @@ trusted_hosts = [
 ]
 ```
 
-**Status**: 🔶 Planned
-**Priority**: Medium
-**Complexity**: Low-Medium
+**Status**: 🔶 Planned **Priority**: Medium **Complexity**: Low-Medium
 
----
+______________________________________________________________________
 
 ### Runtime Optimization
 
@@ -211,9 +203,7 @@ compile_bytecode = true
 strip_docstrings = true
 ```
 
-**Status**: 🔶 Planned
-**Priority**: Low
-**Complexity**: Low
+**Status**: 🔶 Planned **Priority**: Low **Complexity**: Low
 
 #### Dependency Optimization
 
@@ -233,11 +223,9 @@ no_dev_deps = true
 requirements_file = "requirements.lock"
 ```
 
-**Status**: 🔶 Planned
-**Priority**: Medium
-**Complexity**: Medium
+**Status**: 🔶 Planned **Priority**: Medium **Complexity**: Medium
 
----
+______________________________________________________________________
 
 ### Advanced Slot Configuration
 
@@ -260,9 +248,7 @@ source = "config/"
 lifecycle = "persistent"  # Keep across runs
 ```
 
-**Status**: 🔶 Planned
-**Priority**: Medium
-**Complexity**: High
+**Status**: 🔶 Planned **Priority**: Medium **Complexity**: High
 
 #### Platform-Specific Slots
 
@@ -280,11 +266,9 @@ target = "lib/"
 platform = "darwin"
 ```
 
-**Status**: 🔶 Planned
-**Priority**: Medium
-**Complexity**: Medium
+**Status**: 🔶 Planned **Priority**: Medium **Complexity**: Medium
 
----
+______________________________________________________________________
 
 ### Platform-Specific Builds
 
@@ -304,11 +288,9 @@ env = {
 }
 ```
 
-**Status**: 🔶 Planned
-**Priority**: Low
-**Complexity**: Medium
+**Status**: 🔶 Planned **Priority**: Low **Complexity**: Medium
 
----
+______________________________________________________________________
 
 ### Environment and Runtime Features
 
@@ -323,9 +305,7 @@ persistent = true
 port = 8000
 ```
 
-**Status**: 🔶 Planned
-**Priority**: Medium
-**Complexity**: High
+**Status**: 🔶 Planned **Priority**: Medium **Complexity**: High
 
 #### Advanced Environment Control
 
@@ -348,12 +328,9 @@ set = {
 OLD_VAR = "NEW_VAR"
 ```
 
-**Status**: 🟢 Partially Implemented
-**Priority**: High
-**Complexity**: Medium
-**Note**: Basic environment control exists, advanced features planned
+**Status**: 🟢 Partially Implemented **Priority**: High **Complexity**: Medium **Note**: Basic environment control exists, advanced features planned
 
----
+______________________________________________________________________
 
 ## Format Enhancements
 
@@ -369,10 +346,7 @@ compression = "zstd"  # Specific compression
 compression_level = 19  # Maximum compression
 ```
 
-**Status**: 🟡 Basic Implementation
-**Priority**: Low
-**Complexity**: Low
-**Note**: Compression exists but not configurable
+**Status**: 🟡 Basic Implementation **Priority**: Low **Complexity**: Low **Note**: Compression exists but not configurable
 
 #### Encryption Support
 
@@ -384,12 +358,9 @@ encryption = "aes256"
 key_source = "env:ENCRYPTION_KEY"
 ```
 
-**Status**: 🔴 Not Started
-**Priority**: Medium
-**Complexity**: High
-**Note**: See FEP-0001 for encryption operation codes
+**Status**: 🔴 Not Started **Priority**: Medium **Complexity**: High **Note**: See FEP-0001 for encryption operation codes
 
----
+______________________________________________________________________
 
 ### Multi-Platform Packages
 
@@ -410,12 +381,9 @@ platform = "darwin_arm64"
 binary = "dist/bin/launcher-darwin"
 ```
 
-**Status**: 🔴 Not Started
-**Priority**: Low
-**Complexity**: Very High
-**Blockers**: Format specification changes required
+**Status**: 🔴 Not Started **Priority**: Low **Complexity**: Very High **Blockers**: Format specification changes required
 
----
+______________________________________________________________________
 
 ## CLI and Tooling Enhancements
 
@@ -430,10 +398,7 @@ flavor helpers build --platform linux_amd64
 flavor helpers build --platform darwin_arm64 --lang rust
 ```
 
-**Status**: 🔴 Not Started
-**Priority**: Low
-**Complexity**: Medium
-**Note**: Currently documented but not implemented
+**Status**: 🔴 Not Started **Priority**: Low **Complexity**: Medium **Note**: Currently documented but not implemented
 
 #### helpers test
 
@@ -445,10 +410,7 @@ flavor helpers test --helper flavor-rs-launcher-darwin_arm64
 flavor helpers test --verbose
 ```
 
-**Status**: 🟡 Basic Implementation
-**Priority**: Low
-**Complexity**: Low
-**Note**: Command exists but may not be fully functional
+**Status**: 🟡 Basic Implementation **Priority**: Low **Complexity**: Low **Note**: Command exists but may not be fully functional
 
 ### Advanced Inspection
 
@@ -459,9 +421,7 @@ flavor inspect myapp.psp --show-deps
 flavor inspect myapp.psp --dependency-tree
 ```
 
-**Status**: 🔴 Not Started
-**Priority**: Low
-**Complexity**: Medium
+**Status**: 🔴 Not Started **Priority**: Low **Complexity**: Medium
 
 #### Slot Analysis
 
@@ -470,11 +430,9 @@ flavor inspect myapp.psp --slot-details
 flavor inspect myapp.psp --compression-stats
 ```
 
-**Status**: 🔴 Not Started
-**Priority**: Low
-**Complexity**: Low
+**Status**: 🔴 Not Started **Priority**: Low **Complexity**: Low
 
----
+______________________________________________________________________
 
 ## Integration Features
 
@@ -488,10 +446,7 @@ Support for legacy `setup.py` in addition to `pyproject.toml`:
 flavor pack --manifest setup.py
 ```
 
-**Status**: 🔴 Not Started
-**Priority**: Very Low
-**Complexity**: Medium
-**Note**: Modern projects should use pyproject.toml
+**Status**: 🔴 Not Started **Priority**: Very Low **Complexity**: Medium **Note**: Modern projects should use pyproject.toml
 
 #### Poetry Integration
 
@@ -501,9 +456,7 @@ Native support for Poetry configurations:
 flavor pack --manifest poetry.lock
 ```
 
-**Status**: 🔴 Not Started
-**Priority**: Low
-**Complexity**: Medium
+**Status**: 🔴 Not Started **Priority**: Low **Complexity**: Medium
 
 ### CI/CD Templates
 
@@ -513,12 +466,9 @@ Pre-built CI/CD configurations:
 - GitLab CI/CD templates
 - Jenkins pipeline examples
 
-**Status**: 🔴 Not Started
-**Priority**: Medium
-**Complexity**: Low
-**Note**: Documentation task, not implementation
+**Status**: 🔴 Not Started **Priority**: Medium **Complexity**: Low **Note**: Documentation task, not implementation
 
----
+______________________________________________________________________
 
 ## Testing and Quality
 
@@ -536,9 +486,7 @@ purpose = "tests"
 lifecycle = "volatile"
 ```
 
-**Status**: 🔴 Not Started
-**Priority**: Low
-**Complexity**: Low
+**Status**: 🔴 Not Started **Priority**: Low **Complexity**: Low
 
 ### Package Validation
 
@@ -550,11 +498,9 @@ flavor pack --validate-before-sign
 flavor pack --test-command "pytest tests/smoke/"
 ```
 
-**Status**: 🔴 Not Started
-**Priority**: Medium
-**Complexity**: Medium
+**Status**: 🔴 Not Started **Priority**: Medium **Complexity**: Medium
 
----
+______________________________________________________________________
 
 ## Documentation Improvements
 
@@ -567,10 +513,7 @@ Auto-generate API docs from code:
 - Complete `docs/api/reader.md`
 - Complete `docs/api/crypto.md`
 
-**Status**: 🟡 In Progress
-**Priority**: High
-**Complexity**: Low
-**Note**: Stub pages exist, need full content
+**Status**: 🟡 In Progress **Priority**: High **Complexity**: Low **Note**: Stub pages exist, need full content
 
 ### Interactive Examples
 
@@ -583,11 +526,9 @@ flavor demo web-app
 flavor demo cli-tool
 ```
 
-**Status**: 🔴 Not Started
-**Priority**: Low
-**Complexity**: Medium
+**Status**: 🔴 Not Started **Priority**: Low **Complexity**: Medium
 
----
+______________________________________________________________________
 
 ## Advanced Features
 
@@ -600,9 +541,7 @@ See [FEP-0004: Supply Chain JIT](../reference/spec/future/fep-0004-supply-chain-
 - Provenance tracking
 - Signature chains
 
-**Status**: 🔴 Not Started
-**Priority**: Medium
-**Complexity**: Very High
+**Status**: 🔴 Not Started **Priority**: Medium **Complexity**: Very High
 
 ### Runtime JIT Loading
 
@@ -612,9 +551,7 @@ See [FEP-0005: Runtime JIT Loading](../reference/spec/future/fep-0005-runtime-ji
 - On-demand extraction
 - Streaming execution
 
-**Status**: 🔴 Not Started
-**Priority**: Low
-**Complexity**: Very High
+**Status**: 🔴 Not Started **Priority**: Low **Complexity**: Very High
 
 ### Staged Payload Architecture
 
@@ -624,11 +561,9 @@ See [FEP-0006: Staged Payload Architecture](../reference/spec/future/fep-0006-st
 - Progressive enhancement
 - Delta updates
 
-**Status**: 🔴 Not Started
-**Priority**: Low
-**Complexity**: Very High
+**Status**: 🔴 Not Started **Priority**: Low **Complexity**: Very High
 
----
+______________________________________________________________________
 
 ## Community and Ecosystem
 
@@ -641,10 +576,7 @@ flavor publish myapp.psp
 flavor install popular-package
 ```
 
-**Status**: 🔴 Not Started
-**Priority**: Low
-**Complexity**: Very High
-**Blockers**: Requires infrastructure
+**Status**: 🔴 Not Started **Priority**: Low **Complexity**: Very High **Blockers**: Requires infrastructure
 
 ### Plugin System
 
@@ -655,11 +587,9 @@ flavor plugin install compression-extras
 flavor plugin install cloud-deploy
 ```
 
-**Status**: 🔴 Not Started
-**Priority**: Low
-**Complexity**: High
+**Status**: 🔴 Not Started **Priority**: Low **Complexity**: High
 
----
+______________________________________________________________________
 
 ## Migration to v1.0
 
@@ -685,7 +615,7 @@ Features required before declaring v1.0 stable:
 - Platform-specific builds
 - CI/CD integration templates
 
----
+______________________________________________________________________
 
 ## Legend
 
@@ -695,7 +625,7 @@ Features required before declaring v1.0 stable:
 - 🔶 **Planned** - Design complete, awaiting implementation
 - 🔴 **Not Started** - Concept only, no implementation
 
----
+______________________________________________________________________
 
 ## Contributing
 
@@ -707,7 +637,7 @@ Want to help implement these features? Check out:
 
 Feature requests and discussions are welcome in the [GitHub Discussions](https://github.com/provide-io/flavorpack/discussions).
 
----
+______________________________________________________________________
 
 ## See Also
 

@@ -27,6 +27,6 @@ pytest tests/test_builder.py::test_basic_build
 - Coverage requirements
 - Best practices
 
----
+______________________________________________________________________
 
 **See also:** [Testing Guide](index/) | [Integration Tests](integration/)

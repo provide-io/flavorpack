@@ -107,8 +107,7 @@ pytest tests/integration/test_cross_language.py
 
 #### Parity Tests
 
-Verify that Python, Go, and Rust implement the same behavioral contract for
-verification, extraction safety, and platform conventions:
+Verify that Python, Go, and Rust implement the same behavioral contract for verification, extraction safety, and platform conventions:
 
 ```bash
 # Run parity tests
@@ -119,12 +118,9 @@ pytest -m parity --parity-report -v
 # Report written to: reports/parity-report.md
 ```
 
-The `--parity-report` flag generates a Markdown table at `reports/parity-report.md`
-showing per-language pass/fail/N_A status for each parity behavior. This report is
-generated as a CI artifact on every run of the flavor pipeline.
+The `--parity-report` flag generates a Markdown table at `reports/parity-report.md` showing per-language pass/fail/N_A status for each parity behavior. This report is generated as a CI artifact on every run of the flavor pipeline.
 
-Parity tests are annotated with markers that document expected behavior across languages
-even when a language cannot be directly tested from Python:
+Parity tests are annotated with markers that document expected behavior across languages even when a language cannot be directly tested from Python:
 
 ```python
 @pytest.mark.parity
@@ -136,14 +132,9 @@ def test_magic_trailer_validation() -> None:
     ...
 ```
 
-When Go/Rust cannot be exercised directly, the expected behavior is documented in the
-test docstring and the marker status set to `N/A`. A `FAIL` status on any language
-triggers a failed test and a report row with status `has-fail`.
+When Go/Rust cannot be exercised directly, the expected behavior is documented in the test docstring and the marker status set to `N/A`. A `FAIL` status on any language triggers a failed test and a report row with status `has-fail`.
 
-See [`tests/parity/`](https://github.com/provide-io/flavorpack/tree/main/tests/parity)
-for the full test suite and
-[Architecture: Cross-Language Verification Contract](../../explanation/architecture/#cross-language-verification-contract)
-for the contract these tests enforce.
+See [`tests/parity/`](https://github.com/provide-io/flavorpack/tree/main/tests/parity) for the full test suite and [Architecture: Cross-Language Verification Contract](../../explanation/architecture/#cross-language-verification-contract) for the contract these tests enforce.
 
 ## Test Configuration
 
@@ -447,12 +438,12 @@ jobs:
 ## Best Practices
 
 1. **Test early and often**: Write tests alongside code
-2. **Keep tests fast**: Use mocks for expensive operations
-3. **Test edge cases**: Empty inputs, large files, errors
-4. **Use fixtures**: Share common setup between tests
-5. **Test in isolation**: Don't rely on external state
-6. **Document complex tests**: Explain what and why
-7. **Clean up resources**: Use context managers and fixtures
+1. **Keep tests fast**: Use mocks for expensive operations
+1. **Test edge cases**: Empty inputs, large files, errors
+1. **Use fixtures**: Share common setup between tests
+1. **Test in isolation**: Don't rely on external state
+1. **Document complex tests**: Explain what and why
+1. **Clean up resources**: Use context managers and fixtures
 
 ## Common Patterns
 

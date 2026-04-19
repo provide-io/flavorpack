@@ -2,12 +2,7 @@
 
 This tutorial walks you through creating a real-world Python application and packaging it with Flavorpack. We'll build a simple but useful CLI tool that fetches weather information.
 
-!!! example "What we'll build"
-    A weather CLI tool that:
-    - Accepts a city name as input
-    - Fetches current weather data
-    - Displays it in a formatted output
-    - Works as a standalone executable
+!!! example "What we'll build" A weather CLI tool that: - Accepts a city name as input - Fetches current weather data - Displays it in a formatted output - Works as a standalone executable
 
 ## Step 1: Create the Application
 
@@ -166,7 +161,7 @@ optimization_level = 2  # -OO flag for Python
 
 Create `README.md`:
 
-```markdown
+````markdown
 # Weather CLI
 
 A simple command-line weather tool packaged with Flavorpack.
@@ -181,7 +176,7 @@ A simple command-line weather tool packaged with Flavorpack.
 ./weather-cli "New York"
 ./weather-cli London
 ./weather-cli "San Francisco"
-```
+````
 
 ## Features
 
@@ -191,7 +186,8 @@ A simple command-line weather tool packaged with Flavorpack.
 - 🔒 No API keys required
 
 Built with Flavorpack - https://foundry.provide.io/flavorpack/
-```
+
+````
 
 ## Step 3: Build the Package
 
@@ -204,7 +200,7 @@ flavor keygen --output ./keys/
 # You should see:
 # ✅ Generated private key: keys/flavor-private.key
 # ✅ Generated public key: keys/flavor-public.key
-```
+````
 
 ### Create the Package
 
@@ -290,29 +286,35 @@ Your `weather-cli.psp` file is now a **completely self-contained executable** th
 
 === "Direct Download"
 
-    Upload to your website or file hosting:
-    ```bash
-    # Users download and run
-    wget https://example.com/weather-cli.psp
-    chmod +x weather-cli.psp
-    ./weather-cli.psp
-    ```
+````
+Upload to your website or file hosting:
+```bash
+# Users download and run
+wget https://example.com/weather-cli.psp
+chmod +x weather-cli.psp
+./weather-cli.psp
+```
+````
 
 === "GitHub Releases"
 
-    Add to GitHub releases:
-    ```bash
-    gh release create v1.0.0 weather-cli.psp \
-      --title "Weather CLI v1.0.0" \
-      --notes "First release of Weather CLI"
-    ```
+````
+Add to GitHub releases:
+```bash
+gh release create v1.0.0 weather-cli.psp \
+  --title "Weather CLI v1.0.0" \
+  --notes "First release of Weather CLI"
+```
+````
 
 === "Package Managers"
 
-    Future support planned for:
-    - Homebrew (macOS/Linux)
-    - Scoop (Windows)
-    - Snap (Linux)
+```
+Future support planned for:
+- Homebrew (macOS/Linux)
+- Scoop (Windows)
+- Snap (Linux)
+```
 
 ### Verification
 
@@ -336,16 +338,19 @@ flavor verify weather-cli.psp --public-key keys/flavor-public.key
 Your package contains:
 
 1. **Native Launcher** (~2 MB)
+
    - Platform-specific executable
    - Handles extraction and execution
    - Performs signature verification
 
-2. **Python Runtime** (~35 MB)
+1. **Python Runtime** (~35 MB)
+
    - Complete Python 3.11 interpreter
    - Standard library
    - No system Python needed!
 
-3. **Your Application** (~5 MB)
+1. **Your Application** (~5 MB)
+
    - Your weather.py code
    - Configuration files
    - Any dependencies (none in this case)
@@ -384,6 +389,7 @@ Flavorpack uses smart caching:
 Try these improvements:
 
 1. **Add Dependencies**
+
    ```toml
    dependencies = [
        "rich",  # For colored output
@@ -391,12 +397,14 @@ Try these improvements:
    ]
    ```
 
-2. **Add More Features**
+1. **Add More Features**
+
    - Weather forecasts
    - Multiple cities
    - Export to JSON/CSV
 
-3. **Optimize Size**
+1. **Optimize Size**
+
    ```bash
    # Exclude unnecessary files
    flavor pack --exclude "tests/**" --exclude "docs/**"
@@ -411,28 +419,20 @@ Try these improvements:
 
 ## Troubleshooting
 
-??? question "Package is too large"
-    - Use `--exclude` to skip unnecessary files
-    - Consider using `--compression` for better compression
-    - Use `flavor inspect` to see what's taking space
+??? question "Package is too large" - Use `--exclude` to skip unnecessary files - Consider using `--compression` for better compression - Use `flavor inspect` to see what's taking space
 
-??? question "Network error when fetching weather"
-    - Ensure internet connection is available
-    - Check if wttr.in service is accessible
-    - Some corporate networks may block the service
+??? question "Network error when fetching weather" - Ensure internet connection is available - Check if wttr.in service is accessible - Some corporate networks may block the service
 
-??? question "Permission denied when running"
-    - Ensure the file has execute permissions: `chmod +x weather-cli.psp`
-    - On macOS, you may need to remove quarantine: `xattr -d com.apple.quarantine weather-cli.psp`
+??? question "Permission denied when running" - Ensure the file has execute permissions: `chmod +x weather-cli.psp` - On macOS, you may need to remove quarantine: `xattr -d com.apple.quarantine weather-cli.psp`
 
 ## Summary
 
 Congratulations! You've successfully:
 
-✅ Created a real-world Python application  
-✅ Configured it for Flavorpack packaging  
-✅ Built a self-contained executable  
-✅ Tested and verified the package  
-✅ Learned distribution strategies  
+✅ Created a real-world Python application\
+✅ Configured it for Flavorpack packaging\
+✅ Built a self-contained executable\
+✅ Tested and verified the package\
+✅ Learned distribution strategies
 
 Your weather CLI tool is now ready to share with the world - no installation required! 🎉
