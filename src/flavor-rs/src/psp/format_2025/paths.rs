@@ -164,22 +164,10 @@ mod tests {
         let paths = WorkenvPaths::new(cache, &package);
 
         assert_eq!(paths.name(), "myapp");
-        assert_eq!(
-            paths.workenv(),
-            PathBuf::from("/REDACTED_ABS_PATH")
-        );
-        assert_eq!(
-            paths.metadata(),
-            PathBuf::from("/REDACTED_ABS_PATH")
-        );
-        assert_eq!(
-            paths.instance(),
-            PathBuf::from("/REDACTED_ABS_PATH")
-        );
-        assert_eq!(
-            paths.lock_file(),
-            PathBuf::from("/REDACTED_ABS_PATH")
-        );
+        assert_eq!(paths.workenv(), PathBuf::from("/REDACTED_ABS_PATH"));
+        assert_eq!(paths.metadata(), PathBuf::from("/REDACTED_ABS_PATH"));
+        assert_eq!(paths.instance(), PathBuf::from("/REDACTED_ABS_PATH"));
+        assert_eq!(paths.lock_file(), PathBuf::from("/REDACTED_ABS_PATH"));
     }
 
     #[test]
