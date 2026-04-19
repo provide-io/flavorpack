@@ -304,6 +304,5 @@ dependencies = [
 ## See Also
 
 - **[Pyvider Documentation](https://foundry.provide.io/pyvider/)**
-- **[wrknv Integration](wrknv/)**
 - **[CI/CD Integration](../../cookbook/recipes/ci-cd/)**
 - **[Multi-Platform Builds](../../cookbook/recipes/multi-platform/)**
