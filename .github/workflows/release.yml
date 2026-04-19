@@ -429,7 +429,7 @@ jobs:
         run: |
           echo "📦 Wheels to publish:"
           ls -la dist/*.whl
-          
+
           # Verify wheel names match PyPI expectations
           for wheel in dist/*.whl; do
             basename=$(basename "$wheel")
@@ -438,7 +438,12 @@ jobs:
               exit 1
             fi
           done
-      
+
+      - name: ✍️ Sign wheels with Sigstore
+        uses: sigstore/gh-action-sigstore-python@04cffa1d795717b140764e8b640de88853c92acc  # v3.3.0
+        with:
+          inputs: dist/*.whl
+
       - name: 🚀 Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
