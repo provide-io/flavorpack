@@ -95,7 +95,7 @@ namespaces = false
 line-length = 111
 indent-width = 4
 target-version = "py311"
-exclude = ["**/*pb2*.py", "**/generated/**"]
+exclude = ["**/*pb2*.py", "**/generated/**", "tests/taster/build/**"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "ANN", "B", "C90", "SIM", "PTH", "RUF"]
@@ -133,8 +133,12 @@ module = ["structlog.*", "google.*", "grpc.*", "psutil.*", "opentelemetry.*", "m
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
+# Proto-generated bindings populate class attrs dynamically; mypy can't see
+# Operation.Name etc. at callsites. follow_imports='skip' makes the module Any.
 module = ["flavor.psp.format_2025.generated.*", "flavor.*.generated.*"]
+follow_imports = "skip"
 ignore_errors = true
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 # cryptography 46 changed Encoding/PublicFormat/PrivateFormat to str-based enums;
