@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 from pathlib import Path
+import tomllib
 
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ROOT_MAKEFILE = REPO_ROOT / "Makefile"
 QUALITY_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "05-code-quality.yml"
+RELEASE_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "09-release.yml"
 RUST_MAKEFILE = REPO_ROOT / "src" / "flavor-rs" / "Makefile"
 RUST_FUZZ_CARGO = REPO_ROOT / "src" / "flavor-rs" / "fuzz" / "Cargo.toml"
+PYPROJECT = REPO_ROOT / "pyproject.toml"
 
 
 def test_root_makefile_defines_quality_targets() -> None:

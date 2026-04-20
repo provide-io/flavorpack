@@ -658,7 +658,18 @@ func adjustPSPFOffsets(pspfData []byte, launcherSize int64, logger *slog.Logger)
 		"slot_table_offset_before", index.SlotTableOffset)
 
 	// Patch each slot descriptor's Offset in the slot table
-	slotTableStart := int64(index.SlotTableOffset) - launcherSize
+	slotTableOffset, err := uint64ToInt64Checked(index.SlotTableOffset, "slot table offset")
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert slot table offset: %w", err)
+	}
+	if launcherSize > slotTableOffset {
+		return nil, fmt.Errorf("launcher size exceeds slot table offset: launcher=%d offset=%d", launcherSize, slotTableOffset)
+	}
+	launcherSizeUint64, err := int64ToUint64Checked(launcherSize, "launcher size")
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert launcher size: %w", err)
+	}
+	slotTableStart := slotTableOffset - launcherSize
 	for i := 0; i < int(index.SlotCount); i++ {
 		descStart := slotTableStart + int64(i)*int64(SlotDescriptorSize)
 		if descStart < 0 || descStart+int64(SlotDescriptorSize) > int64(len(data)) {
@@ -669,15 +680,27 @@ func adjustPSPFOffsets(pspfData []byte, launcherSize int64, logger *slog.Logger)
 			return nil, fmt.Errorf("failed to unpack slot descriptor %d: %w", i, err)
 		}
 		if desc.Offset > 0 {
-			desc.Offset -= uint64(launcherSize)
+			desc.Offset, err = subtractUint64Checked(desc.Offset, launcherSizeUint64, "slot descriptor offset")
+			if err != nil {
+				return nil, fmt.Errorf("failed to rebase slot descriptor %d offset: %w", i, err)
+			}
 		}
 		copy(data[descStart:], desc.Pack())
 	}
 
 	// Patch index offsets
-	index.MetadataOffset -= uint64(launcherSize)
-	index.SlotTableOffset -= uint64(launcherSize)
-	index.PackageSize = uint64(len(pspfData))
+	index.MetadataOffset, err = subtractUint64Checked(index.MetadataOffset, launcherSizeUint64, "metadata offset")
+	if err != nil {
+		return nil, fmt.Errorf("failed to rebase metadata offset: %w", err)
+	}
+	index.SlotTableOffset, err = subtractUint64Checked(index.SlotTableOffset, launcherSizeUint64, "slot table offset")
+	if err != nil {
+		return nil, fmt.Errorf("failed to rebase slot table offset: %w", err)
+	}
+	index.PackageSize, err = intToUint64Checked(len(pspfData), "PSPF data size")
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert PSPF size: %w", err)
+	}
 	index.LauncherSize = 0
 
 	logger.Debug("Adjusted PSPF offsets",
@@ -754,7 +777,7 @@ func convertToResourceEmbedding(filePath string, launcherSize int64, logger *slo
 	}()
 
 	// Embed offset-adjusted PSPF as resource in temp file
-	embedErr = EmbedPSPFAsResource(tempPath, adjustedPSPF, logger)
+	embedErr = embedPSPFAsResourceImpl(tempPath, adjustedPSPF, logger)
 	if embedErr != nil {
 		return fmt.Errorf("failed to embed as resource: %w", embedErr)
 	}

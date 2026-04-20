@@ -117,8 +117,12 @@ class PyPaPipManager:
         DO NOT CHANGE THIS TO uv pip - IT WILL BREAK DEPENDENCY RESOLUTION
         """
         cmd = [
-            python_exe.as_posix(), "-m", "pip", "wheel",
-            "--wheel-dir", wheel_dir.as_posix(),
+            python_exe.as_posix(),
+            "-m",
+            "pip",
+            "wheel",
+            "--wheel-dir",
+            wheel_dir.as_posix(),
             # Disable truststore SSL backend: on Windows GHA runners truststore
             # fails with ssl.SSLError even for --no-deps local builds (pip still
             # initialises an SSL session for the pip-version-check).
@@ -164,8 +168,12 @@ class PyPaPipManager:
             find_links: Optional local wheel directory to check before PyPI
         """
         cmd = [
-            python_exe.as_posix(), "-m", "pip", "download",
-            "--dest", dest_dir.as_posix(),
+            python_exe.as_posix(),
+            "-m",
+            "pip",
+            "download",
+            "--dest",
+            dest_dir.as_posix(),
             # Disable truststore SSL backend on Windows GHA runners.
             "--no-truststore",
             "--disable-pip-version-check",
