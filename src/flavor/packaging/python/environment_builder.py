@@ -154,24 +154,23 @@ class PythonEnvironmentBuilder:
 
         # Strategy 2: install to uv's default managed location, then find it
         logger.debug("💻🚀📋 Strategy 2: installing to default managed location")
-        try:
-            cmd_default = [uv_cmd, "python", "install", python_spec]
-            result2 = run(cmd_default, capture_output=True, env=_windows_system_env() or None)
-            print(
-                f"[flavor-python] uv python install (default) exit={result2.returncode} "
-                f"stderr={result2.stderr.strip()!r:.120}",
-                flush=True,
-                file=sys.stdout,
-            )
+        cmd_default = [uv_cmd, "python", "install", python_spec]
+        result2 = run(cmd_default, capture_output=True, env=_windows_system_env() or None)
+        print(
+            f"[flavor-python] uv python install (default) exit={result2.returncode} "
+            f"stderr={result2.stderr.strip()!r:.120}",
+            flush=True,
+            file=sys.stdout,
+        )
 
-            find_cmd = [uv_cmd, "python", "find", python_spec, "--python-preference", "only-managed"]
-            result3 = run(find_cmd, capture_output=True, env=_windows_system_env() or None)
-            python_bin_str = result3.stdout.strip()
-            print(
-                f"[flavor-python] uv python find exit={result3.returncode} path={python_bin_str!r:.200}",
-                flush=True,
-                file=sys.stdout,
-            )
+        find_cmd = [uv_cmd, "python", "find", python_spec, "--python-preference", "only-managed"]
+        result3 = run(find_cmd, capture_output=True, env=_windows_system_env() or None)
+        python_bin_str = result3.stdout.strip()
+        print(
+            f"[flavor-python] uv python find exit={result3.returncode} path={python_bin_str!r:.200}",
+            flush=True,
+            file=sys.stdout,
+        )
 
         if result3.returncode == 0 and python_bin_str:
             python_bin = Path(python_bin_str)
