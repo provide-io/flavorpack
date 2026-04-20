@@ -306,7 +306,11 @@ func TestExtractSlotRejectsSymlink(t *testing.T) {
 	}
 }
 
-func TestExtractSlotTarRespectsTargetSubdirectory(t *testing.T) {
+func TestExtractSlotTarIgnoresTargetForArchives(t *testing.T) {
+	// TAR slots extract to destDir regardless of the target field — the tar entries encode
+	// the directory structure. A slot with target="assets" and tar entries "images/logo.txt"
+	// extracts to destDir/images/logo.txt (not destDir/assets/images/logo.txt).
+	// This matches Rust launcher behavior where extract_tarball ignores slot_target.
 	t.Parallel()
 
 	tarRaw := buildTarArchiveWithDirAndFile(t, "images", "logo.txt", 0o644, []byte("logo"))
@@ -328,12 +332,12 @@ func TestExtractSlotTarRespectsTargetSubdirectory(t *testing.T) {
 		t.Fatalf("ExtractSlot(targeted tar) error = %v", err)
 	}
 
-	wantDir := filepath.Join(destDir, "assets")
-	if extractedDir != wantDir {
-		t.Fatalf("ExtractSlot(targeted tar) path = %q, want %q", extractedDir, wantDir)
+	// TAR extracts to destDir (not destDir/assets) — tar entries encode the path
+	if extractedDir != destDir {
+		t.Fatalf("ExtractSlot(targeted tar) path = %q, want %q", extractedDir, destDir)
 	}
 
-	got, err := os.ReadFile(filepath.Join(wantDir, "images", "logo.txt"))
+	got, err := os.ReadFile(filepath.Join(destDir, "images", "logo.txt"))
 	if err != nil {
 		t.Fatalf("ReadFile(targeted tar payload) error = %v", err)
 	}

@@ -86,3 +86,6 @@ coverage.json
 tests/pretaster/logs/
 .claude/worktrees/
 Users/
+
+# Build artifacts accidentally committed upstream
+tests/taster/build/

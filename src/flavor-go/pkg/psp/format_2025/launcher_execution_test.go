@@ -721,6 +721,9 @@ func TestExtractAndMergeSlotsToWorkenvMovesSlotTopLevelFilesToWorkenvRoot(t *tes
 }
 
 func TestExtractAndMergeSlotsToWorkenvMergesRegularTargetDirectories(t *testing.T) {
+	// TAR slots extract to workenv root using the tar's own directory structure.
+	// A slot with target="assets" and tar entries "images/logo.txt" → workenv/images/logo.txt.
+	// Pre-existing workenv/images/ content is merged (not replaced).
 	cacheRoot := t.TempDir()
 	t.Setenv(EnvCacheDir, cacheRoot)
 
@@ -764,11 +767,13 @@ func TestExtractAndMergeSlotsToWorkenvMergesRegularTargetDirectories(t *testing.
 	}
 
 	paths := NewWorkenvPaths(cacheRoot, bundle)
-	targetDir := filepath.Join(paths.Workenv(), "assets")
-	if err := os.MkdirAll(filepath.Join(targetDir, "images"), 0o755); err != nil {
-		t.Fatalf("MkdirAll(target) error = %v", err)
+	// TAR ignores slot target for extraction — files land at workenv root using tar paths.
+	// The tar has "images/logo.txt", so the pre-existing file goes in workenv/images/.
+	imagesDir := filepath.Join(paths.Workenv(), "images")
+	if err := os.MkdirAll(imagesDir, 0o755); err != nil {
+		t.Fatalf("MkdirAll(images dir) error = %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(targetDir, "images", "existing.txt"), []byte("existing"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(imagesDir, "existing.txt"), []byte("existing"), 0o644); err != nil {
 		t.Fatalf("WriteFile(existing) error = %v", err)
 	}
 
@@ -776,10 +781,10 @@ func TestExtractAndMergeSlotsToWorkenvMergesRegularTargetDirectories(t *testing.
 		t.Fatalf("extractAndMergeSlotsToWorkenv() error = %v", err)
 	}
 
-	if got, err := os.ReadFile(filepath.Join(targetDir, "images", "logo.txt")); err != nil || string(got) != "logo" {
-		t.Fatalf("expected merged regular target directory file, err=%v content=%q", err, string(got))
+	if got, err := os.ReadFile(filepath.Join(imagesDir, "logo.txt")); err != nil || string(got) != "logo" {
+		t.Fatalf("expected merged tar directory file, err=%v content=%q", err, string(got))
 	}
-	if got, err := os.ReadFile(filepath.Join(targetDir, "images", "existing.txt")); err != nil || string(got) != "existing" {
+	if got, err := os.ReadFile(filepath.Join(imagesDir, "existing.txt")); err != nil || string(got) != "existing" {
 		t.Fatalf("expected existing file to remain after merge, err=%v content=%q", err, string(got))
 	}
 }
