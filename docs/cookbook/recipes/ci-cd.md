@@ -61,7 +61,6 @@ flowchart TD
 ## GitHub Actions
 
 {% raw %}
-
 ```yaml
 # .github/workflows/package.yml
 name: Build Package
@@ -130,7 +129,6 @@ jobs:
           asset_name: myapp-${{ matrix.platform }}.psp
           asset_content_type: application/octet-stream
 ```
-
 {% endraw %}
 
 ## GitLab CI
@@ -244,7 +242,6 @@ workflows:
 ### 1. **Cache Dependencies**
 
 {% raw %}
-
 ```yaml
 # GitHub Actions
 - name: Cache UV
@@ -259,7 +256,6 @@ workflows:
     path: dist/bin
     key: ${{ runner.os }}-helpers-${{ hashFiles('src/flavor-go/**', 'src/flavor-rs/**') }}
 ```
-
 {% endraw %}
 
 ### 2. **Verify Packages**
@@ -312,7 +308,6 @@ strategy:
 ### Upload to S3
 
 {% raw %}
-
 ```yaml
 - name: Upload to S3
   run: |
@@ -321,13 +316,11 @@ strategy:
     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 ```
-
 {% endraw %}
 
 ### Upload to Artifactory
 
 {% raw %}
-
 ```yaml
 - name: Upload to Artifactory
   run: |
@@ -335,7 +328,6 @@ strategy:
       -T myapp.psp \
       "https://artifactory.company.com/artifactory/packages/myapp.psp"
 ```
-
 {% endraw %}
 
 ## Complete Real-World Example
@@ -343,7 +335,6 @@ strategy:
 Here's a production-ready GitHub Actions workflow that builds, tests, and releases packages for multiple platforms with proper caching and error handling:
 
 {% raw %}
-
 ```yaml
 # .github/workflows/release.yml
 name: Build and Release Flavorpack Package
@@ -485,14 +476,13 @@ jobs:
             exit 1
           fi
 ```
-
 {% endraw %}
 
 ### Usage
 
 1. **Copy this workflow** to `.github/workflows/release.yml` in your repository
-1. **Push to main branch** for development builds
-1. **Create a tag** for releases:
+2. **Push to main branch** for development builds
+3. **Create a tag** for releases:
    ```bash
    git tag v1.0.0
    git push origin v1.0.0
@@ -500,12 +490,16 @@ jobs:
 
 ### Features
 
-✅ **Multi-platform builds** (Linux, macOS Intel, macOS ARM) ✅ **Dependency caching** (UV and helpers) ✅ **Package verification** (automatic integrity checks) ✅ **Artifact uploads** (available for 30 days) ✅ **Automatic releases** (on version tags) ✅ **Build notifications** (success/failure status)
+✅ **Multi-platform builds** (Linux, macOS Intel, macOS ARM)
+✅ **Dependency caching** (UV and helpers)
+✅ **Package verification** (automatic integrity checks)
+✅ **Artifact uploads** (available for 30 days)
+✅ **Automatic releases** (on version tags)
+✅ **Build notifications** (success/failure status)
 
 ### Customization
 
 {% raw %}
-
 ```yaml
 # Add Windows support
 - os: windows-latest
@@ -530,7 +524,6 @@ jobs:
     scp dist/myapp.psp deploy@server:/opt/myapp/
     ssh deploy@server 'systemctl restart myapp'
 ```
-
 {% endraw %}
 
 ## See Also

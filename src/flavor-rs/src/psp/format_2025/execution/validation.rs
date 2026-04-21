@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 //! Validation and checksum management
 
 use super::super::index::Index;
@@ -292,6 +289,22 @@ mod tests {
         assert!(
             validate_package_checksum_mismatch("deadbeef", "cafebabe", ValidationLevel::Strict)
                 .is_err()
+        );
+    }
+
+    #[test]
+    fn validate_package_checksum_mismatch_none_level_is_non_fatal() {
+        assert!(
+            !validate_package_checksum_mismatch("deadbeef", "cafebabe", ValidationLevel::None)
+                .expect("none mismatch should be non-fatal")
+        );
+    }
+
+    #[test]
+    fn validate_package_checksum_mismatch_minimal_level_is_non_fatal() {
+        assert!(
+            !validate_package_checksum_mismatch("deadbeef", "cafebabe", ValidationLevel::Minimal)
+                .expect("minimal mismatch should be non-fatal")
         );
     }
 

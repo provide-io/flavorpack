@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -69,7 +66,7 @@ func TryAcquireLock(paths *WorkenvPaths, logger *slog.Logger) (bool, error) {
 	}
 
 	// Try to create lock file exclusively
-	file, err := openLockFileFn(lockPath, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
+	file, err := openLockFileFn(lockPath, os.O_CREATE|os.O_EXCL|os.O_WRONLY, FilePerms)
 	if err != nil {
 		if os.IsExist(err) {
 			logger.Debug("🔒 Lock file exists, another process is extracting")

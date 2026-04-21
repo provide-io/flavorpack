@@ -2,13 +2,13 @@
 
 Complete command-line interface documentation for Flavorpack.
 
-!!! tip "Prerequisites" Before using the CLI, ensure you have:
+!!! tip "Prerequisites"
+    Before using the CLI, ensure you have:
 
     - [Flavorpack installed](../../getting-started/installation/)
     - [Helpers built](../../development/contributing/#building-helpers) for package creation
 
-See [System Requirements](../../reference/requirements/) for detailed information.
-```
+    See [System Requirements](../../reference/requirements/) for detailed information.
 
 ## Overview
 
@@ -20,24 +20,23 @@ flavor [OPTIONS] COMMAND [ARGS]...
 
 ### Global Options
 
-| Option          | Description                |
-| --------------- | -------------------------- |
-| `-h, --help`    | Show help message and exit |
-| `-V, --version` | Show version and exit      |
+| Option | Description |
+|--------|-------------|
+| `-h, --help` | Show help message and exit |
+| `-V, --version` | Show version and exit |
 
 ### Environment Variables
 
 Flavorpack uses numerous environment variables for configuration and debugging. For a complete reference, see the [Environment Variables Guide](environment/).
 
 Key variables:
-
 - **FOUNDATION_LOG_LEVEL**: Set log level for Python components (`trace`, `debug`, `info`, `warning`, `error`)
 - **FLAVOR_LOG_LEVEL**: Set log level for Go/Rust components
 - **FOUNDATION_LOG_FILE**: Write logs to file
 
 See [Environment Variables](environment/) for the complete list and detailed examples.
 
-______________________________________________________________________
+---
 
 ## Commands
 
@@ -51,22 +50,22 @@ flavor pack [OPTIONS]
 
 #### Options
 
-| Option                   | Type   | Default           | Description                                          |
-| ------------------------ | ------ | ----------------- | ---------------------------------------------------- |
-| `--manifest PATH`        | path   | `pyproject.toml`  | Path to the pyproject.toml manifest file             |
-| `--output PATH`          | path   | `dist/<name>.psp` | Custom output path for the package                   |
-| `--launcher-bin PATH`    | path   | -                 | Path to launcher binary to embed                     |
-| `--builder-bin PATH`     | path   | -                 | Path to builder binary (overrides default selection) |
-| `--verify / --no-verify` | flag   | `True`            | Verify the package after building                    |
-| `--strip`                | flag   | `False`           | Strip debug symbols from launcher for size reduction |
-| `--progress`             | flag   | `False`           | Show progress bars during packaging                  |
-| `--quiet`                | flag   | `False`           | Suppress progress output                             |
-| `--private-key PATH`     | path   | -                 | Path to private key (PEM format) for signing         |
-| `--public-key PATH`      | path   | -                 | Path to public key (PEM format)                      |
-| `--key-seed TEXT`        | text   | -                 | Seed for deterministic key generation                |
-| `--workenv-base PATH`    | path   | -                 | Base directory for {workenv} resolution              |
-| `--output-format TEXT`   | choice | -                 | Output format: `text` or `json`                      |
-| `--output-file TEXT`     | text   | -                 | Output file path, STDOUT, or STDERR                  |
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `--manifest PATH` | path | `pyproject.toml` | Path to the pyproject.toml manifest file |
+| `--output PATH` | path | `dist/<name>.psp` | Custom output path for the package |
+| `--launcher-bin PATH` | path | - | Path to launcher binary to embed |
+| `--builder-bin PATH` | path | - | Path to builder binary (overrides default selection) |
+| `--verify / --no-verify` | flag | `True` | Verify the package after building |
+| `--strip` | flag | `False` | Strip debug symbols from launcher for size reduction |
+| `--progress` | flag | `False` | Show progress bars during packaging |
+| `--quiet` | flag | `False` | Suppress progress output |
+| `--private-key PATH` | path | - | Path to private key (PEM format) for signing |
+| `--public-key PATH` | path | - | Path to public key (PEM format) |
+| `--key-seed TEXT` | text | - | Seed for deterministic key generation |
+| `--workenv-base PATH` | path | - | Base directory for {workenv} resolution |
+| `--output-format TEXT` | choice | - | Output format: `text` or `json` |
+| `--output-file TEXT` | text | - | Output file path, STDOUT, or STDERR |
 
 #### Examples
 
@@ -103,7 +102,7 @@ graph LR
     F --> G
 ```
 
-______________________________________________________________________
+---
 
 ### verify
 
@@ -131,18 +130,17 @@ flavor verify myapp.psp
 ✅ Checksum: Valid
 ```
 
-!!! info "📋 Planned Features" Additional verification options are planned for future releases:
+!!! info "📋 Planned Features"
+    Additional verification options are planned for future releases:
 
-```
-- `--quick`: Fast verification (index and signature only)
-- `--deep`: Deep verification (all slot checksums)
-- `--paranoid`: Full extraction and validation
-- `--public-key PATH`: Verify against external trusted key
+    - `--quick`: Fast verification (index and signature only)
+    - `--deep`: Deep verification (all slot checksums)
+    - `--paranoid`: Full extraction and validation
+    - `--public-key PATH`: Verify against external trusted key
 
-Currently, `flavor verify` performs comprehensive verification of format, index, metadata, and signature.
-```
+    Currently, `flavor verify` performs comprehensive verification of format, index, metadata, and signature.
 
-______________________________________________________________________
+---
 
 ### inspect
 
@@ -158,11 +156,11 @@ flavor inspect [OPTIONS] PACKAGE_FILE
 
 #### Options
 
-| Option         | Description                                             |
-| -------------- | ------------------------------------------------------- |
-| `--json`       | Output full metadata as JSON                            |
-| `--sbom`       | Print CycloneDX 1.6 SBOM JSON from the attestation slot |
-| `--provenance` | Print provenance JSON (builder, timestamp, platform)    |
+| Option | Description |
+|--------|-------------|
+| `--json` | Output full metadata as JSON |
+| `--sbom` | Print CycloneDX 1.6 SBOM JSON from the attestation slot |
+| `--provenance` | Print provenance JSON (builder, timestamp, platform) |
 
 #### Examples
 
@@ -221,7 +219,7 @@ flavor inspect myapp.psp --json
 }
 ```
 
-______________________________________________________________________
+---
 
 ### extract
 
@@ -239,8 +237,8 @@ flavor extract [OPTIONS] PACKAGE_FILE SLOT_INDEX OUTPUT_PATH
 
 #### Options
 
-| Option        | Description                    |
-| ------------- | ------------------------------ |
+| Option | Description |
+|--------|-------------|
 | `--force, -f` | Overwrite existing output file |
 
 #### Examples
@@ -253,7 +251,7 @@ flavor extract myapp.psp 0 runtime.tar.gz
 flavor extract myapp.psp 1 app-code.tar.gz --force
 ```
 
-______________________________________________________________________
+---
 
 ### extract-all
 
@@ -270,8 +268,8 @@ flavor extract-all [OPTIONS] PACKAGE_FILE OUTPUT_DIR
 
 #### Options
 
-| Option        | Description              |
-| ------------- | ------------------------ |
+| Option | Description |
+|--------|-------------|
 | `--force, -f` | Overwrite existing files |
 
 #### Examples
@@ -287,7 +285,7 @@ extracted/
 └── metadata.json
 ```
 
-______________________________________________________________________
+---
 
 ### keygen
 
@@ -299,9 +297,9 @@ flavor keygen [OPTIONS]
 
 #### Options
 
-| Option                | Type | Default | Description                    |
-| --------------------- | ---- | ------- | ------------------------------ |
-| `--out-dir DIRECTORY` | path | `keys`  | Directory to save the key pair |
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `--out-dir DIRECTORY` | path | `keys` | Directory to save the key pair |
 
 #### Examples
 
@@ -321,9 +319,11 @@ keys/
 └── flavor-public.key   # Ed25519 public key (PEM format)
 ```
 
-!!! warning "Key Security" Keep private keys secure! Never commit them to version control. Use environment variables or secure key management systems in CI/CD.
+!!! warning "Key Security"
+    Keep private keys secure! Never commit them to version control.
+    Use environment variables or secure key management systems in CI/CD.
 
-______________________________________________________________________
+---
 
 ### workenv
 
@@ -373,7 +373,7 @@ flavor workenv info
 ```
 📊 Cache Information
 ========================================
-Cache directory: /REDACTED_ABS_PATH
+Cache directory: /home/user/.cache/flavor/workenv
 Total size: 77.3 MB
 Number of cached packages: 2
 Oldest cache: 2025-10-20 10:15:30
@@ -390,10 +390,10 @@ flavor workenv clean [OPTIONS]
 
 **Options:**
 
-| Option              | Description                       |
-| ------------------- | --------------------------------- |
+| Option | Description |
+|--------|-------------|
 | `--older-than DAYS` | Remove packages older than N days |
-| `--yes, -y`         | Skip confirmation prompt          |
+| `--yes, -y` | Skip confirmation prompt |
 
 **Examples:**
 
@@ -422,8 +422,8 @@ flavor workenv remove [OPTIONS] PACKAGE_ID
 
 **Options:**
 
-| Option      | Description              |
-| ----------- | ------------------------ |
+| Option | Description |
+|--------|-------------|
 | `--yes, -y` | Skip confirmation prompt |
 
 **Examples:**
@@ -450,8 +450,8 @@ flavor workenv inspect [OPTIONS] PACKAGE_ID
 
 **Options:**
 
-| Option   | Description           |
-| -------- | --------------------- |
+| Option | Description |
+|--------|-------------|
 | `--json` | Output as JSON format |
 
 **Example Output:**
@@ -460,7 +460,7 @@ flavor workenv inspect [OPTIONS] PACKAGE_ID
 ============================================================
 📦 Package: pspf-a3f7b9c2d1e4f5a6
 ------------------------------------------------------------
-📁 Location: /REDACTED_ABS_PATH
+📁 Location: /home/user/.cache/flavor/pspf-a3f7b9c2d1e4f5a6
 🗂️  Metadata Type: pspf_2025
 ✅ Extraction: Complete
 🔐 Checksum: sha256:a3f7b9c2...
@@ -478,7 +478,7 @@ flavor workenv inspect [OPTIONS] PACKAGE_ID
   Builder: flavor-rs-builder
 ```
 
-______________________________________________________________________
+---
 
 ### helpers
 
@@ -512,7 +512,7 @@ Launchers:
   ✅ flavor-go-launcher-darwin_arm64 (3.4 MB)
   ✅ flavor-rs-launcher-darwin_arm64 (1.0 MB)
 
-Location: /REDACTED_ABS_PATH
+Location: /Users/tim/code/gh/provide-io/flavorpack/dist/bin
 ```
 
 ##### helpers info
@@ -552,10 +552,10 @@ flavor helpers build [OPTIONS]
 
 **Options:**
 
-| Option                   | Description                                        |
-| ------------------------ | -------------------------------------------------- |
+| Option | Description |
+|--------|-------------|
 | `--lang [go\|rust\|all]` | Build helpers for specific language (default: all) |
-| `-f, --force`            | Rebuild even if helpers already exist              |
+| `-f, --force` | Rebuild even if helpers already exist |
 
 **Examples:**
 
@@ -583,10 +583,10 @@ flavor helpers clean [OPTIONS]
 
 **Options:**
 
-| Option      | Description                                         |
-| ----------- | --------------------------------------------------- |
-| `--all`     | Remove all helpers (default: current platform only) |
-| `--yes, -y` | Skip confirmation prompt                            |
+| Option | Description |
+|--------|-------------|
+| `--all` | Remove all helpers (default: current platform only) |
+| `--yes, -y` | Skip confirmation prompt |
 
 **Examples:**
 
@@ -611,8 +611,8 @@ flavor helpers test [OPTIONS]
 
 **Options:**
 
-| Option                   | Description                                       |
-| ------------------------ | ------------------------------------------------- |
+| Option | Description |
+|--------|-------------|
 | `--lang [go\|rust\|all]` | Test helpers for specific language (default: all) |
 
 **Examples:**
@@ -628,7 +628,7 @@ flavor helpers test --lang rust
 flavor helpers test --lang go
 ```
 
-______________________________________________________________________
+---
 
 ### clean
 
@@ -640,27 +640,24 @@ flavor clean [OPTIONS]
 
 #### Options
 
-| Option      | Description                                           |
-| ----------- | ----------------------------------------------------- |
-| `--all`     | Clean both work environment cache and helper binaries |
-| `--helpers` | Clean only helper binaries (not work environment)     |
-| `--dry-run` | Show what would be removed without actually removing  |
-| `--yes, -y` | Skip confirmation prompt                              |
+| Option | Description |
+|--------|-------------|
+| `--all` | Clean both work environment cache and helper binaries |
+| `--helpers` | Clean only helper binaries (not work environment) |
+| `--dry-run` | Show what would be removed without actually removing |
+| `--yes, -y` | Skip confirmation prompt |
 
 #### Behavior
 
 **Default** (no options): Cleans work environment cache only
-
 - Removes all cached package extractions from `~/.cache/flavor/workenv/`
 - Preserves helper binaries in `dist/bin/`
 
 **With `--helpers`**: Cleans only helper binaries
-
 - Removes helper binaries from `~/.cache/flavor/bin/`
 - Preserves work environment cache
 
 **With `--all`**: Cleans everything
-
 - Removes both work environment cache and helper binaries
 - Frees maximum disk space
 
@@ -698,9 +695,13 @@ Would remove 4 helper binaries (18.2 MB):
   - flavor-go-builder-darwin_arm64 (8.1 MB)
 ```
 
-!!! tip "When to Clean" - **Before releases**: Free space and test fresh extraction - **After updates**: Clear old cached versions - **Disk space low**: Reclaim space from cached packages - **Helper issues**: Remove and rebuild helpers with `flavor helpers build`
+!!! tip "When to Clean"
+    - **Before releases**: Free space and test fresh extraction
+    - **After updates**: Clear old cached versions
+    - **Disk space low**: Reclaim space from cached packages
+    - **Helper issues**: Remove and rebuild helpers with `flavor helpers build`
 
-______________________________________________________________________
+---
 
 ## Security Commands
 
@@ -759,17 +760,17 @@ flavor inspect --provenance package.psp
 flavor inspect --json package.psp
 ```
 
-______________________________________________________________________
+---
 
 ## Exit Codes
 
-| Code | Meaning                           |
-| ---- | --------------------------------- |
-| `0`  | Success                           |
-| `1`  | General error (see error message) |
-| `2`  | Command-line usage error          |
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | General error (see error message) |
+| `2` | Command-line usage error |
 
-______________________________________________________________________
+---
 
 ## Common Workflows
 
@@ -819,19 +820,31 @@ flavor workenv clean --older-than 30
 flavor workenv inspect pspf-a3f7b9c2d1e4f5a6
 ```
 
-______________________________________________________________________
+---
 
 ## Tips and Best Practices
 
-!!! tip "Performance" - Use `--strip` to reduce package size by removing debug symbols - Use `--quiet` in CI/CD pipelines to reduce log noise - Use `--progress` for interactive builds to see detailed progress
+!!! tip "Performance"
+    - Use `--strip` to reduce package size by removing debug symbols
+    - Use `--quiet` in CI/CD pipelines to reduce log noise
+    - Use `--progress` for interactive builds to see detailed progress
 
-!!! tip "Security" - Always verify packages with `flavor verify` before distribution - Use `--private-key` for signing production packages - Store keys securely (e.g., CI/CD secrets, key management systems)
+!!! tip "Security"
+    - Always verify packages with `flavor verify` before distribution
+    - Use `--private-key` for signing production packages
+    - Store keys securely (e.g., CI/CD secrets, key management systems)
 
-!!! tip "Cache Management" - Run `flavor workenv clean --older-than 30` periodically to free space - Use `flavor workenv info` to monitor cache growth - Cache is automatically validated on each package execution
+!!! tip "Cache Management"
+    - Run `flavor workenv clean --older-than 30` periodically to free space
+    - Use `flavor workenv info` to monitor cache growth
+    - Cache is automatically validated on each package execution
 
-!!! tip "Debugging" - Set `FOUNDATION_LOG_LEVEL=debug` for detailed logs - Use `flavor inspect --json` for programmatic processing - Check `flavor workenv inspect` for cache-related issues
+!!! tip "Debugging"
+    - Set `FOUNDATION_LOG_LEVEL=debug` for detailed logs
+    - Use `flavor inspect --json` for programmatic processing
+    - Check `flavor workenv inspect` for cache-related issues
 
-______________________________________________________________________
+---
 
 ## See Also
 
@@ -841,7 +854,7 @@ ______________________________________________________________________
 - [Environment Variables](environment/) - All environment variables
 - [Packaging Guide](../packaging/index/) - Creating packages
 
-______________________________________________________________________
+---
 
 ## Related Pages
 
@@ -863,6 +876,6 @@ ______________________________________________________________________
 - 🛠️ [Contributing Guide](../../development/contributing/) - Development setup
 - 🧪 [Testing](../../development/testing/index/) - Testing framework
 
-______________________________________________________________________
+---
 
 **Need help?** Run `flavor --help` or `flavor COMMAND --help` for command-specific documentation.

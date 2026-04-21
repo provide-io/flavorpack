@@ -32,7 +32,7 @@ class TestSlotTableReading:
     @pytest.fixture
     def test_bundle_with_slots(self) -> Iterator[Path]:
         """Create a test bundle with multiple slots."""
-        with tempfile.TemporaryDirectory() as tmpdir_str:
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir_str:
             tmpdir = Path(tmpdir_str)
 
             # Create test files for slots
@@ -165,7 +165,7 @@ class TestWorkEnvironment:
     @pytest.fixture
     def bundle_with_setup_commands(self) -> Iterator[Path]:
         """Create a bundle with setup commands."""
-        with tempfile.TemporaryDirectory() as tmpdir_str:
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir_str:
             tmpdir = Path(tmpdir_str)
             package_version = tmpdir.name
 
@@ -288,7 +288,7 @@ class TestProcessExecution:
     @pytest.fixture
     def executable_bundle(self) -> Iterator[Path]:
         """Create a bundle that can be executed."""
-        with tempfile.TemporaryDirectory() as tmpdir_str:
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir_str:
             tmpdir = Path(tmpdir_str)
 
             # Create a simple Python script

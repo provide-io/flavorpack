@@ -75,7 +75,6 @@ ls -lh dist/*.psp
 ### GitHub Actions
 
 {% raw %}
-
 ```yaml
 name: Multi-Platform Build
 
@@ -119,7 +118,6 @@ jobs:
           name: myapp-${{ matrix.platform }}
           path: dist/myapp-${{ matrix.platform }}.psp
 ```
-
 {% endraw %}
 
 ## Platform-Specific Configuration

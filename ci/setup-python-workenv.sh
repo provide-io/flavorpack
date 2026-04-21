@@ -1,7 +1,4 @@
 #!/bin/bash
-# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
 # Setup Python virtual environment with uv
 # Usage: setup-python-workenv.sh [extra-packages]
 # Requires: astral-sh/setup-uv action (provides uv + python)

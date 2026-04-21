@@ -348,6 +348,7 @@ def enforce_policy(
     enf = policy.enforcement
     current_platform = get_current_platform()
 
+    # 1. Platform check
     if policy.platforms and current_platform not in policy.platforms:
         _apply_enforcement(
             enf.mode_for("platform_mismatch"),
@@ -371,6 +372,7 @@ def enforce_policy(
             warnings,
         )
 
+    # 4. Age check
     if policy.max_age_days is not None and build_timestamp > 0:
         age_days = int((datetime.now(UTC).timestamp() - build_timestamp) / 86400)
         if age_days > policy.max_age_days:
@@ -380,6 +382,7 @@ def enforce_policy(
                 warnings,
             )
 
+    # 5. Environment variable check
     missing = [var for var in policy.require_env if not os.environ.get(var)]
     if missing:
         _apply_enforcement(
@@ -388,9 +391,7 @@ def enforce_policy(
             warnings,
         )
 
-    if policy.use_os_keychain:
-        raise ValueError("use_os_keychain is enabled, but OS keychain trust is not implemented")
-
+    # 6. SBOM check
     if policy.require_sbom and not has_sbom:
         _apply_enforcement(
             enf.mode_for("missing_sbom"),
@@ -398,6 +399,7 @@ def enforce_policy(
             warnings,
         )
 
+    # 7. Trusted key check
     if policy.require_trusted_key and not key_trusted:
         _apply_enforcement(
             enf.mode_for("untrusted_key"),

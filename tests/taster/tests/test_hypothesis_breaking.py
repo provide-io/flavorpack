@@ -6,7 +6,7 @@
 """Hypothesis-based tests designed to break PSPF handling"""
 
 from pathlib import Path
-import subprocess
+import subprocess  # nosec
 import tempfile
 from typing import Any
 

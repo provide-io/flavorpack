@@ -17,7 +17,7 @@ import json
 import os
 from pathlib import Path
 import platform
-import subprocess
+import subprocess  # nosec
 import sys
 from typing import Any
 

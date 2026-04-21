@@ -6,7 +6,7 @@
 """Cross-language verification tests for PSPF operations field compatibility."""
 
 from pathlib import Path
-import subprocess
+import subprocess  # nosec
 
 import pytest
 

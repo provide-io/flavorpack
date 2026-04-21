@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 //! PSPF/2025 package verifier
 
 use super::constants::{LifecycleAttestation, MAGIC_WAND_EMOJI_BYTES};
@@ -248,6 +245,12 @@ fn verify_slot_checksums(reader: &mut super::reader::Reader) -> Result<bool> {
         while remaining > 0 {
             let to_read = remaining.min(CHUNK) as usize;
             let chunk = reader.backend_mut().read_at(offset, to_read)?;
+            if chunk.is_empty() {
+                return Err(FlavorError::Generic(format!(
+                    "Backend returned empty read for slot {} at offset {:#x} (remaining {})",
+                    i, offset, remaining
+                )));
+            }
             if first_chunk_preview.is_none() {
                 first_chunk_preview = Some(chunk[..16.min(chunk.len())].to_vec());
             }
@@ -836,5 +839,45 @@ mod tests {
             err.to_string().contains("policy"),
             "error should mention policy: {err}"
         );
+    }
+
+    proptest! {
+        /// Checksum of data always matches descriptor built from that data.
+        #[test]
+        fn prop_checksum_consistent(data in proptest::collection::vec(any::<u8>(), 0..1024)) {
+            let checksum = Sha256::digest(&data);
+            let mut checksum_bytes = [0u8; 8];
+            checksum_bytes.copy_from_slice(&checksum[..8]);
+            let expected = u64::from_le_bytes(checksum_bytes);
+
+            let mut descriptor = SlotDescriptor::new(1);
+            descriptor.checksum = expected;
+            descriptor.size = data.len() as u64;
+            descriptor.original_size = data.len() as u64;
+
+            prop_assert!(verify_slot_checksum(&descriptor, &data));
+        }
+
+        /// Changing any byte in data must cause checksum mismatch.
+        #[test]
+        fn prop_tamper_always_detected(
+            data in proptest::collection::vec(any::<u8>(), 1..256),
+            flip_idx in any::<proptest::sample::Index>()
+        ) {
+            let checksum = Sha256::digest(&data);
+            let mut checksum_bytes = [0u8; 8];
+            checksum_bytes.copy_from_slice(&checksum[..8]);
+            let expected = u64::from_le_bytes(checksum_bytes);
+
+            let mut descriptor = SlotDescriptor::new(1);
+            descriptor.checksum = expected;
+            descriptor.size = data.len() as u64;
+            descriptor.original_size = data.len() as u64;
+
+            let mut tampered = data.clone();
+            let idx = flip_idx.index(tampered.len());
+            tampered[idx] ^= 0xFF;
+            prop_assert!(!verify_slot_checksum(&descriptor, &tampered));
+        }
     }
 }

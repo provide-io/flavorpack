@@ -362,7 +362,7 @@ class TestRuntimeEnvProcessing:
         env = {
             "SYSTEM_PATH": "/usr/bin",
             "SYSTEM_HOME": "/usr",
-            "USER_PATH": "/REDACTED_ABS_PATH",
+            "USER_PATH": "/home/user/bin",
             "USER_HOME": "/home/user",
             "TEMP_DIR": "/tmp",
             "CACHE_DIR": "/var/cache",
@@ -385,7 +385,7 @@ class TestRuntimeEnvProcessing:
         # USER_* should be renamed
         assert "USER_PATH" not in env
         assert "USER_HOME" not in env
-        assert env["CUSTOM_PATH"] == "/REDACTED_ABS_PATH"
+        assert env["CUSTOM_PATH"] == "/home/user/bin"
         assert env["CUSTOM_HOME"] == "/home/user"
         # NEW_VAR should be set
         assert env["NEW_VAR"] == "new_value"

@@ -17,7 +17,7 @@ Flavorpack uses two complementary testing frameworks to ensure comprehensive val
 | **Speed** | Slower but thorough (property testing, edge cases) | Fast (focused compatibility checks) |
 | **When to Use** | Feature development, debugging issues, security testing | PR validation, release testing, quick sanity checks |
 
-______________________________________________________________________
+---
 
 ## TASTER: Comprehensive Python Testing Framework
 
@@ -28,38 +28,32 @@ ______________________________________________________________________
 ### Key Features
 
 1. **Cross-Language Compatibility Testing**
-
    - Tests Python, Go, and Rust implementation interactions
    - Validates builder/launcher communication
    - Ensures consistent behavior across language boundaries
 
-1. **PSPF Format Validation**
-
+2. **PSPF Format Validation**
    - Binary format correctness
    - Slot descriptor validation
    - Operation chain processing
    - Metadata integrity verification
 
-1. **Property-Based Testing**
-
+3. **Property-Based Testing**
    - Uses Hypothesis framework for edge case discovery
    - Generates test inputs automatically
    - Finds subtle bugs through randomized testing
 
-1. **Runtime Environment Testing**
-
+4. **Runtime Environment Testing**
    - Environment variable filtering (`unset`, `pass`, `set`, `map`)
    - Runtime configuration validation
    - Process isolation verification
 
-1. **I/O Pipeline Validation**
-
+5. **I/O Pipeline Validation**
    - Data transformation correctness
    - Corruption detection
    - Memory-mapped I/O efficiency
 
-1. **Signal Handling & Process Management**
-
+6. **Signal Handling & Process Management**
    - Graceful shutdown testing
    - Interrupt handling
    - Child process cleanup
@@ -111,12 +105,11 @@ pytest --cov=src --cov-report=term-missing
 - Testing signal handling and process management
 
 ❌ **Don't use TASTER when:**
-
 - You need quick builder/launcher compatibility checks (use PRETASTER)
 - Running in minimal CI environments without Python
 - Testing only binary format compatibility
 
-______________________________________________________________________
+---
 
 ## PRETASTER: Fast Cross-Language Validation
 
@@ -127,15 +120,13 @@ ______________________________________________________________________
 ### Key Features
 
 1. **Builder/Launcher Combination Testing**
-
    - Tests all 4 valid combinations:
      - Python builder + Go launcher
      - Python builder + Rust launcher
      - Go builder + Go launcher
      - Rust builder + Rust launcher
 
-1. **Quick Sanity Checks**
-
+2. **Quick Sanity Checks**
    - Package creation validation
    - Basic execution testing
    - Exit code verification
@@ -146,8 +137,7 @@ ______________________________________________________________________
    - No Python runtime needed for execution
    - Fast test execution
 
-1. **CI/CD Optimized**
-
+4. **CI/CD Optimized**
    - Simple pass/fail output
    - Fast feedback loop
    - Easy integration with CI pipelines
@@ -194,17 +184,16 @@ make -C tests/pretaster test
 
 PRETASTER systematically tests these combinations:
 
-| Builder | Launcher | Status       | Notes                   |
-| ------- | -------- | ------------ | ----------------------- |
-| Python  | Go       | ✅ Supported | Most common combination |
-| Python  | Rust     | ✅ Supported | Production-ready        |
-| Go      | Go       | ✅ Supported | Native Go toolchain     |
-| Rust    | Rust     | ✅ Supported | Native Rust toolchain   |
+| Builder | Launcher | Status | Notes |
+|---------|----------|--------|-------|
+| Python | Go | ✅ Supported | Most common combination |
+| Python | Rust | ✅ Supported | Production-ready |
+| Go | Go | ✅ Supported | Native Go toolchain |
+| Rust | Rust | ✅ Supported | Native Rust toolchain |
 
 ### When to Use PRETASTER
 
 ✅ **Use PRETASTER when:**
-
 - Validating PR changes don't break compatibility
 - Running CI/CD pipelines
 - Quick sanity checks after code changes
@@ -213,30 +202,29 @@ PRETASTER systematically tests these combinations:
 - Release validation
 
 ❌ **Don't use PRETASTER when:**
-
 - You need detailed format validation (use TASTER)
 - Testing complex features like environment filtering
 - Debugging subtle package format issues
 - Running property-based tests
 
-______________________________________________________________________
+---
 
 ## Decision Matrix
 
 ### Which Framework Should I Use?
 
-| Scenario                         | Framework                    | Reasoning                                            |
-| -------------------------------- | ---------------------------- | ---------------------------------------------------- |
-| **PR validation**                | PRETASTER                    | Fast, focused on compatibility                       |
-| **Debugging format issues**      | TASTER                       | Detailed validation and inspection                   |
-| **Release testing**              | BOTH                         | PRETASTER for compatibility, TASTER for completeness |
-| **Feature development**          | TASTER                       | Comprehensive test coverage                          |
-| **CI/CD pipeline**               | PRETASTER first, then TASTER | Fast feedback, then thorough validation              |
-| **Security testing**             | TASTER                       | Property-based testing finds edge cases              |
-| **Cross-platform builds**        | PRETASTER                    | Quick verification across platforms                  |
-| **Environment variable testing** | TASTER                       | Detailed environment processing tests                |
+| Scenario | Framework | Reasoning |
+|----------|-----------|-----------|
+| **PR validation** | PRETASTER | Fast, focused on compatibility |
+| **Debugging format issues** | TASTER | Detailed validation and inspection |
+| **Release testing** | BOTH | PRETASTER for compatibility, TASTER for completeness |
+| **Feature development** | TASTER | Comprehensive test coverage |
+| **CI/CD pipeline** | PRETASTER first, then TASTER | Fast feedback, then thorough validation |
+| **Security testing** | TASTER | Property-based testing finds edge cases |
+| **Cross-platform builds** | PRETASTER | Quick verification across platforms |
+| **Environment variable testing** | TASTER | Detailed environment processing tests |
 
-______________________________________________________________________
+---
 
 ## Integration Strategy
 
@@ -294,23 +282,23 @@ jobs:
     timeout-minutes: 30
 ```
 
-______________________________________________________________________
+---
 
 ## Common Patterns
 
 ### Testing a New Feature
 
 1. **Write TASTER tests first** - Define expected behavior
-1. **Implement the feature** - Make tests pass
-1. **Run PRETASTER** - Ensure compatibility wasn't broken
-1. **Run full TASTER suite** - Verify no regressions
+2. **Implement the feature** - Make tests pass
+3. **Run PRETASTER** - Ensure compatibility wasn't broken
+4. **Run full TASTER suite** - Verify no regressions
 
 ### Debugging a Failed Package
 
 1. **Run PRETASTER** - Identify which builder/launcher combo fails
-1. **Switch to TASTER** - Use detailed validation commands
-1. **Use inspection tools** - `taster verify`, `taster inspect`
-1. **Fix and verify** - Run both frameworks to confirm fix
+2. **Switch to TASTER** - Use detailed validation commands
+3. **Use inspection tools** - `taster verify`, `taster inspect`
+4. **Fix and verify** - Run both frameworks to confirm fix
 
 ### Release Validation
 
@@ -328,22 +316,22 @@ pytest tests/taster/tests/ -v --cov
 # (Verify all examples still work)
 ```
 
-______________________________________________________________________
+---
 
 ## Summary
 
-| Aspect           | TASTER                    | PRETASTER               |
-| ---------------- | ------------------------- | ----------------------- |
-| **Speed**        | Slower (minutes)          | Fast (seconds)          |
-| **Depth**        | Comprehensive             | Focused                 |
-| **Language**     | Python                    | Shell                   |
-| **Best For**     | Development & Debugging   | CI/CD & Compatibility   |
+| Aspect | TASTER | PRETASTER |
+|--------|--------|-----------|
+| **Speed** | Slower (minutes) | Fast (seconds) |
+| **Depth** | Comprehensive | Focused |
+| **Language** | Python | Shell |
+| **Best For** | Development & Debugging | CI/CD & Compatibility |
 | **Dependencies** | Many (pytest, hypothesis) | Minimal (bash, helpers) |
-| **Output**       | Detailed reports          | Pass/fail               |
+| **Output** | Detailed reports | Pass/fail |
 
 **Key Insight**: Use **PRETASTER** for fast feedback on compatibility, and **TASTER** for thorough validation and debugging. Both are essential for maintaining Flavorpack quality.
 
-______________________________________________________________________
+---
 
 ## Further Reading
 

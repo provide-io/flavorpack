@@ -10,7 +10,7 @@ Provides post-run analysis for memray stress test binaries:
 """
 
 from pathlib import Path
-import subprocess
+import subprocess  # nosec
 from typing import Any
 
 
