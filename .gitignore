@@ -71,6 +71,7 @@ docs/.shared-theme/
 # MkDocs generated site
 site/
 bf-*.txt
+*-bf.txt
 
 # Local act secrets (never commit)
 .act.secrets
@@ -83,9 +84,7 @@ memray-output/
 
 # Generated test artifacts
 coverage.json
+src/flavor-go/coverage_*.out
 tests/pretaster/logs/
 .claude/worktrees/
 Users/
-
-# Build artifacts accidentally committed upstream
-tests/taster/build/

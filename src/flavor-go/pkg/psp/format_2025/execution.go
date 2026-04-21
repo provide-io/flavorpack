@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -453,10 +450,6 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger *slo
 		if err := savePackageChecksum(paths, index.IndexChecksum, logger); err != nil {
 			logger.Warn("⚠️ Failed to save package checksum", "error", err)
 		}
-
-		// Clean up init lifecycle slots after extraction (regardless of setup commands)
-		logger.Info("🧹 Cleaning up lifecycle slots...")
-		cleanupLifecycleSlots(workenvDir, metadata, slotPaths, logger)
 	} else {
 		logger.Info("✅ Work environment is valid, skipping persistent slot extraction")
 		for _, slot := range metadata.Slots {
@@ -604,6 +597,9 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger *slo
 			}
 		}
 
+		// Clean up init lifecycle slots after setup commands have run
+		logger.Info("🧹 Cleaning up lifecycle slots...")
+		cleanupLifecycleSlots(workenvDir, metadata, slotPaths, logger)
 	}
 
 	if metadata.Execution == nil {

@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package logging
 
 import (
@@ -19,7 +16,7 @@ import (
 // If output is non-nil, log records are written there instead of os.Stderr.
 func Setup(logLevel string, output io.Writer) {
 	format := provlog.LogFormatConsole
-	if os.Getenv(envvars.EnvJSONLog) == "1" || strings.HasPrefix(logLevel, "json") {
+	if IsJSONFormat(logLevel) {
 		format = provlog.LogFormatJSON
 	}
 	// Strip the "json:" prefix from the level string if present.

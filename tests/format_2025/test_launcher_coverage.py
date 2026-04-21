@@ -253,6 +253,10 @@ class TestNormalizeSlotTarget:
         launcher = _make_launcher(tmp_path / "bundle.psp")
         assert launcher._normalize_slot_target("{workenv}") == "{workenv}"
 
+    def test_workenv_root_slash_maps_to_root_directory(self, tmp_path: Path) -> None:
+        launcher = _make_launcher(tmp_path / "bundle.psp")
+        assert launcher._normalize_slot_target("{workenv}/") == "."
+
     def test_workenv_prefix_is_stripped(self, tmp_path: Path) -> None:
         launcher = _make_launcher(tmp_path / "bundle.psp")
         assert launcher._normalize_slot_target("{workenv}/bin/tool") == "bin/tool"

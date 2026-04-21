@@ -94,7 +94,6 @@ The Progressive Secure Package Format is a polyglot file that works as both an O
 ### Key Components
 
 1. **Native Launcher**
-
    - Platform-specific executable (Go or Rust)
    - Embedded at the start of the package
    - Reads the index block from the end
@@ -102,8 +101,7 @@ The Progressive Secure Package Format is a polyglot file that works as both an O
    - Validates checksums and signatures
    - Executes the packaged application
 
-1. **Metadata Block**
-
+2. **Metadata Block**
    - Compressed JSON manifest
    - Contains package information:
      - Name, version, description
@@ -112,8 +110,7 @@ The Progressive Secure Package Format is a polyglot file that works as both an O
      - Dependencies and their versions
    - Located after the launcher
 
-1. **Slot Table**
-
+3. **Slot Table**
    - Array of 64-byte slot descriptors
    - Each descriptor contains:
      - Offset to slot data
@@ -123,16 +120,14 @@ The Progressive Secure Package Format is a polyglot file that works as both an O
      - Operation chains (uint64)
    - Defines the structure of package contents
 
-1. **Slot Data**
-
+4. **Slot Data**
    - Compressed tar.gz archives
    - Slot 0: Python runtime environment
    - Slot 1: Application code
    - Slot 2+: Additional resources
    - Extracted on-demand to work environment
 
-1. **Index Block**
-
+5. **Index Block**
    - Fixed 8KB structure at end of file
    - Contains all offsets and checksums
    - Ed25519 signature for authenticity
@@ -144,20 +139,17 @@ The Progressive Secure Package Format is a polyglot file that works as both an O
 Flavorpack uses Ed25519 signatures for cryptographic verification:
 
 **Signing Process:**
-
 1. Hash the package contents (all bytes except signature)
-1. Sign the hash with Ed25519 private key
-1. Embed signature in the index block
+2. Sign the hash with Ed25519 private key
+3. Embed signature in the index block
 
 **Verification Process:**
-
 1. Extract signature from index block
-1. Hash the package contents (excluding signature)
-1. Verify hash against signature using public key
-1. Reject package if verification fails
+2. Hash the package contents (excluding signature)
+3. Verify hash against signature using public key
+4. Reject package if verification fails
 
 **Key Properties:**
-
 - Ed25519 provides 128-bit security
 - Fast signature generation and verification
 - Small key sizes (32 bytes public, 64 bytes private)
@@ -168,20 +160,17 @@ Flavorpack uses Ed25519 signatures for cryptographic verification:
 Packages extract to cached work environments for performance:
 
 **Cache Location:**
-
 - Default: `~/.cache/flavor/workenvs/` (Linux/macOS)
 - Default: `%LOCALAPPDATA%\flavor\workenvs\` (Windows)
 - Configurable via `FLAVOR_WORKENV_DIR`
 
 **Cache Validation:**
-
 - Keyed by package checksum
 - Validated on every execution
 - Re-extracted if validation fails
 - Old environments cleaned automatically
 
 **Progressive Extraction:**
-
 - Only extracts slots that have changed
 - Reuses cached slots when possible
 - Optimizes for repeated execution
@@ -193,42 +182,36 @@ The Python layer (`src/flavor/`) coordinates the entire build process:
 ### Main Components
 
 1. **`packaging/orchestrator.py`**
-
    - Main build coordinator
    - Selects appropriate helper (Go/Rust)
    - Orchestrates package assembly
    - Manages signing and verification
 
-1. **`packaging/python_packager.py`**
-
+2. **`packaging/python_packager.py`**
    - Python-specific packaging logic
    - Dependency resolution
    - Virtual environment creation
    - Application code bundling
 
-1. **`psp/format_2025/builder.py`**
-
+3. **`psp/format_2025/builder.py`**
    - PSPF package assembly
    - Slot creation and compression
    - Index block generation
    - Launcher embedding
 
-1. **`psp/format_2025/reader.py`**
-
+4. **`psp/format_2025/reader.py`**
    - Package reading and extraction
    - Slot parsing
    - Metadata deserialization
    - Checksum verification
 
-1. **`psp/format_2025/launcher.py`**
-
+5. **`psp/format_2025/launcher.py`**
    - Launcher management
    - Helper selection logic
    - Launcher embedding
    - Platform detection
 
-1. **`psp/format_2025/crypto.py`**
-
+6. **`psp/format_2025/crypto.py`**
    - Ed25519 signing and verification
    - Key generation and management
    - Signature embedding
@@ -240,14 +223,12 @@ Native helpers provide fast, efficient launchers:
 ### Go Helper (`src/flavor-go/`)
 
 **Capabilities:**
-
 - Fast package parsing
 - Efficient slot extraction
 - Native process execution
 - Cross-platform support
 
 **Structure:**
-
 - `cmd/flavor-go/` - CLI entry point
 - `pkg/psp/format_2025/` - PSPF implementation
 - `pkg/launcher/` - Execution logic
@@ -256,14 +237,12 @@ Native helpers provide fast, efficient launchers:
 ### Rust Helper (`src/flavor-rs/`)
 
 **Capabilities:**
-
 - Ultra-fast execution
 - Memory-safe implementation
 - Zero-copy parsing where possible
 - Aggressive optimization
 
 **Structure:**
-
 - `src/main.rs` - Entry point
 - `src/psp/format_2025/` - PSPF implementation
 - `src/launcher/` - Execution logic
@@ -333,11 +312,11 @@ Flavorpack ensures compatibility across all builder/launcher combinations:
 
 ### Compatibility Matrix
 
-| Builder ↓ / Launcher → | Python | Go  | Rust |
-| ---------------------- | ------ | --- | ---- |
-| **Python**             | ✅     | ✅  | ✅   |
-| **Go**                 | ✅     | ✅  | ✅   |
-| **Rust**               | ✅     | ✅  | ✅   |
+| Builder ↓ / Launcher → | Python | Go | Rust |
+|-------------------------|--------|----|----|
+| **Python**              | ✅      | ✅  | ✅  |
+| **Go**                  | ✅      | ✅  | ✅  |
+| **Rust**                | ✅      | ✅  | ✅  |
 
 All combinations produce identical PSPF packages that work interchangeably.
 
@@ -404,18 +383,15 @@ Flavorpack supports major operating systems and architectures:
 ### Binary Compatibility
 
 **Linux:**
-
 - Static binaries (Go: CGO_ENABLED=0, Rust: musl)
 - Works on CentOS 7+, Amazon Linux 2023, Ubuntu, Alpine
 - No glibc dependencies
 
 **macOS:**
-
 - Universal binaries (x86_64 + aarch64)
 - Compatible with macOS 10.15+
 
 **Windows:**
-
 - Native PE executables
 - Compatible with Windows 10+
 
@@ -436,7 +412,6 @@ flavor pack --manifest pyproject.toml \
 ### Provide Foundation
 
 Uses Foundation for:
-
 - Structured logging
 - Configuration management
 - Error handling patterns
@@ -457,15 +432,15 @@ Flavorpack is optimized for production use:
 
 ### Build Performance
 
-- Package assembly: \<5 seconds for typical application
-- Helper compilation: \<10 seconds (cached)
+- Package assembly: <5 seconds for typical application
+- Helper compilation: <10 seconds (cached)
 - Slot compression: Parallel (all cores)
 
 ### Runtime Performance
 
-- Cold start: \<500ms (first run, extraction required)
-- Warm start: \<50ms (cached work environment)
-- Execution overhead: \<10ms
+- Cold start: <500ms (first run, extraction required)
+- Warm start: <50ms (cached work environment)
+- Execution overhead: <10ms
 
 ### Package Size
 
@@ -503,6 +478,6 @@ Flavorpack is optimized for production use:
 - Comprehensive logging
 - Fast build cycles
 
-______________________________________________________________________
+---
 
 For the complete binary format specification, see [FEP-0001: Core Format and Operation Chains](../reference/spec/fep-0001-core-format-and-operation-chains/).

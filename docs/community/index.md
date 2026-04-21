@@ -48,7 +48,6 @@ Read articles and updates.
 ## Resources
 
 ### Documentation
-
 - **[Getting Started](../getting-started/index/)** - Start here
 - **[User Guide](../guide/index/)** - Complete guide
 - **[Cookbook](../cookbook/index/)** - Examples
@@ -59,21 +58,18 @@ Read articles and updates.
 We welcome contributions of all kinds:
 
 ### Code
-
 - Fix bugs
 - Add features
 - Improve performance
 - Write tests
 
 ### Documentation
-
 - Fix typos
 - Clarify explanations
 - Add examples
 - Translate content
 
 ### Community
-
 - Answer questions
 - Review pull requests
 - Write blog posts
@@ -93,6 +89,6 @@ We are committed to providing a welcoming and inclusive environment.
 
 See **[Contributing Guide](../development/contributing/)** for our community guidelines.
 
-______________________________________________________________________
+---
 
 **Connect with us:** [GitHub](https://github.com/provide-io/flavorpack) | [Discussions](https://github.com/provide-io/flavorpack/discussions)

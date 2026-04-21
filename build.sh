@@ -1,7 +1,4 @@
 #!/bin/bash
-# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
 #
 # build.sh - Compiles Go and Rust helper binaries into helpers/bin/
 # Builds both normal (dynamically linked) and musl (statically linked) versions for Linux

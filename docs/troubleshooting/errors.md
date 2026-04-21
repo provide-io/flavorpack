@@ -15,7 +15,6 @@ This guide lists all error messages you might encounter while using Flavorpack, 
 **Cause**: The specified manifest file doesn't exist.
 
 **Solution**:
-
 ```bash
 # Check file exists
 ls pyproject.toml
@@ -29,7 +28,6 @@ flavor pack --manifest ./path/to/pyproject.toml
 **Cause**: The `pyproject.toml` file has syntax errors or invalid structure.
 
 **Solution**:
-
 ```bash
 # Validate TOML syntax
 python -c "import toml; toml.load('pyproject.toml')"
@@ -48,7 +46,6 @@ entry_point = "app:main"  # Required
 **Cause**: The specified module:function doesn't exist.
 
 **Solution**:
-
 ```python
 # Verify entry point exists
 # If entry_point = "myapp:main"
@@ -62,7 +59,6 @@ def main():
 **Cause**: The launcher executable is missing.
 
 **Solution**:
-
 ```bash
 # Build helpers locally
 make build-helpers
@@ -79,7 +75,6 @@ flavor pack --launcher-bin /path/to/launcher
 **Cause**: Python venv creation failed.
 
 **Solution**:
-
 ```bash
 # Check Python version
 python --version  # Should be 3.11+
@@ -97,7 +92,6 @@ which python3
 **Cause**: Conflicting or unavailable dependencies.
 
 **Solution**:
-
 ```toml
 # Fix dependency versions
 [project]
@@ -117,7 +111,6 @@ dependencies = [
 **Cause**: Previous build artifacts exist.
 
 **Solution**:
-
 ```bash
 # Clean build directory
 flavor clean
@@ -132,7 +125,6 @@ flavor pack --manifest pyproject.toml --build-dir /tmp/build
 **Cause**: Not enough space for build process.
 
 **Solution**:
-
 ```bash
 # Check available space
 df -h
@@ -154,7 +146,6 @@ export TMPDIR=/large/disk/tmp
 **Cause**: Required configuration field is missing.
 
 **Solution**:
-
 ```toml
 # Add missing fields
 [project]
@@ -170,7 +161,6 @@ entry_point = "app:main"  # Required
 **Cause**: Slot definition has errors.
 
 **Solution**:
-
 ```toml
 [[tool.flavor.slots]]
 id = "data"           # Required: unique ID
@@ -184,7 +174,6 @@ lifecycle = "persistent"  # Valid lifecycle
 **Cause**: Unknown platform identifier.
 
 **Solution**:
-
 ```bash
 # Use valid platform
 flavor pack --manifest pyproject.toml --platform linux_amd64
@@ -196,7 +185,6 @@ flavor pack --manifest pyproject.toml --platform linux_amd64
 **Cause**: Unknown compression codec.
 
 **Solution**:
-
 ```toml
 [[tool.flavor.slots]]
 # Operations are handled automatically based on source type
@@ -207,7 +195,6 @@ flavor pack --manifest pyproject.toml --platform linux_amd64
 **Cause**: Unknown slot lifecycle.
 
 **Solution**:
-
 ```toml
 [[tool.flavor.slots]]
 lifecycle = "persistent"
@@ -223,7 +210,6 @@ lifecycle = "persistent"
 **Cause**: Compression of slot data failed.
 
 **Solution**:
-
 ```bash
 # Check source files exist
 ls -la data/
@@ -240,7 +226,6 @@ chmod -R r+X data/
 **Cause**: Individual slot is too large.
 
 **Solution**:
-
 ```bash
 # 📋 PLANNED: Manual slot configuration not yet implemented
 # Slots are currently created automatically
@@ -264,7 +249,6 @@ chmod -R r+X data/
 **Cause**: Total package size is too large.
 
 **Solution**:
-
 ```bash
 # Exclude unnecessary files
 [tool.flavor.build]
@@ -287,7 +271,6 @@ exclude = [
 **Cause**: Package signing failed.
 
 **Solution**:
-
 ```bash
 # Check key exists and is valid
 ls -la private.pem
@@ -309,7 +292,6 @@ flavor pack --manifest pyproject.toml --key-seed "secret"
 **Cause**: Private key is corrupted or wrong format.
 
 **Solution**:
-
 ```bash
 # Check key type
 openssl pkey -in private.pem -text | head -1
@@ -327,7 +309,6 @@ flavor keygen --output private.pem
 **Cause**: Specified private key file doesn't exist.
 
 **Solution**:
-
 ```bash
 # Check path
 ls -la private.pem
@@ -344,7 +325,6 @@ flavor pack --manifest pyproject.toml --key-seed "secret"
 **Cause**: Unable to generate cryptographic keys.
 
 **Solution**:
-
 ```bash
 # Check entropy
 cat /proc/sys/kernel/random/entropy_avail  # Should be > 1000
@@ -361,7 +341,6 @@ flavor keygen --seed "random-seed"
 **Cause**: Unable to sign package data.
 
 **Solution**:
-
 ```bash
 # Verify key is Ed25519
 openssl pkey -in private.pem -text | grep ED25519
@@ -380,7 +359,6 @@ flavor pack --manifest pyproject.toml --private-key new.pem
 **Cause**: File is not a valid PSPF package.
 
 **Solution**:
-
 ```bash
 # Check file type
 file package.psp
@@ -397,7 +375,6 @@ flavor pack --manifest pyproject.toml
 **Cause**: Package signature doesn't match.
 
 **Solution**:
-
 ```bash
 # Verify with correct key
 flavor verify package.psp --public-key correct.pub
@@ -414,7 +391,6 @@ FLAVOR_VALIDATION=none ./package.psp
 **Cause**: Slot data is corrupted.
 
 **Solution**:
-
 ```bash
 # Rebuild package
 flavor pack --manifest pyproject.toml
@@ -429,7 +405,6 @@ sha256sum package.psp
 **Cause**: Package integrity check failed.
 
 **Solution**:
-
 ```bash
 # Re-download package
 wget https://example.com/package.psp
@@ -448,7 +423,6 @@ flavor pack --manifest pyproject.toml
 **Cause**: Extraction of package content failed.
 
 **Solution**:
-
 ```bash
 # Check disk space
 df -h
@@ -468,7 +442,6 @@ FLAVOR_CACHE=/tmp/cache ./package.psp
 **Cause**: Embedded Python runtime is missing or corrupted.
 
 **Solution**:
-
 ```bash
 # 📋 PLANNED: Python version selection not yet implemented
 # flavor pack --manifest pyproject.toml --python-version 3.11
@@ -488,7 +461,6 @@ flavor inspect package.psp
 **Cause**: Required Python module is missing.
 
 **Solution**:
-
 ```toml
 # Add to dependencies
 [project]
@@ -505,7 +477,6 @@ flavor pack --manifest pyproject.toml
 **Cause**: Insufficient permissions to execute or extract.
 
 **Solution**:
-
 ```bash
 # Add execute permission
 chmod +x package.psp
@@ -526,7 +497,6 @@ FLAVOR_CACHE=/tmp/mycache ./package.psp
 **Cause**: Windows path length limit exceeded.
 
 **Solution**:
-
 ```powershell
 # Enable long paths (Admin PowerShell)
 New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" `
@@ -552,7 +522,6 @@ set FLAVOR_CACHE=C:\tmp\f
 **Cause**: Gatekeeper blocking unsigned package.
 
 **Solution**:
-
 ```bash
 # Remove quarantine
 xattr -d com.apple.quarantine package.psp
@@ -568,7 +537,6 @@ xcrun altool --notarize-app --file package.psp
 **Cause**: Code signature required by macOS.
 
 **Solution**:
-
 ```bash
 # Sign locally
 codesign --sign - package.psp
@@ -584,7 +552,6 @@ codesign --sign "Developer ID Application: Name" package.psp
 **Cause**: Missing system libraries.
 
 **Solution**:
-
 ```bash
 # Check dependencies
 ldd package.psp
@@ -600,7 +567,6 @@ pacman -S glibc            # Arch
 **Cause**: SELinux policy blocking execution.
 
 **Solution**:
-
 ```bash
 # Check SELinux status
 getenforce
@@ -620,7 +586,6 @@ semodule -i mypackage.pp
 **Cause**: Cache directory is read-only or doesn't exist.
 
 **Solution**:
-
 ```bash
 # Create cache directory
 mkdir -p $FLAVOR_CACHE
@@ -635,7 +600,6 @@ export FLAVOR_CACHE=/tmp/flavor-cache
 **Cause**: Unknown log level specified.
 
 **Solution**:
-
 ```bash
 # Use valid level
 export FLAVOR_LOG_LEVEL=debug
@@ -647,7 +611,6 @@ export FLAVOR_LOG_LEVEL=debug
 **Cause**: Deterministic seed is not secure enough.
 
 **Solution**:
-
 ```bash
 # Use longer seed (32+ characters)
 export FLAVOR_KEY_SEED="very-long-and-random-seed-value-here"
@@ -661,23 +624,19 @@ export FLAVOR_KEY_SEED="$(openssl rand -hex 32)"
 If you encounter an error not listed here:
 
 1. **Enable debug logging**:
-
    ```bash
    FOUNDATION_LOG_LEVEL=debug flavor pack --manifest pyproject.toml
    ```
 
-1. **Check the full error**:
-
+2. **Check the full error**:
    ```bash
    flavor pack --manifest pyproject.toml 2>&1 | tee error.log
    ```
 
-1. **Search existing issues**:
-
+3. **Search existing issues**:
    - [GitHub Issues](https://github.com/provide-io/flavorpack/issues)
 
-1. **Report new issue** with:
-
+4. **Report new issue** with:
    - Full error message
    - Flavorpack version
    - Operating system

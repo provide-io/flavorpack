@@ -1,6 +1,3 @@
-# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
 name: 04 🍰 Taster Pipeline
 
 on:
@@ -585,7 +582,7 @@ jobs:
 
       - name: 🧪 Test 8 - Bootstrap and cache regression coverage
         run: |
-          source workenv/bin/activate
+          source ${{ matrix.activate }}
           cd tests/taster
 
           # exec-test uses Rust launcher internally; Rust launcher crashes on Windows

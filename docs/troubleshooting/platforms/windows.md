@@ -2,7 +2,8 @@
 
 Platform-specific issues and solutions for Windows users.
 
-!!! warning "Beta Support" Windows support is currently in beta. Some features may be limited or require additional configuration.
+!!! warning "Beta Support"
+    Windows support is currently in beta. Some features may be limited or require additional configuration.
 
 ## Common Issues
 
@@ -13,10 +14,9 @@ Platform-specific issues and solutions for Windows users.
 **Symptom**: "Windows protected your PC" warning
 
 **Solution**:
-
 1. Click "More info" on the warning dialog
-1. Click "Run anyway"
-1. Or permanently allow:
+2. Click "Run anyway"
+3. Or permanently allow:
 
 ```powershell
 # Add to Windows Defender exclusions (as Administrator)
@@ -31,7 +31,6 @@ Unblock-File -Path .\myapp.psp
 **Symptom**: Scripts blocked by execution policy
 
 **Solution**:
-
 ```powershell
 # Check current policy
 Get-ExecutionPolicy
@@ -50,7 +49,6 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 **Symptom**: Cannot execute or access package
 
 **Solution**:
-
 ```powershell
 # Run as Administrator
 Start-Process myapp.psp -Verb RunAs
@@ -71,7 +69,6 @@ Set-Acl .\myapp.psp $acl
 **Symptom**: UAC prompts or blocks execution
 
 **Solution**:
-
 ```powershell
 # Create scheduled task to bypass UAC
 $action = New-ScheduledTaskAction -Execute "C:\Path\To\myapp.psp"
@@ -87,7 +84,6 @@ Register-ScheduledTask -TaskName "MyApp" -Action $action -Trigger $trigger -Prin
 **Symptom**: `flavor` not recognized as command
 
 **Solution**:
-
 ```powershell
 # Add to PATH (current session)
 $env:Path += ";C:\Path\To\Flavorpack"
@@ -108,7 +104,6 @@ $env:Path -split ';' | Select-String flavor
 **Symptom**: Wrong Python version or not found
 
 **Solution**:
-
 ```powershell
 # Check Python versions
 py -0
@@ -127,7 +122,6 @@ py -3.11 -m pip install --upgrade pip
 **Symptom**: Package quarantined or deleted
 
 **Solution**:
-
 ```powershell
 # Windows Defender exclusions
 Add-MpPreference -ExclusionPath "C:\Flavorpack"
@@ -147,7 +141,6 @@ Restore-MpThreatDetection -ThreatID <ID>
 **Symptom**: Path too long errors
 
 **Solution**:
-
 ```powershell
 # Enable long paths (requires restart)
 New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" `
@@ -163,7 +156,6 @@ New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" `
 **Symptom**: Permission inheritance issues
 
 **Solution**:
-
 ```powershell
 # Reset permissions
 icacls .\myapp.psp /reset
@@ -181,8 +173,8 @@ icacls .\myapp.psp /inheritance:r
 
 **Symptom**: Network connections blocked
 
-**Solution**: {% raw %}
-
+**Solution**:
+{% raw %}
 ```powershell
 # Allow through firewall
 New-NetFirewallRule -DisplayName "Flavorpack" `
@@ -195,7 +187,6 @@ Get-NetFirewallRule | Where-Object {$_.DisplayName -like "*flavor*"}
 # Disable firewall temporarily (not recommended)
 Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False
 ```
-
 {% endraw %}
 
 #### Proxy Configuration
@@ -203,7 +194,6 @@ Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False
 **Symptom**: Cannot download dependencies
 
 **Solution**:
-
 ```powershell
 # Set proxy
 $env:HTTP_PROXY = "http://proxy.company.com:8080"
@@ -334,7 +324,6 @@ Get-Counter "\Process(myapp)\IO Data Bytes/sec"
 ### Event Logs
 
 {% raw %}
-
 ```powershell
 # Check application events
 Get-EventLog -LogName Application -Newest 50 | Where-Object {$_.Message -like "*flavor*"}
@@ -346,13 +335,11 @@ Get-EventLog -LogName System -EntryType Error -Newest 20
 New-EventLog -LogName "Flavorpack" -Source "MyApp"
 Write-EventLog -LogName "Flavorpack" -Source "MyApp" -EventId 1 -Message "Application started"
 ```
-
 {% endraw %}
 
 ## Troubleshooting Script
 
 {% raw %}
-
 ```powershell
 # diagnose-flavor.ps1 - Diagnostic script for Flavorpack on Windows
 
@@ -383,7 +370,6 @@ netsh winhttp show proxy
 Write-Host "`n=== Test Execution ===" -ForegroundColor Cyan
 & .\myapp.psp --version
 ```
-
 {% endraw %}
 
 ## Getting Help

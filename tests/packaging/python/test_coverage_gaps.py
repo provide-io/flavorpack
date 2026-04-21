@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-import subprocess
+import subprocess  # nosec
 import sys
 import tarfile
 from typing import Any

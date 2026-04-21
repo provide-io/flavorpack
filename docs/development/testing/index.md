@@ -447,12 +447,12 @@ jobs:
 ## Best Practices
 
 1. **Test early and often**: Write tests alongside code
-1. **Keep tests fast**: Use mocks for expensive operations
-1. **Test edge cases**: Empty inputs, large files, errors
-1. **Use fixtures**: Share common setup between tests
-1. **Test in isolation**: Don't rely on external state
-1. **Document complex tests**: Explain what and why
-1. **Clean up resources**: Use context managers and fixtures
+2. **Keep tests fast**: Use mocks for expensive operations
+3. **Test edge cases**: Empty inputs, large files, errors
+4. **Use fixtures**: Share common setup between tests
+5. **Test in isolation**: Don't rely on external state
+6. **Document complex tests**: Explain what and why
+7. **Clean up resources**: Use context managers and fixtures
 
 ## Common Patterns
 

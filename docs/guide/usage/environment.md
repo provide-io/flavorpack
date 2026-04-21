@@ -4,45 +4,45 @@ Complete reference for all environment variables used by Flavorpack and its comp
 
 ## Quick Reference
 
-| Variable                           | Purpose                                 | Default                     | Component      | Category |
-| ---------------------------------- | --------------------------------------- | --------------------------- | -------------- | -------- |
-| **Core Configuration**             |                                         |                             |                |          |
-| `FLAVOR_CACHE`                     | Override cache directory                | `~/.cache/flavor/workenv`   | All            | Config   |
-| `FLAVOR_VALIDATION`                | Validation strictness level             | `standard`                  | Launchers      | Security |
-| `FLAVOR_LOG_LEVEL`                 | Go/Rust logging verbosity               | `warn`                      | Go/Rust        | Logging  |
-| `FLAVOR_LOG_PATH`                  | Write logs to file                      | stderr                      | Rust           | Logging  |
-| `FLAVOR_WORKENV`                   | Work environment path                   | Auto-generated              | All            | Runtime  |
-| **Build-Time**                     |                                         |                             |                |          |
-| `FLAVOR_BUILDER_BIN`               | Specify builder binary                  | Auto-detected               | Orchestrator   | Build    |
-| `FLAVOR_LAUNCHER_BIN`              | Specify launcher binary                 | Auto-detected               | Orchestrator   | Build    |
-| `FLAVOR_WORKENV_BASE`              | Base for `{workenv}` resolution         | `.` (cwd)                   | Builder        | Build    |
-| `FLAVOR_WORKENV_CACHE`             | Disable workenv caching                 | Enabled                     | Launcher       | Build    |
-| `FLAVOR_OUTPUT_FORMAT`             | CLI output format                       | `text`                      | CLI            | Output   |
-| `FLAVOR_OUTPUT_FILE`               | Redirect CLI output                     | `STDOUT`                    | CLI            | Output   |
-| **Launcher-Specific**              |                                         |                             |                |          |
-| `FLAVOR_LAUNCHER_CLI`              | Enable standalone CLI mode              | Disabled                    | Rust launcher  | Config   |
-| `FLAVOR_LAUNCHER_LOG_LEVEL`        | Launcher-specific log level             | Inherits `FLAVOR_LOG_LEVEL` | Rust launcher  | Logging  |
-| `FLAVOR_EXEC_MODE`                 | Execution mode (exec/spawn)             | `exec`                      | Rust launcher  | Runtime  |
-| `FLAVOR_JSON_LOG`                  | JSON-formatted logs                     | Disabled                    | Go helpers     | Logging  |
-| **Runtime (Set by Launcher)**      |                                         |                             |                |          |
-| `FLAVOR_WORKENV`                   | Extraction directory path               | Auto-set                    | Launcher → App | Runtime  |
-| `FLAVOR_COMMAND_NAME`              | Binary basename                         | Auto-set                    | Launcher → App | Runtime  |
-| `FLAVOR_ORIGINAL_COMMAND`          | Full package path                       | Auto-set                    | Launcher → App | Runtime  |
-| `FLAVOR_PACKAGE`                   | Package name                            | Auto-set                    | Launcher → App | Runtime  |
-| `FLAVOR_VERSION`                   | Package version                         | Auto-set                    | Launcher → App | Runtime  |
-| `FLAVOR_OS`                        | Operating system (darwin/linux/windows) | Auto-set                    | Launcher → App | Runtime  |
-| `FLAVOR_ARCH`                      | Architecture (amd64/arm64/etc)          | Auto-set                    | Launcher → App | Runtime  |
-| `FLAVOR_PLATFORM`                  | Combined OS_arch string                 | Auto-set                    | Launcher → App | Runtime  |
-| `FLAVOR_OS_VERSION`                | OS version if available                 | Auto-set                    | Launcher → App | Runtime  |
-| `FLAVOR_CPU_TYPE`                  | CPU type/family if available            | Auto-set                    | Launcher → App | Runtime  |
-| **Foundation (Logging Framework)** |                                         |                             |                |          |
-| `FOUNDATION_LOG_LEVEL`             | Python logging verbosity                | `info`                      | Python         | Logging  |
-| `FOUNDATION_LOG_FILE`              | Write Python logs to file               | stderr                      | Python         | Logging  |
-| `FOUNDATION_SETUP_LOG_LEVEL`       | Initialization log level                | From `FOUNDATION_LOG_LEVEL` | Python         | Logging  |
-| **Debug/Development**              |                                         |                             |                |          |
-| `FLAVOR_DEBUG_METADATA`            | Verbose metadata debugging              | Disabled                    | Rust           | Debug    |
+| Variable | Purpose | Default | Component | Category |
+|----------|---------|---------|-----------|----------|
+| **Core Configuration** |||||
+| `FLAVOR_CACHE` | Override cache directory | `~/.cache/flavor/workenv` | All | Config |
+| `FLAVOR_VALIDATION` | Validation strictness level | `standard` | Launchers | Security |
+| `FLAVOR_LOG_LEVEL` | Go/Rust logging verbosity | `warn` | Go/Rust | Logging |
+| `FLAVOR_LOG_PATH` | Write logs to file | stderr | Rust | Logging |
+| `FLAVOR_WORKENV` | Work environment path | Auto-generated | All | Runtime |
+| **Build-Time** |||||
+| `FLAVOR_BUILDER_BIN` | Specify builder binary | Auto-detected | Orchestrator | Build |
+| `FLAVOR_LAUNCHER_BIN` | Specify launcher binary | Auto-detected | Orchestrator | Build |
+| `FLAVOR_WORKENV_BASE` | Base for `{workenv}` resolution | `.` (cwd) | Builder | Build |
+| `FLAVOR_WORKENV_CACHE` | Disable workenv caching | Enabled | Launcher | Build |
+| `FLAVOR_OUTPUT_FORMAT` | CLI output format | `text` | CLI | Output |
+| `FLAVOR_OUTPUT_FILE` | Redirect CLI output | `STDOUT` | CLI | Output |
+| **Launcher-Specific** |||||
+| `FLAVOR_LAUNCHER_CLI` | Enable standalone CLI mode | Disabled | Rust launcher | Config |
+| `FLAVOR_LAUNCHER_LOG_LEVEL` | Launcher-specific log level | Inherits `FLAVOR_LOG_LEVEL` | Rust launcher | Logging |
+| `FLAVOR_EXEC_MODE` | Execution mode (exec/spawn) | `exec` | Rust launcher | Runtime |
+| `FLAVOR_JSON_LOG` | JSON-formatted logs | Disabled | Go helpers | Logging |
+| **Runtime (Set by Launcher)** |||||
+| `FLAVOR_WORKENV` | Extraction directory path | Auto-set | Launcher → App | Runtime |
+| `FLAVOR_COMMAND_NAME` | Binary basename | Auto-set | Launcher → App | Runtime |
+| `FLAVOR_ORIGINAL_COMMAND` | Full package path | Auto-set | Launcher → App | Runtime |
+| `FLAVOR_PACKAGE` | Package name | Auto-set | Launcher → App | Runtime |
+| `FLAVOR_VERSION` | Package version | Auto-set | Launcher → App | Runtime |
+| `FLAVOR_OS` | Operating system (darwin/linux/windows) | Auto-set | Launcher → App | Runtime |
+| `FLAVOR_ARCH` | Architecture (amd64/arm64/etc) | Auto-set | Launcher → App | Runtime |
+| `FLAVOR_PLATFORM` | Combined OS_arch string | Auto-set | Launcher → App | Runtime |
+| `FLAVOR_OS_VERSION` | OS version if available | Auto-set | Launcher → App | Runtime |
+| `FLAVOR_CPU_TYPE` | CPU type/family if available | Auto-set | Launcher → App | Runtime |
+| **Foundation (Logging Framework)** |||||
+| `FOUNDATION_LOG_LEVEL` | Python logging verbosity | `info` | Python | Logging |
+| `FOUNDATION_LOG_FILE` | Write Python logs to file | stderr | Python | Logging |
+| `FOUNDATION_SETUP_LOG_LEVEL` | Initialization log level | From `FOUNDATION_LOG_LEVEL` | Python | Logging |
+| **Debug/Development** |||||
+| `FLAVOR_DEBUG_METADATA` | Verbose metadata debugging | Disabled | Rust | Debug |
 
-______________________________________________________________________
+---
 
 ## Overview
 
@@ -54,10 +54,9 @@ Flavorpack uses environment variables for configuration, debugging, and runtime 
     - **`FLAVOR_*`**: Flavorpack-specific variables
     - **`FOUNDATION_*`**: Variables from the [provide-foundation](https://github.com/provide-io/provide-foundation) logging framework
 
-Both are used together and serve different purposes.
-```
+    Both are used together and serve different purposes.
 
-______________________________________________________________________
+---
 
 ## Core Flavorpack Variables
 
@@ -68,14 +67,12 @@ These variables control Flavorpack's core behavior across all components.
 **Purpose**: Override the default cache directory for package extractions.
 
 **Default**: Platform-specific
-
 - Linux/macOS: `~/.cache/flavor/workenv`
 - Windows: `%LOCALAPPDATA%\flavor\workenv`
 
 **Used By**: Python orchestrator, Go/Rust launchers
 
 **Example**:
-
 ```bash
 # Use custom cache location
 export FLAVOR_CACHE=/var/cache/myapp/flavor
@@ -86,19 +83,17 @@ FLAVOR_CACHE=/tmp/flavor-cache ./myapp.psp
 ```
 
 **When to use**:
-
 - Limited disk space on home directory
 - Shared cache in multi-user environments
 - Testing with isolated cache
 
-______________________________________________________________________
+---
 
 ### FLAVOR_VALIDATION
 
 **Purpose**: Control validation strictness for package integrity checks.
 
 **Values**:
-
 - `strict` - Enforce all checks, fail on any issue
 - `standard` - Default, balanced validation (default)
 - `relaxed` - Skip signature verification, check formats only
@@ -110,7 +105,6 @@ ______________________________________________________________________
 **Used By**: All launchers (Python, Go, Rust)
 
 **Example**:
-
 ```bash
 # Strict mode for production
 FLAVOR_VALIDATION=strict ./myapp.psp
@@ -122,9 +116,10 @@ FLAVOR_VALIDATION=relaxed ./test-package.psp
 FLAVOR_VALIDATION=none ./debug-package.psp
 ```
 
-!!! warning "Security Impact" Setting `FLAVOR_VALIDATION=none` or `relaxed` disables critical security checks. Only use for development and testing, never in production.
+!!! warning "Security Impact"
+    Setting `FLAVOR_VALIDATION=none` or `relaxed` disables critical security checks. Only use for development and testing, never in production.
 
-______________________________________________________________________
+---
 
 ### FLAVOR_LOG_LEVEL
 
@@ -137,7 +132,6 @@ ______________________________________________________________________
 **Used By**: All components
 
 **Example**:
-
 ```bash
 # Verbose debug output
 FLAVOR_LOG_LEVEL=debug flavor pack --manifest pyproject.toml
@@ -153,12 +147,11 @@ FLAVOR_LOG_LEVEL=debug ./myapp.psp
 ```
 
 **When to use**:
-
 - Debugging build issues: `debug` or `trace`
 - CI/CD pipelines: `info` or `warning`
 - Troubleshooting package execution: `debug`
 
-______________________________________________________________________
+---
 
 ### FLAVOR_LOG_PATH
 
@@ -169,7 +162,6 @@ ______________________________________________________________________
 **Used By**: Rust components
 
 **Example**:
-
 ```bash
 # Log to file
 FLAVOR_LOG_PATH=/var/log/flavor/build.log flavor pack --manifest pyproject.toml
@@ -178,7 +170,7 @@ FLAVOR_LOG_PATH=/var/log/flavor/build.log flavor pack --manifest pyproject.toml
 FLAVOR_LOG_PATH=/tmp/launch.log ./myapp.psp
 ```
 
-______________________________________________________________________
+---
 
 ### FLAVOR_WORKENV
 
@@ -191,7 +183,6 @@ ______________________________________________________________________
 **Used By**: Launchers, packaged applications
 
 **Example**:
-
 ```bash
 # Use custom workenv location
 FLAVOR_WORKENV=/tmp/my-workenv ./myapp.psp
@@ -200,9 +191,10 @@ FLAVOR_WORKENV=/tmp/my-workenv ./myapp.psp
 echo "Running from: $FLAVOR_WORKENV"
 ```
 
-!!! note "Automatic Variable" When you run a `.psp` package, the launcher automatically sets `FLAVOR_WORKENV` to point to the extraction directory. Your application code can read this to find extracted files.
+!!! note "Automatic Variable"
+    When you run a `.psp` package, the launcher automatically sets `FLAVOR_WORKENV` to point to the extraction directory. Your application code can read this to find extracted files.
 
-______________________________________________________________________
+---
 
 ## Build-Time Variables
 
@@ -217,7 +209,6 @@ These variables control the packaging/build process.
 **Used By**: Python orchestrator
 
 **Example**:
-
 ```bash
 # Force use of Rust builder
 export FLAVOR_BUILDER_BIN=/path/to/flavor-rs-builder-linux_amd64
@@ -228,12 +219,11 @@ FLAVOR_BUILDER_BIN=dist/bin/flavor-go-builder-darwin_arm64 flavor pack
 ```
 
 **Selection Priority**:
-
 1. `--builder-bin` CLI flag
-1. `FLAVOR_BUILDER_BIN` environment variable
-1. Auto-detection (Rust → Go → error)
+2. `FLAVOR_BUILDER_BIN` environment variable
+3. Auto-detection (Rust → Go → error)
 
-______________________________________________________________________
+---
 
 ### FLAVOR_LAUNCHER_BIN
 
@@ -244,7 +234,6 @@ ______________________________________________________________________
 **Used By**: Python orchestrator, Rust/Go builders
 
 **Example**:
-
 ```bash
 # Force use of Go launcher
 export FLAVOR_LAUNCHER_BIN=/path/to/flavor-go-launcher-linux_amd64
@@ -256,12 +245,11 @@ FLAVOR_LAUNCHER_BIN=dist/bin/flavor-rs-launcher-linux_amd64 \
 ```
 
 **Selection Priority**:
-
 1. `--launcher-bin` CLI flag
-1. `FLAVOR_LAUNCHER_BIN` environment variable
-1. Auto-detection (Rust → Go → error)
+2. `FLAVOR_LAUNCHER_BIN` environment variable
+3. Auto-detection (Rust → Go → error)
 
-______________________________________________________________________
+---
 
 ### FLAVOR_WORKENV_BASE
 
@@ -272,7 +260,6 @@ ______________________________________________________________________
 **Used By**: Python orchestrator, Rust/Go builders
 
 **Example**:
-
 ```bash
 # Build with custom workenv base
 FLAVOR_WORKENV_BASE=/opt/app flavor pack --manifest pyproject.toml
@@ -280,7 +267,7 @@ FLAVOR_WORKENV_BASE=/opt/app flavor pack --manifest pyproject.toml
 # Resolve {workenv}/config to /opt/app/config
 ```
 
-______________________________________________________________________
+---
 
 ### FLAVOR_WORKENV_CACHE
 
@@ -293,7 +280,6 @@ ______________________________________________________________________
 **Used By**: Rust launcher
 
 **Example**:
-
 ```bash
 # Force fresh extraction every time
 FLAVOR_WORKENV_CACHE=false ./myapp.psp
@@ -302,7 +288,7 @@ FLAVOR_WORKENV_CACHE=false ./myapp.psp
 FLAVOR_WORKENV_CACHE=0 ./myapp.psp
 ```
 
-______________________________________________________________________
+---
 
 ### FLAVOR_OUTPUT_FORMAT
 
@@ -315,7 +301,6 @@ ______________________________________________________________________
 **Used By**: Python CLI commands
 
 **Example**:
-
 ```bash
 # JSON output for programmatic parsing
 FLAVOR_OUTPUT_FORMAT=json flavor inspect myapp.psp
@@ -324,7 +309,7 @@ FLAVOR_OUTPUT_FORMAT=json flavor inspect myapp.psp
 flavor inspect myapp.psp --output-format json
 ```
 
-______________________________________________________________________
+---
 
 ### FLAVOR_OUTPUT_FILE
 
@@ -337,7 +322,6 @@ ______________________________________________________________________
 **Used By**: Python CLI commands
 
 **Example**:
-
 ```bash
 # Write to file
 FLAVOR_OUTPUT_FILE=/tmp/output.json flavor inspect myapp.psp
@@ -346,7 +330,7 @@ FLAVOR_OUTPUT_FILE=/tmp/output.json flavor inspect myapp.psp
 FLAVOR_OUTPUT_FILE=STDOUT flavor inspect myapp.psp
 ```
 
-______________________________________________________________________
+---
 
 ## Launcher-Specific Variables
 
@@ -363,7 +347,6 @@ These variables control launcher behavior.
 **Used By**: Rust launcher
 
 **Example**:
-
 ```bash
 # Run launcher in CLI mode
 FLAVOR_LAUNCHER_CLI=1 /path/to/flavor-rs-launcher inspect myapp.psp
@@ -372,9 +355,10 @@ FLAVOR_LAUNCHER_CLI=1 /path/to/flavor-rs-launcher inspect myapp.psp
 ./myapp.psp
 ```
 
-!!! info "When is this used?" Normally the launcher is embedded in a `.psp` package. This variable allows using the launcher binary standalone for debugging or manual operations.
+!!! info "When is this used?"
+    Normally the launcher is embedded in a `.psp` package. This variable allows using the launcher binary standalone for debugging or manual operations.
 
-______________________________________________________________________
+---
 
 ### FLAVOR_LAUNCHER_LOG_LEVEL
 
@@ -387,13 +371,12 @@ ______________________________________________________________________
 **Used By**: Rust launcher
 
 **Example**:
-
 ```bash
 # Debug launcher, but not application
 FLAVOR_LAUNCHER_LOG_LEVEL=debug ./myapp.psp
 ```
 
-______________________________________________________________________
+---
 
 ### FLAVOR_EXEC_MODE
 
@@ -406,13 +389,12 @@ ______________________________________________________________________
 **Used By**: Rust launcher
 
 **Example**:
-
 ```bash
 # Use spawn mode instead of exec
 FLAVOR_EXEC_MODE=spawn ./myapp.psp
 ```
 
-______________________________________________________________________
+---
 
 ### FLAVOR_JSON_LOG
 
@@ -425,13 +407,12 @@ ______________________________________________________________________
 **Used By**: Go helpers
 
 **Example**:
-
 ```bash
 # JSON logs for log aggregation
 FLAVOR_JSON_LOG=1 flavor-go-launcher inspect myapp.psp
 ```
 
-______________________________________________________________________
+---
 
 ## Runtime Variables (Set by Launcher)
 
@@ -446,7 +427,6 @@ These variables are automatically set by the launcher and available to packaged 
 **Available To**: Packaged applications
 
 **Example (inside packaged app)**:
-
 ```python
 import os
 from pathlib import Path
@@ -459,7 +439,7 @@ config_file = workenv / 'config' / 'app.yaml'
 data_dir = workenv / 'data'
 ```
 
-______________________________________________________________________
+---
 
 ### FLAVOR_COMMAND_NAME
 
@@ -470,7 +450,6 @@ ______________________________________________________________________
 **Available To**: Packaged applications
 
 **Example (inside packaged app)**:
-
 ```python
 import os
 
@@ -479,7 +458,7 @@ cmd_name = os.environ.get('FLAVOR_COMMAND_NAME', 'unknown')
 print(f"Running as: {cmd_name}")
 ```
 
-______________________________________________________________________
+---
 
 ### FLAVOR_ORIGINAL_COMMAND
 
@@ -490,7 +469,6 @@ ______________________________________________________________________
 **Available To**: Packaged applications
 
 **Example (inside packaged app)**:
-
 ```python
 import os
 
@@ -499,7 +477,7 @@ pkg_path = os.environ.get('FLAVOR_ORIGINAL_COMMAND')
 print(f"Package location: {pkg_path}")
 ```
 
-______________________________________________________________________
+---
 
 ### FLAVOR_PACKAGE
 
@@ -509,7 +487,7 @@ ______________________________________________________________________
 
 **Available To**: Packaged applications
 
-______________________________________________________________________
+---
 
 ### FLAVOR_VERSION
 
@@ -520,7 +498,6 @@ ______________________________________________________________________
 **Available To**: Packaged applications
 
 **Example (inside packaged app)**:
-
 ```python
 import os
 
@@ -530,7 +507,7 @@ version = os.environ.get('FLAVOR_VERSION', '0.0.0')
 print(f"{name} v{version}")
 ```
 
-______________________________________________________________________
+---
 
 ### FLAVOR_OS
 
@@ -543,7 +520,6 @@ ______________________________________________________________________
 **Values**: `darwin`, `linux`, `windows`
 
 **Example (inside packaged app)**:
-
 ```python
 import os
 
@@ -554,7 +530,7 @@ elif os_name == 'linux':
     print("Running on Linux")
 ```
 
-______________________________________________________________________
+---
 
 ### FLAVOR_ARCH
 
@@ -567,7 +543,6 @@ ______________________________________________________________________
 **Values**: `amd64`, `arm64`, `x86`, `i386`
 
 **Example (inside packaged app)**:
-
 ```python
 import os
 
@@ -575,7 +550,7 @@ arch = os.environ.get('FLAVOR_ARCH')
 print(f"CPU Architecture: {arch}")
 ```
 
-______________________________________________________________________
+---
 
 ### FLAVOR_PLATFORM
 
@@ -588,7 +563,6 @@ ______________________________________________________________________
 **Format**: `{OS}_{ARCH}` (e.g., `darwin_arm64`, `linux_amd64`)
 
 **Example (inside packaged app)**:
-
 ```python
 import os
 
@@ -597,7 +571,7 @@ print(f"Platform: {platform}")
 # Output: "Platform: darwin_arm64"
 ```
 
-______________________________________________________________________
+---
 
 ### FLAVOR_OS_VERSION
 
@@ -608,7 +582,6 @@ ______________________________________________________________________
 **Available To**: Packaged applications
 
 **Example (inside packaged app)**:
-
 ```python
 import os
 
@@ -617,7 +590,7 @@ if os_version:
     print(f"OS Version: {os_version}")
 ```
 
-______________________________________________________________________
+---
 
 ### FLAVOR_CPU_TYPE
 
@@ -628,7 +601,6 @@ ______________________________________________________________________
 **Available To**: Packaged applications
 
 **Example (inside packaged app)**:
-
 ```python
 import os
 
@@ -637,7 +609,7 @@ if cpu_type:
     print(f"CPU Type: {cpu_type}")
 ```
 
-______________________________________________________________________
+---
 
 ## Foundation (Logging Framework) Variables
 
@@ -654,7 +626,6 @@ Flavorpack uses [provide-foundation](https://github.com/provide-io/provide-found
 **Used By**: Python components (Flavorpack orchestrator, Foundation framework)
 
 **Example**:
-
 ```bash
 # Debug Python components
 FOUNDATION_LOG_LEVEL=debug flavor pack --manifest pyproject.toml
@@ -664,7 +635,6 @@ FOUNDATION_LOG_LEVEL=error flavor pack --manifest pyproject.toml
 ```
 
 **Relationship to `FLAVOR_LOG_LEVEL`**:
-
 - `FOUNDATION_LOG_LEVEL`: Controls Python/Foundation logging
 - `FLAVOR_LOG_LEVEL`: Controls Go/Rust component logging
 - Set both for comprehensive debugging:
@@ -672,7 +642,7 @@ FOUNDATION_LOG_LEVEL=error flavor pack --manifest pyproject.toml
   FOUNDATION_LOG_LEVEL=debug FLAVOR_LOG_LEVEL=debug flavor pack --manifest pyproject.toml
   ```
 
-______________________________________________________________________
+---
 
 ### FOUNDATION_LOG_FILE
 
@@ -683,13 +653,12 @@ ______________________________________________________________________
 **Used By**: Foundation framework
 
 **Example**:
-
 ```bash
 # Log to file
 FOUNDATION_LOG_FILE=/var/log/flavor/build.log flavor pack --manifest pyproject.toml
 ```
 
-______________________________________________________________________
+---
 
 ### FOUNDATION_SETUP_LOG_LEVEL
 
@@ -700,13 +669,12 @@ ______________________________________________________________________
 **Used By**: Foundation framework initialization
 
 **Example**:
-
 ```bash
 # Quiet initialization, verbose runtime
 FOUNDATION_SETUP_LOG_LEVEL=error FOUNDATION_LOG_LEVEL=debug flavor pack
 ```
 
-______________________________________________________________________
+---
 
 ## Debug & Development Variables
 
@@ -723,49 +691,43 @@ These variables are primarily for development and debugging.
 **Used By**: Rust reader/builder
 
 **Example**:
-
 ```bash
 # Debug metadata operations
 FLAVOR_DEBUG_METADATA=1 flavor pack --manifest pyproject.toml
 ```
 
-______________________________________________________________________
+---
 
 ## Variable Priority Reference
 
 When multiple configuration methods exist, this is the priority order:
 
 ### Builder Selection
-
 1. `--builder-bin` CLI flag
-1. `FLAVOR_BUILDER_BIN` environment variable
-1. Auto-detection
+2. `FLAVOR_BUILDER_BIN` environment variable
+3. Auto-detection
 
 ### Launcher Selection
-
 1. `--launcher-bin` CLI flag
-1. `FLAVOR_LAUNCHER_BIN` environment variable
-1. Auto-detection
+2. `FLAVOR_LAUNCHER_BIN` environment variable
+3. Auto-detection
 
 ### Log Level (Python)
-
 1. Explicit code configuration
-1. `FOUNDATION_LOG_LEVEL` environment variable
-1. Default: `info`
+2. `FOUNDATION_LOG_LEVEL` environment variable
+3. Default: `info`
 
 ### Log Level (Rust/Go)
-
 1. `FLAVOR_LAUNCHER_LOG_LEVEL` (launcher-specific)
-1. `FLAVOR_LOG_LEVEL` (general)
-1. Default: `warn`
+2. `FLAVOR_LOG_LEVEL` (general)
+3. Default: `warn`
 
 ### Output Format
-
 1. `--output-format` CLI flag
-1. `FLAVOR_OUTPUT_FORMAT` environment variable
-1. Default: `text`
+2. `FLAVOR_OUTPUT_FORMAT` environment variable
+3. Default: `text`
 
-______________________________________________________________________
+---
 
 ## Common Use Cases
 
@@ -822,7 +784,7 @@ FLAVOR_LAUNCHER_BIN=dist/bin/flavor-rs-launcher-linux_amd64 \
 FLAVOR_VALIDATION=relaxed ./test-package.psp
 ```
 
-______________________________________________________________________
+---
 
 ## Environment Variables in Packaged Applications
 
@@ -848,7 +810,7 @@ print(f"Work environment: {workenv}")
 print(f"Config: {config}")
 ```
 
-______________________________________________________________________
+---
 
 ## Troubleshooting
 
@@ -857,7 +819,6 @@ ______________________________________________________________________
 **Problem**: No debug output even with log level set.
 
 **Solution**: Set both Foundation and Flavor variables:
-
 ```bash
 FOUNDATION_LOG_LEVEL=debug FLAVOR_LOG_LEVEL=debug flavor pack
 ```
@@ -869,7 +830,6 @@ FOUNDATION_LOG_LEVEL=debug FLAVOR_LOG_LEVEL=debug flavor pack
 **Cause**: `FLAVOR_WORKENV_CACHE` is set to disable cache.
 
 **Solution**: Unset the variable:
-
 ```bash
 unset FLAVOR_WORKENV_CACHE
 ./myapp.psp
@@ -880,7 +840,6 @@ unset FLAVOR_WORKENV_CACHE
 **Problem**: Package fails signature verification.
 
 **Quick fix** (testing only):
-
 ```bash
 FLAVOR_VALIDATION=relaxed ./myapp.psp
 ```
@@ -892,7 +851,6 @@ FLAVOR_VALIDATION=relaxed ./myapp.psp
 **Problem**: "No compatible builder/launcher found"
 
 **Check environment**:
-
 ```bash
 echo $FLAVOR_BUILDER_BIN
 echo $FLAVOR_LAUNCHER_BIN
@@ -902,7 +860,6 @@ ls -lh dist/bin/flavor-*
 ```
 
 **Solution**: Either build helpers or set paths explicitly:
-
 ```bash
 make build-helpers
 # Or
@@ -910,7 +867,7 @@ export FLAVOR_BUILDER_BIN=/path/to/builder
 export FLAVOR_LAUNCHER_BIN=/path/to/launcher
 ```
 
-______________________________________________________________________
+---
 
 ## See Also
 

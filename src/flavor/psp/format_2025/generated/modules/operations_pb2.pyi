@@ -1,0 +1,264 @@
+from google.protobuf.internal import containers as _containers
+from google.protobuf.internal import enum_type_wrapper as _enum_type_wrapper
+from google.protobuf import descriptor as _descriptor
+from google.protobuf import message as _message
+from collections.abc import Iterable as _Iterable, Mapping as _Mapping
+from typing import ClassVar as _ClassVar, Optional as _Optional, Union as _Union
+
+DESCRIPTOR: _descriptor.FileDescriptor
+
+class Operation(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    OP_NONE: _ClassVar[Operation]
+    OP_TAR: _ClassVar[Operation]
+    OP_TAR_SORTED: _ClassVar[Operation]
+    OP_TAR_STREAM: _ClassVar[Operation]
+    OP_CPIO: _ClassVar[Operation]
+    OP_CPIO_NEWC: _ClassVar[Operation]
+    OP_AR: _ClassVar[Operation]
+    OP_AR_BSD: _ClassVar[Operation]
+    OP_ZIP_STORE: _ClassVar[Operation]
+    OP_ZIP_STREAM: _ClassVar[Operation]
+    OP_7Z: _ClassVar[Operation]
+    OP_RAR: _ClassVar[Operation]
+    OP_PAX: _ClassVar[Operation]
+    OP_USTAR: _ClassVar[Operation]
+    OP_BUNDLE_RESERVED_E: _ClassVar[Operation]
+    OP_BUNDLE_RESERVED_F: _ClassVar[Operation]
+    OP_GZIP: _ClassVar[Operation]
+    OP_GZIP_FAST: _ClassVar[Operation]
+    OP_GZIP_BEST: _ClassVar[Operation]
+    OP_BZIP2: _ClassVar[Operation]
+    OP_BZIP2_FAST: _ClassVar[Operation]
+    OP_BZIP2_BEST: _ClassVar[Operation]
+    OP_XZ: _ClassVar[Operation]
+    OP_XZ_FAST: _ClassVar[Operation]
+    OP_XZ_BEST: _ClassVar[Operation]
+    OP_LZMA: _ClassVar[Operation]
+    OP_LZMA2: _ClassVar[Operation]
+    OP_ZSTD: _ClassVar[Operation]
+    OP_ZSTD_FAST: _ClassVar[Operation]
+    OP_ZSTD_BEST: _ClassVar[Operation]
+    OP_LZ4: _ClassVar[Operation]
+    OP_LZ4_HC: _ClassVar[Operation]
+    OP_SNAPPY: _ClassVar[Operation]
+    OP_BROTLI: _ClassVar[Operation]
+    OP_BROTLI_TEXT: _ClassVar[Operation]
+    OP_DEFLATE: _ClassVar[Operation]
+    OP_DEFLATE64: _ClassVar[Operation]
+    OP_PPM: _ClassVar[Operation]
+    OP_PPMD: _ClassVar[Operation]
+    OP_AES128_GCM: _ClassVar[Operation]
+    OP_AES256_GCM: _ClassVar[Operation]
+    OP_AES128_CBC: _ClassVar[Operation]
+    OP_AES256_CBC: _ClassVar[Operation]
+    OP_AES128_CTR: _ClassVar[Operation]
+    OP_AES256_CTR: _ClassVar[Operation]
+    OP_CHACHA20_POLY1305: _ClassVar[Operation]
+    OP_XCHACHA20_POLY1305: _ClassVar[Operation]
+    OP_SALSA20: _ClassVar[Operation]
+    OP_XSALSA20_POLY1305: _ClassVar[Operation]
+    OP_RSA_2048: _ClassVar[Operation]
+    OP_RSA_4096: _ClassVar[Operation]
+    OP_ED25519: _ClassVar[Operation]
+    OP_X25519: _ClassVar[Operation]
+    OP_SECP256K1: _ClassVar[Operation]
+    OP_SECP256R1: _ClassVar[Operation]
+    OP_NACL_BOX: _ClassVar[Operation]
+    OP_NACL_SECRETBOX: _ClassVar[Operation]
+    OP_AGE: _ClassVar[Operation]
+    OP_PGP: _ClassVar[Operation]
+    OP_BASE64: _ClassVar[Operation]
+    OP_BASE64_URL: _ClassVar[Operation]
+    OP_BASE32: _ClassVar[Operation]
+    OP_BASE16: _ClassVar[Operation]
+    OP_HEX: _ClassVar[Operation]
+    OP_ASCII85: _ClassVar[Operation]
+    OP_UUENCODE: _ClassVar[Operation]
+    OP_XXENCODE: _ClassVar[Operation]
+    OP_QUOTED_PRINTABLE: _ClassVar[Operation]
+    OP_PUNYCODE: _ClassVar[Operation]
+    OP_PERCENT: _ClassVar[Operation]
+    OP_SHA256: _ClassVar[Operation]
+    OP_SHA512: _ClassVar[Operation]
+    OP_SHA3_256: _ClassVar[Operation]
+    OP_SHA3_512: _ClassVar[Operation]
+    OP_BLAKE2B: _ClassVar[Operation]
+    OP_BLAKE2S: _ClassVar[Operation]
+    OP_BLAKE3: _ClassVar[Operation]
+    OP_MD5: _ClassVar[Operation]
+    OP_SHA1: _ClassVar[Operation]
+    OP_XXHASH: _ClassVar[Operation]
+    OP_XXHASH3: _ClassVar[Operation]
+    OP_SIPHASH: _ClassVar[Operation]
+    OP_HIGHWAYHASH: _ClassVar[Operation]
+    OP_ADLER32: _ClassVar[Operation]
+    OP_CRC32: _ClassVar[Operation]
+    OP_CRC64: _ClassVar[Operation]
+    OP_ED25519_SIGN: _ClassVar[Operation]
+    OP_RSA_PSS: _ClassVar[Operation]
+    OP_RSA_PKCS1: _ClassVar[Operation]
+    OP_ECDSA_P256: _ClassVar[Operation]
+    OP_ECDSA_P384: _ClassVar[Operation]
+    OP_ECDSA_P521: _ClassVar[Operation]
+    OP_EDDSA: _ClassVar[Operation]
+    OP_HMAC_SHA256: _ClassVar[Operation]
+    OP_HMAC_SHA512: _ClassVar[Operation]
+    OP_SPLIT: _ClassVar[Operation]
+    OP_MERGE: _ClassVar[Operation]
+    OP_DEDUPE: _ClassVar[Operation]
+    OP_DELTA: _ClassVar[Operation]
+    OP_PATCH: _ClassVar[Operation]
+    OP_TERMINAL: _ClassVar[Operation]
+OP_NONE: Operation
+OP_TAR: Operation
+OP_TAR_SORTED: Operation
+OP_TAR_STREAM: Operation
+OP_CPIO: Operation
+OP_CPIO_NEWC: Operation
+OP_AR: Operation
+OP_AR_BSD: Operation
+OP_ZIP_STORE: Operation
+OP_ZIP_STREAM: Operation
+OP_7Z: Operation
+OP_RAR: Operation
+OP_PAX: Operation
+OP_USTAR: Operation
+OP_BUNDLE_RESERVED_E: Operation
+OP_BUNDLE_RESERVED_F: Operation
+OP_GZIP: Operation
+OP_GZIP_FAST: Operation
+OP_GZIP_BEST: Operation
+OP_BZIP2: Operation
+OP_BZIP2_FAST: Operation
+OP_BZIP2_BEST: Operation
+OP_XZ: Operation
+OP_XZ_FAST: Operation
+OP_XZ_BEST: Operation
+OP_LZMA: Operation
+OP_LZMA2: Operation
+OP_ZSTD: Operation
+OP_ZSTD_FAST: Operation
+OP_ZSTD_BEST: Operation
+OP_LZ4: Operation
+OP_LZ4_HC: Operation
+OP_SNAPPY: Operation
+OP_BROTLI: Operation
+OP_BROTLI_TEXT: Operation
+OP_DEFLATE: Operation
+OP_DEFLATE64: Operation
+OP_PPM: Operation
+OP_PPMD: Operation
+OP_AES128_GCM: Operation
+OP_AES256_GCM: Operation
+OP_AES128_CBC: Operation
+OP_AES256_CBC: Operation
+OP_AES128_CTR: Operation
+OP_AES256_CTR: Operation
+OP_CHACHA20_POLY1305: Operation
+OP_XCHACHA20_POLY1305: Operation
+OP_SALSA20: Operation
+OP_XSALSA20_POLY1305: Operation
+OP_RSA_2048: Operation
+OP_RSA_4096: Operation
+OP_ED25519: Operation
+OP_X25519: Operation
+OP_SECP256K1: Operation
+OP_SECP256R1: Operation
+OP_NACL_BOX: Operation
+OP_NACL_SECRETBOX: Operation
+OP_AGE: Operation
+OP_PGP: Operation
+OP_BASE64: Operation
+OP_BASE64_URL: Operation
+OP_BASE32: Operation
+OP_BASE16: Operation
+OP_HEX: Operation
+OP_ASCII85: Operation
+OP_UUENCODE: Operation
+OP_XXENCODE: Operation
+OP_QUOTED_PRINTABLE: Operation
+OP_PUNYCODE: Operation
+OP_PERCENT: Operation
+OP_SHA256: Operation
+OP_SHA512: Operation
+OP_SHA3_256: Operation
+OP_SHA3_512: Operation
+OP_BLAKE2B: Operation
+OP_BLAKE2S: Operation
+OP_BLAKE3: Operation
+OP_MD5: Operation
+OP_SHA1: Operation
+OP_XXHASH: Operation
+OP_XXHASH3: Operation
+OP_SIPHASH: Operation
+OP_HIGHWAYHASH: Operation
+OP_ADLER32: Operation
+OP_CRC32: Operation
+OP_CRC64: Operation
+OP_ED25519_SIGN: Operation
+OP_RSA_PSS: Operation
+OP_RSA_PKCS1: Operation
+OP_ECDSA_P256: Operation
+OP_ECDSA_P384: Operation
+OP_ECDSA_P521: Operation
+OP_EDDSA: Operation
+OP_HMAC_SHA256: Operation
+OP_HMAC_SHA512: Operation
+OP_SPLIT: Operation
+OP_MERGE: Operation
+OP_DEDUPE: Operation
+OP_DELTA: Operation
+OP_PATCH: Operation
+OP_TERMINAL: Operation
+
+class OperationChain(_message.Message):
+    __slots__ = ("packed", "operations", "description")
+    PACKED_FIELD_NUMBER: _ClassVar[int]
+    OPERATIONS_FIELD_NUMBER: _ClassVar[int]
+    DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
+    packed: int
+    operations: _containers.RepeatedScalarFieldContainer[int]
+    description: str
+    def __init__(self, packed: _Optional[int] = ..., operations: _Optional[_Iterable[int]] = ..., description: _Optional[str] = ...) -> None: ...
+
+class OperationCapability(_message.Message):
+    __slots__ = ("operation", "required_capabilities", "input_format", "output_format", "cpu_cost", "memory_cost", "streaming", "seekable")
+    OPERATION_FIELD_NUMBER: _ClassVar[int]
+    REQUIRED_CAPABILITIES_FIELD_NUMBER: _ClassVar[int]
+    INPUT_FORMAT_FIELD_NUMBER: _ClassVar[int]
+    OUTPUT_FORMAT_FIELD_NUMBER: _ClassVar[int]
+    CPU_COST_FIELD_NUMBER: _ClassVar[int]
+    MEMORY_COST_FIELD_NUMBER: _ClassVar[int]
+    STREAMING_FIELD_NUMBER: _ClassVar[int]
+    SEEKABLE_FIELD_NUMBER: _ClassVar[int]
+    operation: Operation
+    required_capabilities: _containers.RepeatedScalarFieldContainer[str]
+    input_format: str
+    output_format: str
+    cpu_cost: int
+    memory_cost: int
+    streaming: bool
+    seekable: bool
+    def __init__(self, operation: _Optional[_Union[Operation, str]] = ..., required_capabilities: _Optional[_Iterable[str]] = ..., input_format: _Optional[str] = ..., output_format: _Optional[str] = ..., cpu_cost: _Optional[int] = ..., memory_cost: _Optional[int] = ..., streaming: bool = ..., seekable: bool = ...) -> None: ...
+
+class OperationConfig(_message.Message):
+    __slots__ = ("operation", "parameters", "buffer_size", "max_memory", "timeout_ms")
+    class ParametersEntry(_message.Message):
+        __slots__ = ("key", "value")
+        KEY_FIELD_NUMBER: _ClassVar[int]
+        VALUE_FIELD_NUMBER: _ClassVar[int]
+        key: str
+        value: str
+        def __init__(self, key: _Optional[str] = ..., value: _Optional[str] = ...) -> None: ...
+    OPERATION_FIELD_NUMBER: _ClassVar[int]
+    PARAMETERS_FIELD_NUMBER: _ClassVar[int]
+    BUFFER_SIZE_FIELD_NUMBER: _ClassVar[int]
+    MAX_MEMORY_FIELD_NUMBER: _ClassVar[int]
+    TIMEOUT_MS_FIELD_NUMBER: _ClassVar[int]
+    operation: Operation
+    parameters: _containers.ScalarMap[str, str]
+    buffer_size: int
+    max_memory: int
+    timeout_ms: int
+    def __init__(self, operation: _Optional[_Union[Operation, str]] = ..., parameters: _Optional[_Mapping[str, str]] = ..., buffer_size: _Optional[int] = ..., max_memory: _Optional[int] = ..., timeout_ms: _Optional[int] = ...) -> None: ...
