@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 // helpers/flavor-rs/src/psp/format_2025/backends.rs
 // Backend implementations for PSPF bundle access - mmap, file, and stream
 
@@ -613,8 +610,9 @@ mod tests {
             vec![b"abcd".to_vec(), b"efgh".to_vec(), b"ij".to_vec()]
         );
 
+        // read_slot assembles all chunks into a complete buffer
         let slot = backend.read_slot(&descriptor).expect("slot read");
-        assert_eq!(slot, b"abcd");
+        assert_eq!(slot, b"abcdefghij");
     }
 
     #[test]
@@ -677,10 +675,11 @@ mod tests {
             offset: 0,
             ..SlotDescriptor::new(2)
         };
+        // read_slot returns the full slot (all chunks assembled), not just the first chunk
         let large_slot = large_backend
             .read_slot(&large_descriptor)
             .expect("stream slot");
-        assert_eq!(large_slot.len(), DEFAULT_CHUNK_SIZE);
+        assert_eq!(large_slot.len(), (DEFAULT_CHUNK_SIZE) + 10);
     }
 
     #[test]

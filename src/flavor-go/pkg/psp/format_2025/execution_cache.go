@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -109,7 +106,7 @@ func savePackageChecksum(paths *WorkenvPaths, checksum uint32, logger *slog.Logg
 	checksumStr := fmt.Sprintf("%08x", checksum)
 
 	// Open file with explicit sync to ensure write is flushed before exec
-	file, err := openFileFn(checksumPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	file, err := openFileFn(checksumPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, FilePerms)
 	if err != nil {
 		logger.Debug("⚠️ Failed to open checksum file", "error", err)
 		return err

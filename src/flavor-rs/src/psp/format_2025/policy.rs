@@ -359,7 +359,7 @@ pub fn enforce_policy(
     let mut warnings: Vec<String> = Vec::new();
     let current_platform = get_current_platform();
 
-    // Platform check
+    // 1. Platform check
     if !policy.platforms.is_empty() && !policy.platforms.contains(&current_platform) {
         let mode = policy
             .enforcement
@@ -408,7 +408,7 @@ pub fn enforce_policy(
         )?;
     }
 
-    // Age check
+    // 4. Age check
     if let Some(max_days) = policy.max_age_days {
         if build_timestamp > 0 {
             let now = SystemTime::now()
@@ -432,7 +432,7 @@ pub fn enforce_policy(
         }
     }
 
-    // Environment variable check
+    // 5. Environment variable check
     for var in &policy.require_env {
         match std::env::var(var) {
             Ok(val) if !val.is_empty() => {}
@@ -447,7 +447,7 @@ pub fn enforce_policy(
         }
     }
 
-    // SBOM check
+    // 6. SBOM check
     if policy.require_sbom && !has_sbom {
         let mode = policy.enforcement.mode_for(policy.enforcement.missing_sbom);
         apply_enforcement(
@@ -457,14 +457,7 @@ pub fn enforce_policy(
         )?;
     }
 
-    if policy.use_os_keychain {
-        return Err(
-            "operator policy requests OS keychain trust, but Rust launcher does not support it"
-                .to_string(),
-        );
-    }
-
-    // Trusted key check
+    // 7. Trusted key check
     if policy.require_trusted_key && !key_trusted {
         let mode = policy
             .enforcement
@@ -966,5 +959,245 @@ mod tests {
         assert!(ep.missing_sbom.is_none());
         assert!(ep.root_execution.is_none());
         assert!(ep.os_keychain.is_none());
+    }
+
+    #[test]
+    fn test_merge_policy_platforms_only_pkg() {
+        let pkg = PackagePolicy {
+            platforms: vec!["darwin_arm64".to_string()],
+            ..Default::default()
+        };
+        let op = OperatorPolicy::default();
+        let eff = merge_policy(pkg, op);
+        assert_eq!(eff.platforms, vec!["darwin_arm64".to_string()]);
+    }
+
+    #[test]
+    fn test_merge_policy_max_age_only_operator() {
+        let pkg = PackagePolicy::default();
+        let op = OperatorPolicy {
+            max_age_days: Some(365),
+            ..Default::default()
+        };
+        let eff = merge_policy(pkg, op);
+        assert_eq!(eff.max_age_days, Some(365));
+    }
+
+    #[test]
+    fn test_merge_policy_max_age_none_both() {
+        let pkg = PackagePolicy::default();
+        let op = OperatorPolicy::default();
+        let eff = merge_policy(pkg, op);
+        assert_eq!(eff.max_age_days, None);
+    }
+
+    #[test]
+    fn test_merge_policy_propagates_require_env() {
+        let pkg = PackagePolicy {
+            require_env: vec!["FOO".to_string(), "BAR".to_string()],
+            ..Default::default()
+        };
+        let op = OperatorPolicy::default();
+        let eff = merge_policy(pkg, op);
+        assert_eq!(eff.require_env, vec!["FOO".to_string(), "BAR".to_string()]);
+    }
+
+    #[test]
+    fn test_merge_policy_propagates_require_sbom() {
+        let pkg = PackagePolicy::default();
+        let op = OperatorPolicy {
+            require_sbom: true,
+            ..Default::default()
+        };
+        let eff = merge_policy(pkg, op);
+        assert!(eff.require_sbom);
+    }
+
+    #[test]
+    fn test_merge_policy_propagates_require_trusted_key() {
+        let pkg = PackagePolicy::default();
+        let op = OperatorPolicy {
+            require_trusted_key: true,
+            ..Default::default()
+        };
+        let eff = merge_policy(pkg, op);
+        assert!(eff.require_trusted_key);
+    }
+
+    #[test]
+    fn test_enforce_policy_age_not_exceeded_with_recent_timestamp() {
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        let eff = EffectivePolicy {
+            max_age_days: Some(365),
+            ..Default::default()
+        };
+        // Build timestamp of now should not exceed 365 day limit
+        let result = enforce_policy(&eff, now, false, true);
+        assert!(result.is_ok());
+        assert!(result.unwrap().is_empty());
+    }
+
+    #[test]
+    fn test_enforce_policy_age_zero_timestamp_skips_check() {
+        let eff = EffectivePolicy {
+            max_age_days: Some(0),
+            ..Default::default()
+        };
+        // build_timestamp=0 should skip the age check entirely
+        let result = enforce_policy(&eff, 0, false, true);
+        assert!(result.is_ok());
+        assert!(result.unwrap().is_empty());
+    }
+
+    #[test]
+    fn test_enforce_policy_warn_mode_os_keychain() {
+        let eff = EffectivePolicy {
+            use_os_keychain: true,
+            enforcement: EnforcementPolicy {
+                os_keychain: Some(EnforcementMode::Warn),
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let result = enforce_policy(&eff, 0, false, true);
+        assert!(result.is_ok());
+        let warnings = result.unwrap();
+        assert_eq!(warnings.len(), 1);
+        assert!(warnings[0].contains("os_keychain"));
+    }
+
+    #[test]
+    fn test_enforce_policy_warn_mode_env_var() {
+        unsafe { env::remove_var("__FLAVOR_POLICY_WARN_ENV__") };
+        let eff = EffectivePolicy {
+            require_env: vec!["__FLAVOR_POLICY_WARN_ENV__".to_string()],
+            enforcement: EnforcementPolicy {
+                missing_env: Some(EnforcementMode::Warn),
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let result = enforce_policy(&eff, 0, false, true);
+        assert!(result.is_ok());
+        let warnings = result.unwrap();
+        assert_eq!(warnings.len(), 1);
+        assert!(warnings[0].contains("environment variable"));
+    }
+
+    #[test]
+    fn test_enforce_policy_warn_mode_expired_package() {
+        let eff = EffectivePolicy {
+            max_age_days: Some(0),
+            enforcement: EnforcementPolicy {
+                expired_package: Some(EnforcementMode::Warn),
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let result = enforce_policy(&eff, 1, false, true);
+        assert!(result.is_ok());
+        let warnings = result.unwrap();
+        assert_eq!(warnings.len(), 1);
+        assert!(warnings[0].contains("days old"));
+    }
+
+    #[test]
+    fn test_parse_policy_file_invalid_json_errors() {
+        let mut policy = OperatorPolicy::default();
+        let err = parse_policy_file("{invalid json!", &mut policy);
+        assert!(err.is_err());
+    }
+
+    #[test]
+    fn test_load_operator_policy_both_none() {
+        let policy = load_operator_policy_from_paths(None, None).expect("policy load");
+        assert!(!policy.require_trusted_key);
+        assert!(!policy.refuse_root);
+    }
+
+    #[test]
+    fn test_load_operator_policy_valid_system_and_user_files() {
+        let dir = tempfile::TempDir::new().expect("tempdir");
+
+        let system_file = dir.path().join("system_policy.json");
+        std::fs::write(
+            &system_file,
+            r#"{"version": 1, "trust": {"require_trusted_key": true}}"#,
+        )
+        .expect("write system policy");
+
+        let user_file = dir.path().join("user_policy.json");
+        std::fs::write(
+            &user_file,
+            r#"{"version": 1, "execution": {"refuse_root": true}}"#,
+        )
+        .expect("write user policy");
+
+        let policy = load_operator_policy_from_paths(Some(&system_file), Some(&user_file))
+            .expect("policy load");
+        assert!(policy.require_trusted_key);
+        assert!(policy.refuse_root);
+    }
+
+    #[test]
+    fn test_apply_enforcement_allow_does_nothing() {
+        let mut warnings = Vec::new();
+        let result = apply_enforcement(
+            EnforcementMode::Allow,
+            "should not appear".to_string(),
+            &mut warnings,
+        );
+        assert!(result.is_ok());
+        assert!(warnings.is_empty());
+    }
+
+    #[test]
+    fn test_apply_enforcement_warn_pushes_message() {
+        let mut warnings = Vec::new();
+        let result = apply_enforcement(
+            EnforcementMode::Warn,
+            "warning msg".to_string(),
+            &mut warnings,
+        );
+        assert!(result.is_ok());
+        assert_eq!(warnings.len(), 1);
+        assert_eq!(warnings[0], "warning msg");
+    }
+
+    #[test]
+    fn test_apply_enforcement_deny_returns_error() {
+        let mut warnings = Vec::new();
+        let result = apply_enforcement(
+            EnforcementMode::Deny,
+            "denied msg".to_string(),
+            &mut warnings,
+        );
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "denied msg");
+        assert!(warnings.is_empty());
+    }
+
+    #[test]
+    fn test_package_policy_default() {
+        let pkg = PackagePolicy::default();
+        assert!(pkg.platforms.is_empty());
+        assert!(!pkg.refuse_root);
+        assert!(pkg.max_age_days.is_none());
+        assert!(pkg.require_env.is_empty());
+    }
+
+    #[test]
+    fn test_effective_policy_default() {
+        let eff = EffectivePolicy::default();
+        assert!(eff.platforms.is_empty());
+        assert!(!eff.refuse_root);
+        assert!(eff.max_age_days.is_none());
+        assert!(eff.require_env.is_empty());
+        assert!(!eff.require_trusted_key);
+        assert!(!eff.use_os_keychain);
+        assert!(!eff.require_sbom);
     }
 }

@@ -6,7 +6,7 @@
 """Tests for PythonSlotBuilder._bundle_build_backends."""
 
 from pathlib import Path
-import subprocess
+import subprocess  # nosec
 import tempfile
 from unittest.mock import Mock, patch
 

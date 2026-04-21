@@ -11,7 +11,7 @@ from collections.abc import Callable, Sequence
 import json
 from pathlib import Path
 from queue import Empty, Queue
-import subprocess
+import subprocess  # nosec
 import sys
 import tempfile
 from threading import Event, Thread

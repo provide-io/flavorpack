@@ -1,7 +1,4 @@
 #!/bin/bash
-# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
 # Generate PSPF compatibility report from pretaster logs
 # Usage: generate-pspf-compatibility-report.sh <logs_directory>
 

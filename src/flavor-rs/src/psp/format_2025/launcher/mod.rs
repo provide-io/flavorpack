@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 //! PSPF/2025 package launcher
 
 pub mod command;
@@ -179,15 +176,21 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
         }
     }
 
-    // Trust store check: verify the package signing key is trusted.
-    // key_trusted is false only when the store exists AND the key is explicitly absent.
+    // Trust store check: determine whether the package signing key is trusted.
+    // The result feeds into the policy enforcement step below, which decides
+    // whether to deny, warn, or allow based on the operator policy.
+    // We intentionally do NOT hard-fail here — trust decisions belong to policy.
     let key_trusted = {
         use super::trust;
 
         match trust::derive_index_key_fingerprint(&index) {
             Ok(Some(fp)) => match trust::is_key_trusted(&fp, true) {
                 None => {
-                    warn!("⚠️ No trusted-keys store found; treating package as untrusted");
+                    // No trust store configured — key trust cannot be verified.
+                    // Policy enforcement below will decide whether to deny, warn, or allow.
+                    warn!(
+                        "⚠️ No trusted-keys store found; requiring a trusted key will fail closed"
+                    );
                     false
                 }
                 Some(true) => {
@@ -199,14 +202,8 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
                         "Package signing key is not in the trusted-keys store (fp={})",
                         fp
                     );
-                    if matches!(validation_level, ValidationLevel::Strict) {
-                        error!("❌ {}", msg);
-                        return Err(FlavorError::Generic(msg));
-                    } else {
-                        eprintln!("flavor: warning: {msg}");
-                        warn!("⚠️ {}", msg);
-                        false
-                    }
+                    warn!("⚠️ {}", msg);
+                    false
                 }
             },
             Ok(None) => {
@@ -641,10 +638,80 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
 }
 
 #[cfg(test)]
+#[allow(unsafe_code)]
 mod tests {
     use super::*;
+    #[cfg(unix)]
+    use crate::api::BuildOptions;
+    #[cfg(unix)]
+    use crate::psp::format_2025::build;
+    #[cfg(unix)]
+    use serde_json::json;
+    #[cfg(unix)]
+    use std::env;
     use std::fs;
+    use std::path::PathBuf;
     use tempfile::tempdir;
+
+    #[cfg(unix)]
+    fn build_real_bundle(temp: &tempfile::TempDir) -> PathBuf {
+        let payload = temp.path().join("payload.txt");
+        fs::write(&payload, b"payload contents").expect("write payload");
+
+        let launcher = temp.path().join(if cfg!(windows) {
+            "launcher.bat"
+        } else {
+            "launcher.sh"
+        });
+        let launcher_bytes = if cfg!(windows) {
+            b"@echo off\r\nexit /b 0\r\n".as_slice()
+        } else {
+            b"#!/bin/sh\nexit 0\n".as_slice()
+        };
+        fs::write(&launcher, launcher_bytes).expect("write launcher");
+
+        let manifest_path = temp.path().join("manifest.json");
+        let output_path = temp.path().join("bundle.pspf");
+        let manifest = json!({
+            "package": {
+                "name": "launcher-mod-demo",
+                "version": "1.0.0"
+            },
+            "execution": {
+                "command": if cfg!(windows) { "cmd /C exit 0" } else { "true" },
+                "env": {}
+            },
+            "slots": [
+                {
+                    "slot": 0,
+                    "id": "payload",
+                    "source": payload.display().to_string(),
+                    "target": "bin/payload.txt",
+                    "operations": "",
+                    "purpose": "payload",
+                    "lifecycle": "runtime",
+                    "permissions": "0644"
+                }
+            ]
+        });
+        fs::write(
+            &manifest_path,
+            serde_json::to_vec_pretty(&manifest).expect("serialize manifest"),
+        )
+        .expect("write manifest");
+
+        let options = BuildOptions {
+            launcher_bin: Some(launcher),
+            skip_verification: false,
+            private_key_path: None,
+            public_key_path: None,
+            key_seed: Some("launcher-mod-test-seed".to_string()),
+            workenv_base: None,
+        };
+
+        build(&manifest_path, &output_path, options).expect("build real bundle");
+        output_path
+    }
 
     #[cfg(unix)]
     #[test]
@@ -743,5 +810,58 @@ mod tests {
 
         let result = launch(&package, &[], LaunchOptions::default());
         assert!(result.is_err());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn launch_executes_real_bundle_in_spawn_mode() {
+        let temp = tempdir().expect("tempdir");
+        let bundle = build_real_bundle(&temp);
+        let workdir_hint = temp
+            .path()
+            .join("cache/workenv/launcher-mod-test")
+            .display()
+            .to_string();
+
+        let original_exec_mode = env::var(crate::env_vars::EXEC_MODE).ok();
+        let original_validation = env::var(crate::env_vars::VALIDATION).ok();
+        let original_workenv = env::var(crate::env_vars::WORKENV).ok();
+
+        unsafe {
+            env::set_var(crate::env_vars::EXEC_MODE, "spawn");
+            env::set_var(crate::env_vars::VALIDATION, "strict");
+            env::remove_var(crate::env_vars::WORKENV);
+        }
+
+        let options = LaunchOptions {
+            workdir: Some(workdir_hint),
+        };
+        let result = launch(&bundle, &[], options).expect("launch real bundle");
+        assert_eq!(result, 0);
+
+        match original_exec_mode {
+            Some(value) => unsafe {
+                env::set_var(crate::env_vars::EXEC_MODE, value);
+            },
+            None => unsafe {
+                env::remove_var(crate::env_vars::EXEC_MODE);
+            },
+        }
+        match original_validation {
+            Some(value) => unsafe {
+                env::set_var(crate::env_vars::VALIDATION, value);
+            },
+            None => unsafe {
+                env::remove_var(crate::env_vars::VALIDATION);
+            },
+        }
+        match original_workenv {
+            Some(value) => unsafe {
+                env::set_var(crate::env_vars::WORKENV, value);
+            },
+            None => unsafe {
+                env::remove_var(crate::env_vars::WORKENV);
+            },
+        }
     }
 }

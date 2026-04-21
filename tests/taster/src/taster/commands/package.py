@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-import subprocess
+import subprocess  # nosec
 import tempfile
 from typing import Any
 

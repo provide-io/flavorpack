@@ -468,7 +468,7 @@ class UVManager(BaseToolManager):
             str(requirements_file),
             "--quiet",
         ]
-        result = run(cmd, check=False, capture_output=True)
+        result = run(cmd, check=False, capture_output=True, env=_windows_system_env() or None)
         if result.returncode == 0:
             logger.warning(f"✅ Copied wheels from {ENV_WHEEL_CACHE} (offline)")
             return True

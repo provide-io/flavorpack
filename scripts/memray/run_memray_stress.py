@@ -13,7 +13,7 @@ Generates .bin files in memray-output/ and prints analysis commands.
 """
 
 from pathlib import Path
-import subprocess
+import subprocess  # nosec
 import sys
 
 

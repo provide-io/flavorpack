@@ -35,8 +35,8 @@ dependencies = [
     # C++/CMake/gRPC and hangs CI. Use all extras minus opentelemetry on
     # windows_arm64 — grpcio is only used for OTLP gRPC telemetry export in
     # provide.foundation, and all imports are wrapped in lazy try/except.
-    "provide-foundation[all]>=0.3.21; sys_platform != 'win32' or platform_machine != 'ARM64'",
-    "provide-foundation[cli,compression,crypto,transport,platform]>=0.3.21; sys_platform == 'win32' and platform_machine == 'ARM64'",
+    "provide-foundation[all]>=0.4.0; sys_platform != 'win32' or platform_machine != 'ARM64'",
+    "provide-foundation[cli,compression,crypto,transport,platform]>=0.4.0; sys_platform == 'win32' and platform_machine == 'ARM64'",
     "pip>=25.2",
     "uv>=0.9.6",
     "setuptools==82.0.1",  # Pinned to match build-backends group; checked by _ensure_no_isolation_build_backend
@@ -49,16 +49,16 @@ Homepage = "https://github.com/provide-io/flavorpack"
 
 [dependency-groups]
 dev = [
-    # provide-testkit[all] includes memray which does not support win32
-    "provide-testkit[all]; sys_platform != 'win32'",
-    "provide-testkit; sys_platform == 'win32'",
+    # provide-testkit[all]>=0.4.0 includes memray which does not support win32
+    "provide-testkit[all]>=0.4.0; sys_platform != 'win32'",
+    "provide-testkit>=0.4.0; sys_platform == 'win32'",
     "memray>=1.0; sys_platform != 'emscripten' and sys_platform != 'win32'",
-    # protobuf is included via provide-testkit[all] on non-Windows; add explicitly for Windows
+    # protobuf is included via provide-testkit[all]>=0.4.0 on non-Windows; add explicitly for Windows
     "protobuf>=4.0; sys_platform == 'win32'",
     "hypothesis>=6.0",
 ]
 docs = [
-    "provide-testkit[docs]",
+    "provide-testkit[docs]>=0.4.0",
     "mkdocs-mermaid2-plugin>=1.1.0",
 ]
 build-backends = [

@@ -7,37 +7,37 @@
 
 <div class="grid cards" markdown>
 
-- :fontawesome-solid-rocket:{ .lg .middle } **Get Started Quickly**
+-   :fontawesome-solid-rocket:{ .lg .middle } **Get Started Quickly**
 
-  ______________________________________________________________________
+    ---
 
-  Package your first application in under 5 minutes.
+    Package your first application in under 5 minutes.
 
-  [:octicons-arrow-right-24: Quick Start](getting-started/quickstart/)
+    [:octicons-arrow-right-24: Quick Start](getting-started/quickstart/)
 
-- :fontawesome-solid-cube:{ .lg .middle } **Single-File Distribution**
+-   :fontawesome-solid-cube:{ .lg .middle } **Single-File Distribution**
 
-  ______________________________________________________________________
+    ---
 
-  Package applications into one executable that runs anywhere.
+    Package applications into one executable that runs anywhere.
 
-  [:octicons-arrow-right-24: Package Structure](guide/concepts/package-structure/)
+    [:octicons-arrow-right-24: Package Structure](guide/concepts/package-structure/)
 
-- :fontawesome-solid-shield:{ .lg .middle } **Secure by Default**
+-   :fontawesome-solid-shield:{ .lg .middle } **Secure by Default**
 
-  ______________________________________________________________________
+    ---
 
-  Ed25519 signature verification ensures integrity.
+    Ed25519 signature verification ensures integrity.
 
-  [:octicons-arrow-right-24: Security Model](guide/concepts/security/)
+    [:octicons-arrow-right-24: Security Model](guide/concepts/security/)
 
-- :fontawesome-solid-language:{ .lg .middle } **Cross-Language**
+-   :fontawesome-solid-language:{ .lg .middle } **Cross-Language**
 
-  ______________________________________________________________________
+    ---
 
-  Python orchestrator with native Go and Rust launchers.
+    Python orchestrator with native Go and Rust launchers.
 
-  [:octicons-arrow-right-24: Architecture](explanation/architecture/)
+    [:octicons-arrow-right-24: Architecture](explanation/architecture/)
 
 </div>
 
@@ -46,7 +46,6 @@
 Flavorpack transforms Python applications into self-contained executables using the Progressive Secure Package Format (PSPF/2025). Each package contains the application code, Python runtime, dependencies, and a native launcher - all in a single `.psp` file.
 
 **Key Features:**
-
 - Single-file distribution
 - Cryptographic security (Ed25519 signatures)
 - Smart caching with validation
@@ -77,11 +76,16 @@ Understand how provide-foundation, pyvider, flavorpack, and other projects work 
 
 ## Use Cases
 
-!!! example "Ideal for" - **CLI Tools**: Distribute command-line applications without Python installation - **Data Science**: Package ML models with their environment - **DevOps**: Deploy self-contained tools that work everywhere - **Enterprise**: Secure, signed packages with built-in verification - **Terraform**: Package custom providers as single executables
+!!! example "Ideal for"
+    - **CLI Tools**: Distribute command-line applications without Python installation
+    - **Data Science**: Package ML models with their environment
+    - **DevOps**: Deploy self-contained tools that work everywhere
+    - **Enterprise**: Secure, signed packages with built-in verification
+    - **Terraform**: Package custom providers as single executables
 
 ## Platform Support
 
---8\<-- "includes/platform-support.md"
+--8<-- "includes/platform-support.md"
 
 ## Community
 
@@ -89,6 +93,6 @@ Understand how provide-foundation, pyvider, flavorpack, and other projects work 
 - **Documentation**: [Guides and API reference](getting-started/index/)
 - **Support**: [Get help](community/support/)
 
-______________________________________________________________________
+---
 
 **Ready to package your Python applications?** Check out our [Quick Start guide](getting-started/quickstart/) or explore the [architecture](explanation/architecture/).

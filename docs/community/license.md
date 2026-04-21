@@ -12,15 +12,23 @@ Flavorpack is licensed under the **Apache License, Version 2.0**.
 
 ### You Can
 
-✅ Use commercially ✅ Modify ✅ Distribute ✅ Sublicense ✅ Use privately
+✅ Use commercially
+✅ Modify
+✅ Distribute
+✅ Sublicense
+✅ Use privately
 
 ### You Must
 
-📋 Include copyright notice 📋 Include license text 📋 State changes made 📋 Include NOTICE file (if provided)
+📋 Include copyright notice
+📋 Include license text
+📋 State changes made
+📋 Include NOTICE file (if provided)
 
 ### Limitations
 
-❌ Liability - No warranty provided ❌ Trademark use - Separate trademark policy
+❌ Liability - No warranty provided
+❌ Trademark use - Separate trademark policy
 
 ## Third-Party Licenses
 
@@ -43,6 +51,6 @@ See **[Contributing Guide](../development/contributing/)** for details.
 
 For licensing questions, open an issue on [GitHub](https://github.com/provide-io/flavorpack/issues).
 
-______________________________________________________________________
+---
 
 **Full license text:** [LICENSE](https://github.com/provide-io/flavorpack/blob/main/LICENSE)

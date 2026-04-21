@@ -34,6 +34,34 @@ pub const VALIDATION: &str = "FLAVOR_VALIDATION";
 /// Enable metadata debug output in reader
 pub const DEBUG_METADATA: &str = "FLAVOR_DEBUG_METADATA";
 
+// Logging (builder-specific)
+/// Log level override for builder only
+pub const BUILDER_LOG_LEVEL: &str = "FLAVOR_BUILDER_LOG_LEVEL";
+/// Enable JSON-formatted log output
+pub const JSON_LOG: &str = "FLAVOR_JSON_LOG";
+
+// Execution keys
+/// Deterministic key seed for signing
+pub const KEY_SEED: &str = "FLAVOR_KEY_SEED";
+
+// Launcher IPC / CLI mode
+/// Additional launcher arguments
+pub const LAUNCHER_ARGS: &str = "FLAVOR_LAUNCHER_ARGS";
+/// Bundle path for launcher
+pub const LAUNCHER_BUNDLE: &str = "FLAVOR_LAUNCHER_BUNDLE";
+/// Launcher mode (e.g., "extract", "exec")
+pub const LAUNCHER_MODE: &str = "FLAVOR_LAUNCHER_MODE";
+/// Helper binary path for launcher
+pub const LAUNCHER_HELPER: &str = "FLAVOR_LAUNCHER_HELPER";
+/// Subprocess binary path for launcher
+pub const LAUNCHER_SUBPROCESS: &str = "FLAVOR_LAUNCHER_SUBPROCESS";
+/// Spawn-exit helper binary path
+pub const LAUNCHER_SPAWN_EXIT_HELPER: &str = "FLAVOR_LAUNCHER_SPAWN_EXIT_HELPER";
+
+// Runtime env vars injected into the child process
+// Note: FLAVOR_CACHE is Go-only (injected into child process at launch);
+// Rust uses FLAVOR_CACHE_DIR (the cache directory path) instead.
+
 /// Binary name passed to launched process
 pub const COMMAND_NAME: &str = "FLAVOR_COMMAND_NAME";
 /// Original command path passed to launched process

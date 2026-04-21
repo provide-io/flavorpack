@@ -80,13 +80,11 @@ See the [PSPF Format Specification](https://foundry.provide.io/flavorpack/refere
 Flavorpack consists of three main components:
 
 1. **Python Orchestrator** (`src/flavor/`)
-
    - Manages the build process and dependency resolution
    - Creates manifests and handles Python packaging
    - Provides CLI interface for package operations
 
-1. **Native Helpers** (`src/flavor-go/`, `src/flavor-rs/`)
-
+2. **Native Helpers** (`src/flavor-go/`, `src/flavor-rs/`)
    - **Launchers**: Extract and execute packages at runtime, perform Ed25519 signature verification, manage workenv caching
    - **Builders**: Assemble PSPF packages from manifests, implement the PSPF/2025 binary format, handle slot packing and metadata encoding
    - Built binaries are placed in `dist/bin/` for distribution
@@ -181,6 +179,6 @@ Flavorpack is built on the shoulders of giants:
 - [UV](https://github.com/astral-sh/uv) for fast Python package management
 - The Python, Go, and Rust communities for excellent tooling
 
-______________________________________________________________________
+---
 
 **Built with ❤️ by the provide.io team**

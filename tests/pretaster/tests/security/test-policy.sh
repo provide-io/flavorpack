@@ -47,10 +47,13 @@ echo "Test 1: Platform deny mode"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 if [ "$POLICY_TEST_SKIPPED" = false ] && [ -f "$POLICY_PSP" ]; then
+    # Use an empty config dir so no local policy.json can override the deny default
+    DENY_POLICY_DIR=$(mktemp -d)
     set +e
-    CHECK_OUTPUT=$("$FLAVOR_BIN" policy check "$POLICY_PSP" 2>&1)
+    CHECK_OUTPUT=$(FLAVOR_CONFIG_DIR="$DENY_POLICY_DIR" "$FLAVOR_BIN" policy check "$POLICY_PSP" 2>&1)
     CHECK_EXIT=$?
     set -e
+    rm -rf "$DENY_POLICY_DIR"
 
     if [ $CHECK_EXIT -ne 0 ] && echo "$CHECK_OUTPUT" | grep -qiE 'not permitted|not in|platform.*not|mars_amd64'; then
         print_color "$GREEN" "  ✅ Platform deny correctly rejected mars_amd64 (exit $CHECK_EXIT)"

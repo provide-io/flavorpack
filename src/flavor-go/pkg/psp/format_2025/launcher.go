@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-// SPDX-License-Identifier: Apache-2.0
-
 package format_2025
 
 import (
@@ -57,7 +54,7 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 	// Determine log output destination.
 	var logOutput io.Writer
 	if logPath := os.Getenv(EnvLogPath); logPath != "" {
-		if file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644); err == nil {
+		if file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, FilePerms); err == nil {
 			defer func() { _ = file.Close() }()
 			logOutput = file
 		}

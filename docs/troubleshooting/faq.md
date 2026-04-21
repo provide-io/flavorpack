@@ -114,30 +114,29 @@ entry_point = "myapp:main"
 
 ### How do I exclude files from the package?
 
-!!! info "📋 Planned Feature" Manifest-based exclude patterns are planned for a future release. See the [Roadmap](../guide/roadmap/) for details.
+!!! info "📋 Planned Feature"
+    Manifest-based exclude patterns are planned for a future release. See the [Roadmap](../guide/roadmap/) for details.
 
 ### Can I build packages for other platforms?
 
-!!! info "📋 Planned Feature" Platform-specific builds via CLI are planned. Currently, packages are built for the host platform. See the [Roadmap](../guide/roadmap/) for details.
+!!! info "📋 Planned Feature"
+    Platform-specific builds via CLI are planned. Currently, packages are built for the host platform. See the [Roadmap](../guide/roadmap/) for details.
 
 ### How do I reduce package size?
 
 1. Enable compression:
-
    ```toml
    [[tool.flavor.slots]]
    # Compression is automatic - tar.gz for directories
    ```
 
-1. Exclude unnecessary files:
-
+2. Exclude unnecessary files:
    ```toml
    [tool.flavor.build]
    exclude = ["tests/", "docs/"]
    ```
 
-1. Strip binaries:
-
+3. Strip binaries:
    ```bash
    flavor pack --manifest pyproject.toml --strip
    ```
@@ -169,7 +168,6 @@ Yes, arguments are passed through to your application:
 ### Where are packages extracted?
 
 Packages are extracted to a cache directory:
-
 - **Linux/macOS**: `~/.cache/flavor/workenv/`
 - **Windows**: `%LOCALAPPDATA%\flavor\workenv\`
 
@@ -264,7 +262,6 @@ No, packages are immutable. To update dependencies, rebuild the package.
 ### Why is my package so large?
 
 Common causes:
-
 - Large dependencies (numpy, tensorflow, etc.)
 - Uncompressed slots
 - Including unnecessary files
@@ -273,11 +270,10 @@ Common causes:
 ### Why won't my package run?
 
 Check:
-
 1. Execute permissions: `chmod +x myapp.psp`
-1. Platform compatibility: Built for correct OS/architecture
-1. Python version: Matches build environment
-1. Package integrity: `flavor verify myapp.psp`
+2. Platform compatibility: Built for correct OS/architecture
+3. Python version: Matches build environment
+4. Package integrity: `flavor verify myapp.psp`
 
 ### How do I debug package issues?
 
@@ -341,7 +337,6 @@ You can build custom launchers from the Go or Rust source in the `helpers/` dire
 Yes, Flavorpack works well in CI/CD. During alpha, use source installation:
 
 {% raw %}
-
 ```yaml
 # GitHub Actions example
 - name: Build package
@@ -353,13 +348,11 @@ Yes, Flavorpack works well in CI/CD. During alpha, use source installation:
     make build-helpers
     flavor pack --manifest ../myproject/pyproject.toml --key-seed "${{ secrets.FLAVOR_SEED }}"
 ```
-
 {% endraw %}
 
 ### Can I distribute packages through PyPI?
 
 No, PSPF packages are standalone executables, not Python packages. Distribute them through:
-
 - Direct download
 - GitHub releases
 - Package managers (apt, brew, chocolatey)
@@ -369,15 +362,15 @@ No, PSPF packages are standalone executables, not Python packages. Distribute th
 
 ### How fast is package extraction?
 
-First run: 1-5 seconds depending on size Subsequent runs: \<100ms (cached)
+First run: 1-5 seconds depending on size
+Subsequent runs: <100ms (cached)
 
 ### Can I improve build performance?
 
-!!! info "📋 Planned Features" Build optimization features like `--parallel` and build caching are planned for future releases.
+!!! info "📋 Planned Features"
+    Build optimization features like `--parallel` and build caching are planned for future releases.
 
-```
-Currently, build performance is primarily determined by dependency resolution and UV's package installation speed.
-```
+    Currently, build performance is primarily determined by dependency resolution and UV's package installation speed.
 
 ### How much disk space do packages use?
 

@@ -5,7 +5,6 @@
 Windows rejects PSP files created with Go launchers (exit codes 126/139). The PSP format appends PSPF data to the launcher executable, creating a modified binary that Windows won't execute.
 
 **Current build command:**
-
 ```bash
 CGO_ENABLED=0 go build -buildvcs=false -ldflags="-s -w" -o launcher.exe
 ```
@@ -21,18 +20,15 @@ Go compiler/linker flags might produce PE binaries that are more tolerant of hav
 Go supports different build modes that affect PE structure:
 
 #### Option A: `-buildmode=pie` (Position Independent Executable)
-
 ```bash
 CGO_ENABLED=0 go build -buildmode=pie -ldflags="-s -w" -o launcher.exe
 ```
 
 **Pros:**
-
 - Creates relocatable code that might be more flexible
 - Modern security feature (ASLR compatible)
 
 **Cons:**
-
 - May not work with `CGO_ENABLED=0` on Windows
 - Might increase binary size
 - Still appends data to the binary
@@ -40,13 +36,11 @@ CGO_ENABLED=0 go build -buildmode=pie -ldflags="-s -w" -o launcher.exe
 **Worth trying:** ⭐⭐⭐
 
 #### Option B: `-buildmode=exe` (explicit default)
-
 ```bash
 CGO_ENABLED=0 go build -buildmode=exe -ldflags="-s -w" -o launcher.exe
 ```
 
 **Pros:**
-
 - Explicit control over build mode
 - Can combine with other flags
 
@@ -55,7 +49,6 @@ CGO_ENABLED=0 go build -buildmode=exe -ldflags="-s -w" -o launcher.exe
 ### 2. Linker Flags (`-ldflags`)
 
 #### Option A: Remove stripping flags `-s -w`
-
 ```bash
 CGO_ENABLED=0 go build -buildvcs=false -o launcher.exe
 ```
@@ -63,20 +56,17 @@ CGO_ENABLED=0 go build -buildvcs=false -o launcher.exe
 **Rationale:** Stripped binaries might be more sensitive to modifications. Keeping debug info might add sections that make Windows more tolerant.
 
 **Pros:**
-
 - Preserves DWARF debugging info
 - Preserves symbol table
 - Creates more "standard" PE structure
 
 **Cons:**
-
 - Significantly larger binaries (~3-5x size)
 - Doesn't address the fundamental appending issue
 
 **Worth trying:** ⭐⭐
 
 #### Option B: Windows subsystem control
-
 ```bash
 CGO_ENABLED=0 go build -ldflags="-s -w -H=windowsgui" -o launcher.exe
 # or
@@ -88,7 +78,6 @@ CGO_ENABLED=0 go build -ldflags="-s -w -H=windows" -o launcher.exe
 **Worth trying:** ⭐
 
 #### Option C: Custom import path
-
 ```bash
 CGO_ENABLED=0 go build -ldflags="-s -w -importcfg=custom.cfg" -o launcher.exe
 ```
@@ -98,7 +87,6 @@ CGO_ENABLED=0 go build -ldflags="-s -w -importcfg=custom.cfg" -o launcher.exe
 ### 3. Windows-Specific Build Tags
 
 #### Option A: Enable CGO for Windows resource embedding
-
 ```bash
 # For Windows only
 CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o launcher.exe
@@ -107,13 +95,11 @@ CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o launcher.ex
 **Rationale:** With CGO, we could use Windows APIs to embed PSPF as a PE resource instead of appending.
 
 **Pros:**
-
 - Could embed data in PE resource section (industry standard)
 - Windows loader understands resources
 - No appending needed
 
 **Cons:**
-
 - Breaks static linking requirement
 - Requires C compiler (MinGW on Windows)
 - More complex build process
@@ -123,7 +109,6 @@ CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o launcher.ex
 ### 4. Custom Linker Script
 
 #### Option A: Reserve space in PE sections
-
 ```bash
 CGO_ENABLED=0 go build -ldflags="-s -w -extldflags=-Wl,--section-alignment=4096" -o launcher.exe
 ```
@@ -135,7 +120,6 @@ CGO_ENABLED=0 go build -ldflags="-s -w -extldflags=-Wl,--section-alignment=4096"
 ### 5. Go Version / Toolchain Changes
 
 #### Option A: Try older Go version
-
 ```bash
 # Go 1.20 vs Go 1.21+ might have different PE generation
 go1.20 build -o launcher.exe
@@ -144,7 +128,6 @@ go1.20 build -o launcher.exe
 **Worth trying:** ⭐⭐
 
 #### Option B: Try newer Go version with PE improvements
-
 ```bash
 # Latest Go might have fixes
 go1.22.0 build -o launcher.exe
@@ -157,19 +140,16 @@ go1.22.0 build -o launcher.exe
 ### Phase 1: Low-effort, high-impact (Quick tests)
 
 1. **Remove stripping** - Keep debug symbols
-
    ```bash
    CGO_ENABLED=0 go build -buildvcs=false -o launcher.exe
    ```
 
-1. **Try PIE mode** - Position independent executable
-
+2. **Try PIE mode** - Position independent executable
    ```bash
    CGO_ENABLED=0 go build -buildmode=pie -ldflags="-s -w" -o launcher.exe
    ```
 
-1. **Windows subsystem** - Try different subsystem
-
+3. **Windows subsystem** - Try different subsystem
    ```bash
    CGO_ENABLED=0 go build -ldflags="-s -w -H=windowsgui" -o launcher.exe
    ```
@@ -177,14 +157,12 @@ go1.22.0 build -o launcher.exe
 ### Phase 2: Alternative architecture (Requires code changes)
 
 4. **PE Resource Embedding** - Embed PSPF as PE resource
-
    - Enable CGO for Windows builds
    - Use `github.com/josephspurrier/goversioninfo` or similar
    - Embed PSPF data in `.rsrc` section instead of appending
    - Modify launcher to read from resources instead of EOF
 
    This is the most promising approach but requires:
-
    - Builder changes to use resource embedding
    - Launcher changes to read from resources
    - Windows-specific build process
@@ -215,7 +193,6 @@ PE File Structure:
 ### Implementation Plan
 
 **1. Builder Side:**
-
 ```go
 import "github.com/tc-hib/winres"
 
@@ -240,7 +217,6 @@ func embedPSPFAsResource(exePath string, pspfData []byte) error {
 ```
 
 **2. Launcher Side:**
-
 ```go
 import (
     "syscall"
@@ -270,7 +246,6 @@ func readPSPFFromResource() ([]byte, error) {
 ```
 
 **3. Build Process:**
-
 ```bash
 # Build launcher without PSPF
 CGO_ENABLED=0 go build -o launcher.exe ./cmd/flavor-go-launcher
@@ -281,11 +256,18 @@ flavor-go-builder --manifest manifest.json --output app.exe --embed-mode=resourc
 
 ### Advantages of Resource Embedding
 
-✅ **Windows-native** - `.rsrc` section is standard PE structure ✅ **No appending** - Data is part of the PE file, not trailing ✅ **Validated by Windows** - PE loader understands resources ✅ **Industry standard** - How installers (NSIS, Inno Setup) embed data ✅ **Inspectable** - Can view with Resource Hacker, PE tools
+✅ **Windows-native** - `.rsrc` section is standard PE structure
+✅ **No appending** - Data is part of the PE file, not trailing
+✅ **Validated by Windows** - PE loader understands resources
+✅ **Industry standard** - How installers (NSIS, Inno Setup) embed data
+✅ **Inspectable** - Can view with Resource Hacker, PE tools
 
 ### Disadvantages
 
-❌ **Windows-only** - Different approach than Unix (but they work fine) ❌ **Requires syscall** - Launcher needs Windows APIs ❌ **Build complexity** - Need resource embedding tool ❌ **Size limits** - Resources have theoretical limits (4GB should be fine)
+❌ **Windows-only** - Different approach than Unix (but they work fine)
+❌ **Requires syscall** - Launcher needs Windows APIs
+❌ **Build complexity** - Need resource embedding tool
+❌ **Size limits** - Resources have theoretical limits (4GB should be fine)
 
 ## Recommendation
 
@@ -298,9 +280,9 @@ This aligns with how Windows software actually works - installers like NSIS, 7-Z
 ## Next Steps
 
 1. Create test branch with various build flag combinations
-1. Test each approach with Helper Prep + Pretaster
-1. If simple flags don't work, implement PE resource embedding
-1. Update build system to use different approaches per platform:
+2. Test each approach with Helper Prep + Pretaster
+3. If simple flags don't work, implement PE resource embedding
+4. Update build system to use different approaches per platform:
    - **Unix**: Keep appending (works fine)
    - **Windows + Rust launcher**: Keep appending with DOS stub expansion
    - **Windows + Go launcher**: Use PE resource embedding
