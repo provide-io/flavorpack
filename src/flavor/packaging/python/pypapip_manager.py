@@ -105,7 +105,7 @@ class PyPaPipManager:
         CRITICAL: Must use ACTUAL pip3 NOT uv pip - uv pip is incomplete/broken
         DO NOT CHANGE THIS TO uv pip - IT WILL BREAK DEPENDENCY RESOLUTION
         """
-        return [python_exe.as_posix(), "-m", "pip", "install", *packages]
+        return [*_pip_base_cmd(python_exe), "install", *packages]
 
     def _get_pypapip_wheel_cmd(
         self, python_exe: Path, wheel_dir: Path, source: Path, no_deps: bool = False
@@ -116,19 +116,7 @@ class PyPaPipManager:
         CRITICAL: Must use ACTUAL pip3 NOT uv pip - uv pip is incomplete/broken
         DO NOT CHANGE THIS TO uv pip - IT WILL BREAK DEPENDENCY RESOLUTION
         """
-        cmd = [
-            python_exe.as_posix(),
-            "-m",
-            "pip",
-            "wheel",
-            "--wheel-dir",
-            wheel_dir.as_posix(),
-            # Disable truststore SSL backend: on Windows GHA runners truststore
-            # fails with ssl.SSLError even for --no-deps local builds (pip still
-            # initialises an SSL session for the pip-version-check).
-            "--no-truststore",
-            "--disable-pip-version-check",
-        ]
+        cmd = [*_pip_base_cmd(python_exe), "wheel", "--wheel-dir", wheel_dir.as_posix()]
         if no_deps:
             cmd.append("--no-deps")
         # --no-build-isolation: the workenv already has setuptools/wheel installed.
@@ -167,17 +155,7 @@ class PyPaPipManager:
             platform_tag: Optional platform tag to use (e.g., "manylinux2014_x86_64")
             find_links: Optional local wheel directory to check before PyPI
         """
-        cmd = [
-            python_exe.as_posix(),
-            "-m",
-            "pip",
-            "download",
-            "--dest",
-            dest_dir.as_posix(),
-            # Disable truststore SSL backend on Windows GHA runners.
-            "--no-truststore",
-            "--disable-pip-version-check",
-        ]
+        cmd = [*_pip_base_cmd(python_exe), "download", "--dest", dest_dir.as_posix()]
         if binary_only:
             cmd.extend(["--only-binary", ":all:"])
 

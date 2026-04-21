@@ -274,10 +274,10 @@ flavor pack \
 ## Benefits
 
 1. **No Python Required**: Users don't need Python installed
-1. **Single Binary**: Easy distribution and deployment
-1. **Version Lock**: Exact provider version in every environment
-1. **Security**: Signed, verified providers
-1. **Fast**: Native execution with minimal overhead
+2. **Single Binary**: Easy distribution and deployment
+3. **Version Lock**: Exact provider version in every environment
+4. **Security**: Signed, verified providers
+5. **Fast**: Native execution with minimal overhead
 
 ## Troubleshooting
 
@@ -304,5 +304,6 @@ dependencies = [
 ## See Also
 
 - **[Pyvider Documentation](https://foundry.provide.io/pyvider/)**
+- **[wrknv Integration](wrknv/)**
 - **[CI/CD Integration](../../cookbook/recipes/ci-cd/)**
 - **[Multi-Platform Builds](../../cookbook/recipes/multi-platform/)**

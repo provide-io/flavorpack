@@ -13,7 +13,6 @@ Covers:
 """
 
 from pathlib import Path
-from typing import Any
 from unittest.mock import MagicMock, patch
 
 from provide.foundation import logger as pf_logger
@@ -579,7 +578,7 @@ class TestBundleExecutorDebugBranch:
         """Branch 215->217: is_debug_enabled() False — debug log is NOT emitted."""
         from flavor.psp.format_2025.executor import BundleExecutor
 
-        metadata: dict[str, Any] = {
+        metadata: dict[str, object] = {
             "package": {"name": "mypkg", "version": "1.0.0"},
             "execution": {},
         }

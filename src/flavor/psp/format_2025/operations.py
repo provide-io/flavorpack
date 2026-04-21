@@ -157,7 +157,7 @@ def _get_operation_name(op: int) -> str:
     # Try protobuf lookup if available
     if _HAS_PROTOBUF:
         try:
-            name = str(operations_pb2.Operation.Name(op))
+            name = operations_pb2.Operation.Name(op)
             if name.startswith("OP_"):
                 name = name[3:]
             return name

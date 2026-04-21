@@ -117,6 +117,26 @@ func TestLaunchWithLogLevelEnvLogPathNotWritable(t *testing.T) {
 	LaunchWithLogLevel(bundle, []string{"info"}, "warn", "test")
 }
 
+// TestLaunchWithLogLevelFlavorJSONLogEnv exercises the FLAVOR_JSON_LOG=1 path: even
+// with a non-json logLevel, the env var triggers JSON mode so no 🐹 prefix is added.
+func TestLaunchWithLogLevelFlavorJSONLogEnv(t *testing.T) {
+	bundle := buildLauncherTestBundle(t)
+	t.Setenv(EnvLauncherCLI, "1")
+	t.Setenv(EnvJSONLog, "1")
+
+	var buf bytes.Buffer
+	old := launcherStderrWriter
+	launcherStderrWriter = &buf
+	t.Cleanup(func() { launcherStderrWriter = old })
+
+	LaunchWithLogLevel(bundle, []string{"info"}, "info", "test")
+
+	out := buf.String()
+	if strings.Contains(out, "🐹 ") {
+		t.Fatalf("FLAVOR_JSON_LOG=1 should suppress the 🐹 prefix, got: %q", out)
+	}
+}
+
 func TestLaunchWithLogLevelConsolePrefixesLines(t *testing.T) {
 	bundle := buildLauncherTestBundle(t)
 	t.Setenv(EnvLauncherCLI, "1")

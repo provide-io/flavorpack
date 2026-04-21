@@ -271,7 +271,7 @@ $(COMBO_GO_GO): $(DIST_DIR)
 #################
 
 .PHONY: test
-test: test-core test-combo test-security ## Run all tests
+test: test-core test-combo test-security test-compat ## Run all tests
 
 .PHONY: test-security
 test-security: ## Run security test suite (policy, trust, integrity)

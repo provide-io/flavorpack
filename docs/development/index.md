@@ -116,7 +116,6 @@ graph LR
 Flavorpack maintains high code quality standards:
 
 ### Python Code
-
 ```bash
 # Format code
 ruff format src/ tests/
@@ -129,7 +128,6 @@ mypy src/flavor
 ```
 
 ### Go Code
-
 ```bash
 cd src/flavor-go
 
@@ -144,7 +142,6 @@ go test ./...
 ```
 
 ### Rust Code
-
 ```bash
 cd src/flavor-rs
 
@@ -176,10 +173,10 @@ cargo test
 ## Next Steps
 
 1. **First contribution?** → Start with [Contributing Guide](contributing/)
-1. **Want to understand the code?** → Read [Architecture](architecture/)
-1. **Building helpers?** → See [Building Helpers](helpers/)
-1. **Writing tests?** → Check [Testing Guide](testing/index/)
+2. **Want to understand the code?** → Read [Architecture](architecture/)
+3. **Building helpers?** → See [Building Helpers](helpers/)
+4. **Writing tests?** → Check [Testing Guide](testing/index/)
 
-______________________________________________________________________
+---
 
 **Ready to contribute?** Head to the **[Contributing Guide](contributing/)**!

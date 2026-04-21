@@ -24,6 +24,8 @@ def normalize_workenv_target(slot_target: str) -> str:
 
     if normalized_target.startswith("{workenv}/"):
         normalized_target = normalized_target.removeprefix("{workenv}/")
+        if not normalized_target:
+            return "."
     elif "{workenv}" in normalized_target:
         raise ValueError(f"Invalid slot target: unsupported placeholder usage in '{slot_target}'")
 
@@ -38,9 +40,6 @@ def normalize_workenv_target(slot_target: str) -> str:
 
     if any(part == ".." for part in target_path.parts):
         raise ValueError(f"Invalid slot target: path traversal is not allowed: '{slot_target}'")
-
-    if any(part == "" for part in target_path.parts):
-        raise ValueError(f"Invalid slot target: malformed path: '{slot_target}'")
 
     normalized = target_path.as_posix()
     if normalized in {"", "."}:

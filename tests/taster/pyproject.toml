@@ -1,6 +1,3 @@
-# SPDX-FileCopyrightText: Copyright (c) 2026 provide.io llc. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
@@ -20,10 +17,10 @@ maintainers = [
 ]
 dependencies = [
     # grpcio has no win_arm64 binary wheel; use reduced extras on that platform
-    "provide-foundation[all]; sys_platform != 'win32' or platform_machine != 'ARM64'",
-    "provide-foundation[cli,compression,crypto,transport,platform]; sys_platform == 'win32' and platform_machine == 'ARM64'",
+    "provide-foundation[all]>=0.4.0; sys_platform != 'win32' or platform_machine != 'ARM64'",
+    "provide-foundation[cli,compression,crypto,transport,platform]>=0.4.0; sys_platform == 'win32' and platform_machine == 'ARM64'",
     # exec-test calls build_package_from_manifest() which requires these pinned build
-    # backends in the workenv via importlib_metadata (must match flavorpack's pins)
+    # backends in the workenv via importlib_metadata (must match flavorpack>=0.4.0's pins)
     "setuptools==82.0.1",
     "wheel==0.46.3",
 ]
@@ -43,7 +40,7 @@ version = { file = "VERSION" }
 
 [tool.flavor]
 name = "taster"
-version = "1.0.0"
+version = "0.4.0"
 entry_point = "taster.cli:main"
 
 [tool.flavor.build]
@@ -89,15 +86,15 @@ set = { "TASTER_MODE" = "test", "TASTER_VERSION" = "1.0.0", "PYTHONIOENCODING" =
 map = { "OLD_VAR" = "NEW_VAR" }
 
 [tool.uv]
-# cffi 1.x has no win_arm64 binary wheel; matches flavorpack's constraint
-# cryptography<46 has no win_arm64 binary wheel; matches flavorpack's constraint
+# cffi 1.x has no win_arm64 binary wheel; matches flavorpack>=0.4.0's constraint
+# cryptography<46 has no win_arm64 binary wheel; matches flavorpack>=0.4.0's constraint
 constraint-dependencies = ["cffi>=2.0.0", "cryptography>=46.0.0,<=46.0.3"]
 
 [dependency-groups]
 dev = [
-    "provide-testkit[standard,build]",
+    "provide-testkit[standard,build]>=0.4.0",
     "hypothesis>=6.138.14",
 ]
 docs = [
-    "provide-testkit[docs]",
+    "provide-testkit[docs]>=0.4.0",
 ]

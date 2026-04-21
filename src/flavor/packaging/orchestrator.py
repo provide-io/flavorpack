@@ -339,7 +339,7 @@ class PackagingOrchestrator:
         detected_launcher_type = self._detect_launcher_type(launcher_executable)
         logger.info(f"Detected launcher type: {detected_launcher_type}")
 
-        # Build command
+        # Run builder with cwd=manifest_dir so relative slot source paths resolve.
         build_cmd_args = [
             packager_executable.as_posix(),
             "--manifest",
@@ -358,7 +358,7 @@ class PackagingOrchestrator:
                 build_cmd_args.extend(["--public-key", self.public_key_path])
 
         logger.info("Building package...")
-        run(build_cmd_args, check=True, capture_output=True)
+        run(build_cmd_args, check=True, capture_output=True, cwd=self.manifest_dir)
 
 
 # 🌶️📦🔚

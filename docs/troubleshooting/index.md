@@ -5,9 +5,7 @@ Comprehensive guide to diagnosing and resolving common Flavorpack issues.
 !!! warning "Alpha Software - Some Features Not Yet Implemented"
     Flavorpack is in **alpha** status. This troubleshooting guide includes solutions for both implemented and planned features. Features marked with 📋 **PLANNED** are not yet available.
 
-```
-If you encounter issues with features that don't work, check the [Roadmap](../guide/roadmap/) to see implementation status.
-```
+    If you encounter issues with features that don't work, check the [Roadmap](../guide/roadmap/) to see implementation status.
 
 ## Overview
 
@@ -56,7 +54,6 @@ FLAVOR_LOG_LEVEL=debug ./myapp.psp
 **Symptom**: `flavor: command not found`
 
 **Solution**:
-
 ```bash
 # Ensure Flavorpack is installed from source
 cd flavorpack
@@ -74,7 +71,6 @@ source .venv/bin/activate
 **Symptom**: `Permission denied` when running `flavor` command
 
 **Solution**:
-
 ```bash
 # Activate the virtual environment
 source .venv/bin/activate
@@ -88,7 +84,6 @@ chmod +x $(which flavor)
 **Symptom**: `ModuleNotFoundError` during installation
 
 **Solution**:
-
 ```bash
 # Install build dependencies
 uv pip install --upgrade pip setuptools wheel
@@ -104,13 +99,11 @@ uv sync
 **Symptom**: `Entry point 'myapp:main' not found`
 
 **Causes**:
-
 - Incorrect module path
 - Missing function
 - Import errors
 
 **Solution**:
-
 ```python
 # Verify entry point exists
 # myapp/__init__.py or myapp.py
@@ -128,13 +121,11 @@ entry_point = "myapp:main"  # module:function
 **Symptom**: Package over 100MB
 
 **Causes**:
-
 - Uncompressed slots
 - Unnecessary files included
 - Large dependencies
 
 **Solutions**:
-
 ```toml
 # Enable compression
 [[tool.flavor.slots]]
@@ -159,7 +150,6 @@ strip = true
 **Symptom**: Build process hangs or times out
 
 **Solutions**:
-
 ```bash
 # Interrupt and retry (Ctrl+C)
 # Enable debug logging to see where it hangs
@@ -176,7 +166,6 @@ rm -rf ~/.cache/flavor/build
 **Symptom**: `Launcher binary not found`
 
 **Solution**:
-
 ```bash
 # Build helpers locally
 make build-helpers
@@ -197,13 +186,11 @@ flavor helpers test
 !!! info "Available Helper Commands"
     Flavorpack provides these helper management commands:
 
-```
-- `flavor helpers list` - List available helper binaries
-- `flavor helpers build` - Build helpers from source
-- `flavor helpers clean` - Remove built helpers
-- `flavor helpers info <name>` - Show helper details
-- `flavor helpers test` - Test helper functionality
-```
+    - `flavor helpers list` - List available helper binaries
+    - `flavor helpers build` - Build helpers from source
+    - `flavor helpers clean` - Remove built helpers
+    - `flavor helpers info <name>` - Show helper details
+    - `flavor helpers test` - Test helper functionality
 
 ### Runtime Errors
 
@@ -212,13 +199,11 @@ flavor helpers test
 **Symptom**: Package doesn't run when double-clicked or executed
 
 **Causes**:
-
 - Missing execute permissions
 - Platform mismatch
 - Corrupted package
 
 **Solutions**:
-
 ```bash
 # Add execute permission
 chmod +x myapp.psp
@@ -235,13 +220,11 @@ file myapp.psp
 **Symptom**: `Failed to extract slot`
 
 **Causes**:
-
 - Insufficient disk space
 - Permission issues
 - Corrupted slots
 
 **Solutions**:
-
 ```bash
 # Check disk space
 df -h
@@ -258,13 +241,11 @@ export FLAVOR_CACHE=/tmp/flavor-cache
 **Symptom**: `ModuleNotFoundError` at runtime
 
 **Causes**:
-
 - Missing dependencies
 - Incorrect Python path
 - Version conflicts
 
 **Solutions**:
-
 ```toml
 # Ensure all dependencies are listed
 [project]
@@ -284,7 +265,6 @@ python_version = "3.11"
 **Symptom**: `MemoryError` or application crashes
 
 **Solutions**:
-
 ```toml
 # Set memory limits
 [tool.flavor.execution]
@@ -306,7 +286,6 @@ FLAVOR_LOG_LEVEL=debug ./myapp.psp
 **Symptom**: `File name too long` errors
 
 **Solution**:
-
 ```bash
 # Enable long path support (Windows 10+)
 # Run as Administrator:
@@ -332,7 +311,6 @@ set FLAVOR_CACHE=C:\tmp\f
 **Symptom**: `"myapp.psp" cannot be opened because it is from an unidentified developer`
 
 **Solution**:
-
 ```bash
 # Remove quarantine attribute
 xattr -d com.apple.quarantine myapp.psp
@@ -345,7 +323,6 @@ xattr -d com.apple.quarantine myapp.psp
 **Symptom**: macOS refuses to run unsigned code
 
 **Solution**:
-
 ```bash
 # Sign the package
 codesign --sign - myapp.psp
@@ -361,7 +338,6 @@ sudo spctl --master-disable
 **Symptom**: `error while loading shared libraries`
 
 **Solution**:
-
 ```bash
 # Check dependencies
 ldd myapp.psp
@@ -376,7 +352,6 @@ sudo yum install glibc      # RHEL/CentOS
 **Symptom**: Permission denied despite correct file permissions
 
 **Solution**:
-
 ```bash
 # Check SELinux status
 getenforce
@@ -396,13 +371,11 @@ sudo semodule -i myapp.pp
 **Symptom**: `Signature verification failed`
 
 **Causes**:
-
 - Package corrupted
 - Wrong public key
 - Package tampered
 
 **Solutions**:
-
 ```bash
 # Verify package integrity
 flavor verify myapp.psp
@@ -419,7 +392,6 @@ flavor pack --manifest pyproject.toml --private-key keys/flavor-private.key --pu
 **Symptom**: Cannot generate or use keys
 
 **Solutions**:
-
 ```bash
 # Generate new key pair
 flavor keygen --out-dir keys/
@@ -438,7 +410,6 @@ chmod 600 keys/flavor-private.key
 **Symptom**: `No space left on device` in cache directory
 
 **Solutions**:
-
 ```bash
 # Check cache size
 flavor workenv info
@@ -458,7 +429,6 @@ export FLAVOR_CACHE=/large/disk/cache
 **Symptom**: Packages fail to run after previously working
 
 **Solutions**:
-
 ```bash
 # Remove specific package cache
 flavor workenv remove <package-id>
@@ -598,25 +568,25 @@ min_memory = "128MB"    # Minimum required memory
 
 ### Common Error Messages
 
-| Error                          | Meaning                  | Solution                     |
-| ------------------------------ | ------------------------ | ---------------------------- |
-| `PSPF format not recognized`   | Invalid package file     | Rebuild package              |
-| `Launcher not found`           | Missing launcher binary  | Run `make build-helpers`     |
-| `Slot checksum mismatch`       | Corrupted slot data      | Rebuild package              |
-| `Unsupported platform`         | Platform mismatch        | Build for correct platform   |
-| `Python version mismatch`      | Wrong Python version     | Use specified Python version |
-| `Dependency resolution failed` | Conflicting dependencies | Fix dependency versions      |
-| `Build directory not empty`    | Leftover build files     | Clean build directory        |
-| `Manifest validation failed`   | Invalid pyproject.toml   | Check manifest syntax        |
+| Error | Meaning | Solution |
+|-------|---------|----------|
+| `PSPF format not recognized` | Invalid package file | Rebuild package |
+| `Launcher not found` | Missing launcher binary | Run `make build-helpers` |
+| `Slot checksum mismatch` | Corrupted slot data | Rebuild package |
+| `Unsupported platform` | Platform mismatch | Build for correct platform |
+| `Python version mismatch` | Wrong Python version | Use specified Python version |
+| `Dependency resolution failed` | Conflicting dependencies | Fix dependency versions |
+| `Build directory not empty` | Leftover build files | Clean build directory |
+| `Manifest validation failed` | Invalid pyproject.toml | Check manifest syntax |
 
 ## Getting Help
 
 ### Self-Service Resources
 
 1. **Documentation**: Read the [User Guide](../guide/index/)
-1. **Examples**: Check the [Examples Section](../getting-started/examples/)
-1. **FAQ**: See [Frequently Asked Questions](faq/)
-1. **API Reference**: Consult [API Documentation](../api/index/)
+2. **Examples**: Check the [Examples Section](../getting-started/examples/)
+3. **FAQ**: See [Frequently Asked Questions](faq/)
+4. **API Reference**: Consult [API Documentation](../api/index/)
 
 ### Community Support
 

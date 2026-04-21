@@ -6,7 +6,7 @@
 """Test management commands for Flavor"""
 
 from pathlib import Path
-import subprocess
+import subprocess  # nosec
 import sys
 from typing import Any
 

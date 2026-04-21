@@ -15,7 +15,7 @@
       "lifecycle": "cached",
       "operations": "raw",
       "id": "minimal-test-sh",
-      "source": "/REDACTED_ABS_PATH",
+      "source": "/Users/tim/code/gh/provide-io/flavorpack/helpers/pretaster/scripts/minimal_test.sh",
       "target": "minimal_test.sh",
       "permissions": "0755"
     }
