@@ -57,9 +57,9 @@ jobs:
         id: version
         run: ci/validate-release-version.sh "${{ github.event.inputs.version }}"
       
-      - name: 🔍 Find Latest Successful Runs
+      - name: 🔍 Find Matching Successful Runs
         id: find_runs
-        run: ci/get-release-runs.sh
+        run: ci/get-release-runs.sh "${{ steps.version.outputs.version }}"
         env:
           GH_TOKEN: ${{ github.token }}
 
