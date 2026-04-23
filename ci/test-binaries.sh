@@ -230,25 +230,27 @@ done
 
 RESULTS="$RESULTS]"
 
-# Update report with results (properly escape JSON for Python)
-python3 -c "
+# Update report with results without embedding JSON into Python source.
+REPORT_FILE="$REPORT_FILE" RESULTS_JSON="$RESULTS" TOTAL="$TOTAL" PASSED="$PASSED" FAILED="$FAILED" python3 - <<'PY'
 import json
+import os
 
-with open('$REPORT_FILE') as f:
+report_file = os.environ["REPORT_FILE"]
+results_json = os.environ["RESULTS_JSON"]
+
+with open(report_file) as f:
     data = json.load(f)
 
-# Parse the JSON string properly
-results_json = '''$RESULTS'''
-data['binaries'] = json.loads(results_json)
-data['summary'] = {
-    'total': $TOTAL,
-    'passed': $PASSED,
-    'failed': $FAILED
+data["binaries"] = json.loads(results_json)
+data["summary"] = {
+    "total": int(os.environ["TOTAL"]),
+    "passed": int(os.environ["PASSED"]),
+    "failed": int(os.environ["FAILED"]),
 }
 
-with open('$REPORT_FILE', 'w') as f:
+with open(report_file, "w") as f:
     json.dump(data, f, indent=2)
-"
+PY
 
 # Display summary
 echo ""
