@@ -88,3 +88,6 @@ src/flavor-go/coverage_*.out
 tests/pretaster/logs/
 .claude/worktrees/
 Users/
+
+# Foundry docs-build tooling (injected by preflight; not versioned)
+.provide/
