@@ -40,7 +40,7 @@ version = { file = "VERSION" }
 
 [tool.flavor]
 name = "taster"
-version = "0.4.0"
+version = "0.4.1"
 entry_point = "taster.cli:main"
 
 [tool.flavor.build]
