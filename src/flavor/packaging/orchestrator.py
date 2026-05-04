@@ -80,18 +80,28 @@ class PackagingOrchestrator:
     def _detect_launcher_type(self, launcher_path: Path) -> str:
         """Detect launcher type by running the binary with --version."""
         logger.debug("🔍🚀📋 Detecting launcher type", path=str(launcher_path))
+
+        # Fast path: launcher filename is authoritative for our managed helpers.
+        launcher_name = launcher_path.name.lower()
+        if "flavor-go-launcher" in launcher_name:
+            return "go"
+        if "flavor-rs-launcher" in launcher_name or "flavor-rust-launcher" in launcher_name:
+            return "rust"
+
         try:
             result = run(
                 [launcher_path.as_posix(), "--version"],
                 capture_output=True,
                 check=False,
                 timeout=5,
+                text=False,
             )
         except Exception as e:
             raise BuildError(f"Failed to execute command: {e}") from e
 
-        output = result.stdout.lower()
-        logger.trace("🔍📤📋 Launcher version output", output=result.stdout.strip())
+        stdout = result.stdout if isinstance(result.stdout, (bytes, bytearray)) else b""
+        output = stdout.decode("utf-8", errors="replace").lower()
+        logger.trace("🔍📤📋 Launcher version output", output=output.strip())
 
         if "flavor-rs-launcher" in output or "rust" in output:
             return "rust"
