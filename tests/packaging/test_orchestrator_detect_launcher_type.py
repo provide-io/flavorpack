@@ -1,5 +1,5 @@
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -28,7 +28,10 @@ def test_detect_launcher_type_prefers_filename_for_go(tmp_path: Path) -> None:
 
 @pytest.mark.unit
 @patch("flavor.packaging.orchestrator.run")
-def test_detect_launcher_type_handles_non_utf8_subprocess_output(mock_run: patch, tmp_path: Path) -> None:
+def test_detect_launcher_type_handles_non_utf8_subprocess_output(
+    mock_run: MagicMock,
+    tmp_path: Path,
+) -> None:
     orch = _make_orchestrator(tmp_path)
     launcher = tmp_path / "launcher.exe"
     mock_run.return_value.stdout = b"\x90\x91flavor-go-launcher 1.2.3\n"
