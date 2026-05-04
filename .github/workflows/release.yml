@@ -323,26 +323,10 @@ jobs:
           echo "  PSP packages: $(ls -1 release/*.psp 2>/dev/null | wc -l)"
           echo "  Other: $(ls -1 release/*.txt release/*.md 2>/dev/null | wc -l)"
       
+      # Idempotent tag creation: skips ref creation if the tag already exists,
+      # so rerunning a partial release does not fail with HTTP 422.
       - name: 🏷️ Create Git Tag
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # Update VERSION file if changed
-          echo "${{ needs.prepare.outputs.version }}" > VERSION
-          git add VERSION
-          git diff --cached --quiet || git commit -m "🚀 Release v${{ needs.prepare.outputs.version }}"
-
-          # Create tag via GitHub API (avoids GITHUB_TOKEN workflow-file restriction)
-          COMMIT_SHA=$(git rev-parse HEAD)
-          gh api repos/${{ github.repository }}/git/tags \
-            -f tag="${{ needs.prepare.outputs.version_tag }}" \
-            -f message="Release ${{ needs.prepare.outputs.version }}" \
-            -f object="$COMMIT_SHA" \
-            -f type="commit" > /dev/null
-          gh api repos/${{ github.repository }}/git/refs \
-            -f ref="refs/tags/${{ needs.prepare.outputs.version_tag }}" \
-            -f sha="$COMMIT_SHA" > /dev/null
+        run: ci/create-release-tag.sh "${{ needs.prepare.outputs.version }}" "${{ needs.prepare.outputs.version_tag }}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
