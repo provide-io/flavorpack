@@ -823,8 +823,8 @@ docs = [
 [package.metadata]
 requires-dist = [
     { name = "pip", specifier = ">=25.2" },
-    { name = "provide-foundation", extras = ["all"], marker = "platform_machine != 'ARM64' or sys_platform != 'win32'", specifier = ">=0.4.0" },
-    { name = "provide-foundation", extras = ["cli", "compression", "crypto", "platform", "transport"], marker = "platform_machine == 'ARM64' and sys_platform == 'win32'", specifier = ">=0.4.0" },
+    { name = "provide-foundation", extras = ["all"], marker = "platform_machine != 'ARM64' or sys_platform != 'win32'", specifier = ">=0.4.1" },
+    { name = "provide-foundation", extras = ["cli", "compression", "crypto", "platform", "transport"], marker = "platform_machine == 'ARM64' and sys_platform == 'win32'", specifier = ">=0.4.1" },
     { name = "setuptools", specifier = "==82.0.1" },
     { name = "uv", specifier = ">=0.9.6" },
     { name = "wheel", specifier = "==0.46.3" },
@@ -2620,16 +2620,16 @@ wheels = [
 
 [[package]]
 name = "provide-foundation"
-version = "0.4.0"
+version = "0.4.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "attrs" },
     { name = "structlog" },
     { name = "tomli-w" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/18/97/8e33408dae18859774748f6bf2bc80c476bccd32318d409c88378ee14042/provide_foundation-0.4.0.tar.gz", hash = "sha256:7fea7dede7df9f5d482b15fe52dea5455f507de586c2da8e130fbcc4a4ff2993", size = 417899, upload-time = "2026-04-21T02:24:26.135Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/57/9e/36e5076f1103565ab9b5623452ed826bcd467be786c75c6ead901f84da96/provide_foundation-0.4.1.tar.gz", hash = "sha256:294255d6754bf4aad0dde9fe775a296f5da09510142eee4efc9e12fc7074ca5d", size = 417992, upload-time = "2026-05-04T20:09:05.388Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/95/43/31c60ed135ab55626fd62fb737aa618dcf9167a68b3d3ffc02e4e71e3ae6/provide_foundation-0.4.0-py3-none-any.whl", hash = "sha256:9a64b9a7c54723682255551e869a148bc30691c37240170afbd4675c691d46a9", size = 615880, upload-time = "2026-04-21T02:24:24.005Z" },
+    { url = "https://files.pythonhosted.org/packages/13/37/515c0489ee3048dcad5204bae38619a0b6380166c37a99e9862a71bb5d71/provide_foundation-0.4.1-py3-none-any.whl", hash = "sha256:cdc1bf2aa5e7c132f3259bd0eb28bb997a80dcce6b2f3d42a9ec16e48ecf2b25", size = 616102, upload-time = "2026-05-04T20:09:03.761Z" },
 ]
 
 [package.optional-dependencies]
