@@ -15,9 +15,25 @@ git diff --cached --quiet || git commit -m "🚀 Release v${VERSION}"
 
 COMMIT_SHA="$(git rev-parse HEAD)"
 
-if gh api "repos/${GITHUB_REPOSITORY}/git/refs/tags/${VERSION_TAG}" >/dev/null 2>&1; then
-  echo "✓ Tag ${VERSION_TAG} already exists; skipping ref creation"
-  exit 0
+if EXISTING_REF_JSON="$(gh api "repos/${GITHUB_REPOSITORY}/git/refs/tags/${VERSION_TAG}" 2>/dev/null)"; then
+  EXISTING_SHA="$(printf '%s' "${EXISTING_REF_JSON}" | jq -r '.object.sha')"
+
+  # Lightweight tags point directly at a commit; annotated tags point at a tag object.
+  if [ "${EXISTING_SHA}" != "${COMMIT_SHA}" ]; then
+    if TAG_COMMIT_SHA="$(gh api "repos/${GITHUB_REPOSITORY}/git/tags/${EXISTING_SHA}" --jq '.object.sha' 2>/dev/null)"; then
+      EXISTING_SHA="${TAG_COMMIT_SHA}"
+    fi
+  fi
+
+  if [ "${EXISTING_SHA}" = "${COMMIT_SHA}" ]; then
+    echo "✓ Tag ${VERSION_TAG} already exists at ${COMMIT_SHA}; skipping ref creation"
+    exit 0
+  fi
+
+  echo "❌ Tag ${VERSION_TAG} exists but points to a different commit"
+  echo "   Existing: ${EXISTING_SHA}"
+  echo "   Expected: ${COMMIT_SHA}"
+  exit 1
 fi
 
 gh api "repos/${GITHUB_REPOSITORY}/git/tags" \
