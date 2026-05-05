@@ -131,6 +131,7 @@ jobs:
   # freebsd_arm64 is additionally run on ubuntu-24.04-arm to benchmark QEMU performance.
   build-freebsd-amd64:
     name: 😈🔨 freebsd_amd64
+    if: ${{ inputs.platforms == 'all' || contains(inputs.platforms, 'freebsd_amd64') }}
     needs: setup
     runs-on: ubuntu-24.04
     env:
@@ -273,6 +274,7 @@ jobs:
 
   build-freebsd-arm64:
     name: 😈🔨 freebsd_arm64
+    if: ${{ inputs.platforms == 'all' || contains(inputs.platforms, 'freebsd_arm64') }}
     needs: setup
     runs-on: ubuntu-24.04
     env:
