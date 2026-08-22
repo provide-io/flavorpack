@@ -8,6 +8,18 @@ repos:
     rev: v5.0.0
     hooks:
       - id: detect-private-key
+        # Signing keypairs the taster/pretaster suites load from disk, plus the
+        # inline PEM `tests/packaging/test_keys.py` asserts against. They are
+        # generated for the tests and protect nothing, so the hook has to skip
+        # them by name rather than by directory -- a blanket `tests/` exclude
+        # would let a real leak through.
+        exclude: |
+          (?x)^(
+            tests/taster/keys/flavor-private\.key
+            |tests/taster/configs/keys/flavor-private\.key
+            |tests/pretaster/configs/keys/flavor-private\.key
+            |tests/packaging/test_keys\.py
+          )$
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.7
