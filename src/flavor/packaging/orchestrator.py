@@ -99,13 +99,24 @@ class PackagingOrchestrator:
         except Exception as e:
             raise BuildError(f"Failed to execute command: {e}") from e
 
-        stdout = result.stdout if isinstance(result.stdout, (bytes, bytearray)) else b""
-        output = stdout.decode("utf-8", errors="replace").lower()
+        # `run` is called with text=False so this is normally bytes, but accept a
+        # decoded string too: silently coercing an unexpected type to b"" sent every
+        # such call to the "rust" fallback below, which is a misdetection, not an error.
+        raw = result.stdout
+        if isinstance(raw, (bytes, bytearray)):
+            raw = raw.decode("utf-8", errors="replace")
+        output = (raw or "").lower()
         logger.trace("🔍📤📋 Launcher version output", output=output.strip())
 
-        if "flavor-rs-launcher" in output or "rust" in output:
+        # Exact helper names win over the looser heuristics, so a Go banner that
+        # happens to mention rust is not read as a Rust launcher.
+        if "flavor-rs-launcher" in output or "flavor-rust-launcher" in output:
             return "rust"
-        if "flavor-go-launcher" in output or "go version" in output:
+        if "flavor-go-launcher" in output:
+            return "go"
+        if "rust" in output:
+            return "rust"
+        if "go version" in output:
             return "go"
 
         logger.warning(
