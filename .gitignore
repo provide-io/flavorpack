@@ -91,3 +91,10 @@ Users/
 
 # Foundry docs-build tooling (injected by preflight; not versioned)
 .provide/
+
+# flavorpack generates a fresh signing keypair per build (see
+# flavor/packaging/keys.py); nothing verifies against a committed one. They are
+# build artifacts, and committing them is how private keys reached five public
+# repositories in this suite.
+keys/
+*.private-key.pem
