@@ -1,6 +1,14 @@
 default_install_hook_types: [pre-commit, pre-push]
 
 repos:
+  # Secret scanning. Private keys reached five public repositories in this
+  # suite before this hook existed anywhere; it is the cheapest place to stop
+  # the next one.
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: detect-private-key
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.7
     hooks:
