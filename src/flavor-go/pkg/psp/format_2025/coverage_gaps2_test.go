@@ -27,7 +27,9 @@ import (
 // TestEnforcePolicyRefusedRoot covers the branch where RefuseRoot=true AND
 // isPrivilegedUser() returns true. We inject getuidFn → 0 to simulate root.
 func TestEnforcePolicyRefusedRoot(t *testing.T) {
-	t.Parallel()
+	// Not t.Parallel(): this test replaces the package-level getuidFn seam, read
+	// by isPrivilegedUser(). Nothing else currently sets RefuseRoot, so no test
+	// reads it concurrently today -- the first one that does would race.
 
 	old := getuidFn
 	t.Cleanup(func() { getuidFn = old })
@@ -115,7 +117,13 @@ func TestSaveIndexMetadataWriteFileFails(t *testing.T) {
 // return false, nil) by recreating the lock file right after the stale-lock
 // cleanup removes it, so OpenFile sees EEXIST.
 func TestTryAcquireLockIsExistRace(t *testing.T) {
-	t.Parallel()
+	// Not t.Parallel(): this test replaces isProcessRunningFn with one that
+	// reports every PID dead. TestTryAcquireLockHeldByRunningProcess depends on
+	// the real one reporting its own PID alive, so an overlap sends it down the
+	// stale-lock branch and it acquires a lock it must not get. Serialising the
+	// writer is what fixes it: Go releases parallel tests only once the serial
+	// ones have finished, so this can never overlap a parallel reader -- including
+	// readers added later, which serialising the reader instead would not cover.
 
 	paths := NewWorkenvPaths(t.TempDir(), "/tmp/isexist-test.pspf")
 	logger := logging.NewNullLogger()
