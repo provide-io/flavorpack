@@ -50,7 +50,10 @@ func buildTestBundle(t *testing.T) string {
 // overriding launchFn with a no-op that records whether it was called.
 // This allows in-process testing without os.Exit terminating the test.
 func TestLauncherMainLaunchFnIsCalled(t *testing.T) {
-	t.Parallel()
+	// Not t.Parallel(): unlike the other launcher tests, which only assert on a
+	// subprocess and so mutate nothing here, this one runs main() in-process and
+	// replaces launchFn, executablePathFn and os.Args to do it. Those are process
+	// globals, so it cannot safely overlap anything.
 
 	bundlePath := buildTestBundle(t)
 
@@ -70,6 +73,11 @@ func TestLauncherMainLaunchFnIsCalled(t *testing.T) {
 		return bundlePath, nil
 	}
 
+	// Restore os.Args: the sibling tests spawn exec.Command(os.Args[0], ...) to
+	// re-enter this binary, so leaving it pointed at the bundle makes them exec
+	// the bundle instead and fail with a PathError.
+	oldArgs := os.Args
+	t.Cleanup(func() { os.Args = oldArgs })
 	os.Args = []string{bundlePath}
 	main()
 
