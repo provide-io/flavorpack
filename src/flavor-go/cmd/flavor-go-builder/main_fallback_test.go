@@ -11,7 +11,9 @@ import (
 // TestGetBuilderTimestampExecutableFails covers the time.Now() fallback path
 // (main.go:46) in getBuilderTimestamp when os.Executable returns an error.
 func TestGetBuilderTimestampExecutableFails(t *testing.T) {
-	t.Parallel()
+	// Not t.Parallel(): this test swaps a package-level function seam, and the
+	// others in this file swap the same or a neighbouring one. Running them
+	// concurrently is a data race on that global, not a faster suite.
 
 	old := osExecutableFn
 	t.Cleanup(func() { osExecutableFn = old })
@@ -44,7 +46,9 @@ func TestGetBuilderTimestampExecutableFails(t *testing.T) {
 // TestGetBuilderTimestampVcsTime covers main.go:36-39 (vcs.time branch).
 // We inject readBuildInfoFn to return a fake BuildInfo with a vcs.time setting.
 func TestGetBuilderTimestampVcsTime(t *testing.T) {
-	t.Parallel()
+	// Not t.Parallel(): this test swaps a package-level function seam, and the
+	// others in this file swap the same or a neighbouring one. Running them
+	// concurrently is a data race on that global, not a faster suite.
 
 	fakeTime := "2024-01-15T12:00:00Z"
 	old := readBuildInfoFn
@@ -66,7 +70,9 @@ func TestGetBuilderTimestampVcsTime(t *testing.T) {
 // TestGetBuilderTimestampVcsTimeParseFails covers the path where vcs.time exists
 // but is not valid RFC3339 (falls through to the binary mtime / time.Now() path).
 func TestGetBuilderTimestampVcsTimeInvalid(t *testing.T) {
-	t.Parallel()
+	// Not t.Parallel(): this test swaps a package-level function seam, and the
+	// others in this file swap the same or a neighbouring one. Running them
+	// concurrently is a data race on that global, not a faster suite.
 
 	old := readBuildInfoFn
 	t.Cleanup(func() { readBuildInfoFn = old })
