@@ -724,7 +724,11 @@ jobs:
     # Mutation testing is expensive; skip on PRs and run nightly/on-demand only.
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    # 45, not 30: the first run of this job to ever finish took 24m20s, which is
+    # 81% of a 30-minute budget -- one slow runner from being killed and reported
+    # as "cancelled", which is what happened to every run of this workflow
+    # between July and 2026-08-23.
+    timeout-minutes: 45
     continue-on-error: true
     steps:
       - name: 📥 Checkout
