@@ -30,13 +30,13 @@ jobs:
     runs-on: ${{ inputs.os }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
       - name: 💾 Cache tastesh
         id: cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             dist/bin/flavor-tastesh-${{ inputs.platform }}
@@ -55,7 +55,7 @@ jobs:
 
       - name: 🔧 Setup Go (Windows — builds tastesh-win Go interpreter)
         if: steps.cache.outputs.cache-hit != 'true' && runner.os == 'Windows'
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: ci/tastesh-win/go.mod
           cache-dependency-path: ci/tastesh-win/go.sum

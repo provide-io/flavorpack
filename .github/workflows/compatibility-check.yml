@@ -22,12 +22,12 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
       - name: 🐹 Setup Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version: "${{ vars.GO_VERSION }}"
 
@@ -71,7 +71,7 @@ jobs:
           - { name: "Alpine Latest", image: "alpine:latest", arch: "amd64", glibc: "musl" }
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -112,7 +112,7 @@ jobs:
           - { name: "Arch Linux", image: "archlinux:latest", glibc: "latest" }
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -147,7 +147,7 @@ jobs:
           - { name: "Amazon Linux 2023 ARM64", image: "arm64v8/amazonlinux:2023" }
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -187,7 +187,7 @@ jobs:
           - { name: "Fedora 39", image: "fedora:39", install: "dnf install -y python3 python3-pip" }
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -216,7 +216,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 

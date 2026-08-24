@@ -37,7 +37,7 @@ jobs:
       flavor_run_id: ${{ steps.flavor.outputs.run_id }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -64,7 +64,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
       - name: 📥 Download Flavor PSP artifacts
-        uses: dawidd6/action-download-artifact@v19
+        uses: dawidd6/action-download-artifact@v24
         with:
           workflow: flavor-pipeline.yml
           run_id: ${{ steps.flavor.outputs.run_id }}
@@ -80,7 +80,7 @@ jobs:
           ls -la flavor-psp/
       
       - name: 📥 Download helper artifacts
-        uses: dawidd6/action-download-artifact@v19
+        uses: dawidd6/action-download-artifact@v24
         with:
           workflow: helper-prep.yml
           name: flavor-helpers-${{ steps.version.outputs.version }}-all
@@ -127,7 +127,7 @@ jobs:
       matrix: ${{ fromJson(needs.setup.outputs.test_matrix) }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -138,7 +138,7 @@ jobs:
           path: ./flavor-psp
       
       - name: 📥 Download helpers
-        uses: dawidd6/action-download-artifact@v19
+        uses: dawidd6/action-download-artifact@v24
         with:
           workflow: helper-prep.yml
           name: flavor-helpers-${{ needs.setup.outputs.version }}-all
@@ -324,7 +324,7 @@ jobs:
       PYTHONUTF8: "1"
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -335,7 +335,7 @@ jobs:
           path: all-results
 
       - name: 📥 Download helpers
-        uses: dawidd6/action-download-artifact@v19
+        uses: dawidd6/action-download-artifact@v24
         with:
           workflow: helper-prep.yml
           name: flavor-helpers-${{ needs.setup.outputs.version }}-all
@@ -365,7 +365,7 @@ jobs:
           ls -la src/flavor/helpers/bin/ || echo "  (empty)"
 
       - name: 📦 Setup uv + Python
-        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           python-version: '3.11'
 
@@ -602,7 +602,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 

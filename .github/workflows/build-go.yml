@@ -34,13 +34,13 @@ jobs:
     runs-on: ${{ inputs.os }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
       - name: 💾 Cache Go helpers
         id: cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             dist/bin/flavor-go-*-${{ inputs.version }}-${{ inputs.platform }}
@@ -49,14 +49,14 @@ jobs:
           key: ${{ inputs.go_cache_key_base }}-${{ inputs.platform }}-${{ inputs.version }}
 
       - name: 📦 Setup uv + Python
-        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           python-version: '3.11'
           enable-cache: false
 
       - name: 🐹 Setup Go
         if: steps.cache.outputs.cache-hit != 'true'
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version: "${{ vars.GO_VERSION }}"
           cache-dependency-path: src/flavor-go/go.sum
