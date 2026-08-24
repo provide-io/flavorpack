@@ -1,0 +1,25 @@
+# Action pins here are SHA-pinned so a retagged upstream cannot silently change
+# what runs. The cost is that a pin never updates itself, and a stale one fails
+# late and confusingly: sigstore/gh-action-sigstore-python sat at v3.0.0 until
+# its bundled TUF trust root stopped verifying, which surfaced as
+# "root was signed by 0/3 keys" -- mid-release, in the signing step, months
+# after the pin was written. This keeps the pins moving so that cannot recur.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 3
+    # One pull request a week for every action bump, rather than one per action.
+    # Ungrouped, this becomes a firehose -- provide-uterm carries 20+ open
+    # dependabot branches for exactly that reason.
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "🔼"
+      include: "scope"
