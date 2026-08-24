@@ -28,7 +28,7 @@ jobs:
       test_matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -71,14 +71,14 @@ jobs:
       matrix: ${{ fromJson(needs.setup.outputs.test_matrix) }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
       # Native platforms use separate Go/Rust helper artifacts
       - name: 📥 Download Go helpers
         if: ${{ matrix.vm_arch == '' }}
-        uses: dawidd6/action-download-artifact@v19
+        uses: dawidd6/action-download-artifact@v24
         with:
           workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
@@ -87,7 +87,7 @@ jobs:
 
       - name: 📥 Download Rust helpers
         if: ${{ matrix.vm_arch == '' }}
-        uses: dawidd6/action-download-artifact@v19
+        uses: dawidd6/action-download-artifact@v24
         with:
           workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
@@ -97,7 +97,7 @@ jobs:
       # FreeBSD uses a single combined helpers artifact
       - name: 📥 Download combined helpers (FreeBSD)
         if: ${{ matrix.vm_arch != '' }}
-        uses: dawidd6/action-download-artifact@v19
+        uses: dawidd6/action-download-artifact@v24
         with:
           workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
@@ -106,7 +106,7 @@ jobs:
 
       # Download tastesh (embedded shell for self-contained PSPs)
       - name: 📥 Download tastesh
-        uses: dawidd6/action-download-artifact@v19
+        uses: dawidd6/action-download-artifact@v24
         with:
           workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
@@ -135,7 +135,7 @@ jobs:
       # Build pretaster test packages via Makefile (FreeBSD QEMU VM)
       - name: 🔨 Build Pretaster packages (FreeBSD VM)
         if: ${{ matrix.vm_arch != '' }}
-        uses: cross-platform-actions/action@v0.32.0
+        uses: cross-platform-actions/action@v1.4.0
         env:
           FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
@@ -165,7 +165,7 @@ jobs:
       matrix: ${{ fromJson(needs.setup.outputs.test_matrix) }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
       
@@ -178,7 +178,7 @@ jobs:
       # Native platforms use separate Go/Rust helper artifacts
       - name: 📥 Download Go helpers
         if: ${{ matrix.vm_arch == '' }}
-        uses: dawidd6/action-download-artifact@v19
+        uses: dawidd6/action-download-artifact@v24
         with:
           workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
@@ -187,7 +187,7 @@ jobs:
 
       - name: 📥 Download Rust helpers
         if: ${{ matrix.vm_arch == '' }}
-        uses: dawidd6/action-download-artifact@v19
+        uses: dawidd6/action-download-artifact@v24
         with:
           workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
@@ -197,7 +197,7 @@ jobs:
       # FreeBSD uses a single combined helpers artifact
       - name: 📥 Download combined helpers (FreeBSD)
         if: ${{ matrix.vm_arch != '' }}
-        uses: dawidd6/action-download-artifact@v19
+        uses: dawidd6/action-download-artifact@v24
         with:
           workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
@@ -206,7 +206,7 @@ jobs:
 
       # Download tastesh (embedded shell for self-contained PSPs)
       - name: 📥 Download tastesh
-        uses: dawidd6/action-download-artifact@v19
+        uses: dawidd6/action-download-artifact@v24
         with:
           workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
@@ -290,7 +290,7 @@ jobs:
 
       - name: 🧪 Run cross-language tests (FreeBSD VM)
         if: ${{ matrix.vm_arch != '' }}
-        uses: cross-platform-actions/action@v0.32.0
+        uses: cross-platform-actions/action@v1.4.0
         env:
           FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
@@ -359,14 +359,14 @@ jobs:
       matrix: ${{ fromJson(needs.setup.outputs.test_matrix) }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
       # Native platforms use separate Go/Rust helper artifacts
       - name: 📥 Download Go helpers
         if: ${{ matrix.vm_arch == '' }}
-        uses: dawidd6/action-download-artifact@v19
+        uses: dawidd6/action-download-artifact@v24
         with:
           workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
@@ -375,7 +375,7 @@ jobs:
 
       - name: 📥 Download Rust helpers
         if: ${{ matrix.vm_arch == '' }}
-        uses: dawidd6/action-download-artifact@v19
+        uses: dawidd6/action-download-artifact@v24
         with:
           workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
@@ -385,7 +385,7 @@ jobs:
       # FreeBSD uses a single combined helpers artifact
       - name: 📥 Download combined helpers (FreeBSD)
         if: ${{ matrix.vm_arch != '' }}
-        uses: dawidd6/action-download-artifact@v19
+        uses: dawidd6/action-download-artifact@v24
         with:
           workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
@@ -418,7 +418,7 @@ jobs:
 
       - name: 🔧 Build pretaster PSP (FreeBSD VM)
         if: ${{ matrix.vm_arch != '' }}
-        uses: cross-platform-actions/action@v0.32.0
+        uses: cross-platform-actions/action@v1.4.0
         env:
           FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
@@ -465,7 +465,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
       
