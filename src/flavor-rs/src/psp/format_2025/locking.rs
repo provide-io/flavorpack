@@ -16,6 +16,17 @@ static LOCK_ACQUIRED: AtomicBool = AtomicBool::new(false);
 /// and `tasklist` on Windows.
 #[cfg(unix)]
 pub fn is_process_running(pid: u32) -> bool {
+    // Reject anything that cannot be a live pid before shelling out. `kill` takes a
+    // signed pid_t, so a u32 above i32::MAX is reinterpreted as negative -- and a
+    // negative argument is not "no such process", it is a process *group*, with -1
+    // meaning every process the caller can signal. That call succeeds, so without
+    // this guard an impossible pid reports as running on Linux and its extraction
+    // directory is never cleaned. macOS rejects the same input outright, which is
+    // why this only ever failed on one platform.
+    if pid == 0 || pid > i32::MAX as u32 {
+        return false;
+    }
+
     std::process::Command::new("kill")
         .args(["-0", &pid.to_string()])
         .stdout(std::process::Stdio::null())
@@ -259,6 +270,24 @@ mod tests {
         assert!(is_extraction_complete(&paths));
         mark_extraction_incomplete(&paths);
         assert!(!is_extraction_complete(&paths));
+    }
+
+    #[test]
+    fn is_process_running_rejects_pids_that_cannot_exist() {
+        // u32::MAX reinterpreted as a signed pid_t is -1, which `kill` reads as
+        // "every process I can signal" and reports success for. Linux's kill accepts
+        // that input where macOS refuses it, so before the range guard this returned
+        // true on one platform and false on the other, and a stale extraction
+        // directory named 4294967295 was never cleaned up on Linux.
+        assert!(!is_process_running(u32::MAX));
+        assert!(!is_process_running(i32::MAX as u32 + 1));
+        // 0 addresses the caller's own process group, not "no such process".
+        assert!(!is_process_running(0));
+    }
+
+    #[test]
+    fn is_process_running_reports_this_process_alive() {
+        assert!(is_process_running(std::process::id()));
     }
 
     #[test]
