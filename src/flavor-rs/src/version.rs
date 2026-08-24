@@ -58,7 +58,14 @@ mod tests {
     fn full_version_with_test_inputs_truncates_commit_and_appends_build_time() {
         let version = full_version_with(Some("0123456789abcdef"), Some("2026-03-31T00:00:00Z"));
 
-        assert_eq!(version, "0.3.25 (01234567) built 2026-03-31T00:00:00Z");
+        // Built from VERSION, not a literal: the hardcoded "0.3.25" this replaces
+        // went stale at 0.4.0 and stayed wrong for six releases, because the suite
+        // hangs under the default parallel harness and never got far enough to
+        // report it. The sibling test below already did it this way.
+        assert_eq!(
+            version,
+            format!("{VERSION} (01234567) built 2026-03-31T00:00:00Z")
+        );
     }
 
     #[test]

@@ -77,9 +77,24 @@ security:
 		echo "   Install with: cargo install cargo-deny"; \
 	fi
 
+# Rust runs every test in parallel by default -- there is no opt-in like Go's
+# t.Parallel(). Five tests here mutate process-global environment variables
+# (VALIDATION, EXEC_MODE, WORKENV in launcher/mod.rs, plus four in policy.rs),
+# which is why env::set_var is unsafe in edition 2024. Concurrently, other tests
+# perform a real bundle launch that reads exactly those variables, and the
+# collision deadlocks: CI sat 42 minutes past its last test line before the job
+# timeout killed it, with cargo-llvm-cov and a live test binary still resident.
+# It also hid a stale assertion in version.rs for six releases, because the suite
+# never survived to report.
+#
+# --test-threads=1 is the fix rather than a workaround: the whole suite finishes
+# in about half a second serially, so the parallel harness was buying nothing and
+# costing correctness.
+TEST_THREADS ?= 1
+
 test:
 	@echo "🧪 Running Rust tests..."
-	@cargo test --all-features
+	@cargo test --all-features -- --test-threads=$(TEST_THREADS)
 	@echo "✅ Tests passed"
 
 coverage:
@@ -92,7 +107,7 @@ coverage:
 		export LLVM_COV=/opt/homebrew/opt/llvm/bin/llvm-cov; \
 		export LLVM_PROFDATA=/opt/homebrew/opt/llvm/bin/llvm-profdata; \
 	fi; \
-	cargo llvm-cov --all-features --workspace --lcov --output-path coverage.lcov; \
+	cargo llvm-cov --all-features --workspace --lcov --output-path coverage.lcov -- --test-threads=$(TEST_THREADS); \
 	cargo llvm-cov report --summary-only | tee coverage.txt; \
 	total="$$(awk '/^TOTAL/{gsub(/%/,"",$$10); print $$10}' coverage.txt | tail -1)"; \
 	min="$${QUALITY_RUST_COV_MIN}"; \
@@ -108,7 +123,7 @@ coverage:
 
 proptest:
 	@echo "🧪 Running Rust property tests..."
-	@cargo test prop_ --all-features
+	@cargo test prop_ --all-features -- --test-threads=$(TEST_THREADS)
 	@echo "✅ Proptests passed"
 
 mutation:
