@@ -48,7 +48,7 @@ jobs:
       flavor_run_id: ${{ steps.find_runs.outputs.flavor_run_id }}
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
           fetch-depth: 0
@@ -72,7 +72,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout for scripts
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
           sparse-checkout: |
@@ -80,7 +80,7 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: 📥 Download wheel artifacts from Flavor Pipeline
-        uses: dawidd6/action-download-artifact@v19
+        uses: dawidd6/action-download-artifact@v24
         with:
           workflow: flavor-pipeline.yml
           run_id: ${{ needs.prepare.outputs.flavor_run_id }}
@@ -112,7 +112,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout for scripts
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
           sparse-checkout: |
@@ -120,7 +120,7 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: 📥 Download Flavor PSP artifacts
-        uses: dawidd6/action-download-artifact@v19
+        uses: dawidd6/action-download-artifact@v24
         with:
           workflow: flavor-pipeline.yml
           run_id: ${{ needs.prepare.outputs.flavor_run_id }}
@@ -131,7 +131,7 @@ jobs:
         continue-on-error: true
       
       - name: 📥 Download Taster artifacts
-        uses: dawidd6/action-download-artifact@v19
+        uses: dawidd6/action-download-artifact@v24
         with:
           workflow: taster-pipeline.yml
           name_is_regexp: true
@@ -163,7 +163,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -280,7 +280,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -331,7 +331,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
       - name: 🚀 Create GitHub Release
-        uses: softprops/action-gh-release@v2.6.1
+        uses: softprops/action-gh-release@v3.0.2
         with:
           tag_name: ${{ needs.prepare.outputs.version_tag }}
           name: Flavor Pack ${{ needs.prepare.outputs.version }}
