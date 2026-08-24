@@ -803,7 +803,7 @@ jobs:
         run: make quality-rust-fast
 
       - name: 🧪 Run Rust deep quality
-        run: make quality-rust-deep QUALITY_RUST_FUZZ_SECONDS=15 QUALITY_RUST_MUTATION_ARGS="--timeout 120 --iterate 2"
+        run: make quality-rust-deep QUALITY_RUST_FUZZ_SECONDS=15 QUALITY_RUST_MUTATION_ARGS="--timeout 120 --iterate"
 
       - name: 📊 Summarize Rust observability
         if: always()
