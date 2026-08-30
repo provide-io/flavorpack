@@ -36,7 +36,10 @@ class TestRemovedPackOptions:
             ["pack", "--manifest", str(pyproject), "--output-format", "json"],
         )
         assert result.exit_code != 0
-        assert "No such option: --output-format" in result.output
+        # click quotes the option name and appends a suggestion as of 8.5, so
+        # assert on the two parts that carry the meaning rather than the phrasing.
+        assert "No such option" in result.output
+        assert "--output-format" in result.output
 
     def test_output_file_rejected(self, tmp_path: Path) -> None:
         """--output-file should be rejected as an unrecognized option."""
@@ -49,7 +52,10 @@ class TestRemovedPackOptions:
             ["pack", "--manifest", str(pyproject), "--output-file", "out.psp"],
         )
         assert result.exit_code != 0
-        assert "No such option: --output-file" in result.output
+        # click quotes the option name and appends a suggestion as of 8.5, so
+        # assert on the two parts that carry the meaning rather than the phrasing.
+        assert "No such option" in result.output
+        assert "--output-file" in result.output
 
 
 @pytest.mark.unit
