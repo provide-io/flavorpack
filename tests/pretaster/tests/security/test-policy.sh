@@ -27,7 +27,11 @@ elif [ ! -f "$BUILD_HELPER" ]; then
     POLICY_TEST_SKIPPED=true
 else
     set +e
-    BUILD_OUTPUT=$(cd "$PROJECT_ROOT" && "$PYTHON_BIN" "$BUILD_HELPER" "$PRETASTER_DIR/$POLICY_PSP" 2>&1)
+    # Pass the launcher explicitly: test-setup.sh already resolved it for this
+    # platform, and the helper's own probe cannot see the Linux musl build.
+    POLICY_LAUNCHER="$RS_LAUNCHER"
+    [ ! -f "$POLICY_LAUNCHER" ] && POLICY_LAUNCHER="$GO_LAUNCHER"
+    BUILD_OUTPUT=$(cd "$PROJECT_ROOT" && FLAVOR_LAUNCHER_BIN="$POLICY_LAUNCHER" "$PYTHON_BIN" "$BUILD_HELPER" "$PRETASTER_DIR/$POLICY_PSP" 2>&1)
     BUILD_EXIT=$?
     set -e
     if [ $BUILD_EXIT -ne 0 ]; then
