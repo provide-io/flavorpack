@@ -92,13 +92,13 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "Test 3: Cross-builder trust verification"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-CROSS_MANIFEST="configs/test-echo.json"
+CROSS_MANIFEST="$RESOLVED_CONFIGS_DIR/test-echo.json"
 CROSS_SEED="cross-trust-test"
 CROSS_SKIP=false
 
 [ ! -f "$GO_BUILDER" ] || [ ! -f "$RS_BUILDER" ] && { print_color "$YELLOW" "  ⚠️  Need both builders — skipping"; CROSS_SKIP=true; }
 [ ! -f "$GO_LAUNCHER" ] && [ ! -f "$RS_LAUNCHER" ] && { print_color "$YELLOW" "  ⚠️  No launcher — skipping"; CROSS_SKIP=true; }
-[ ! -f "$CROSS_MANIFEST" ] && { print_color "$YELLOW" "  ⚠️  test-echo.json not found — skipping"; CROSS_SKIP=true; }
+[ ! -f "$CROSS_MANIFEST" ] && { print_color "$YELLOW" "  ⚠️  resolved test-echo.json not found (run make to resolve configs) — skipping"; CROSS_SKIP=true; }
 
 # Derive cross-trust key (requires Python for Ed25519 derivation)
 CROSS_TRUST_DIR=""
@@ -143,7 +143,13 @@ ENDJSON
             --output "$CROSS_PSP" --key-seed "$CROSS_SEED" 2>/dev/null
         BUILD_RC=$?
         set -e
-        [ $BUILD_RC -ne 0 ] && { print_color "$YELLOW" "  ⚠️  $BUILDER_NAME build failed"; rm -f "$CROSS_PSP"; continue; }
+        if [ $BUILD_RC -ne 0 ]; then
+            print_color "$RED" "  ❌ $BUILDER_NAME build failed (exit $BUILD_RC)"
+            TEST_FAILURES=$((TEST_FAILURES + 1))
+            FAILED_TESTS="$FAILED_TESTS\n  - Cross-builder: $BUILDER_NAME build"
+            rm -f "$CROSS_PSP"
+            continue
+        fi
 
         # Untrusted
         EMPTY_TRUST=$(mktemp -d)

@@ -54,13 +54,19 @@ test_exit_code() {
     
     local package_name="test-exit-${expected_code}"
     local package_file="dist/${package_name}.psp"
-    
+
+    # Fixtures are generated, so they live in a temp dir. Writing them into
+    # scripts/ and configs/ overwrote tracked files and then deleted them,
+    # leaving the working tree dirty after every run.
+    local fixture_dir
+    fixture_dir=$(mktemp -d)
+
     # Create test script that exits with specific code (POSIX sh, no Python needed)
-    cat > scripts/exit_test.sh << EOF
+    cat > "$fixture_dir/exit_test.sh" << EOF
 #!/bin/sh
 exit ${expected_code}
 EOF
-    chmod +x scripts/exit_test.sh
+    chmod +x "$fixture_dir/exit_test.sh"
 
     # Locate tastesh binary
     local tastesh_bin="../../dist/bin/flavor-tastesh-${PLATFORM}${EXT}"
@@ -70,7 +76,7 @@ EOF
     fi
 
     # Create manifest with embedded tastesh (slot 0) + shell script (slot 1)
-    cat > configs/test-exit.json << EOF
+    cat > "$fixture_dir/test-exit.json" << EOF
 {
     "package": {
         "name": "${package_name}",
@@ -96,7 +102,7 @@ EOF
         {
             "slot": 1,
             "id": "exit-test-script",
-            "source": "scripts/exit_test.sh",
+            "source": "${fixture_dir}/exit_test.sh",
             "target": "scripts/exit_test.sh",
             "purpose": "payload",
             "lifecycle": "cached",
@@ -110,7 +116,7 @@ EOF
     local builder_bin="../../dist/bin/flavor-${builder}-builder-${PLATFORM}${EXT}"
     local launcher_bin="../../dist/bin/flavor-${launcher}-launcher-${PLATFORM}${EXT}"
     # Use exit status of the builder itself, not grep (piping through grep loses the builder's exit code)
-    if ! $builder_bin --manifest configs/test-exit.json --launcher-bin "$launcher_bin" --output "$package_file" --key-seed test123 --log-level error >/dev/null 2>&1; then
+    if ! $builder_bin --manifest "$fixture_dir/test-exit.json" --launcher-bin "$launcher_bin" --output "$package_file" --key-seed test123 --log-level error >/dev/null 2>&1; then
         echo -e "${RED}❌ Failed to build package${NC}"
         return 1
     fi
@@ -122,7 +128,8 @@ EOF
     set -e
 
     # Clean up
-    rm -f "$package_file" scripts/exit_test.sh configs/test-exit.json
+    rm -f "$package_file"
+    rm -rf "$fixture_dir"
     
     # Check result
     if [[ $actual_code -eq $expected_code ]]; then
