@@ -1,4 +1,16 @@
-name: 02 🔬 Pretaster Validation
+name: 02a 🔬 Pretaster Validation
+#
+# Stage 02 runs the pretaster suite twice, against different helper binaries.
+#
+#   02a (this file) -- after 01 Helper Prep, on main and develop. Consumes the
+#                      published helper artifacts and covers the full platform
+#                      matrix, FreeBSD included.
+#   02b             -- on every pull request. Builds helpers from the PR's own
+#                      source, because a PR has no Helper Prep run to draw on,
+#                      and covers Linux and macOS only.
+#
+# Neither replaces the other: 02a is the broad post-merge sweep, 02b is the
+# gate that stops a broken launcher reaching main in the first place.
 
 on:
   workflow_dispatch:

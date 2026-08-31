@@ -299,7 +299,7 @@ The helper build is automated in CI:
 
 {% raw %}
 ```yaml
-# .github/workflows/01-helper-prep.yml
+# .github/workflows/helper-prep.yml
 name: Build Helpers
 
 on:
