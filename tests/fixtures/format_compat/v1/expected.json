@@ -1,0 +1,37 @@
+{
+  "generation": "v1",
+  "key_seed": "flavorpack-format-compat-fixture-v1",
+  "package": {
+    "name": "format-compat-fixture",
+    "version": "1.0.0"
+  },
+  "fixtures": {
+    "rust.psp": {
+      "producer": "flavor-rs-builder-darwin_arm64",
+      "producer_version": "flavor-rs-builder 0.4.6",
+      "sha256": "3d597ff89239e25c75deeeadaef3f16fcf6ec0f9049fb3f9aa19a0f6a834fa29",
+      "size": 17765,
+      "public_key": "00d88e9ee4f0deaf06d28f94e545cdc858dcd8a7371de3ca3e392c0b4263696c",
+      "key_fingerprint": "4b1a4651cda2c3f6c27b1c8cb6e64d56869b0fecc8296a1bd3332b866abe6cdf",
+      "slot_count": 1
+    },
+    "go.psp": {
+      "producer": "flavor-go-builder-darwin_arm64",
+      "producer_version": "flavor-go-builder 0.4.6",
+      "sha256": "ccdd723300f1815275173229a7e6532eb004766bf2d7aac66cc9a5aeecf9951f",
+      "size": 9445,
+      "public_key": "00d88e9ee4f0deaf06d28f94e545cdc858dcd8a7371de3ca3e392c0b4263696c",
+      "key_fingerprint": "4b1a4651cda2c3f6c27b1c8cb6e64d56869b0fecc8296a1bd3332b866abe6cdf",
+      "slot_count": 1
+    },
+    "python.psp": {
+      "producer": "flavor.psp.format_2025.pspf_builder",
+      "producer_version": "0.4.6",
+      "sha256": "5dda9d7d7a7f29af4ed07e9a8482ac31cd864e737b0148ab8049ec7c119a98ff",
+      "size": 42186,
+      "public_key": "00d88e9ee4f0deaf06d28f94e545cdc858dcd8a7371de3ca3e392c0b4263696c",
+      "key_fingerprint": "4b1a4651cda2c3f6c27b1c8cb6e64d56869b0fecc8296a1bd3332b866abe6cdf",
+      "slot_count": 2
+    }
+  }
+}

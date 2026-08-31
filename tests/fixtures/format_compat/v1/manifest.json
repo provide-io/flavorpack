@@ -1,0 +1,22 @@
+{
+  "package": {
+    "name": "format-compat-fixture",
+    "version": "1.0.0"
+  },
+  "execution": {
+    "command": "true",
+    "env": {}
+  },
+  "slots": [
+    {
+      "slot": 0,
+      "id": "payload",
+      "source": "tests/fixtures/format_compat/v1/inputs/payload.txt",
+      "target": "data/payload.txt",
+      "operations": "",
+      "purpose": "data",
+      "lifecycle": "runtime",
+      "permissions": "0644"
+    }
+  ]
+}
