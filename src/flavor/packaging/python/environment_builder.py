@@ -22,6 +22,7 @@ from provide.foundation.resilience.types import BackoffStrategy
 
 from flavor.config.defaults import DEFAULT_EXECUTABLE_PERMS
 from flavor.packaging.python.dependency_resolver import DependencyResolver
+from flavor.packaging.python.glibc import GlibcVersion, max_glibc_in_tree
 from flavor.packaging.python.pypapip_manager import PyPaPipManager
 from flavor.packaging.python.uv_manager import UVManager, _windows_system_env
 
@@ -45,6 +46,10 @@ class PythonEnvironmentBuilder:
         self.python_version = python_version
         self.is_windows = is_windows
         self.manylinux_tag = manylinux_tag
+        #: Filled in on Linux once the interpreter has been downloaded; the
+        #: bundled wheels are verified against it. None elsewhere, and on a
+        #: fallback tarball, where there is no interpreter to measure.
+        self.interpreter_glibc_floor: GlibcVersion | None = None
         self.uv_manager = UVManager()
         self.pypapip = PyPaPipManager()
         self.uv_exe = "uv.exe" if is_windows else "uv"
@@ -82,6 +87,15 @@ class PythonEnvironmentBuilder:
             if not python_install_dir:
                 self._create_fallback_python_tarball(python_tgz)
                 return
+
+            # Read the interpreter's own glibc floor while its tree is still on
+            # disk; once it is a tarball this costs a full extraction. The
+            # wheels are checked against it later, in the slot builder.
+            if get_os_name() == "linux":
+                self.interpreter_glibc_floor = max_glibc_in_tree(python_install_dir)
+                if self.interpreter_glibc_floor:
+                    major, minor = self.interpreter_glibc_floor
+                    logger.info(f"🔎 Bundled interpreter requires glibc {major}.{minor}")
 
             self._create_python_tarball(python_install_dir, python_tgz)
 
