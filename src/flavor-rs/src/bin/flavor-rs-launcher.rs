@@ -72,6 +72,12 @@ fn run() -> i32 {
 
         // Route to the appropriate CLI command.
         let exit_code = match command {
+            // Reports the launcher's own version. Deliberately does not touch the
+            // bundle, so the builder can probe a standalone launcher binary.
+            "version" => {
+                println!("{}", flavor::version::full_version());
+                0
+            }
             "info" => flavor::psp::format_2025::cli::show_info(&exe_path),
             "verify" => flavor::psp::format_2025::cli::verify_bundle(&exe_path),
             "metadata" => flavor::psp::format_2025::cli::show_metadata(&exe_path),
@@ -110,6 +116,7 @@ fn run() -> i32 {
                 println!("PSPF Package Launcher - CLI Mode");
                 println!();
                 println!("Available commands:");
+                println!("  version           Show launcher version");
                 println!("  info              Show package information (default)");
                 println!("  verify            Verify package integrity");
                 println!("  metadata          Show raw package metadata");
@@ -128,7 +135,9 @@ fn run() -> i32 {
             }
             _ => {
                 eprintln!("Error: Unknown command '{}'", command);
-                eprintln!("Available commands: info, verify, metadata, extract, run, help");
+                eprintln!(
+                    "Available commands: version, info, verify, metadata, extract, run, help"
+                );
                 EXIT_INVALID_ARGS
             }
         };
