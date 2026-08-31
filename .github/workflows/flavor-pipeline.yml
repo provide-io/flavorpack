@@ -1,4 +1,15 @@
-name: 03 🌶️ Flavor Pipeline
+name: 03a 🌶️ Flavor Pipeline
+#
+# Stage 03 runs the test suites twice, against different helper binaries.
+#
+#   03a (this file) -- after 01 Helper Prep, on main and develop. Consumes the
+#                      published helper artifacts, and also builds the wheels,
+#                      the Flavor PSP packages and the coverage badge.
+#   03b             -- on every pull request. Builds helpers from the PR's own
+#                      source and runs the suites only, since a PR has no
+#                      Helper Prep run to draw on.
+#
+# Anything downstream keys off 03a: 04 Taster Pipeline triggers on its name.
 
 on:
   workflow_dispatch:

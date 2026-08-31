@@ -14,7 +14,7 @@ on:
         default: '--help'
   
   workflow_run:
-    workflows: ["03 🌶️ Flavor Pipeline"]
+    workflows: ["03a 🌶️ Flavor Pipeline"]
     types: [completed]
     branches: [main, develop]
 
