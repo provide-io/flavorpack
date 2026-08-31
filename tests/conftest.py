@@ -44,7 +44,10 @@ import provide.testkit  # noqa: F401 - Installs setproctitle blocker early
 try:
     import mutmut.__main__ as _mutmut_main
 
-    _mutmut_main.setproctitle = lambda title: None
+    # setattr rather than attribute assignment: mutmut does not export
+    # setproctitle, so mypy strict rejects assigning to it by name even though
+    # the attribute is there at runtime.
+    setattr(_mutmut_main, "setproctitle", lambda title: None)  # noqa: B010
 except ImportError:
     pass
 from provide.testkit.logger import reset_foundation_setup_for_testing
