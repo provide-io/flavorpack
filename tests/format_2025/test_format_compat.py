@@ -40,7 +40,8 @@ FIXTURE_DIR = FIXTURE_ROOT / GENERATION
 
 def _expected() -> dict[str, Any]:
     """Load the pinned facts for the current fixture generation."""
-    return json.loads((FIXTURE_DIR / "expected.json").read_text(encoding="utf-8"))
+    pinned: dict[str, Any] = json.loads((FIXTURE_DIR / "expected.json").read_text(encoding="utf-8"))
+    return pinned
 
 
 EXPECTED = _expected()
