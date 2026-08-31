@@ -18,6 +18,7 @@ from provide.foundation.file.formats import write_json
 
 from flavor.packaging.python.dist_manager import PythonDistManager
 from flavor.packaging.python.environment_builder import PythonEnvironmentBuilder
+from flavor.packaging.python.manylinux import resolve_manylinux_tags
 from flavor.packaging.python.pypapip_manager import PyPaPipManager
 from flavor.packaging.python.slot_builder import PythonSlotBuilder
 from flavor.packaging.python.uv_manager import UVManager
@@ -37,8 +38,10 @@ class PythonPackager:
     - UVManager: Handles UV operations
     """
 
-    # Class-level constants
-    MANYLINUX_TAG = "manylinux2014"
+    @property
+    def MANYLINUX_TAG(self) -> str:
+        """The manylinux tag this package prefers, first in its policy."""
+        return self.manylinux_tags[0]
 
     def __init__(
         self,
@@ -64,16 +67,20 @@ class PythonPackager:
         self.build_config = build_config or {}
         self.python_version = python_version
 
+        # Which Linux wheels this package is willing to see. One policy, read
+        # once, handed to everything that downloads.
+        self.manylinux_tags = resolve_manylinux_tags(self.build_config)
+
         # Platform detection
         self.is_windows = sys.platform == "win32"
         self.venv_bin_dir = "Scripts" if self.is_windows else "bin"
         self.uv_exe = "uv.exe" if self.is_windows else "uv"
 
         # Initialize manager instances
-        self.pypapip = PyPaPipManager()
+        self.pypapip = PyPaPipManager(manylinux_tags=self.manylinux_tags)
         self.uv = UVManager()
         self.uv_manager = self.uv  # Alias for compatibility
-        self.wheel_builder = WheelBuilder(python_version=python_version)
+        self.wheel_builder = WheelBuilder(python_version=python_version, manylinux_tags=self.manylinux_tags)
         self.dist_manager = PythonDistManager(python_version=python_version)
 
         # Initialize specialized builders

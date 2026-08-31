@@ -1331,7 +1331,7 @@ class TestDependencyResolverFallbackDownload:
         assert result is None
 
     def test_get_uv_platform_tag_linux_amd64(self) -> None:
-        """Lines 245-250 - Linux amd64 platform tag."""
+        """Linux amd64 asks for the whole policy, preferred tag first."""
         from flavor.packaging.python.dependency_resolver import DependencyResolver
 
         resolver = DependencyResolver()
@@ -1340,10 +1340,10 @@ class TestDependencyResolverFallbackDownload:
             patch("flavor.packaging.python.dependency_resolver.get_arch_name", return_value="amd64"),
         ):
             result = resolver._get_uv_platform_tag()
-        assert result == "manylinux2014_x86_64"
+        assert result == ["manylinux2014_x86_64", "manylinux_2_28_x86_64"]
 
     def test_get_uv_platform_tag_linux_arm64(self) -> None:
-        """Lines 249-250 - Linux arm64 platform tag."""
+        """Linux arm64 asks for the whole policy, preferred tag first."""
         from flavor.packaging.python.dependency_resolver import DependencyResolver
 
         resolver = DependencyResolver()
@@ -1352,16 +1352,16 @@ class TestDependencyResolverFallbackDownload:
             patch("flavor.packaging.python.dependency_resolver.get_arch_name", return_value="arm64"),
         ):
             result = resolver._get_uv_platform_tag()
-        assert result == "manylinux2014_aarch64"
+        assert result == ["manylinux2014_aarch64", "manylinux_2_28_aarch64"]
 
     def test_get_uv_platform_tag_non_linux(self) -> None:
-        """Line 251 - non-Linux returns None."""
+        """Non-Linux constrains nothing, so pip resolves for the running machine."""
         from flavor.packaging.python.dependency_resolver import DependencyResolver
 
         resolver = DependencyResolver()
         with patch("flavor.packaging.python.dependency_resolver.get_os_name", return_value="darwin"):
             result = resolver._get_uv_platform_tag()
-        assert result is None
+        assert result == []
 
     def test_execute_download_command_success(self) -> None:
         """Lines 268-278 - successful download command."""
