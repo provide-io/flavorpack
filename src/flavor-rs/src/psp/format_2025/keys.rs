@@ -32,10 +32,15 @@ pub fn load_or_generate_keys(options: &BuildOptions) -> Result<(SigningKey, Veri
 
     // Generate ephemeral keys
     warn!("⚠️ No keys provided, generating ephemeral keys (not recommended for production)");
-    use rand::RngCore;
-    use rand::rngs::OsRng;
+    // rand 0.10 renamed OsRng to SysRng and made it fallible.
+    use rand::TryRng;
+    use rand::rngs::SysRng;
     let mut secret_key = [0u8; 32];
-    OsRng.fill_bytes(&mut secret_key);
+    SysRng.try_fill_bytes(&mut secret_key).map_err(|e| {
+        FlavorError::BuildError(format!(
+            "Failed to read system entropy for ephemeral key: {e}"
+        ))
+    })?;
     let signing_key = SigningKey::from_bytes(&secret_key);
     let verifying_key = signing_key.verifying_key();
     Ok((signing_key, verifying_key))
