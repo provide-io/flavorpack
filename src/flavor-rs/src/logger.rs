@@ -135,24 +135,35 @@ impl Log for JsonLogger {
             serde_json::to_string(&log_entry).unwrap_or_default()
         );
 
-        // Write to file or stderr
-        if let Ok(mut file_guard) = self.target_file.lock() {
-            if let Some(ref mut file) = *file_guard {
-                let _ = file.write_all(json_string.as_bytes());
-                let _ = file.flush();
-            } else {
-                // Write to stderr
-                let _ = io::stderr().write_all(json_string.as_bytes());
-                let _ = io::stderr().flush();
-            }
-        } else {
-            // Fallback to stderr if lock fails
-            let _ = io::stderr().write_all(json_string.as_bytes());
-            let _ = io::stderr().flush();
+        // Write to the target file, holding the lock only for that write.
+        //
+        // ⚠️ Never write to stderr while this lock is held. stderr has a lock of
+        // its own, so doing so takes (target_file -> stderr) while any writer
+        // that already holds stderr -- libtest's output capture, for one --
+        // wants target_file next. That inversion deadlocked the whole test
+        // suite: one thread stuck in Stderr::write_all holding target_file,
+        // every other thread stuck waiting for target_file, forever.
+        let wrote_to_file = match self.target_file.lock() {
+            Ok(mut file_guard) => match file_guard.as_mut() {
+                Some(file) => {
+                    let _ = file.write_all(json_string.as_bytes());
+                    let _ = file.flush();
+                    true
+                }
+                None => false,
+            },
+            Err(_) => false,
+        };
+
+        if !wrote_to_file {
+            let mut stderr = io::stderr().lock();
+            let _ = stderr.write_all(json_string.as_bytes());
+            let _ = stderr.flush();
         }
     }
 
     fn flush(&self) {
+        // Same ordering rule as log(): release target_file before touching stderr.
         if let Ok(mut file_guard) = self.target_file.lock() {
             if let Some(ref mut file) = *file_guard {
                 let _ = file.flush();
