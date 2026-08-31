@@ -209,6 +209,52 @@ func checkWorkenvValidity(paths *WorkenvPaths, index *PSPFIndex, metadata *Metad
 		return false, nil
 	}
 
+	// Then that setup finished, which extraction alone does not imply.
+	// metadata is nil in callers that only care about extraction state.
+	if metadata != nil && metadata.CacheValidation != nil && !setupCompleted(paths, metadata, logger) {
+		logger.Debug("🔍 Work environment is incomplete; setup will run again")
+		return false, nil
+	}
+
 	// Check package checksum
 	return validatePackageChecksum(paths, index.IndexChecksum, logger)
+}
+
+// setupCompleted reports whether the setup steps ran to completion.
+//
+// The extraction marker says the payload was unpacked; it says nothing about
+// whether the wheels were installed afterwards. CacheValidation names a file the
+// setup steps write last, so its presence -- with the expected content -- is the
+// only evidence that setup finished. Without this check, a setup interrupted
+// midway leaves a workenv that is extracted, checksum-clean and missing bin/,
+// and every later run reuses it and fails at exec with "no such file or
+// directory".
+func setupCompleted(paths *WorkenvPaths, metadata *Metadata, logger *slog.Logger) bool {
+	cache := metadata.CacheValidation
+	checkPath, err := resolveWorkenvTarget(paths.Workenv(), cache.CheckFile)
+	if err != nil {
+		logger.Debug("🔍 Setup completion marker path is invalid", "error", err)
+		return false
+	}
+
+	content, err := os.ReadFile(checkPath) // #nosec G304 -- path is confined to the workenv
+	if err != nil {
+		logger.Debug("🔍 Setup completion marker missing", "path", checkPath)
+		return false
+	}
+
+	expected := expandPackagePlaceholders(cache.ExpectedContent, metadata)
+	if expected == "" || strings.TrimSpace(string(content)) == strings.TrimSpace(expected) {
+		return true
+	}
+
+	logger.Debug("🔍 Setup completion marker has unexpected content",
+		"actual", strings.TrimSpace(string(content)), "expected", strings.TrimSpace(expected))
+	return false
+}
+
+// expandPackagePlaceholders fills in the package placeholders the manifest uses.
+func expandPackagePlaceholders(text string, metadata *Metadata) string {
+	text = strings.ReplaceAll(text, "{package_name}", metadata.Package.Name)
+	return strings.ReplaceAll(text, "{version}", metadata.Package.Version)
 }
