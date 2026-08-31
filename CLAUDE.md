@@ -45,15 +45,29 @@ mypy src/
 
 ## CI Workflows
 
-Numbered pipeline stages, each triggering the next:
-1. `01-helper-prep.yml` - Build Go/Rust helpers for all 6 platforms
-2. `02-pretaster-pipeline.yml` - Cross-language validation with pretaster
-3. `03-flavor-pipeline.yml` - Main CI: tests, wheels, Flavor PSP builds (badge workflow)
-4. `04-taster-pipeline.yml` - End-to-end taster tests
-5. `05-code-quality.yml` - Linting, type checking, complexity
-6. `06-security-scan.yml` - Security scanning
-7. `07-dependency-audit.yml` - Dependency auditing
-8. `08-license-compliance.yml` - License compliance
+The stage number lives in the workflow's `name:`, not in its filename — the
+files are not prefixed. `gh run list --workflow=<file>` takes the filename.
+
+| Stage | File | Runs on | Does |
+|---|---|---|---|
+| 01 🥘 Helper Prep | `helper-prep.yml` | dispatch | Builds Go/Rust helpers for all 6 platforms |
+| 02a 🔬 Pretaster Validation | `pretaster-pipeline.yml` | after 01, main/develop | Cross-language validation on the full matrix, using 01's artifacts |
+| 02b 🧪 Pretaster Validation (PR) | `pr-pretaster.yml` | **pull request** | Same suite, helpers built from the PR's source, Linux + macOS |
+| 03 🌶️ Flavor Pipeline | `flavor-pipeline.yml` | after 01, main/develop | Tests, wheels, Flavor PSP builds (badge workflow) |
+| 04 🍰 Taster Pipeline | `taster-pipeline.yml` | after 03 | End-to-end taster tests |
+| 05 🎨 Code Quality | `code-quality.yml` | **pull request**, schedule | Linting, type checking, complexity |
+| 06 🔒 Security Scanning | `security-scan.yml` | push, schedule | Security scanning |
+| 07 📦 Dependency Audit | `dependency-audit.yml` | push, schedule | Dependency auditing |
+| 08 ⚖️ License Compliance | `license-compliance.yml` | **pull request**, schedule | License compliance |
+| 09 🚀 Release Pipeline | `release.yml` | dispatch | Release builds and publication |
+
+Unnumbered: `build-go.yml`, `build-rust.yml`, `build-tastesh.yml` are reusable
+(`workflow_call`); `compatibility-check.yml` and `exp-freebsd.yml` run on their
+own schedules.
+
+Only three workflows see a pull request: 02b, 05 and 08. In particular no
+workflow runs `cargo test`, `go test` or `pytest` on a PR — the suites live in
+03, which is `workflow_run`-gated to main. Verify test changes locally.
 
 ## Cross-Platform
 

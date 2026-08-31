@@ -1,20 +1,22 @@
-name: 06 🧪 PR Pretaster
+name: 02b 🧪 Pretaster Validation (PR)
 # ─────────────────────────────────────────────────────────────────────────────
 # Script policy: keep inline run: blocks to ≤ 3 lines.
 # Anything longer belongs in ci/ and should be called from here.
 # ─────────────────────────────────────────────────────────────────────────────
 #
-# End-to-end coverage for pull requests.
+# End-to-end coverage for pull requests -- the second half of stage 02.
 #
-# The pretaster/taster pipelines cannot run on a PR: 01 Helper Prep is
-# workflow_dispatch-only, and 02/03/04 are workflow_run-gated to main/develop.
-# Before this workflow, the only PR check was 05 Code Quality, which runs
-# clippy/fmt/machete and no tests at all — so changes to the launcher, builder
-# and packaging paths merged with nothing exercising them.
+# 02a cannot serve a PR: it consumes the helper artifacts published by 01
+# Helper Prep, which is workflow_dispatch-only, and its workflow_run trigger is
+# gated to main/develop. Before this workflow existed, the only PR check was 05
+# Code Quality, which runs clippy/fmt/machete and no tests at all -- so changes
+# to the launcher, builder and packaging paths merged with nothing exercising
+# them.
 #
-# This builds the helpers from the PR's own source and runs the pretaster
-# suite against them: core, combo (all four builder×launcher combinations),
-# security, and compat.
+# So this builds the helpers from the PR's own source instead of downloading
+# them, and runs the same pretaster suite against them: core, combo (all four
+# builder×launcher combinations), security, and compat. Linux and macOS only;
+# 02a keeps the wider matrix.
 
 on:
   workflow_dispatch:
