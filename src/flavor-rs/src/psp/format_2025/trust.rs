@@ -72,7 +72,9 @@ pub fn compute_key_fingerprint(raw_key: &[u8]) -> Result<String, String> {
     }
     let mut hasher = Sha256::new();
     hasher.update(raw_key);
-    Ok(format!("{:x}", hasher.finalize()))
+    // hex::encode rather than {:x}: digest 0.11 returns an Array, which does
+    // not implement LowerHex.
+    Ok(hex::encode(hasher.finalize()))
 }
 
 /// Derive the canonical trust fingerprint from an index's embedded public key.
