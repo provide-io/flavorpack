@@ -4,11 +4,15 @@
 #
 
 """This module handles all pip-specific operations with proper platform support
-and manylinux2014 compatibility for maximum Linux distribution coverage.
+and manylinux compatibility for maximum Linux distribution coverage.
+
+Which manylinux tags a download may see is decided in one place, by
+:mod:`flavor.packaging.python.manylinux`; this module only asks for them.
 """
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 import os
 from pathlib import Path
 import sys
@@ -20,6 +24,11 @@ from provide.foundation.process import run
 from provide.foundation.resilience.types import BackoffStrategy
 
 from flavor.config.defaults import ENV_WHEEL_CACHE
+from flavor.packaging.python.manylinux import (
+    DEFAULT_MANYLINUX_TAGS,
+    platform_constraint_hint,
+    platform_tags_for_arch,
+)
 from flavor.packaging.python.uv_manager import _windows_system_env
 
 # On Windows GHA runners, pip's vendored truststore fails:
@@ -65,17 +74,27 @@ class PyPaPipManager:
     DO NOT REPLACE pip commands with uv pip - they have different capabilities!
     """
 
-    # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
-    MANYLINUX_TAG = "manylinux2014"
-
-    def __init__(self, python_version: str = "3.11") -> None:
+    def __init__(
+        self,
+        python_version: str = "3.11",
+        manylinux_tags: Sequence[str] | None = None,
+    ) -> None:
         """
         Initialize the pip manager.
 
         Args:
             python_version: Target Python version for pip operations
+            manylinux_tags: Manylinux tags this build accepts, most preferred
+                first. Defaults to the shared policy; a package overrides it
+                with `manylinux` under [tool.flavor.build].
         """
         self.python_version = python_version
+        self.manylinux_tags: tuple[str, ...] = tuple(manylinux_tags or DEFAULT_MANYLINUX_TAGS)
+
+    @property
+    def MANYLINUX_TAG(self) -> str:
+        """The tag pip will prefer, which is the first one offered to it."""
+        return self.manylinux_tags[0]
 
     # ╔══════════════════════════════════════════════════════════════════════════════╗
     # ║                           CRITICAL PyPA HELPER METHODS                          ║
@@ -129,6 +148,40 @@ class PyPaPipManager:
         cmd.append(source.as_posix())
         return cmd
 
+    def _platform_failure_hint(self, stderr: str) -> str:
+        """Say so when a platform constraint is the likely reason for a failure.
+
+        pip reports a hidden wheel as "No matching distribution found", which
+        reads like the package does not exist. Naming the requested tags is the
+        difference between a one-line diagnosis and an afternoon: this is
+        exactly how jq 1.12.0 -- published, but only for a newer manylinux
+        baseline -- silently broke every Linux build.
+        """
+        if not stderr:
+            return ""
+        symptoms = ("No matching distribution found", "Could not find a version that satisfies")
+        if not any(symptom in stderr for symptom in symptoms):
+            return ""
+        return platform_constraint_hint(self._download_platform_tags())
+
+    def _download_platform_tags(
+        self,
+        platform_tag: str | Sequence[str] | None = None,
+        binary_only: bool = True,
+    ) -> list[str]:
+        """The `--platform` values a download should ask for.
+
+        An explicit tag wins: callers that already know exactly what they need
+        keep that ability. Otherwise a Linux build asks for this manager's
+        manylinux policy, and every other host is left unconstrained so pip
+        resolves for the machine it is running on.
+        """
+        if platform_tag:
+            return [platform_tag] if isinstance(platform_tag, str) else list(platform_tag)
+        if get_os_name() != "linux" or not binary_only:
+            return []
+        return platform_tags_for_arch(self.manylinux_tags, get_arch_name())
+
     # ⚠️ CRITICAL: This method handles manylinux platform tags - DO NOT REMOVE! ⚠️
     def _get_pypapip_download_cmd(
         self,
@@ -137,7 +190,7 @@ class PyPaPipManager:
         requirements_file: Path | None = None,
         packages: list[str] | None = None,
         binary_only: bool = True,
-        platform_tag: str | None = None,
+        platform_tag: str | Sequence[str] | None = None,
         find_links: str | None = None,
     ) -> list[str]:
         """
@@ -152,7 +205,9 @@ class PyPaPipManager:
             requirements_file: Optional requirements file
             packages: Optional list of packages to download
             binary_only: Whether to download only binary wheels
-            platform_tag: Optional platform tag to use (e.g., "manylinux2014_x86_64")
+            platform_tag: Optional platform tag, or ordered tags, to use
+                (e.g. "manylinux2014_x86_64"). Defaults to this manager's
+                manylinux policy on Linux.
             find_links: Optional local wheel directory to check before PyPI
         """
         cmd = [*_pip_base_cmd(python_exe), "download", "--dest", dest_dir.as_posix()]
@@ -166,30 +221,11 @@ class PyPaPipManager:
         cmd.extend(["--python-version", f"{py_major}.{py_minor}"])
         logger.debug(f"Added Python version constraint: {py_major}.{py_minor}")
 
-        # Handle platform tags
-        if platform_tag:
-            # Use explicitly provided platform tag (works on any OS)
-            cmd.extend(["--platform", platform_tag])
-            logger.debug(f"Added platform constraint: {platform_tag}")
-        elif get_os_name() == "linux" and binary_only:
-            # For Linux builds, explicitly request manylinux wheels for maximum compatibility
-            # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
-            arch = get_arch_name()
-            if logger.is_trace_enabled():
-                logger.trace(f"Linux build detected, arch={arch}, requesting {self.MANYLINUX_TAG} wheels")
-
-            # Use manylinux2014 format for maximum compatibility
-            # manylinux2014 = glibc 2.17+ (CentOS 7, Amazon Linux 2, Ubuntu 14.04+)
-            if arch == "amd64":
-                cmd.extend(["--platform", f"{self.MANYLINUX_TAG}_x86_64"])
-                logger.debug(f"Added platform constraint: {self.MANYLINUX_TAG}_x86_64")
-            elif arch == "arm64":
-                # ARM64 uses manylinux2014_aarch64 to match published wheels
-                # Note: This is equivalent to manylinux_2_17_aarch64 (glibc 2.17)
-                # We use manylinux2014 format for compatibility with published wheels
-                cmd.extend(["--platform", f"{self.MANYLINUX_TAG}_aarch64"])
-                logger.debug(f"Added platform constraint: {self.MANYLINUX_TAG}_aarch64")
-                logger.warning("⚠️ grpcio on CentOS 7 ARM64 may have C++ ABI issues")
+        # Handle platform tags. Every tag offered is passed as its own --platform:
+        # pip considers all of them and prefers the one listed first.
+        for tag in self._download_platform_tags(platform_tag, binary_only=binary_only):
+            cmd.extend(["--platform", tag])
+            logger.debug(f"Added platform constraint: {tag}")
 
         # When a local wheel directory is provided, check it before hitting PyPI.
         # This supplies C-extension wheels for platforms with no PyPI binary wheels
@@ -246,6 +282,7 @@ class PyPaPipManager:
 
         if result.returncode != 0:
             error_msg = f"Failed to download required wheels: {result.stderr}"
+            error_msg += self._platform_failure_hint(result.stderr)
             logger.error(error_msg)
             raise RuntimeError(error_msg)
         else:
@@ -291,6 +328,7 @@ class PyPaPipManager:
 
         if result.returncode != 0:
             error_msg = f"Failed to download required packages: {result.stderr}"
+            error_msg += self._platform_failure_hint(result.stderr)
             logger.error(error_msg)
             raise RuntimeError(error_msg)
 

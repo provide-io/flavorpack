@@ -112,7 +112,8 @@ class TestDependencyResolverTraceBranches:
         ):
             result = resolver._get_uv_platform_tag()
 
-        assert result is None
+        # An arch with no manylinux spelling constrains nothing.
+        assert result == []
 
     @pytest.mark.unit
     def test_execute_download_command_trace_logging(self) -> None:

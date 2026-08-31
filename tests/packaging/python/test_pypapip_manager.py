@@ -128,7 +128,9 @@ class TestPyPaPipManager:
                 python_exe, dest_dir, packages=packages, binary_only=True
             )
 
-        # CRITICAL: Must include manylinux2014_x86_64 platform tag for Linux compatibility
+        # CRITICAL: manylinux2014_x86_64 must come first -- pip prefers the tag it is
+        # offered first, and that is what keeps the artifact's glibc floor where it was.
+        # manylinux_2_28 follows as a fallback for packages that publish nothing older.
         expected = [
             "/usr/bin/python3",
             "-m",
@@ -142,6 +144,8 @@ class TestPyPaPipManager:
             "3.11",
             "--platform",
             "manylinux2014_x86_64",
+            "--platform",
+            "manylinux_2_28_x86_64",
             "numpy",
         ]
         assert cmd == expected
@@ -162,7 +166,7 @@ class TestPyPaPipManager:
                 python_exe, dest_dir, packages=packages, binary_only=True
             )
 
-        # CRITICAL: Must include manylinux2014_aarch64 platform tag for ARM64 Linux
+        # CRITICAL: manylinux2014_aarch64 first, manylinux_2_28_aarch64 as the fallback.
         # Note: This matches published wheels (manylinux2014 == manylinux_2_17, both glibc 2.17+)
         expected = [
             "/usr/bin/python3",
@@ -177,6 +181,8 @@ class TestPyPaPipManager:
             "3.11",
             "--platform",
             "manylinux2014_aarch64",
+            "--platform",
+            "manylinux_2_28_aarch64",
             "scipy",
         ]
         assert cmd == expected
@@ -240,6 +246,8 @@ class TestPyPaPipManager:
             "3.11",
             "--platform",
             "manylinux2014_x86_64",
+            "--platform",
+            "manylinux_2_28_x86_64",
             "-r",
             "/tmp/requirements.txt",
         ]

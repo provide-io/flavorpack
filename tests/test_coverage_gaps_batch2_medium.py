@@ -366,7 +366,7 @@ class TestPyPaPipManagerCoverage:
     """Cover missing branches in PyPaPipManager."""
 
     def test_download_cmd_trace_logging_for_linux_arch(self) -> None:
-        """Linux binary download triggers trace log for arch (line 179)."""
+        """Linux binary download traces which platform tags it asked for."""
         from flavor.packaging.python.pypapip_manager import PyPaPipManager
 
         mgr = PyPaPipManager(python_version="3.11")
@@ -377,7 +377,7 @@ class TestPyPaPipManagerCoverage:
         with (
             patch("flavor.packaging.python.pypapip_manager.get_os_name", return_value="linux"),
             patch("flavor.packaging.python.pypapip_manager.get_arch_name", return_value="amd64"),
-            patch("flavor.packaging.python.pypapip_manager.logger", mock_logger),
+            patch("flavor.packaging.python.manylinux.logger", mock_logger),
             patch("sys.platform", "linux"),
         ):
             cmd = mgr._get_pypapip_download_cmd(

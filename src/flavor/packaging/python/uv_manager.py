@@ -33,6 +33,7 @@ from provide.foundation.tools.base import (
 )
 
 from flavor.config.defaults import ENV_WHEEL_CACHE
+from flavor.packaging.python.manylinux import DEFAULT_MANYLINUX_TAGS, platform_tags_for_arch
 
 
 def _windows_system_env() -> dict[str, str]:
@@ -580,14 +581,11 @@ class UVManager(BaseToolManager):
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
 
-            # Determine platform for manylinux2014 compatibility
-            arch = get_arch_name()
-            uv_platform_tag = None
+            # Platform tags come from the shared manylinux policy so this path
+            # cannot drift from what the rest of the build asks pip for.
+            uv_platform_tag: list[str] = []
             if get_os_name() == "linux":
-                if arch == "amd64":
-                    uv_platform_tag = "manylinux2014_x86_64"
-                elif arch == "arm64":
-                    uv_platform_tag = "manylinux2014_aarch64"
+                uv_platform_tag = platform_tags_for_arch(DEFAULT_MANYLINUX_TAGS, get_arch_name())
 
             # Download UV wheel using PyPA pip
             download_cmd = pypapip._get_pypapip_download_cmd(
