@@ -809,8 +809,9 @@ class TestUVManagerLinuxArmTag:
             call_kwargs = mock_pypapip._get_pypapip_download_cmd.call_args
             kwargs = call_kwargs.kwargs if call_kwargs and call_kwargs.kwargs else {}
             platform_tag = kwargs.get("platform_tag")
-            if platform_tag is not None:
-                assert "aarch64" in platform_tag
+            if platform_tag:
+                # An ordered list of tags now, all of them arm64-spelled.
+                assert all("aarch64" in tag for tag in platform_tag)
 
 
 # ===========================================================================

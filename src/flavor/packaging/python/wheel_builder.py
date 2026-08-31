@@ -11,6 +11,7 @@ combining UV performance where appropriate with PyPA pip compatibility.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 import importlib.metadata as importlib_metadata
 from pathlib import Path
 from typing import Any
@@ -45,17 +46,23 @@ class WheelBuilder:
     - Proper manylinux compatibility
     """
 
-    def __init__(self, python_version: str = "3.11") -> None:
+    def __init__(
+        self,
+        python_version: str = "3.11",
+        manylinux_tags: Sequence[str] | None = None,
+    ) -> None:
         """
         Initialize the wheel builder.
 
         Args:
             python_version: Target Python version for wheel building
+            manylinux_tags: Manylinux tags this build accepts, most preferred
+                first. Passed straight through to the downloader.
         """
         self.python_version = python_version
 
         # Initialize managers
-        self.pypapip = PyPaPipManager(python_version=python_version)
+        self.pypapip = PyPaPipManager(python_version=python_version, manylinux_tags=manylinux_tags)
         self.uv = UVManager()  # UV manager for performance where appropriate
 
         logger.debug(f"Initialized WheelBuilder for Python {python_version}")
