@@ -1,0 +1,28 @@
+[main]	INFO	profile include tests: None
+[main]	INFO	profile exclude tests: None
+[main]	INFO	cli include tests: None
+[main]	INFO	cli exclude tests: None
+[main]	INFO	running on Python 3.13.3
+[?25l[2KWorking... [38;5;237m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [35m  0%[0m [36m-:--:--[0m[2KWorking... [38;2;249;38;114m━━━━━━━━[0m[38;2;249;38;114m╸[0m[38;5;237m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [35m 22%[0m [36m-:--:--[0m[2KWorking... [38;2;249;38;114m━━━━━━━━[0m[38;2;249;38;114m╸[0m[38;5;237m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [35m 22%[0m [36m-:--:--[0m[2KWorking... [38;2;249;38;114m━━━━━━━━━━━━━━━━━━━━━[0m[38;2;249;38;114m╸[0m[38;5;237m━━━━━━━━━━━━━━━━━━[0m [35m 54%[0m [36m0:00:01[0m[2KWorking... [38;2;249;38;114m━━━━━━━━━━━━━━━━━━━━━[0m[38;2;249;38;114m╸[0m[38;5;237m━━━━━━━━━━━━━━━━━━[0m [35m 54%[0m [36m0:00:01[0m[2KWorking... [38;2;114;156;31m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [35m100%[0m [33m0:00:00[0m[2KWorking... [38;2;114;156;31m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [35m100%[0m [33m0:00:00[0m
+[?25hRun started:2026-08-31 21:23:12.824761+00:00
+
+Test results:
+	No issues identified.
+
+Code scanned:
+	Total lines of code: 14164
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 1
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 17
+		Medium: 0
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 17
+Files skipped (0):
