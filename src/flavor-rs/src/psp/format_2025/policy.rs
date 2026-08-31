@@ -288,13 +288,14 @@ pub fn merge_policy(pkg: PackagePolicy, op: OperatorPolicy) -> EffectivePolicy {
 #[cfg(target_os = "windows")]
 #[allow(unsafe_code)]
 fn is_windows_admin() -> bool {
-    use windows::Win32::Foundation::BOOL;
     use windows::Win32::Security::{
         AllocateAndInitializeSid, CheckTokenMembership, FreeSid, PSID, SID_IDENTIFIER_AUTHORITY,
     };
     use windows::Win32::System::SystemServices::{
         DOMAIN_ALIAS_RID_ADMINS, SECURITY_BUILTIN_DOMAIN_RID,
     };
+    // windows 0.62 moved BOOL out of Win32::Foundation into windows-core.
+    use windows::core::BOOL;
 
     const NT_AUTHORITY: SID_IDENTIFIER_AUTHORITY = SID_IDENTIFIER_AUTHORITY {
         Value: [0, 0, 0, 0, 0, 5],

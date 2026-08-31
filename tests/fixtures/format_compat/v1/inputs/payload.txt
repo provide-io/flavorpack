@@ -1,0 +1,2 @@
+flavorpack format-compatibility fixture payload
+do not edit: the slot checksum in every committed fixture covers these bytes

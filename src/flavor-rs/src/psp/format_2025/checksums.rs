@@ -2,6 +2,8 @@
 //!
 //! Format: "algorithm:hexvalue" (e.g., "sha256:cafe8008...", "adler32:f00dcafe")
 
+// Digests are rendered with hex::encode rather than {:x}: since digest 0.11 the
+// output type is hybrid-array's Array, which does not implement LowerHex.
 use sha2::{Digest, Sha256, Sha512};
 use std::fmt;
 use std::io::Read;
@@ -77,7 +79,7 @@ pub fn calculate_checksum<R: Read>(
                 }
                 hasher.update(&buffer[..bytes_read]);
             }
-            Ok(format!("sha256:{:x}", hasher.finalize()))
+            Ok(format!("sha256:{}", hex::encode(hasher.finalize())))
         }
         ChecksumAlgorithm::Sha512 => {
             let mut hasher = Sha512::new();
@@ -88,7 +90,7 @@ pub fn calculate_checksum<R: Read>(
                 }
                 hasher.update(&buffer[..bytes_read]);
             }
-            Ok(format!("sha512:{:x}", hasher.finalize()))
+            Ok(format!("sha512:{}", hex::encode(hasher.finalize())))
         }
         ChecksumAlgorithm::Adler32 => {
             let mut adler = adler2::Adler32::new();
@@ -120,12 +122,12 @@ pub fn calculate_checksum_bytes(
         ChecksumAlgorithm::Sha256 => {
             let mut hasher = Sha256::new();
             hasher.update(data);
-            Ok(format!("sha256:{:x}", hasher.finalize()))
+            Ok(format!("sha256:{}", hex::encode(hasher.finalize())))
         }
         ChecksumAlgorithm::Sha512 => {
             let mut hasher = Sha512::new();
             hasher.update(data);
-            Ok(format!("sha512:{:x}", hasher.finalize()))
+            Ok(format!("sha512:{}", hex::encode(hasher.finalize())))
         }
         ChecksumAlgorithm::Adler32 => {
             let checksum = adler2::adler32_slice(data);
