@@ -34,7 +34,7 @@ if [ -n "$TRUST_PSP" ]; then
     set -e
 
     if [ $TAMPER_EXIT -ne 0 ]; then
-        print_color "$GREEN" "  ✅ Tampered PSP rejected by launcher (exit $TAMPER_EXIT)"
+        pass_test "Tampered PSP rejected by launcher (exit $TAMPER_EXIT)"
     else
         print_color "$RED" "  ❌ FAIL: Tampered PSP should be rejected"
         TEST_FAILURES=$((TEST_FAILURES + 1))
@@ -49,7 +49,7 @@ if [ -n "$TRUST_PSP" ]; then
         set -e
 
         if [ $TAMPER_CLI_EXIT -ne 0 ]; then
-            print_color "$GREEN" "  ✅ Tampered PSP rejected by flavor CLI (exit $TAMPER_CLI_EXIT)"
+            pass_test "Tampered PSP rejected by flavor CLI (exit $TAMPER_CLI_EXIT)"
         else
             print_color "$RED" "  ❌ FAIL: Tampered PSP should be rejected by CLI"
             TEST_FAILURES=$((TEST_FAILURES + 1))
@@ -59,7 +59,7 @@ if [ -n "$TRUST_PSP" ]; then
 
     rm -f "$TAMPERED_PSP"
 else
-    print_color "$YELLOW" "  ⚠️  No PSP available — skipping"
+    skip_test "Checksum tampering detected" "no PSP available"
 fi
 
 echo ""
@@ -78,7 +78,7 @@ if [ -n "$TRUST_PSP" ]; then
     set -e
 
     if [ $VERIFY_EXIT -eq 0 ]; then
-        print_color "$GREEN" "  ✅ Valid PSP verified (exit 0)"
+        pass_test "Valid PSP verified (exit 0)"
     else
         print_color "$RED" "  ❌ FAIL: Valid PSP should verify (exit $VERIFY_EXIT)"
         echo "     Output: $VERIFY_OUTPUT"
@@ -86,7 +86,7 @@ if [ -n "$TRUST_PSP" ]; then
         FAILED_TESTS="$FAILED_TESTS\n  - Verify: valid PSP"
     fi
 else
-    print_color "$YELLOW" "  ⚠️  No PSP available — skipping"
+    skip_test "Signature tampering detected" "no PSP available"
 fi
 
 echo ""
@@ -111,7 +111,7 @@ ENDJSON
     rm -rf "$POLICY_DIR"
 
     if [ $AGE_OK_EXIT -eq 0 ]; then
-        print_color "$GREEN" "  ✅ Fresh package accepted with max_age_days=9999"
+        pass_test "Fresh package accepted with max_age_days=9999"
     else
         print_color "$RED" "  ❌ FAIL: Fresh package should pass (exit $AGE_OK_EXIT)"
         TEST_FAILURES=$((TEST_FAILURES + 1))
@@ -130,14 +130,14 @@ ENDJSON
     rm -rf "$POLICY_DIR"
 
     if [ $AGE_WARN_EXIT -eq 0 ]; then
-        print_color "$GREEN" "  ✅ Age check with warn mode did not block"
+        pass_test "Age check with warn mode did not block"
     else
         print_color "$RED" "  ❌ FAIL: Warn mode should not block (exit $AGE_WARN_EXIT)"
         TEST_FAILURES=$((TEST_FAILURES + 1))
         FAILED_TESTS="$FAILED_TESTS\n  - Age: warn mode"
     fi
 else
-    print_color "$YELLOW" "  ⚠️  Skipping (no flavor CLI or PSP)"
+    skip_test "Policy enforcement" "no flavor CLI or PSP"
 fi
 
 echo ""
@@ -166,14 +166,14 @@ ENDJSON
     rm -rf "$POLICY_DIR" "$TRUST_DIR"
 
     if [ $ALLOW_EXIT -eq 0 ]; then
-        print_color "$GREEN" "  ✅ Allow mode passed all checks silently"
+        pass_test "Allow mode passed all checks silently"
     else
         print_color "$RED" "  ❌ FAIL: Allow mode should pass (exit $ALLOW_EXIT)"
         TEST_FAILURES=$((TEST_FAILURES + 1))
         FAILED_TESTS="$FAILED_TESTS\n  - Enforcement: allow"
     fi
 else
-    print_color "$YELLOW" "  ⚠️  Skipping (no flavor CLI or policy-block PSP)"
+    skip_test "Policy-block enforcement" "no flavor CLI or policy-block PSP"
 fi
 
 echo ""
@@ -197,14 +197,14 @@ ENDJSON
     rm -rf "$POLICY_DIR"
 
     if [ $FWD_EXIT -eq 0 ]; then
-        print_color "$GREEN" "  ✅ Future version policy accepted gracefully"
+        pass_test "Future version policy accepted gracefully"
     else
         print_color "$RED" "  ❌ FAIL: Future version should be accepted (exit $FWD_EXIT)"
         TEST_FAILURES=$((TEST_FAILURES + 1))
         FAILED_TESTS="$FAILED_TESTS\n  - Forward-version"
     fi
 else
-    print_color "$YELLOW" "  ⚠️  Skipping (no flavor CLI or PSP)"
+    skip_test "Integrity enforcement" "no flavor CLI or PSP"
 fi
 
 echo ""
@@ -224,12 +224,12 @@ if [ -f "dist/env-test.psp" ]; then
     set -e
 
     if [ $ENV_OK_EXIT -eq 0 ]; then
-        print_color "$GREEN" "  ✅ Execution with env vars succeeded"
+        pass_test "Execution with env vars succeeded"
     else
         print_color "$YELLOW" "  ⚠️  env-test.psp failed (exit $ENV_OK_EXIT) — may be unrelated to env vars"
     fi
 else
-    print_color "$YELLOW" "  ⚠️  env-test.psp not found — run test-pretaster.sh first"
+    skip_test "Environment variable handling" "env-test.psp not found (run test-pretaster.sh first)"
 fi
 
 echo ""

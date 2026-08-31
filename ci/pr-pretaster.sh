@@ -27,5 +27,10 @@ echo "🔨 Building Go and Rust helpers from source..."
 echo "📦 Helpers built:"
 ls -la dist/bin/
 
+# The security suites need the flavor CLI for the policy tests. Without a venv
+# they skipped it silently, so CI was not running those checks at all.
+echo "🐍 Installing the flavor CLI..."
+uv sync --quiet
+
 echo "🧪 Running pretaster suite (${TEST_TARGET})..."
 make -C tests/pretaster "${TEST_TARGET}"
