@@ -157,6 +157,14 @@ module = [
 ]
 disable_error_code = ["arg-type"]
 
+[[tool.mypy.overrides]]
+# os.posix_fadvise and os.POSIX_FADV_WILLNEED exist in typeshed only on Linux.
+# The call is guarded by hasattr at runtime, so the type: ignore is required
+# when checking on macOS and unused when checking on Linux -- warn_unused_ignores
+# then makes the module unable to pass on both platforms at once.
+module = ["flavor.psp.format_2025.backends"]
+warn_unused_ignores = false
+
 [tool.pylint.main]
 disable = ["C0330", "C0326"]
 
