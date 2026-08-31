@@ -23,6 +23,7 @@ from provide.foundation.process import run
 
 from flavor.config.defaults import DEFAULT_DIR_PERMS, DEFAULT_EXECUTABLE_PERMS, ENV_WHEEL_CACHE
 from flavor.packaging.python.environment_builder import PythonEnvironmentBuilder
+from flavor.packaging.python.glibc import verify_wheels_against_floor
 from flavor.packaging.python.pypapip_manager import _pip_base_cmd
 from flavor.packaging.python.uv_manager import UVManager
 
@@ -187,6 +188,17 @@ class PythonSlotBuilder:
         python_tgz = work_dir / "python.tgz"
         self.env_builder.create_python_placeholder(python_tgz)
         artifacts["python_tgz"] = python_tgz
+
+        # Both halves of the package now exist, so they can be compared. The
+        # interpreter and the wheels acquire their glibc requirements from
+        # entirely separate places -- whichever python-build-standalone release
+        # uv resolved, and whichever manylinux tags pip was allowed to see --
+        # and nothing else notices when the wheel side drifts above the
+        # interpreter side. Left unchecked that ships: the build succeeds and
+        # the dynamic linker refuses the extension module on a user's machine.
+        floor = self.env_builder.interpreter_glibc_floor
+        if floor is not None:
+            verify_wheels_against_floor(wheels_dir, floor)
 
         return artifacts
 
