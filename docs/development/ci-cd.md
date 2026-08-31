@@ -10,12 +10,14 @@ The Flavorpack CI/CD system consists of multiple independent GitHub Actions work
 graph LR
     A[01 helper-prep] --> B[Helper Artifacts]
     B --> C[02a pretaster-pipeline]
-    B --> D[03 flavor-pipeline]
+    B --> D[03a flavor-pipeline]
     D --> E[04 taster-pipeline]
 
-    P[Pull request] --> Q[02b pr-pretaster]
-    Q --> R[Helpers built from PR source]
-    R --> F
+    P[Pull request] --> R[Helpers built from PR source]
+    R --> Q[02b pr-pretaster]
+    R --> S[03b pr-tests]
+    Q --> F
+    S --> G
 
     C --> F[Cross-Language Tests]
     D --> G[Python API Tests]
@@ -34,15 +36,17 @@ graph LR
     style D fill:#fff3e0
     style E fill:#fff3e0
     style Q fill:#fff3e0
+    style S fill:#fff3e0
     style J fill:#e8f5e9
     style K fill:#ffebee
 ```
 
-Stage 02 exists twice on purpose. 02a runs after Helper Prep on main and
-develop, consuming its published artifacts across the full platform matrix.
-02b runs on every pull request, where those artifacts do not exist, so it
-builds helpers from the PR's own source instead. 02a is the broad post-merge
-sweep; 02b is the gate that stops a broken launcher reaching main.
+Stages 02 and 03 each exist twice on purpose. The `a` half runs after Helper
+Prep on main and develop, consuming its published artifacts across the full
+platform matrix. The `b` half runs on every pull request, where those artifacts
+do not exist, so it builds helpers from the PR's own source instead. The `a`
+halves are the broad post-merge sweep; the `b` halves are the gate that stops a
+break reaching main in the first place.
 
 ### Design Principles
 
@@ -120,7 +124,7 @@ suite needs, and then the same `make -C tests/pretaster test` target.
 
 **Scope**: Linux and macOS only. 02a keeps the wider matrix, FreeBSD included.
 
-### 03 - Flavor Pipeline
+### 03a - Flavor Pipeline
 
 **File**: `.github/workflows/flavor-pipeline.yml`
 
@@ -131,6 +135,29 @@ suite needs, and then the same `make -C tests/pretaster test` target.
 - Tests package building functionality
 - Validates API consistency
 - Generates coverage reports
+
+### 03b - Test Suites (PR)
+
+**File**: `.github/workflows/pr-tests.yml`
+
+**Purpose**: Run the Rust, Go and Python test suites on a pull request
+
+**Why it is separate**: the same reason as 02b. 03a is `workflow_run`-gated to
+main and consumes 01's artifacts, so until this workflow existed no PR ran a
+test suite at all — they ran when somebody manually started a helper build,
+four times in a fortnight and then not for three months. A pull request could
+add or break a test and merge green.
+
+**What it runs**: `ci/pr-tests.sh` builds helpers with `./build.sh`, then runs
+`cargo test`, `make -C src/flavor-go test` and `ci/run-tests.sh` in turn. Each
+suite's exit code is reported separately and a failure in one does not stop the
+rest, so a single run shows everything that is broken.
+
+`FLAVOR_REQUIRE_HELPERS=1` is set for the Python suite: with helpers present,
+a skipped `requires_helpers` test means a setup bug, and a suite that skips its
+integration tests reports success having checked nothing.
+
+**Scope**: tests only. Wheels, PSP builds and the coverage badge stay in 03a.
 
 ### 04 - Taster Pipeline
 
@@ -237,6 +264,10 @@ below; these are the ones the numbered stages call directly.
 - The entry point for 02b: builds helpers from the PR's own source, installs
   the `flavor` CLI, then runs the pretaster make target
 - Exists because a PR has no Helper Prep artifacts to download
+
+**`ci/pr-tests.sh`**
+- The entry point for 03b: builds helpers, then runs the Rust, Go and Python
+  suites, reporting each exit code separately
 
 **`ci/test-metadata.py`**
 - Collects and formats test metadata
