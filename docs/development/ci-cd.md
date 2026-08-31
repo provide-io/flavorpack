@@ -8,10 +8,14 @@ The Flavorpack CI/CD system consists of multiple independent GitHub Actions work
 
 ```mermaid
 graph LR
-    A[01-helper-prep] --> B[Helper Artifacts]
-    B --> C[02-pretaster]
-    B --> D[03-flavor]
-    B --> E[04-taster]
+    A[01 helper-prep] --> B[Helper Artifacts]
+    B --> C[02a pretaster-pipeline]
+    B --> D[03 flavor-pipeline]
+    D --> E[04 taster-pipeline]
+
+    P[Pull request] --> Q[02b pr-pretaster]
+    Q --> R[Helpers built from PR source]
+    R --> F
 
     C --> F[Cross-Language Tests]
     D --> G[Python API Tests]
@@ -25,17 +29,28 @@ graph LR
     I -->|No| K[❌ Fix Issues]
 
     style A fill:#e3f2fd
+    style P fill:#e3f2fd
     style C fill:#fff3e0
     style D fill:#fff3e0
     style E fill:#fff3e0
+    style Q fill:#fff3e0
     style J fill:#e8f5e9
     style K fill:#ffebee
 ```
 
+Stage 02 exists twice on purpose. 02a runs after Helper Prep on main and
+develop, consuming its published artifacts across the full platform matrix.
+02b runs on every pull request, where those artifacts do not exist, so it
+builds helpers from the PR's own source instead. 02a is the broad post-merge
+sweep; 02b is the gate that stops a broken launcher reaching main.
+
 ### Design Principles
 
-1. **Manual Triggering**: All workflows use `workflow_dispatch` for manual control
-2. **Script Delegation**: Complex logic lives in `.github/scripts/`, not in workflow YAML
+1. **Explicit Triggering**: The numbered pipeline stages are `workflow_dispatch`
+   plus `workflow_run` chaining; the PR-facing workflows (02b, 05, 08) add
+   `pull_request`
+2. **Script Delegation**: Complex logic lives in `ci/`, not in workflow YAML —
+   inline `run:` blocks are capped at three lines
 3. **Artifact Sharing**: Workflows share build artifacts rather than calling each other
 4. **Platform Coverage**: Multi-platform support (Linux, macOS, Windows*)
 
@@ -45,7 +60,7 @@ graph LR
 
 ### 01 - Helper Prep
 
-**File**: `.github/workflows/01-helper-prep.yml`
+**File**: `.github/workflows/helper-prep.yml`
 
 **Purpose**: Build and validate Go/Rust helpers for all platforms
 
@@ -65,11 +80,11 @@ graph LR
 ]
 ```
 
-### 02 - Pretaster Pipeline
+### 02a - Pretaster Validation
 
-**File**: `.github/workflows/02-pretaster-pipeline.yml`
+**File**: `.github/workflows/pretaster-pipeline.yml`
 
-**Purpose**: Validate cross-language compatibility
+**Purpose**: Validate cross-language compatibility after merge, on the full platform matrix
 
 **Key Features**:
 - Tests all builder/launcher combinations (4 total)
@@ -83,9 +98,31 @@ graph LR
 - Rust builder + Go launcher
 - Rust builder + Rust launcher
 
+### 02b - Pretaster Validation (PR)
+
+**File**: `.github/workflows/pr-pretaster.yml`
+
+**Purpose**: Run the same suite on a pull request, before anything merges
+
+**Why it is separate**: 02a downloads the helper artifacts published by 01, and
+01 is `workflow_dispatch`-only, so a PR branch has nothing to download. This
+workflow calls `ci/pr-pretaster.sh`, which runs `./build.sh` to compile helpers
+from the PR's own tree, `uv sync` to install the `flavor` CLI the security
+suite needs, and then the same `make -C tests/pretaster test` target.
+
+**Key Features**:
+- Matrix over ubuntu-24.04 and macos-14, `fail-fast: false` — a hardcoded
+  platform path is invisible on one and fatal on the other
+- `PRETASTER_STRICT=1`, which turns a skipped check into a failure: every
+  prerequisite exists in CI, so a skip is a setup bug rather than "not
+  applicable here"
+- Uploads `tests/pretaster/logs/` on failure
+
+**Scope**: Linux and macOS only. 02a keeps the wider matrix, FreeBSD included.
+
 ### 03 - Flavor Pipeline
 
-**File**: `.github/workflows/03-flavor-pipeline.yml`
+**File**: `.github/workflows/flavor-pipeline.yml`
 
 **Purpose**: Test the main Flavorpack Python package
 
@@ -97,7 +134,7 @@ graph LR
 
 ### 04 - Taster Pipeline
 
-**File**: `.github/workflows/04-taster-pipeline.yml`
+**File**: `.github/workflows/taster-pipeline.yml`
 
 **Purpose**: Test the Taster comprehensive test package
 
@@ -109,7 +146,7 @@ graph LR
 
 ### 05 - Code Quality
 
-**File**: `.github/workflows/05-code-quality.yml`
+**File**: `.github/workflows/code-quality.yml`
 
 **Purpose**: Enforce code quality standards
 
@@ -121,7 +158,7 @@ graph LR
 
 ### 06 - Security Scan
 
-**File**: `.github/workflows/06-security-scan.yml`
+**File**: `.github/workflows/security-scan.yml`
 
 **Purpose**: Security vulnerability scanning
 
@@ -133,7 +170,7 @@ graph LR
 
 ### 07 - Dependency Audit
 
-**File**: `.github/workflows/07-dependency-audit.yml`
+**File**: `.github/workflows/dependency-audit.yml`
 
 **Purpose**: Audit and validate dependencies
 
@@ -145,7 +182,7 @@ graph LR
 
 ### 08 - License Compliance
 
-**File**: `.github/workflows/08-license-compliance.yml`
+**File**: `.github/workflows/license-compliance.yml`
 
 **Purpose**: Ensure license compatibility
 
@@ -155,51 +192,65 @@ graph LR
 - NOTICE file accuracy
 - Third-party attribution
 
+### 09 - Release Pipeline
+
+**File**: `.github/workflows/release.yml`
+
+**Purpose**: Build and publish a release
+
+### Unnumbered workflows
+
+- `build-go.yml`, `build-rust.yml`, `build-tastesh.yml` — reusable
+  (`workflow_call`), invoked by the stages above rather than triggered directly
+- `compatibility-check.yml` — daily container compatibility sweep
+- `exp-freebsd.yml` — experimental FreeBSD builds, dispatch only
+
 ## Supporting Scripts
+
+Workflow logic lives in `ci/`, which holds considerably more than the entries
+below; these are the ones the numbered stages call directly.
 
 ### Build Scripts
 
-**`.github/scripts/build-platform-helpers.sh`**
-- Builds Go and Rust helpers for a specific platform
-- Handles cross-compilation settings
-- Creates platform-specific binaries
+**`ci/build-go-helpers.sh`**, **`ci/build-rust-helpers.sh`**
+- Build the Go and Rust helpers for a target platform
+- Handle cross-compilation settings, including the musl static build on Linux
 
-**`.github/scripts/build-pretaster.sh`**
+**`ci/build-pretaster.sh`**
 - Builds pretaster PSP package
 - Creates test manifests dynamically
 - Packages test scripts and configurations
 
-**`.github/scripts/build-crosslang-tests.sh`**
-- Creates test packages for cross-language validation
-- Generates manifests for all builder/launcher combinations
-- Uses PSPF/2025 nested format
-
 ### Test Scripts
 
-**`.github/scripts/run-tests.sh`**
+**`ci/run-tests.sh`**
 - Main test runner for Python tests
 - Handles pytest configuration
 - Collects test metadata and coverage
 
-**`.github/scripts/run-pretaster-tests.sh`**
+**`ci/run-pretaster-tests.sh`**
 - Executes pretaster test suite
 - Detects PSP execution context (FLAVOR_WORKENV)
 - Provides honest validation output
 
-**`.github/scripts/test-metadata.py`**
+**`ci/pr-pretaster.sh`**
+- The entry point for 02b: builds helpers from the PR's own source, installs
+  the `flavor` CLI, then runs the pretaster make target
+- Exists because a PR has no Helper Prep artifacts to download
+
+**`ci/test-metadata.py`**
 - Collects and formats test metadata
 - Handles Windows UTF-8 encoding
 - Generates JSON reports for CI
 
 ### Utility Scripts
 
-**`.github/scripts/validate-psp-package.sh`**
-- Validates PSP package structure
-- Checks signature verification
-- Tests basic execution
+**`ci/quality-checks.sh`**
+- The 05 gate: blocking checks (format, lint, types, clippy) exit non-zero;
+  advisory ones report without failing the build
 
-**`.github/scripts/get-version.sh`**
-- Extracts version from pyproject.toml
+**`ci/get-version.sh`**
+- Reads the version from the `VERSION` file, the single source of truth
 - Used for artifact naming
 
 ## Artifact Management
@@ -219,7 +270,7 @@ flavor-helpers-{version}-all
 ```yaml
 - uses: dawidd6/action-download-artifact@v6
   with:
-    workflow: 01-helper-prep.yml
+    workflow: helper-prep.yml
     name: flavor-helpers-0.3.0-linux_amd64
     path: ./helpers
     workflow_conclusion: success
@@ -248,10 +299,10 @@ brew install act  # macOS
 curl https://raw.githubusercontent.com/nektos/act/master/install.sh | bash
 
 # Run a specific workflow
-act -W .github/workflows/03-flavor-pipeline.yml
+act -W .github/workflows/flavor-pipeline.yml
 
 # Run with specific event
-act workflow_dispatch -W .github/workflows/01-helper-prep.yml
+act workflow_dispatch -W .github/workflows/helper-prep.yml
 
 # Run with secrets
 act -s GITHUB_TOKEN=$GITHUB_TOKEN
@@ -292,10 +343,12 @@ Currently disabled due to UTF-8 encoding issues with emoji characters in test sc
 ## Best Practices
 
 ### Workflow Design
-1. Keep workflow YAML minimal
-2. Delegate to scripts in `.github/scripts/`
-3. Use matrix strategies for multi-platform builds
-4. Always use manual triggers (`workflow_dispatch`)
+1. Keep workflow YAML minimal — inline `run:` blocks are capped at three lines
+2. Delegate to scripts in `ci/`
+3. Use matrix strategies for multi-platform builds, with `fail-fast: false` so
+   one platform's failure does not hide another's
+4. Anything that must gate a merge needs a `pull_request` trigger; a
+   `workflow_run` filtered to main can never fire on a PR branch
 
 ### Error Handling
 1. Provide clear error messages
@@ -348,7 +401,8 @@ Currently disabled due to UTF-8 encoding issues with emoji characters in test sc
 
 4. **Test locally before CI**:
    ```bash
-   .github/scripts/build-platform-helpers.sh darwin_arm64
+   ./build.sh                    # helpers for the host platform
+   make -C tests/pretaster test  # the suite 02a and 02b both run
    ```
 
 ## Future Improvements

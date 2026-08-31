@@ -23,14 +23,14 @@
 **Rust launcher status:** ❌ Not supported on Windows — use Go launcher
 
 **What stays in CI:**
-- `01-helper-prep.yml` still builds Rust launcher binaries for Windows (preserved for
+- `helper-prep.yml` still builds Rust launcher binaries for Windows (preserved for
   future use and cross-platform wheel distribution). They are built but never used as
   the launcher on Windows.
 - `build-pretaster.sh` selects Go launcher when `$PLATFORM` contains "windows".
-- `04-taster-pipeline.yml` build step selects Go launcher on `windows_*` platforms.
-- `build-pretaster` job in `02-pretaster-pipeline.yml` selects Go launcher for the
+- `taster-pipeline.yml` (04) build step selects Go launcher on `windows_*` platforms.
+- `build-pretaster` job in `pretaster-pipeline.yml` (02a) selects Go launcher for the
   Go-builder combo on Windows.
-- `test-crosslang` in `02-pretaster-pipeline.yml` runs with `continue-on-error: true`
+- `test-crosslang` in `pretaster-pipeline.yml` (02a) runs with `continue-on-error: true`
   on all Windows platforms because Rust-launcher-embedded packages cannot run on Windows.
 
 **Future fix path:** Investigate the Rust launcher Windows crash to determine whether
