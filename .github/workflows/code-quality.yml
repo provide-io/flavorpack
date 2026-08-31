@@ -78,9 +78,6 @@ jobs:
           name: python-quality-reports
           path: quality-logs/
           if-no-files-found: ignore
-            mypy-report/
-            mypy-txt/
-            quality-report.json
 
   # Go Code Quality
   go-quality:
