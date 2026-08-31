@@ -51,22 +51,23 @@ else
 fi
 
 # Slot 2: Gzipped Flavor builder (should be decompressed)
-if [ -f "${FLAVOR_WORKENV}/slot2/flavor-go-builder-darwin_arm64" ]; then
+if [ -f "${FLAVOR_WORKENV}/slot2/flavor-go-builder" ]; then
     echo ""
     echo "  ✅ Slot 2: Flavor Go builder found (decompressed from gzip)"
     echo "     Checking builder:"
-    if [ -x "${FLAVOR_WORKENV}/slot2/flavor-go-builder-darwin_arm64" ]; then
+    if [ -x "${FLAVOR_WORKENV}/slot2/flavor-go-builder" ]; then
         echo "     Builder is executable"
         # Try to get version if possible
-        "${FLAVOR_WORKENV}/slot2/flavor-go-builder-darwin_arm64" --version 2>/dev/null | head -1 | sed 's/^/     /' || echo "     (version check failed - expected)"
+        "${FLAVOR_WORKENV}/slot2/flavor-go-builder" --version 2>/dev/null | head -1 | sed 's/^/     /' || echo "     (version check failed - expected)"
     else
         echo "     Making builder executable..."
-        chmod +x "${FLAVOR_WORKENV}/slot2/flavor-go-builder-darwin_arm64"
+        chmod +x "${FLAVOR_WORKENV}/slot2/flavor-go-builder"
     fi
 else
     echo "  ❌ Slot 2: Flavor builder missing!"
     echo "     Looking for any files in slot2:"
     ls -la "${FLAVOR_WORKENV}/slot2/" 2>/dev/null | sed 's/^/       /' || echo "       Directory doesn't exist"
+    exit 1
 fi
 
 # Slot 3: Scripts tarball
