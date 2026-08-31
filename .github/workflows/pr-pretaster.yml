@@ -67,6 +67,12 @@ jobs:
         with:
           persist-credentials: false
 
+      # The security suites need the flavor CLI; ci/pr-pretaster.sh uv syncs it.
+      - name: 📦 Setup uv + Python
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          enable-cache: true
+
       # Go toolchain, version pinned by the module itself.
       - name: 🐹 Setup Go
         uses: actions/setup-go@v7
@@ -101,6 +107,11 @@ jobs:
 
       # Builds helpers from source, then runs the pretaster suite against them.
       - name: 🧪 Build helpers and run pretaster
+        # Strict: every prerequisite exists in CI, so a skipped check is a setup
+        # bug, not "not applicable here". Without it a suite can report success
+        # having asserted nothing.
+        env:
+          PRETASTER_STRICT: "1"
         run: ci/pr-pretaster.sh "${{ inputs.test_target || 'test' }}"
 
       # Suite logs are the only record of which combination failed.

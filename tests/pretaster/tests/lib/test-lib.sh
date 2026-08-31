@@ -11,8 +11,47 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Test result tracking
+#
+# Passes and skips are both counted so the summary can distinguish a suite that
+# verified something from one whose prerequisites were all missing. Previously
+# only failures were tracked, so a suite that asserted nothing at all printed
+# the same "✅ All tests passed!" as one that asserted everything.
 TEST_FAILURES=0
+TEST_PASSES=0
+TEST_SKIPS=0
 FAILED_TESTS=""
+SKIPPED_TESTS=""
+
+# PRETASTER_STRICT=1 turns a skipped prerequisite into a failure. CI is meant to
+# have every prerequisite present, so a skip there is a setup bug, not a
+# legitimate "not applicable on this machine".
+PRETASTER_STRICT="${PRETASTER_STRICT:-0}"
+
+# Record a skipped check and why. Use this instead of a bare echo so the skip
+# reaches the summary.
+skip_test() {
+    local test_name="$1"
+    local reason="$2"
+
+    if [ "$PRETASTER_STRICT" = "1" ]; then
+        print_color "$RED" "  ❌ ${test_name}: ${reason} (strict mode: skips are failures)"
+        TEST_FAILURES=$((TEST_FAILURES + 1))
+        FAILED_TESTS="$FAILED_TESTS\n  - ${test_name} (skipped: ${reason})"
+        return 1
+    fi
+
+    print_color "$YELLOW" "  ⚠️  ${test_name}: ${reason} — skipping"
+    TEST_SKIPS=$((TEST_SKIPS + 1))
+    SKIPPED_TESTS="$SKIPPED_TESTS\n  - ${test_name}: ${reason}"
+    return 0
+}
+
+# Record a check that ran and passed.
+pass_test() {
+    TEST_PASSES=$((TEST_PASSES + 1))
+    [ -n "${1:-}" ] && print_color "$GREEN" "  ✅ $1"
+    return 0
+}
 
 # Print colored message
 print_color() {
@@ -39,6 +78,7 @@ run_test() {
     
     if eval "$test_cmd"; then
         print_color "$GREEN" "✅ Test passed"
+        TEST_PASSES=$((TEST_PASSES + 1))
         return 0
     else
         local exit_code=$?
@@ -112,16 +152,32 @@ test_with_exit_code() {
 print_test_summary() {
     echo ""
     echo "═══════════════════════════════════"
-    if [ $TEST_FAILURES -eq 0 ]; then
-        print_color "$GREEN" "✅ All tests passed!"
-        return 0
-    else
-        print_color "$RED" "❌ $TEST_FAILURES test(s) failed!"
-        if [ -n "$FAILED_TESTS" ]; then
-            echo -e "\nFailed tests:$FAILED_TESTS"
-        fi
+
+    local tally="${TEST_PASSES} passed, ${TEST_SKIPS} skipped, ${TEST_FAILURES} failed"
+
+    if [ $TEST_FAILURES -ne 0 ]; then
+        print_color "$RED" "❌ $TEST_FAILURES check(s) failed!  (${tally})"
+        [ -n "$FAILED_TESTS" ] && echo -e "\nFailed:$FAILED_TESTS"
+        [ -n "$SKIPPED_TESTS" ] && echo -e "\nSkipped:$SKIPPED_TESTS"
         return 1
     fi
+
+    # Nothing failed -- but say plainly whether anything actually ran. A suite
+    # that asserted nothing is not the same result as one that asserted plenty.
+    if [ "$TEST_PASSES" -eq 0 ]; then
+        print_color "$YELLOW" "⚠️  No checks ran!  (${tally})"
+        [ -n "$SKIPPED_TESTS" ] && echo -e "\nSkipped:$SKIPPED_TESTS"
+        return 0
+    fi
+
+    if [ "$TEST_SKIPS" -ne 0 ]; then
+        print_color "$GREEN" "✅ All checks passed  (${tally})"
+        echo -e "\nSkipped:$SKIPPED_TESTS"
+        return 0
+    fi
+
+    print_color "$GREEN" "✅ All checks passed  (${tally})"
+    return 0
 }
 
 # Check PE header for Windows compatibility issues

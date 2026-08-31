@@ -29,10 +29,10 @@ ENDJSON
     rm -rf "$TRUST_DIR" "$POLICY_DIR"
 
     if [ $UNTRUST_EXIT -ne 0 ]; then
-        print_color "$GREEN" "  ✅ Untrusted key correctly rejected (exit $UNTRUST_EXIT)"
+        pass_test "Untrusted key correctly rejected (exit $UNTRUST_EXIT)"
     elif [ "$TRUST_CHECK_MODE" = "launcher" ]; then
         if echo "$TRUST_CHECK_OUTPUT" | grep -qiE 'not in.*trusted|signing key'; then
-            print_color "$GREEN" "  ✅ Launcher warned about untrusted key (enforcement not yet wired)"
+            pass_test "Launcher warned about untrusted key (enforcement not yet wired)"
         else
             print_color "$YELLOW" "  ⚠️  Launcher did not enforce require_trusted_key (may need rebuild)"
         fi
@@ -43,7 +43,7 @@ ENDJSON
         FAILED_TESTS="$FAILED_TESTS\n  - Untrusted key rejected"
     fi
 else
-    print_color "$YELLOW" "  ⚠️  echo-test.psp not found — run test-pretaster.sh first"
+    skip_test "Untrusted key rejected" "echo-test.psp not found (run test-pretaster.sh first)"
 fi
 
 echo ""
@@ -68,19 +68,19 @@ ENDJSON
     set +e; _run_trust_check "$POLICY_DIR" "$TRUST_DIR" "$TRUST_PSP"; TRUST_EXIT=$?; set -e
 
     if [ $TRUST_EXIT -eq 0 ]; then
-        print_color "$GREEN" "  ✅ Trusted key accepted (exit 0, fp: ${TRUST_TEST_FINGERPRINT:0:16}...)"
+        pass_test "Trusted key accepted (exit 0, fp: ${TRUST_TEST_FINGERPRINT:0:16}...)"
     elif echo "$TRUST_CHECK_OUTPUT" | grep -qiE 'trusted.*key|not.*trusted'; then
         print_color "$RED" "  ❌ FAIL: Trusted key should have been accepted (exit $TRUST_EXIT)"
         echo "     Output: $TRUST_CHECK_OUTPUT"
         TEST_FAILURES=$((TEST_FAILURES + 1))
         FAILED_TESTS="$FAILED_TESTS\n  - Trusted key accepted"
     else
-        print_color "$GREEN" "  ✅ Trusted key accepted (exit $TRUST_EXIT — trust OK, payload may fail)"
+        pass_test "Trusted key accepted (exit $TRUST_EXIT — trust OK, payload may fail)"
     fi
 
     rm -rf "$TRUST_DIR" "$POLICY_DIR"
 else
-    print_color "$YELLOW" "  ⚠️  echo-test.psp not found — run test-pretaster.sh first"
+    skip_test "Untrusted key rejected" "echo-test.psp not found (run test-pretaster.sh first)"
 fi
 
 echo ""
@@ -96,9 +96,9 @@ CROSS_MANIFEST="$RESOLVED_CONFIGS_DIR/test-echo.json"
 CROSS_SEED="cross-trust-test"
 CROSS_SKIP=false
 
-[ ! -f "$GO_BUILDER" ] || [ ! -f "$RS_BUILDER" ] && { print_color "$YELLOW" "  ⚠️  Need both builders — skipping"; CROSS_SKIP=true; }
-[ ! -f "$GO_LAUNCHER" ] && [ ! -f "$RS_LAUNCHER" ] && { print_color "$YELLOW" "  ⚠️  No launcher — skipping"; CROSS_SKIP=true; }
-[ ! -f "$CROSS_MANIFEST" ] && { print_color "$YELLOW" "  ⚠️  resolved test-echo.json not found (run make to resolve configs) — skipping"; CROSS_SKIP=true; }
+[ ! -f "$GO_BUILDER" ] || [ ! -f "$RS_BUILDER" ] && { skip_test "Cross-builder trust" "need both builders"; CROSS_SKIP=true; }
+[ ! -f "$GO_LAUNCHER" ] && [ ! -f "$RS_LAUNCHER" ] && { skip_test "Cross-builder trust" "no launcher available"; CROSS_SKIP=true; }
+[ ! -f "$CROSS_MANIFEST" ] && { skip_test "Cross-builder trust" "resolved test-echo.json not found (run make to resolve configs)"; CROSS_SKIP=true; }
 
 # Derive cross-trust key (requires Python for Ed25519 derivation)
 CROSS_TRUST_DIR=""
@@ -115,10 +115,10 @@ r=p.public_bytes(Encoding.Raw,PublicFormat.Raw)
 fp=hashlib.sha256(r).hexdigest()
 open('$CROSS_TRUST_DIR/'+fp[:16]+'.pub','w').write('# Name: cross\n'+p.public_bytes(Encoding.PEM,PublicFormat.SubjectPublicKeyInfo).decode())
 print(fp)" 2>&1)
-    [ $? -ne 0 ] && { print_color "$YELLOW" "  ⚠️  Key derivation failed — skipping"; CROSS_SKIP=true; }
+    [ $? -ne 0 ] && { skip_test "Cross-builder trust" "key derivation failed"; CROSS_SKIP=true; }
     set -e
 elif [ "$CROSS_SKIP" = false ]; then
-    print_color "$YELLOW" "  ⚠️  Python not available for key derivation — skipping"
+    skip_test "Cross-builder trust" "python3 not available for key derivation"
     CROSS_SKIP=true
 fi
 
@@ -135,7 +135,7 @@ ENDJSON
     for BUILDER_NAME in "Go" "Rust"; do
         BUILDER_BIN="$GO_BUILDER"
         [ "$BUILDER_NAME" = "Rust" ] && BUILDER_BIN="$RS_BUILDER"
-        [ ! -f "$BUILDER_BIN" ] && { print_color "$YELLOW" "  ⚠️  $BUILDER_NAME builder not found"; continue; }
+        [ ! -f "$BUILDER_BIN" ] && { skip_test "Cross-builder trust ($BUILDER_NAME)" "builder not found"; continue; }
 
         CROSS_PSP=$(mktemp "${TMPDIR:-/tmp}/cross-${BUILDER_NAME}-XXXXXX.psp")
         set +e
@@ -156,7 +156,7 @@ ENDJSON
         set +e; _run_trust_check "$CROSS_POLICY_DIR" "$EMPTY_TRUST" "$CROSS_PSP"; CROSS_RC=$?; set -e
         rm -rf "$EMPTY_TRUST"
         if [ $CROSS_RC -ne 0 ]; then
-            print_color "$GREEN" "  ✅ $BUILDER_NAME-built: untrusted rejected (exit $CROSS_RC)"
+            pass_test "$BUILDER_NAME-built: untrusted rejected (exit $CROSS_RC)"
         else
             print_color "$RED" "  ❌ $BUILDER_NAME-built: should reject untrusted"
             TEST_FAILURES=$((TEST_FAILURES + 1))
@@ -166,13 +166,13 @@ ENDJSON
         # Trusted
         set +e; _run_trust_check "$CROSS_POLICY_DIR" "$CROSS_TRUST_DIR" "$CROSS_PSP"; CROSS_RC=$?; set -e
         if [ $CROSS_RC -eq 0 ]; then
-            print_color "$GREEN" "  ✅ $BUILDER_NAME-built: trusted accepted (exit 0)"
+            pass_test "$BUILDER_NAME-built: trusted accepted (exit 0)"
         elif echo "$TRUST_CHECK_OUTPUT" | grep -qiE 'trusted.*key|not.*trusted'; then
             print_color "$RED" "  ❌ $BUILDER_NAME-built: should accept trusted"
             TEST_FAILURES=$((TEST_FAILURES + 1))
             FAILED_TESTS="$FAILED_TESTS\n  - Cross-builder: $BUILDER_NAME trusted"
         else
-            print_color "$GREEN" "  ✅ $BUILDER_NAME-built: trusted accepted (exit $CROSS_RC — payload may fail)"
+            pass_test "$BUILDER_NAME-built: trusted accepted (exit $CROSS_RC — payload may fail)"
         fi
 
         rm -f "$CROSS_PSP"

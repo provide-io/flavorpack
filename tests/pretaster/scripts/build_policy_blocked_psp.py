@@ -27,7 +27,7 @@ import tempfile
 
 
 def _find_launcher() -> Path | None:
-    """Try to locate a launcher binary without relying on dist/bin/."""
+    """Locate a launcher binary."""
     # 1. Environment override
     env_bin = os.environ.get("FLAVOR_LAUNCHER_BIN")
     if env_bin:
@@ -35,16 +35,27 @@ def _find_launcher() -> Path | None:
         if p.exists():
             return p
 
-    # 2. Local Go/Rust source build
     script_dir = Path(__file__).parent
     # Walk up from scripts/ to find the project root (scripts/ → pretaster/ → tests/ → project)
     # Try both 3 and 4 levels to support different checkout structures.
     for levels in (3, 4):
-        p = script_dir
+        root = script_dir
         for _ in range(levels):
-            p = p.parent
-        candidate_go = p / "src" / "flavor-go" / "flavor-go-launcher"
-        candidate_rs = p / "src" / "flavor-rs" / "target" / "release" / "flavor-rs-launcher"
+            root = root.parent
+
+        # 2. dist/bin/, where build.sh actually puts the helpers. This is the
+        # canonical location and the only platform-independent one: on Linux
+        # the Rust helpers are built for a musl target, so they land in
+        # target/<triple>/release/ rather than target/release/, and the
+        # source-tree probe below silently misses them. That is why the policy
+        # suite ran on macOS and skipped on Linux.
+        for candidate in sorted((root / "dist" / "bin").glob("flavor-*-launcher*")):
+            if candidate.is_file() and os.access(candidate, os.X_OK):
+                return candidate
+
+        # 3. Local Go/Rust source build
+        candidate_go = root / "src" / "flavor-go" / "flavor-go-launcher"
+        candidate_rs = root / "src" / "flavor-rs" / "target" / "release" / "flavor-rs-launcher"
         for c in (candidate_go, candidate_rs):
             if c.exists() and os.access(c, os.X_OK):
                 return c
