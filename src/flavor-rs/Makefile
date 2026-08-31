@@ -90,11 +90,15 @@ security:
 # --test-threads=1 is the fix rather than a workaround: the whole suite finishes
 # in about half a second serially, so the parallel harness was buying nothing and
 # costing correctness.
-TEST_THREADS ?= 1
+# Parallel by default. The suite used to deadlock above one thread -- a
+# lock-order inversion in JsonLogger, fixed since -- and this was pinned to 1
+# to hide it. Set TEST_THREADS=1 to force serial execution if ever needed.
+TEST_THREADS ?=
+TEST_THREAD_ARGS := $(if $(TEST_THREADS),-- --test-threads=$(TEST_THREADS),)
 
 test:
 	@echo "🧪 Running Rust tests..."
-	@cargo test --all-features -- --test-threads=$(TEST_THREADS)
+	@cargo test --all-features $(TEST_THREAD_ARGS)
 	@echo "✅ Tests passed"
 
 coverage:
@@ -107,7 +111,7 @@ coverage:
 		export LLVM_COV=/opt/homebrew/opt/llvm/bin/llvm-cov; \
 		export LLVM_PROFDATA=/opt/homebrew/opt/llvm/bin/llvm-profdata; \
 	fi; \
-	cargo llvm-cov --all-features --workspace --lcov --output-path coverage.lcov -- --test-threads=$(TEST_THREADS); \
+	cargo llvm-cov --all-features --workspace --lcov --output-path coverage.lcov $(TEST_THREAD_ARGS); \
 	cargo llvm-cov report --summary-only | tee coverage.txt; \
 	total="$$(awk '/^TOTAL/{gsub(/%/,"",$$10); print $$10}' coverage.txt | tail -1)"; \
 	min="$${QUALITY_RUST_COV_MIN}"; \
@@ -123,7 +127,7 @@ coverage:
 
 proptest:
 	@echo "🧪 Running Rust property tests..."
-	@cargo test prop_ --all-features -- --test-threads=$(TEST_THREADS)
+	@cargo test prop_ --all-features $(TEST_THREAD_ARGS)
 	@echo "✅ Proptests passed"
 
 mutation:
