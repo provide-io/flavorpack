@@ -82,10 +82,17 @@ jobs:
           workspaces: src/flavor-rs
 
       # tastesh is built from autotools sources by build.sh; the compat
-      # exit-code suite fails outright when it is missing.
-      - name: 🔧 Install autotools for tastesh (Linux)
+      # exit-code suite fails outright when it is missing. musl-tools provides
+      # the linker for the static Rust build below.
+      - name: 🔧 Install autotools and musl for tastesh (Linux)
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y autoconf automake
+        run: sudo apt-get update && sudo apt-get install -y autoconf automake musl-tools
+
+      # Linux helpers ship as musl static binaries -- src/flavor-rs's build-static
+      # is the default target there -- so the toolchain must carry that target.
+      - name: 🦀 Add musl target (Linux)
+        if: runner.os == 'Linux'
+        run: rustup target add x86_64-unknown-linux-musl
 
       # Same prerequisite on macOS runners.
       - name: 🔧 Install autotools for tastesh (macOS)
