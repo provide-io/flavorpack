@@ -42,22 +42,20 @@ glob = "0.3"
 chrono = "0.4"
 clap = { version = "4.5", features = ["derive"] }
 rand = "0.8"
-gethostname = "0.5"
+gethostname = "1.1"
 memmap2 = "0.9"
 hex = "0.4"
-which = "6.0"
+which = "8.0"
 fs2 = "0.4"
 
 [target.'cfg(unix)'.dependencies]
-signal-hook = "0.3"
 libc = "0.2"
 
 [target.'cfg(windows)'.dependencies]
-windows = { version = "0.58", features = [
+windows = { version = "0.62", features = [
     "Win32_Foundation",
     "Win32_Security",
     "Win32_System_LibraryLoader",
-    "Win32_Storage_FileSystem",
     "Win32_System_SystemServices"
 ] }
 
