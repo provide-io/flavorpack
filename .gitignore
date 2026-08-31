@@ -40,6 +40,11 @@ dist/
 target/
 *code.sh
 
+# ...except the format-compatibility fixtures, which are committed on purpose.
+# They are packages built by an older toolchain and are the only check that new
+# code still verifies old packages. See tests/fixtures/format_compat/README.md.
+!tests/fixtures/format_compat/**/*.psp
+
 # Test manifests (generated during testing)
 flavor-manifest.json
 tests/pretaster/pretaster-build-manifest.json
