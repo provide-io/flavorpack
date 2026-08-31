@@ -164,7 +164,7 @@ jobs:
 
       - name: 🏗️ Prep FreeBSD system
         if: steps.cache.outputs.cache-hit != 'true'
-        uses: cross-platform-actions/action@v1.4.0
+        uses: cross-platform-actions/action@v1.5.0
         with:
           operating_system: freebsd
           version: '14.2'
@@ -174,7 +174,7 @@ jobs:
 
       - name: 🐹 Build Go helpers
         if: steps.cache.outputs.cache-hit != 'true'
-        uses: cross-platform-actions/action@v1.4.0
+        uses: cross-platform-actions/action@v1.5.0
         with:
           operating_system: freebsd
           version: '14.2'
@@ -185,7 +185,7 @@ jobs:
 
       - name: 🐚 Build tastesh
         if: steps.cache.outputs.cache-hit != 'true'
-        uses: cross-platform-actions/action@v1.4.0
+        uses: cross-platform-actions/action@v1.5.0
         with:
           operating_system: freebsd
           version: '14.2'
@@ -196,7 +196,7 @@ jobs:
 
       - name: 🦀 Prep Rust
         if: steps.cache.outputs.cache-hit != 'true'
-        uses: cross-platform-actions/action@v1.4.0
+        uses: cross-platform-actions/action@v1.5.0
         with:
           operating_system: freebsd
           version: '14.2'
@@ -207,7 +207,7 @@ jobs:
 
       - name: 🔨 Build Rust helpers
         if: steps.cache.outputs.cache-hit != 'true'
-        uses: cross-platform-actions/action@v1.4.0
+        uses: cross-platform-actions/action@v1.5.0
         with:
           operating_system: freebsd
           version: '14.2'
@@ -218,7 +218,7 @@ jobs:
 
       - name: 🧪 Test Go
         if: steps.cache.outputs.cache-hit != 'true'
-        uses: cross-platform-actions/action@v1.4.0
+        uses: cross-platform-actions/action@v1.5.0
         with:
           operating_system: freebsd
           version: '14.2'
@@ -307,7 +307,7 @@ jobs:
 
       - name: 🏗️ Prep FreeBSD system
         if: steps.cache.outputs.cache-hit != 'true'
-        uses: cross-platform-actions/action@v1.4.0
+        uses: cross-platform-actions/action@v1.5.0
         with:
           operating_system: freebsd
           version: '14.2'
@@ -317,7 +317,7 @@ jobs:
 
       - name: 🐹 Build Go helpers
         if: steps.cache.outputs.cache-hit != 'true'
-        uses: cross-platform-actions/action@v1.4.0
+        uses: cross-platform-actions/action@v1.5.0
         with:
           operating_system: freebsd
           version: '14.2'
@@ -328,7 +328,7 @@ jobs:
 
       - name: 🐚 Build tastesh
         if: steps.cache.outputs.cache-hit != 'true'
-        uses: cross-platform-actions/action@v1.4.0
+        uses: cross-platform-actions/action@v1.5.0
         with:
           operating_system: freebsd
           version: '14.2'
@@ -339,7 +339,7 @@ jobs:
 
       - name: 🦀 Prep Rust
         if: steps.cache.outputs.cache-hit != 'true'
-        uses: cross-platform-actions/action@v1.4.0
+        uses: cross-platform-actions/action@v1.5.0
         with:
           operating_system: freebsd
           version: '14.2'
@@ -350,7 +350,7 @@ jobs:
 
       - name: 🔨 Build Rust helpers
         if: steps.cache.outputs.cache-hit != 'true'
-        uses: cross-platform-actions/action@v1.4.0
+        uses: cross-platform-actions/action@v1.5.0
         with:
           operating_system: freebsd
           version: '14.2'
@@ -361,7 +361,7 @@ jobs:
 
       - name: 🧪 Test Go
         if: steps.cache.outputs.cache-hit != 'true'
-        uses: cross-platform-actions/action@v1.4.0
+        uses: cross-platform-actions/action@v1.5.0
         with:
           operating_system: freebsd
           version: '14.2'
