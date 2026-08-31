@@ -203,7 +203,7 @@ class TestPypapipManagerBranches:
         from flavor.packaging.python.pypapip_manager import PyPaPipManager
 
         mgr = PyPaPipManager.__new__(PyPaPipManager)
-        mgr.MANYLINUX_TAG = "manylinux2014"
+        mgr.manylinux_tags = ("manylinux2014",)
         mgr.python_version = "3.11"
 
         with (

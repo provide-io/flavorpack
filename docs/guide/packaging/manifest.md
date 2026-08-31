@@ -64,6 +64,7 @@ All other `[project]` fields (description, readme, license, etc.) are preserved 
 | Field | Status | Description |
 |-------|--------|-------------|
 | `dependencies` | ✅ Supported | Build-time dependencies |
+| `manylinux` | ✅ Supported | Manylinux tags Linux wheels may be downloaded for, most preferred first |
 
 #### `[tool.flavor.execution.runtime.env]` Section ✅
 
@@ -256,6 +257,42 @@ dependencies = [                  # ✅ Supported
     "wheel>=0.38",
     "setuptools>=65.0",
 ]
+
+# Which Linux wheels this package may be built from, most preferred first.
+# Defaults to ["manylinux2014", "manylinux_2_28"].
+manylinux = [                     # ✅ Supported
+    "manylinux2014",
+    "manylinux_2_28",
+]
+```
+
+##### Choosing manylinux tags
+
+`pip download --platform TAG` does not mean *prefer* `TAG`. It replaces the set
+of platform tags pip will consider, and pip expands each one **downward only**:
+asking for `manylinux2014` (an alias of `manylinux_2_17`) makes 2_17, 2_12, 2_5
+and `manylinux1` wheels visible, and everything newer invisible. A single tag is
+therefore a ceiling on what the ecosystem is allowed to have moved on to, not a
+floor under compatibility.
+
+That ceiling gets reached. jq published manylinux2014 wheels through 1.10.0 and
+`manylinux_2_26/2_28` from 1.11.0, so a lock resolving jq 1.12.0 failed the
+Linux build outright with `No matching distribution found`, while the same
+build succeeded on macOS and Windows.
+
+Every tag listed is passed to pip as its own `--platform`, and **pip prefers the
+one listed first**. The default therefore keeps `manylinux2014` at the front: a
+package that still publishes a 2_17 wheel is selected exactly as before, and
+`manylinux_2_28` applies only where nothing older is published at all.
+
+Order the list by what the artifact must run on. Putting a newer tag first
+raises the glibc floor of everything you build — that is a deliberate
+compatibility decision, not a default:
+
+```toml
+[tool.flavor.build]
+# "This artifact targets RHEL 9 and newer; prefer the modern wheels."
+manylinux = ["manylinux_2_28", "manylinux2014"]
 ```
 
 !!! warning "📋 Planned Features - Not Yet Implemented"

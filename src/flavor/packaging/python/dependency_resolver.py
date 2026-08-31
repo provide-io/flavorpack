@@ -19,6 +19,7 @@ from provide.foundation.platform import get_arch_name, get_os_name
 from provide.foundation.process import run
 from provide.foundation.resilience.types import BackoffStrategy
 
+from flavor.packaging.python.manylinux import DEFAULT_MANYLINUX_TAGS, platform_tags_for_arch
 from flavor.packaging.python.pypapip_manager import PyPaPipManager
 from flavor.packaging.python.uv_manager import UVManager
 
@@ -238,17 +239,17 @@ class DependencyResolver:
             logger.warning(f"Failed to download UV wheel via pip: {e}")
             return None
 
-    def _get_uv_platform_tag(self) -> str | None:
-        """Get platform tag for UV wheel download."""
-        # ⚠️ CRITICAL: Using pip_manager for correct manylinux handling ⚠️
-        # DO NOT replace this with direct uv commands - they don't handle platform tags correctly!
-        arch = get_arch_name()
-        if get_os_name() == "linux":
-            if arch == "amd64":
-                return "manylinux2014_x86_64"
-            elif arch == "arm64":
-                return "manylinux2014_aarch64"
-        return None
+    def _get_uv_platform_tag(self) -> list[str]:
+        """Platform tags for the UV wheel download.
+
+        ⚠️ CRITICAL: Using pip_manager for correct manylinux handling ⚠️
+        DO NOT replace this with direct uv commands - they don't handle platform
+        tags correctly! The tags themselves come from the shared policy, so this
+        does not drift from what the rest of the build asks for.
+        """
+        if get_os_name() != "linux":
+            return []
+        return platform_tags_for_arch(DEFAULT_MANYLINUX_TAGS, get_arch_name())
 
     @retry(
         ConnectionError,

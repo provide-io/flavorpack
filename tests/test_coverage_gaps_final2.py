@@ -416,7 +416,7 @@ class TestDependencyResolverGaps:
             patch("flavor.packaging.python.dependency_resolver.get_arch_name", return_value="arm64"),
         ):
             result = resolver._get_uv_platform_tag()
-            assert result == "manylinux2014_aarch64"
+            assert result == ["manylinux2014_aarch64", "manylinux_2_28_aarch64"]
 
 
 # ===========================================================================
