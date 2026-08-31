@@ -16,6 +16,11 @@ import (
 	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
 
+// LauncherVersion is the launcher binary's own version, set by the binary at
+// startup from its -ldflags-injected value. CLI mode's "version" command
+// reports it so the builder can record which launcher it embedded.
+var LauncherVersion = "unknown"
+
 var syscallExecFn = syscall.Exec
 var osExitFn = os.Exit
 var osGetWdFn = os.Getwd
@@ -100,6 +105,10 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 		}
 
 		switch args[0] {
+		// Reports the launcher's own version. Deliberately does not touch the
+		// bundle, so the builder can probe a standalone launcher binary.
+		case "version":
+			fmt.Println(LauncherVersion)
 		case "info":
 			showBundleInfo(exePath, logger)
 		case "verify":
@@ -125,6 +134,7 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 			fmt.Println("PSPF Package Launcher - CLI Mode")
 			fmt.Println()
 			fmt.Println("Available commands:")
+			fmt.Println("  version           Show launcher version")
 			fmt.Println("  info              Show package information (default)")
 			fmt.Println("  verify            Verify package integrity")
 			fmt.Println("  metadata          Show raw package metadata")
@@ -141,7 +151,7 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 			fmt.Println("  FLAVOR_LAUNCHER_CLI=1 ./package.psp extract 0 /tmp/output")
 		default:
 			fmt.Fprintf(os.Stderr, "Error: Unknown command '%s'\n", args[0])
-			fmt.Fprintf(os.Stderr, "Available commands: info, verify, metadata, extract, run, help\n")
+			fmt.Fprintf(os.Stderr, "Available commands: version, info, verify, metadata, extract, run, help\n")
 			osExitFn(ExitInvalidArgs)
 		}
 		return

@@ -8,6 +8,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PRETASTER_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 HELPERS_DIR="$(cd "$PRETASTER_DIR/../../dist" && pwd)"
 PROJECT_ROOT="$(cd "$PRETASTER_DIR/../.." && pwd)"
+# Config templates carry placeholders (TASTESH_BIN, GO_BUILDER_BIN); the Makefile
+# substitutes them into $(DIST_DIR)/.configs. Tests must use the resolved copies.
+RESOLVED_CONFIGS_DIR="$PRETASTER_DIR/dist/.configs"
 
 cd "$PRETASTER_DIR"
 source "$SCRIPT_DIR/test-lib.sh"

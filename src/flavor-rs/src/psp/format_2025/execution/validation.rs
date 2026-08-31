@@ -1,8 +1,9 @@
 //! Validation and checksum management
 
 use super::super::index::Index;
-use super::super::metadata::Metadata;
+use super::super::metadata::{CacheValidationInfo, Metadata};
 use super::super::paths::WorkenvPaths;
+use super::placeholders::substitute_placeholders;
 use crate::exceptions::{FlavorError, Result};
 use log::{debug, warn};
 use serde::{Deserialize, Serialize};
@@ -193,17 +194,56 @@ pub fn save_index_metadata(paths: &WorkenvPaths, index: &Index) -> Result<()> {
     Ok(())
 }
 
+/// Check whether the setup steps ran to completion.
+///
+/// The extraction marker says the payload was unpacked; it says nothing about
+/// whether the wheels were installed afterwards. `cache_validation` names a
+/// file the setup steps write *last*, so its presence -- with the expected
+/// content -- is the only evidence that setup finished. Without this check, a
+/// setup interrupted midway leaves a workenv that is extracted, checksum-clean
+/// and missing `bin/`, and every later run reuses it and fails at exec with
+/// "No such file or directory".
+fn setup_completed(paths: &WorkenvPaths, metadata: &Metadata, cache: &CacheValidationInfo) -> bool {
+    let workenv = paths.workenv();
+    let check_path = substitute_placeholders(&cache.check_file, &workenv, &metadata.package);
+    let expected = substitute_placeholders(&cache.expected_content, &workenv, &metadata.package);
+
+    let Ok(actual) = fs::read_to_string(&check_path) else {
+        debug!("🔍 Setup completion marker missing: {check_path}");
+        return false;
+    };
+
+    if expected.is_empty() || actual.trim() == expected.trim() {
+        true
+    } else {
+        debug!(
+            "🔍 Setup completion marker says {:?}, expected {:?}",
+            actual.trim(),
+            expected.trim()
+        );
+        false
+    }
+}
+
 /// Check if work environment is valid using checksums
 pub fn check_workenv_validity_full(
     paths: &WorkenvPaths,
     index: &Index,
-    _metadata: &Metadata,
+    metadata: &Metadata,
 ) -> Result<bool> {
     // First check if extraction is complete
     let complete_path = paths.complete_file();
     if !complete_path.exists() {
         debug!("🔍 No extraction completion marker found");
         return Ok(false);
+    }
+
+    // Then that setup finished, which extraction alone does not imply.
+    if let Some(cache) = &metadata.cache_validation {
+        if !setup_completed(paths, metadata, cache) {
+            debug!("🔍 Work environment is incomplete; setup will run again");
+            return Ok(false);
+        }
     }
 
     // Check package checksum
@@ -218,7 +258,9 @@ mod tests {
     };
     use crate::psp::format_2025::defaults::ValidationLevel;
     use crate::psp::format_2025::index::Index;
-    use crate::psp::format_2025::metadata::{ExecutionInfo, Metadata, PackageInfo, SlotMetadata};
+    use crate::psp::format_2025::metadata::{
+        CacheValidationInfo, ExecutionInfo, Metadata, PackageInfo, SlotMetadata,
+    };
     use crate::psp::format_2025::paths::WorkenvPaths;
     use std::collections::HashMap;
     use std::fs;
@@ -354,5 +396,97 @@ mod tests {
             check_workenv_validity_full(&paths, &index, &metadata)
                 .expect("matching state should be valid")
         );
+    }
+
+    /// A workenv that extracted but never finished installing must not be reused.
+    ///
+    /// This is the shape that broke in the field: setup was interrupted, so
+    /// `metadata/installed` was never written, but the extraction marker and the
+    /// package checksum both survived. Every later run reused the half-built
+    /// workenv and died at exec with "No such file or directory".
+    #[test]
+    fn an_extracted_but_unfinished_workenv_is_not_reused() {
+        let temp = tempfile::tempdir().expect("tempdir");
+        let paths = WorkenvPaths::new(
+            PathBuf::from(temp.path()),
+            PathBuf::from("demo.psp").as_path(),
+        );
+        let mut metadata = sample_metadata();
+        metadata.cache_validation = Some(CacheValidationInfo {
+            check_file: "{workenv}/metadata/installed".to_string(),
+            expected_content: "{package_name}-{version}".to_string(),
+        });
+        let mut index = Index::new();
+        index.index_checksum = 0x12345678;
+
+        // Extraction finished and the checksum matches: everything the old
+        // check looked at is in order.
+        fs::create_dir_all(paths.extract()).expect("create extract dir");
+        fs::write(paths.complete_file(), b"ok").expect("write completion marker");
+        save_package_checksum(&paths, index.index_checksum).expect("save checksum");
+
+        assert!(
+            !check_workenv_validity_full(&paths, &index, &metadata).expect("check runs"),
+            "a workenv with no setup marker must be rebuilt, not reused"
+        );
+
+        // Setup finishes and writes its marker.
+        let marker = paths.workenv().join("metadata/installed");
+        fs::create_dir_all(marker.parent().expect("marker parent")).expect("create metadata dir");
+        fs::write(&marker, b"demo-1.0.0").expect("write setup marker");
+
+        assert!(
+            check_workenv_validity_full(&paths, &index, &metadata).expect("check runs"),
+            "a workenv whose setup completed is reusable"
+        );
+    }
+
+    /// A marker left by a different version is not evidence for this one.
+    #[test]
+    fn a_setup_marker_from_another_version_is_rejected() {
+        let temp = tempfile::tempdir().expect("tempdir");
+        let paths = WorkenvPaths::new(
+            PathBuf::from(temp.path()),
+            PathBuf::from("demo.psp").as_path(),
+        );
+        let mut metadata = sample_metadata();
+        metadata.cache_validation = Some(CacheValidationInfo {
+            check_file: "{workenv}/metadata/installed".to_string(),
+            expected_content: "{package_name}-{version}".to_string(),
+        });
+        let mut index = Index::new();
+        index.index_checksum = 0x12345678;
+
+        fs::create_dir_all(paths.extract()).expect("create extract dir");
+        fs::write(paths.complete_file(), b"ok").expect("write completion marker");
+        save_package_checksum(&paths, index.index_checksum).expect("save checksum");
+
+        let marker = paths.workenv().join("metadata/installed");
+        fs::create_dir_all(marker.parent().expect("marker parent")).expect("create metadata dir");
+        fs::write(&marker, b"demo-0.9.0").expect("write stale setup marker");
+
+        assert!(
+            !check_workenv_validity_full(&paths, &index, &metadata).expect("check runs"),
+            "a marker naming another version must not validate this one"
+        );
+    }
+
+    /// Packages whose manifest declares no cache_validation keep working.
+    #[test]
+    fn a_manifest_without_cache_validation_is_unaffected() {
+        let temp = tempfile::tempdir().expect("tempdir");
+        let paths = WorkenvPaths::new(
+            PathBuf::from(temp.path()),
+            PathBuf::from("demo.psp").as_path(),
+        );
+        let metadata = sample_metadata(); // cache_validation: None
+        let mut index = Index::new();
+        index.index_checksum = 0x12345678;
+
+        fs::create_dir_all(paths.extract()).expect("create extract dir");
+        fs::write(paths.complete_file(), b"ok").expect("write completion marker");
+        save_package_checksum(&paths, index.index_checksum).expect("save checksum");
+
+        assert!(check_workenv_validity_full(&paths, &index, &metadata).expect("check runs"));
     }
 }

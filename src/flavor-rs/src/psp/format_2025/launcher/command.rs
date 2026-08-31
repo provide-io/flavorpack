@@ -15,6 +15,20 @@ use std::path::Path;
 /// On Windows, this handles .exe extension resolution automatically.
 /// Falls back to the basename if resolution fails.
 pub fn resolve_executable(executable: &str) -> String {
+    // An absolute path that exists is already the answer. This matters for
+    // workenv commands like {workenv}/bin/taster: the workenv's bin directory is
+    // not on PATH, so reducing such a path to its basename and searching PATH
+    // finds nothing, and the fallback below then execs a bare name that cannot
+    // resolve. The Go launcher has guarded this since it was written; this is
+    // the same guard.
+    if executable.starts_with('/') {
+        let path = Path::new(executable);
+        if path.is_file() {
+            debug!("✅ Executable exists at absolute path, using directly: {executable}");
+            return executable.to_string();
+        }
+    }
+
     // If it's an absolute Unix path (starts with /), extract just the basename
     // This handles cases like "/usr/bin/python3" -> "python3"
     let exec_name = if executable.starts_with('/') {
@@ -69,6 +83,14 @@ pub fn resolve_executable(executable: &str) -> String {
             }
         }
 
+        if executable.starts_with('/') {
+            // Name the path that was wanted: "no such file" on a bare basename
+            // tells the operator nothing about what the package tried to run.
+            // The return value stays the basename, which callers rely on.
+            warn!(
+                "⚠️  Executable '{executable}' does not exist and its name is not on PATH — the work environment is probably incomplete"
+            );
+        }
         warn!(
             "⚠️  Could not resolve executable '{}' in PATH — will attempt to run as-is, expect failure if not on PATH",
             executable
@@ -399,6 +421,43 @@ mod tests {
         assert!(
             path_val.starts_with(&expected_scripts),
             "PATH should start with {expected_scripts} but was: {path_val}"
+        );
+    }
+
+    /// A workenv command is an absolute path to a file that is not on PATH.
+    ///
+    /// Reducing it to its basename and searching PATH finds nothing, and the
+    /// fallback then execs a bare name that cannot resolve -- which is how a
+    /// packaged provider failed with "No such file or directory" while the file
+    /// it wanted was sitting right there. The Go launcher has always guarded
+    /// this; this asserts the Rust one does too.
+    #[cfg(unix)]
+    #[test]
+    fn an_existing_absolute_path_is_used_as_is() {
+        let temp = tempfile::tempdir().expect("tempdir");
+        let bin = temp.path().join("bin");
+        std::fs::create_dir_all(&bin).expect("create bin");
+        let exe = bin.join("terraform-provider-demo");
+        std::fs::write(&exe, b"#!/bin/sh\nexit 0\n").expect("write executable");
+
+        let resolved = resolve_executable(&exe.to_string_lossy());
+
+        assert_eq!(
+            resolved,
+            exe.to_string_lossy(),
+            "an absolute path that exists must not be reduced to its basename"
+        );
+    }
+
+    /// A host path that has moved still falls back to PATH, e.g. /usr/bin/sh.
+    #[cfg(unix)]
+    #[test]
+    fn a_missing_absolute_path_still_falls_back_to_path_lookup() {
+        let resolved = resolve_executable("/nonexistent/directory/sh");
+
+        assert!(
+            resolved.ends_with("sh"),
+            "expected a PATH-resolved sh, got: {resolved}"
         );
     }
 }
