@@ -138,10 +138,19 @@ func doBuild(logger *slog.Logger, manifestPath, outputPath, launcherBin, private
 		buildExitFn(1)
 	}
 	logger.Info("🚀 Loading launcher", "path", launcherPath)
+	// BuildConfig.Launcher was declared and logged but never assigned, so every
+	// build reported an empty launcher. Record the launcher actually embedded.
+	config.Launcher = launcherPath
 
-	// Check launcher version
-	versionCmd := exec.Command(launcherPath, "--version") // #nosec G204 -- launcherPath is operator-supplied and executed directly without shell expansion for a version probe.
-	versionOutput, err := versionCmd.CombinedOutput()
+	// Check launcher version.
+	// Launchers deliberately never intercept arguments outside CLI mode -- every
+	// argument belongs to the packaged application -- so probing with --version
+	// was executed as the package and always failed. CLI mode is the supported
+	// channel, and its "version" command does not touch the bundle.
+	// Read stdout only; the launcher logs to stderr.
+	versionCmd := exec.Command(launcherPath, "version") // #nosec G204 -- launcherPath is operator-supplied and executed directly without shell expansion for a version probe.
+	versionCmd.Env = append(os.Environ(), EnvLauncherCLI+"=1")
+	versionOutput, err := versionCmd.Output()
 	if err != nil {
 		logger.Warn("⚠️ Failed to get launcher version", "error", err)
 	} else {
