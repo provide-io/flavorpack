@@ -30,7 +30,11 @@ PLATFORM="${OS}_${ARCH}"
 EXT=""
 [[ "$OS" == "windows" ]] && EXT=".exe"
 
-# Locate flavor CLI
+# Locate flavor CLI.
+# This is flavorpack's own entry point ([project.scripts] flavor = flavor.cli:main),
+# so its absence means the package under test is not installed -- not that some
+# optional extra is unavailable. Suites that need it should say so plainly; in
+# CI, PRETASTER_STRICT makes that a failure rather than a silent skip.
 FLAVOR_BIN=""
 if [ -f "$PROJECT_ROOT/.venv/bin/flavor" ]; then
     FLAVOR_BIN="$PROJECT_ROOT/.venv/bin/flavor"

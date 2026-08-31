@@ -306,6 +306,9 @@ for combo in "${combinations[@]}"; do
     # Run test and track result (don't exit on failure)
     if test_combination "$builder" "$launcher" "$builder_bin" "$launcher_bin" "$emoji"; then
         PASSED_COMBOS+=("$emoji $builder+$launcher")
+        # Also record it with the shared counter, so print_test_summary
+        # reports a real tally instead of "No checks ran".
+        pass_test
     else
         FAILED_COMBOS+=("$emoji $builder+$launcher")
     fi

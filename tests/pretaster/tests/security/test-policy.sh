@@ -17,13 +17,13 @@ BUILD_HELPER="$PRETASTER_DIR/scripts/build_policy_blocked_psp.py"
 # Build the policy-blocked PSP (platforms: ["mars_amd64"])
 # ---------------------------------------------------------------------------
 if [ -z "$FLAVOR_BIN" ]; then
-    print_color "$YELLOW" "  ⚠️  flavor CLI not found — skipping policy tests"
+    skip_test "Policy tests" "flavor CLI not found — flavorpack is not installed (run: uv sync)"
     POLICY_TEST_SKIPPED=true
 elif [ -z "$PYTHON_BIN" ]; then
-    print_color "$YELLOW" "  ⚠️  python3 not found — skipping policy tests"
+    skip_test "Policy tests" "python3 not found"
     POLICY_TEST_SKIPPED=true
 elif [ ! -f "$BUILD_HELPER" ]; then
-    print_color "$YELLOW" "  ⚠️  Build helper not found: $BUILD_HELPER"
+    skip_test "Policy tests" "build helper not found"
     POLICY_TEST_SKIPPED=true
 else
     set +e
@@ -56,7 +56,7 @@ if [ "$POLICY_TEST_SKIPPED" = false ] && [ -f "$POLICY_PSP" ]; then
     rm -rf "$DENY_POLICY_DIR"
 
     if [ $CHECK_EXIT -ne 0 ] && echo "$CHECK_OUTPUT" | grep -qiE 'not permitted|not in|platform.*not|mars_amd64'; then
-        print_color "$GREEN" "  ✅ Platform deny correctly rejected mars_amd64 (exit $CHECK_EXIT)"
+        pass_test "Platform deny correctly rejected mars_amd64 (exit $CHECK_EXIT)"
     else
         print_color "$RED" "  ❌ FAIL: Should have rejected mars_amd64 package"
         echo "     Output: $CHECK_OUTPUT"
@@ -64,7 +64,7 @@ if [ "$POLICY_TEST_SKIPPED" = false ] && [ -f "$POLICY_PSP" ]; then
         FAILED_TESTS="$FAILED_TESTS\n  - Platform deny"
     fi
 else
-    print_color "$YELLOW" "  ⚠️  Skipped"
+    skip_test "Platform deny enforcement" "prerequisites missing"
 fi
 
 echo ""
@@ -88,14 +88,14 @@ ENDJSON
     rm -rf "$POLICY_DIR"
 
     if [ $WARN_EXIT -eq 0 ]; then
-        print_color "$GREEN" "  ✅ Warn mode allowed the blocked package"
+        pass_test "Warn mode allowed the blocked package"
     else
         print_color "$RED" "  ❌ FAIL: Warn mode should allow (exit $WARN_EXIT)"
         TEST_FAILURES=$((TEST_FAILURES + 1))
         FAILED_TESTS="$FAILED_TESTS\n  - Warn mode"
     fi
 else
-    print_color "$YELLOW" "  ⚠️  Skipped"
+    skip_test "Warn mode allows" "prerequisites missing"
 fi
 
 echo ""
@@ -121,14 +121,14 @@ ENDJSON
     rm -rf "$POLICY_DIR" "$TRUST_DIR"
 
     if [ $ALLOW_EXIT -eq 0 ]; then
-        print_color "$GREEN" "  ✅ Allow mode passed all checks silently"
+        pass_test "Allow mode passed all checks silently"
     else
         print_color "$RED" "  ❌ FAIL: Allow mode should pass (exit $ALLOW_EXIT)"
         TEST_FAILURES=$((TEST_FAILURES + 1))
         FAILED_TESTS="$FAILED_TESTS\n  - Allow mode"
     fi
 else
-    print_color "$YELLOW" "  ⚠️  Skipped"
+    skip_test "Allow mode passes" "prerequisites missing"
 fi
 
 echo ""
@@ -152,9 +152,9 @@ if [ -n "$FLAVOR_BIN" ] && [ -n "$INSPECT_PSP" ]; then
         set -e
 
         if [ $SBOM_EXIT -eq 0 ] && echo "$SBOM_OUTPUT" | grep -qiE 'CycloneDX|bomFormat'; then
-            print_color "$GREEN" "  ✅ SBOM inspection returned CycloneDX"
+            pass_test "SBOM inspection returned CycloneDX"
         elif echo "$SBOM_OUTPUT" | grep -qiE 'no sbom|sbom not found|no attestation|not present'; then
-            print_color "$GREEN" "  ✅ SBOM inspection: no SBOM in package (correct)"
+            pass_test "SBOM inspection: no SBOM in package (correct)"
         else
             print_color "$RED" "  ❌ Unexpected SBOM output (exit $SBOM_EXIT)"
             TEST_FAILURES=$((TEST_FAILURES + 1))
@@ -164,7 +164,7 @@ if [ -n "$FLAVOR_BIN" ] && [ -n "$INSPECT_PSP" ]; then
         print_color "$YELLOW" "  ⚠️  flavor inspect --sbom not supported in this version"
     fi
 else
-    print_color "$YELLOW" "  ⚠️  Skipping (no flavor CLI or PSP)"
+    skip_test "SBOM inspection" "no flavor CLI or PSP"
 fi
 
 echo ""
