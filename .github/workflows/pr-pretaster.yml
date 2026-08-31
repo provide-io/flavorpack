@@ -1,0 +1,114 @@
+name: 06 🧪 PR Pretaster
+# ─────────────────────────────────────────────────────────────────────────────
+# Script policy: keep inline run: blocks to ≤ 3 lines.
+# Anything longer belongs in ci/ and should be called from here.
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# End-to-end coverage for pull requests.
+#
+# The pretaster/taster pipelines cannot run on a PR: 01 Helper Prep is
+# workflow_dispatch-only, and 02/03/04 are workflow_run-gated to main/develop.
+# Before this workflow, the only PR check was 05 Code Quality, which runs
+# clippy/fmt/machete and no tests at all — so changes to the launcher, builder
+# and packaging paths merged with nothing exercising them.
+#
+# This builds the helpers from the PR's own source and runs the pretaster
+# suite against them: core, combo (all four builder×launcher combinations),
+# security, and compat.
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_target:
+        description: 'Pretaster make target (test, test-core, test-combo, test-security, test-compat)'
+        type: string
+        required: false
+        default: 'test'
+
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '**.go'
+      - '**.rs'
+      - 'build.sh'
+      - 'ci/pr-pretaster.sh'
+      - 'src/flavor-go/**'
+      - 'src/flavor-rs/**'
+      - 'tests/pretaster/**'
+      - '.github/workflows/pr-pretaster.yml'
+
+concurrency:
+  group: pr-pretaster-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  pretaster:
+    name: 🧪 Pretaster (${{ matrix.label }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      # Both platforms run: a hardcoded darwin_arm64 path in a test script is
+      # invisible on macOS and only fails on Linux, and vice versa.
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            label: linux_amd64
+          - os: macos-14
+            label: darwin_arm64
+
+    steps:
+      # Source under test: the PR's own tree, helpers built from it below.
+      - name: 📥 Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      # Go toolchain, version pinned by the module itself.
+      - name: 🐹 Setup Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: src/flavor-go/go.mod
+          cache: true
+          cache-dependency-path: src/flavor-go/go.sum
+
+      # Rust toolchain, with the cargo registry and target dir cached.
+      - name: 🦀 Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          workspaces: src/flavor-rs
+
+      # tastesh is built from autotools sources by build.sh; the compat
+      # exit-code suite fails outright when it is missing. musl-tools provides
+      # the linker for the static Rust build below.
+      - name: 🔧 Install autotools and musl for tastesh (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y autoconf automake musl-tools
+
+      # Linux helpers ship as musl static binaries -- src/flavor-rs's build-static
+      # is the default target there -- so the toolchain must carry that target.
+      - name: 🦀 Add musl target (Linux)
+        if: runner.os == 'Linux'
+        run: rustup target add x86_64-unknown-linux-musl
+
+      # Same prerequisite on macOS runners.
+      - name: 🔧 Install autotools for tastesh (macOS)
+        if: runner.os == 'macOS'
+        run: brew install autoconf automake
+
+      # Builds helpers from source, then runs the pretaster suite against them.
+      - name: 🧪 Build helpers and run pretaster
+        run: ci/pr-pretaster.sh "${{ inputs.test_target || 'test' }}"
+
+      # Suite logs are the only record of which combination failed.
+      - name: 📄 Upload pretaster logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pretaster-logs-${{ matrix.label }}
+          path: tests/pretaster/logs/
+          if-no-files-found: ignore
+          retention-days: 7
