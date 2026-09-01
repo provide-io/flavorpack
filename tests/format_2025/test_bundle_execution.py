@@ -61,7 +61,6 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
             "format": "PSPF/2025",
             "package": {"name": "hello-app", "version": "1.0.0"},
             "execution": {
-                "primary_slot": 0,
                 "command": "/usr/bin/python3 {slot:0}",
             },
         }
@@ -133,7 +132,6 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
             "format": "PSPF/2025",
             "package": {"name": "limited-app", "version": "1.0.0"},
             "execution": {
-                "primary_slot": 0,
                 "command": "/usr/bin/python3 {workenv}/app.py",
                 "limits": {"memory": "1GB", "cpu": "2", "timeout": "300s"},
             },
@@ -160,7 +158,7 @@ print(f"Hello from PSPF! Args: {sys.argv[1:]}")
         metadata = {
             "format": "PSPF/2025",
             "package": {"name": "error-app", "version": "1.0.0"},
-            "execution": {"primary_slot": 0, "command": "/nonexistent/binary"},
+            "execution": {"command": "/nonexistent/binary"},
         }
 
         bundle_path = temp_dir / "error.psp"
@@ -183,12 +181,10 @@ class TestBundleExecutorUnit:
         command: str = "/usr/bin/python3",
         slots: list[dict[str, Any]] | None = None,
         execution_env: dict[str, str] | None = None,
-        primary_slot: int = 0,
     ) -> BundleExecutor:
         metadata: dict[str, Any] = {
             "package": {"name": "test-pkg", "version": "1.2.3"},
             "execution": {
-                "primary_slot": primary_slot,
                 "command": command,
             },
         }

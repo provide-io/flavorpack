@@ -23,7 +23,7 @@ func TestExtractAndMergeJsonMarshalFails(t *testing.T) {
 			storedData: []byte("hello"),
 		},
 	}, Metadata{
-		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution: &ExecutionInfo{Command: "/bin/true"},
 		Build:     &BuildInfo{Tool: "test"},
 	})
 
@@ -54,7 +54,7 @@ func TestExtractAndMergeReadDirFails(t *testing.T) {
 			storedData: []byte("hello"),
 		},
 	}, Metadata{
-		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution: &ExecutionInfo{Command: "/bin/true"},
 		Build:     &BuildInfo{Tool: "test"},
 	})
 
@@ -89,7 +89,7 @@ func TestExtractAndMergeMkdirAllParentFails(t *testing.T) {
 			storedData: []byte("hello world"),
 		},
 	}, Metadata{
-		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution: &ExecutionInfo{Command: "/bin/true"},
 		Build:     &BuildInfo{Tool: "test"},
 	})
 
@@ -122,7 +122,7 @@ func TestExtractAndMergeFixShebangsFails(t *testing.T) {
 			storedData: []byte("hello"),
 		},
 	}, Metadata{
-		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution: &ExecutionInfo{Command: "/bin/true"},
 		Build:     &BuildInfo{Tool: "test"},
 		Workenv: &WorkenvInfo{
 			Directories: []DirectorySpec{
@@ -162,7 +162,7 @@ func TestExtractAndMergeRemoveAllFails(t *testing.T) {
 			storedData: []byte("hello"),
 		},
 	}, Metadata{
-		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution: &ExecutionInfo{Command: "/bin/true"},
 		Build:     &BuildInfo{Tool: "test"},
 	})
 
@@ -197,7 +197,7 @@ func TestExtractAndMergeSaveIndexMetadataFails(t *testing.T) {
 			storedData: []byte("hello"),
 		},
 	}, Metadata{
-		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution: &ExecutionInfo{Command: "/bin/true"},
 		Build:     &BuildInfo{Tool: "test"},
 	})
 
@@ -232,7 +232,7 @@ func TestExtractAndMergeMarkExtractionCompleteFails(t *testing.T) {
 			storedData: []byte("hello"),
 		},
 	}, Metadata{
-		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution: &ExecutionInfo{Command: "/bin/true"},
 		Build:     &BuildInfo{Tool: "test"},
 	})
 

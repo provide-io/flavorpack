@@ -38,7 +38,6 @@
   "execution": {
     "command": "{workenv}/bin/tastesh {workenv}/scripts/policy_test.sh",
     "args": [],
-    "env": {},
-    "primary_slot": 1
+    "env": {}
   }
 }

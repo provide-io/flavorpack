@@ -59,7 +59,6 @@
     "args": [],
     "env": {
       "TASTER_MODE": "real"
-    },
-    "primary_slot": 0
+    }
   }
 }

@@ -187,7 +187,6 @@ mod tests {
                 self_ref: None,
             }],
             execution: ExecutionInfo {
-                primary_slot: 0,
                 command: "run".to_string(),
                 env: HashMap::new(),
             },

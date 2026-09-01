@@ -84,8 +84,7 @@ EOF
     },
     "format": "PSPF/2025",
     "execution": {
-        "command": "{workenv}/bin/tastesh {workenv}/scripts/exit_test.sh",
-        "primary_slot": 1
+        "command": "{workenv}/bin/tastesh {workenv}/scripts/exit_test.sh"
     },
     "slots": [
         {

@@ -22,7 +22,6 @@
   ],
   "execution": {
     "command": "/bin/bash {workenv}/minimal_test.sh",
-    "args": [],
-    "primary_slot": 0
+    "args": []
   }
 }

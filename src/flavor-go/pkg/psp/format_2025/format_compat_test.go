@@ -12,9 +12,11 @@ package format_2025
 
 import (
 	"bytes"
+	"compress/gzip"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -259,49 +261,83 @@ func TestEveryProducerDerivesTheSameKey(t *testing.T) {
 	}
 }
 
-// TestExecutionBlockOmittingPrimarySlotIsReadable reads the one metadata
-// document every implementation has to agree on.
+// TestExecutionBlockIsReadable reads the one metadata document every
+// implementation has to agree on.
 //
-// primary_slot was required by Rust and optional here and in Python, so a
-// package without it was ordinary to two implementations and unopenable to the
-// third. The environment was worse: it is written under "env" by Rust and
-// Python, and this implementation read "environment", so an environment set by
-// either of them was dropped without a word. The fixture omits primary_slot and
-// carries a non-empty env; see tests/fixtures/format_compat/execution/README.md.
-func TestExecutionBlockOmittingPrimarySlotIsReadable(t *testing.T) {
+// The environment is written under "env" by Rust and Python, and this
+// implementation read "environment", so an environment set by either of them was
+// dropped without a word. See tests/fixtures/format_compat/execution/README.md.
+func TestExecutionBlockIsReadable(t *testing.T) {
 	t.Parallel()
 
-	path := filepath.Join(repoRoot(t), "tests", "fixtures", "format_compat", "execution", "omits-primary-slot.json")
+	path := filepath.Join(repoRoot(t), "tests", "fixtures", "format_compat", "execution", "execution-block.json")
 	raw, err := os.ReadFile(path) //nolint:gosec // fixture path built from the repo root
 	if err != nil {
 		t.Fatalf("read %s: %v", path, err)
 	}
 
-	// The fixture is only worth anything while it keeps omitting the field.
-	var probe struct {
-		Execution map[string]json.RawMessage `json:"execution"`
-	}
-	if err := json.Unmarshal(raw, &probe); err != nil {
-		t.Fatalf("parse fixture: %v", err)
-	}
-	if _, present := probe.Execution["primary_slot"]; present {
-		t.Fatal("the fixture must keep omitting primary_slot")
-	}
-
 	var metadata Metadata
 	if err := json.Unmarshal(raw, &metadata); err != nil {
-		t.Fatalf("metadata must parse without primary_slot: %v", err)
+		t.Fatalf("fixture must parse: %v", err)
 	}
 	if metadata.Execution == nil {
 		t.Fatal("execution block missing")
-	}
-	if metadata.Execution.PrimarySlot != 0 {
-		t.Errorf("PrimarySlot = %d, want 0", metadata.Execution.PrimarySlot)
 	}
 	if metadata.Execution.Command != "true" {
 		t.Errorf("Command = %q, want %q", metadata.Execution.Command, "true")
 	}
 	if got := metadata.Execution.Environment["MODE"]; got != "prod" {
-		t.Errorf("Environment[\"MODE\"] = %q, want %q — the environment must be read from the \"env\" key", got, "prod")
+		t.Errorf("Environment[\"MODE\"] = %q, want %q -- the environment must be read from the \"env\" key", got, "prod")
+	}
+}
+
+// TestCommittedPackagesCarryUnmodelledExecutionFields is the other half.
+//
+// Every package in v1/ was built while execution.primary_slot was written, and
+// no struct models it now. They have to stay readable, so the fixtures are the
+// witness: if this stops finding the field, the fixtures were rebuilt and the
+// tolerance they prove went with them.
+func TestCommittedPackagesCarryUnmodelledExecutionFields(t *testing.T) {
+	t.Parallel()
+
+	dir := fixtureDir(t)
+	found := false
+
+	for _, name := range []string{"rust.psp", "go.psp", "python.psp"} {
+		reader := openFixture(t, filepath.Join(dir, name))
+		archive, err := reader.ReadMetadataArchive()
+		if err != nil {
+			t.Fatalf("%s: read metadata archive: %v", name, err)
+		}
+		gr, err := gzip.NewReader(bytes.NewReader(archive))
+		if err != nil {
+			t.Fatalf("%s: gunzip metadata: %v", name, err)
+		}
+		raw, err := io.ReadAll(gr)
+		if err != nil {
+			t.Fatalf("%s: read metadata: %v", name, err)
+		}
+		if err := gr.Close(); err != nil {
+			t.Fatalf("%s: close gzip reader: %v", name, err)
+		}
+
+		var probe struct {
+			Execution map[string]json.RawMessage `json:"execution"`
+		}
+		if err := json.Unmarshal(raw, &probe); err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		if _, present := probe.Execution["primary_slot"]; present {
+			found = true
+		}
+
+		var metadata Metadata
+		if err := json.Unmarshal(raw, &metadata); err != nil {
+			t.Errorf("%s carries a field this reader does not model and failed to parse: %v", name, err)
+		}
+	}
+
+	if !found {
+		t.Fatal("no committed fixture carries primary_slot; this test no longer proves anything")
 	}
 }

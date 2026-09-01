@@ -259,7 +259,7 @@ func TestExecBundleReplaceResolvesBinaryFromWorkenvPath(t *testing.T) {
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "tool"},
+		Execution:     &ExecutionInfo{Command: "tool"},
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	})
 
@@ -310,8 +310,7 @@ func TestLaunchWithLogLevelRunPropagatesSpawnExitCode(t *testing.T) {
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
 		Execution: &ExecutionInfo{
-			PrimarySlot: 0,
-			Command:     fmt.Sprintf("%q -test.run=TestLaunchSpawnExitHelper", os.Args[0]),
+			Command: fmt.Sprintf("%q -test.run=TestLaunchSpawnExitHelper", os.Args[0]),
 			Environment: map[string]string{
 				EnvLauncherSpawnExitHelper: "1",
 			},
@@ -362,7 +361,7 @@ func TestSpawnBundleReturnsStartFailure(t *testing.T) {
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/definitely/missing/binary"},
+		Execution:     &ExecutionInfo{Command: "/definitely/missing/binary"},
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	})
 

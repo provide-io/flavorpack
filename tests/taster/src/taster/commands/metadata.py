@@ -80,9 +80,8 @@ def _load_metadata(workenv_path: Path) -> dict[str, Any]:
             "host": "test-host",
         },
         "execution": {
-            "primary_slot": 0,
             "command": "python -m taster.cli",
-            "environment": {},
+            "env": {},
         },
         "slots": [
             {"index": 0, "name": "payload", "purpose": "payload"},
@@ -135,8 +134,7 @@ def _print_execution_info(metadata: Mapping[str, Any]) -> None:
         return
     pout("\n🚀 Execution:", color="magenta")
     pout(f"  Command: {execution.get('command', 'unknown')}")
-    pout(f"  Primary Slot: {execution.get('primary_slot', 0)}")
-    env = execution.get("environment") or {}
+    env = execution.get("env") or {}
     pout(f"  Environment: {len(env)} variables")
 
 

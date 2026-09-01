@@ -266,8 +266,6 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
             build_info.timestamp, build_info.tool, build_info.tool_version
         );
     }
-
-    debug!("🎯 Primary slot: {}", metadata.execution.primary_slot);
     debug!("🔧 Command: {}", metadata.execution.command);
 
     // Get work environment paths

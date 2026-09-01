@@ -25,7 +25,6 @@
   "execution": {
     "command": "/usr/bin/python3 -m taster",
     "args": [],
-    "env": {},
-    "primary_slot": 0
+    "env": {}
   }
 }

@@ -56,7 +56,7 @@ func TestSpawnBundleFailingCommandNoOpExit(t *testing.T) {
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "demo-fail", Version: "1.0.0"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/false"},
+		Execution:     &ExecutionInfo{Command: "/bin/false"},
 		Build:         &BuildInfo{Tool: "test"},
 	}
 	bundle := buildMultiSlotBundleForTests(t, []multiSlotBundleSpec{

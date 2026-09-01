@@ -147,7 +147,7 @@ func buildLauncherTestBundleWithCommand(t *testing.T, command string, extraPathD
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: command},
+		Execution:     &ExecutionInfo{Command: command},
 		Build:         &BuildInfo{Tool: "test"},
 	}
 

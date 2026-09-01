@@ -72,7 +72,6 @@ pub(super) fn create_metadata(
         },
         slots: vec![],
         execution: ExecutionInfo {
-            primary_slot: 0,
             command: manifest.execution.command.clone(),
             env: manifest.execution.env.clone(),
         },
@@ -276,7 +275,6 @@ mod tests {
         assert_eq!(metadata.format, "PSPF/2025");
         assert_eq!(metadata.package.name, "demo");
         assert_eq!(metadata.package.version, "1.2.3");
-        assert_eq!(metadata.execution.primary_slot, 0);
         assert_eq!(metadata.execution.command, "run");
         assert_eq!(
             metadata.execution.env.get("MODE").map(String::as_str),

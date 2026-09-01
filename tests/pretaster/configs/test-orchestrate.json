@@ -76,7 +76,6 @@
     "args": [],
     "env": {
       "TEST_MODE": "orchestration"
-    },
-    "primary_slot": 0
+    }
   }
 }
