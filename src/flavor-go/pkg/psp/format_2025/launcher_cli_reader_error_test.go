@@ -1,6 +1,7 @@
 package format_2025
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -19,7 +20,7 @@ func TestShowMetadataNewReaderError(t *testing.T) {
 	logger := logging.NewNullLogger()
 
 	exitCode, panicked := withStubbedExit(func() {
-		showMetadata(nonExistent, logger)
+		showMetadata(io.Discard, nonExistent, logger)
 	})
 	if panicked {
 		t.Fatal("unexpected non-exit panic in showMetadata")
@@ -70,7 +71,7 @@ func TestShowMetadataReadMetadataError(t *testing.T) {
 
 	logger := logging.NewNullLogger()
 	exitCode, panicked := withStubbedExit(func() {
-		showMetadata(bundle, logger)
+		showMetadata(io.Discard, bundle, logger)
 	})
 	if panicked {
 		t.Fatal("unexpected non-exit panic in showMetadata")
@@ -87,7 +88,7 @@ func TestShowBundleInfoNewReaderError(t *testing.T) {
 	logger := logging.NewNullLogger()
 
 	exitCode, panicked := withStubbedExit(func() {
-		showBundleInfo(nonExistent, logger)
+		showBundleInfo(io.Discard, nonExistent, logger)
 	})
 	if panicked {
 		t.Fatal("unexpected non-exit panic in showBundleInfo")
@@ -104,7 +105,7 @@ func TestExtractSlotNewReaderError(t *testing.T) {
 	logger := logging.NewNullLogger()
 
 	exitCode, panicked := withStubbedExit(func() {
-		extractSlot(nonExistent, "0", t.TempDir(), logger)
+		extractSlot(io.Discard, nonExistent, "0", t.TempDir(), logger)
 	})
 	if panicked {
 		t.Fatal("unexpected non-exit panic in extractSlot")
@@ -121,7 +122,7 @@ func TestVerifyBundleNewReaderError(t *testing.T) {
 	logger := logging.NewNullLogger()
 
 	exitCode, panicked := withStubbedExit(func() {
-		verifyBundle(nonExistent, logger)
+		verifyBundle(io.Discard, nonExistent, logger)
 	})
 	if panicked {
 		t.Fatal("unexpected non-exit panic in verifyBundle")

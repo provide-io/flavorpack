@@ -3,6 +3,7 @@ package format_2025
 import (
 	"crypto/sha256"
 	"encoding/json"
+	"io"
 	"log/slog"
 	"os"
 	"runtime"
@@ -189,7 +190,7 @@ func TestShowBundleInfoReadIndexErrorPath(t *testing.T) {
 	logger := logging.NewNullLogger()
 
 	exitCode, panicked := withStubbedExit(func() {
-		showBundleInfo(bundlePath, logger)
+		showBundleInfo(io.Discard, bundlePath, logger)
 	})
 	if panicked {
 		t.Fatal("unexpected non-exit panic")
@@ -206,7 +207,7 @@ func TestShowBundleInfoReadMetadataErrorPath(t *testing.T) {
 	logger := logging.NewNullLogger()
 
 	exitCode, panicked := withStubbedExit(func() {
-		showBundleInfo(bundlePath, logger)
+		showBundleInfo(io.Discard, bundlePath, logger)
 	})
 	if panicked {
 		t.Fatal("unexpected non-exit panic")
@@ -216,8 +217,8 @@ func TestShowBundleInfoReadMetadataErrorPath(t *testing.T) {
 	}
 }
 
-// TestShowBundleInfoVerifyStatusFail verifies that showBundleInfo displays
-// "Verified: ✗" when the magic trailer is corrupted.
+// TestShowBundleInfoVerifyStatusFail covers showBundleInfo against a bundle
+// whose magic trailer has been zeroed: it exits 1 without printing a report.
 func TestShowBundleInfoVerifyStatusFail(t *testing.T) {
 	// Build a valid bundle first, then corrupt it so VerifyMagicTrailer fails.
 	bundle := buildSingleSlotBundleForTests(t,
@@ -228,24 +229,31 @@ func TestShowBundleInfoVerifyStatusFail(t *testing.T) {
 	corruptMagicTrailerBytes(t, bundle)
 	logger := logging.NewNullLogger()
 
-	// The bundle now has a corrupt magic trailer. showBundleInfo should still
-	// display info but set verifyStatus = "✗". However, ReadIndex/ReadMetadata
-	// may also fail since the trailer is zeroed — in that case it will just call
-	// osExitFn(1) on index read failure. Either way, no panic.
-	output := captureStdout(t, func() {
+	// Zeroing the trailer takes the index with it, so showBundleInfo never
+	// reaches the report -- it exits 1 on the index read. The "Verified: ✗"
+	// display is covered by TestShowBundleInfoVerifyMagicTrailerFails, which
+	// fails the trailer check while leaving the index readable.
+	//
+	// The assertion here used to read `if output != "" && ...`, which passed
+	// whenever nothing was captured -- and nothing ever is.
+	var exitCode int
+	output := captureCLIOutput(func(out io.Writer) {
 		old := osExitFn
 		osExitFn = func(code int) {
+			exitCode = code
 			panic(launcherExitCode{code: code})
 		}
 		defer func() {
 			osExitFn = old
 			recover() // swallow exit panic
 		}()
-		showBundleInfo(bundle, logger)
+		showBundleInfo(out, bundle, logger)
 	})
-	// If it printed output, it should have included "✗".
-	if output != "" && !strings.Contains(output, "✗") {
-		t.Fatalf("expected '✗' in showBundleInfo output for corrupted bundle, got: %q", output)
+	if output != "" {
+		t.Errorf("expected no report from a bundle whose index cannot be read, got %q", output)
+	}
+	if exitCode != 1 {
+		t.Errorf("exit code = %d, want 1", exitCode)
 	}
 }
 
@@ -257,7 +265,7 @@ func TestExtractSlotExtractionFailure(t *testing.T) {
 	logger := logging.NewNullLogger()
 
 	exitCode, panicked := withStubbedExit(func() {
-		extractSlot(bundlePath, "0", outputDir, logger)
+		extractSlot(io.Discard, bundlePath, "0", outputDir, logger)
 	})
 	if panicked {
 		t.Fatal("unexpected non-exit panic")
@@ -274,7 +282,7 @@ func TestShowMetadataReadMetadataErrorPath(t *testing.T) {
 	logger := logging.NewNullLogger()
 
 	exitCode, panicked := withStubbedExit(func() {
-		showMetadata(bundlePath, logger)
+		showMetadata(io.Discard, bundlePath, logger)
 	})
 	if panicked {
 		t.Fatal("unexpected non-exit panic")
@@ -295,7 +303,7 @@ func TestVerifyBundleSlotReadFailure(t *testing.T) {
 	logger := logging.NewNullLogger()
 
 	// verifyBundle calls osExitFn(1) when errors are found; stub it.
-	output := captureStdout(t, func() {
+	output := captureCLIOutput(func(out io.Writer) {
 		old := osExitFn
 		osExitFn = func(code int) {
 			panic(launcherExitCode{code: code})
@@ -304,7 +312,7 @@ func TestVerifyBundleSlotReadFailure(t *testing.T) {
 			osExitFn = old
 			recover()
 		}()
-		verifyBundle(bundlePath, logger)
+		verifyBundle(out, bundlePath, logger)
 	})
 
 	if !strings.Contains(output, "read failed") && !strings.Contains(output, "verification failed") {
@@ -321,7 +329,7 @@ func TestShowBundleInfoWithCleanupAndReaderFailure(t *testing.T) {
 	defer restore()
 
 	exitCode, panicked := withStubbedExit(func() {
-		showBundleInfo("/fake/exe", logging.NewNullLogger())
+		showBundleInfo(io.Discard, "/fake/exe", logging.NewNullLogger())
 	})
 	if panicked {
 		t.Fatal("unexpected non-exit panic")
@@ -338,7 +346,7 @@ func TestExtractSlotWithCleanupAndReaderFailure(t *testing.T) {
 	defer restore()
 
 	exitCode, panicked := withStubbedExit(func() {
-		extractSlot("/fake/exe", "0", t.TempDir(), logging.NewNullLogger())
+		extractSlot(io.Discard, "/fake/exe", "0", t.TempDir(), logging.NewNullLogger())
 	})
 	if panicked {
 		t.Fatal("unexpected non-exit panic")
@@ -355,7 +363,7 @@ func TestShowMetadataWithCleanupAndReaderFailure(t *testing.T) {
 	defer restore()
 
 	exitCode, panicked := withStubbedExit(func() {
-		showMetadata("/fake/exe", logging.NewNullLogger())
+		showMetadata(io.Discard, "/fake/exe", logging.NewNullLogger())
 	})
 	if panicked {
 		t.Fatal("unexpected non-exit panic")
@@ -371,7 +379,7 @@ func TestVerifyBundleWithCleanupAndReaderFailure(t *testing.T) {
 	restore := stubPEResourceWithInvalidBundle(t)
 	defer restore()
 
-	output := captureStdout(t, func() {
+	output := captureCLIOutput(func(out io.Writer) {
 		old := osExitFn
 		osExitFn = func(code int) {
 			panic(launcherExitCode{code: code})
@@ -380,7 +388,7 @@ func TestVerifyBundleWithCleanupAndReaderFailure(t *testing.T) {
 			osExitFn = old
 			recover()
 		}()
-		verifyBundle("/fake/exe", logging.NewNullLogger())
+		verifyBundle(out, "/fake/exe", logging.NewNullLogger())
 	})
 	// verifyBundle may print verification failure info or exit with code 1.
 	_ = output

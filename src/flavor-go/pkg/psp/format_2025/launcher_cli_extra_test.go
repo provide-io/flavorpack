@@ -1,6 +1,7 @@
 package format_2025
 
 import (
+	"io"
 	"testing"
 
 	"github.com/provide-io/flavor/go/flavor/pkg/logging"
@@ -19,7 +20,7 @@ func TestShowMetadataSuccess(t *testing.T) {
 		t.Fatalf("unexpected osExitFn(%d) called during showMetadata success path", code)
 	}
 
-	showMetadata(bundle, logger)
+	showMetadata(io.Discard, bundle, logger)
 }
 
 // TestShowBundleInfoSuccess covers the happy path of showBundleInfo with a valid bundle.
@@ -33,7 +34,7 @@ func TestShowBundleInfoSuccess(t *testing.T) {
 		t.Fatalf("unexpected osExitFn(%d) called during showBundleInfo success path", code)
 	}
 
-	showBundleInfo(bundle, logger)
+	showBundleInfo(io.Discard, bundle, logger)
 }
 
 // TestLaunchWithLogLevelMetadataCommand exercises the "metadata" CLI command path.

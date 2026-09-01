@@ -2,6 +2,7 @@ package format_2025
 
 import (
 	"errors"
+	"io"
 	"log/slog"
 	"testing"
 
@@ -46,7 +47,7 @@ func TestShowBundleInfoPrepareBundlePathError(t *testing.T) {
 	defer restore()
 
 	exitCode, panicked := withStubbedExit(func() {
-		showBundleInfo("/fake/exe", logging.NewNullLogger())
+		showBundleInfo(io.Discard, "/fake/exe", logging.NewNullLogger())
 	})
 	if panicked {
 		t.Fatal("unexpected non-exit panic in showBundleInfo")
@@ -63,7 +64,7 @@ func TestShowMetadataPrepareBundlePathError(t *testing.T) {
 	defer restore()
 
 	exitCode, panicked := withStubbedExit(func() {
-		showMetadata("/fake/exe", logging.NewNullLogger())
+		showMetadata(io.Discard, "/fake/exe", logging.NewNullLogger())
 	})
 	if panicked {
 		t.Fatal("unexpected non-exit panic in showMetadata")
@@ -80,7 +81,7 @@ func TestVerifyBundlePrepareBundlePathError(t *testing.T) {
 	defer restore()
 
 	exitCode, panicked := withStubbedExit(func() {
-		verifyBundle("/fake/exe", logging.NewNullLogger())
+		verifyBundle(io.Discard, "/fake/exe", logging.NewNullLogger())
 	})
 	if panicked {
 		t.Fatal("unexpected non-exit panic in verifyBundle")
@@ -97,7 +98,7 @@ func TestExtractSlotPrepareBundlePathError(t *testing.T) {
 	defer restore()
 
 	exitCode, panicked := withStubbedExit(func() {
-		extractSlot("/fake/exe", "0", t.TempDir(), logging.NewNullLogger())
+		extractSlot(io.Discard, "/fake/exe", "0", t.TempDir(), logging.NewNullLogger())
 	})
 	if panicked {
 		t.Fatal("unexpected non-exit panic in extractSlot")
@@ -152,7 +153,7 @@ func TestExtractSlotInvalidSlotIndex(t *testing.T) {
 	logger := logging.NewNullLogger()
 
 	exitCode, panicked := withStubbedExit(func() {
-		extractSlot(bundle, "not-an-int", t.TempDir(), logger)
+		extractSlot(io.Discard, bundle, "not-an-int", t.TempDir(), logger)
 	})
 	if panicked {
 		t.Fatal("unexpected non-exit panic in extractSlot with invalid slot index")
@@ -169,7 +170,7 @@ func TestExtractSlotOutOfRange(t *testing.T) {
 	logger := logging.NewNullLogger()
 
 	exitCode, panicked := withStubbedExit(func() {
-		extractSlot(bundle, "999", t.TempDir(), logger)
+		extractSlot(io.Discard, bundle, "999", t.TempDir(), logger)
 	})
 	if panicked {
 		t.Fatal("unexpected non-exit panic in extractSlot with out-of-range slot")
