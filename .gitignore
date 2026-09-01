@@ -89,8 +89,18 @@ memray-output/
 
 # Generated test artifacts
 coverage.json
+coverage.xml
 src/flavor-go/coverage_*.out
+src/flavor-go/coverage.out
 tests/pretaster/logs/
+# Written by ci/run-tests.sh, ci/pr-tests.sh and ci/quality-checks.sh, which
+# are worth running locally -- see the 03b notes in docs/development/ci-cd.md.
+pytest-results.xml
+test-report.json
+test-logs/
+test-metadata/
+test-outputs/
+quality-logs/
 .claude/worktrees/
 Users/
 

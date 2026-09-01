@@ -1,1 +1,0 @@
-./ci/quality-checks.sh: line 57: staticcheck: command not found

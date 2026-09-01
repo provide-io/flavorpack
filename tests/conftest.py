@@ -70,23 +70,28 @@ MOCK_LAUNCHER_DATA = b"FAKE_LAUNCHER_FOR_TEST" + b"\x00" * (MOCK_LAUNCHER_SIZE -
 
 
 def _check_binaries_available() -> bool:
-    """Check if launcher binaries are available on disk."""
-    binary_paths = [
-        Path("dist/bin/flavor-rs-launcher-darwin_arm64"),
-        Path("dist/bin/flavor-rs-launcher"),
-        Path("helpers/bin/flavor-rs-launcher"),
-        Path.cwd() / "dist" / "bin" / "flavor-rs-launcher-darwin_arm64",
-        Path.cwd() / "dist" / "bin" / "flavor-rs-launcher",
-    ]
-    for search_dir in (Path("helpers/bin"), Path.cwd() / "helpers" / "bin"):
-        if search_dir.is_dir():
-            binary_paths.extend(search_dir.glob("flavor-rs-launcher*"))
+    """Check if launcher binaries are available on disk.
 
+    Globs rather than naming platforms. The previous version listed
+    ``dist/bin/flavor-rs-launcher-darwin_arm64`` literally and globbed only
+    ``helpers/bin``, but ``./build.sh`` writes platform-suffixed names into
+    ``dist/bin`` -- so on Linux, where the suffix is ``linux_amd64``, a
+    checkout with helpers freshly built matched nothing and every
+    ``requires_helpers`` test skipped itself. That is invisible on macOS,
+    which is the one platform the literal path happened to name.
+    """
     env_launcher = os.environ.get("FLAVOR_LAUNCHER_BIN")
-    if env_launcher:
-        binary_paths.insert(0, Path(env_launcher))
+    if env_launcher and Path(env_launcher).exists():
+        return True
 
-    return any(p.exists() for p in binary_paths)
+    # Both the working directory and the checkout root: pytest is not always
+    # invoked from the repository root.
+    roots = {Path.cwd(), Path(__file__).resolve().parent.parent}
+    return any(
+        (root / bin_dir).is_dir() and any((root / bin_dir).glob("flavor-rs-launcher*"))
+        for root in roots
+        for bin_dir in ("dist/bin", "helpers/bin")
+    )
 
 
 # Module-level flag so fixtures can reference it
