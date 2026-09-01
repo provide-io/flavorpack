@@ -3,572 +3,682 @@
 **Status**: Standards Track  
 **Type**: Core Protocol  
 **Created**: 2025-01-08  
-**Version**: v0.1  
+**Updated**: 2026-09-01  
+**Version**: v0.2  
 **Category**: Standards Track  
 
 ## Abstract
 
-This document specifies the JSON-based metadata format for PSPF/2025 packages. The metadata provides structured information about package contents, slot definitions, execution parameters, and build provenance. This specification defines the exact JSON schema, validation rules, encoding requirements, and parsing algorithms to ensure cross-language compatibility between Python, Go, and Rust implementations.
+This document specifies the JSON metadata document carried by PSPF/2025 packages. The metadata names the package, describes each data slot, states how the package is executed, and records how it was built and how it is verified. It is the structure the Python, Go and Rust implementations read to answer what a package is and what it contains.
+
+This specification defines the document's fields, their types, which of them a reader may rely on, the encoding under which the document is stored, and the JSON Schema that a conforming document satisfies. The schema in Section 8 is checked against the packages in `tests/fixtures/format_compat/`, which are built by all three implementations.
 
 ## Table of Contents
 
 1. [Introduction](#1-introduction)
 2. [Conventions and Terminology](#2-conventions-and-terminology)
-3. [JSON Metadata Structure](#3-json-metadata-structure)
+3. [Document Structure](#3-document-structure)
 4. [Field Specifications](#4-field-specifications)
 5. [Validation Rules](#5-validation-rules)
-6. [Encoding and Serialization](#6-encoding-and-serialization)
-7. [ABNF Grammar](#7-abnf-grammar)
+6. [Encoding and Storage](#6-encoding-and-storage)
+7. [Identifier and Version Grammar](#7-identifier-and-version-grammar)
 8. [JSON Schema Definition](#8-json-schema-definition)
-9. [Processing Algorithms](#9-processing-algorithms)
-10. [Error Handling](#10-error-handling)
-11. [Security Considerations](#11-security-considerations)
-12. [Implementation Requirements](#12-implementation-requirements)
-13. [Test Vectors](#13-test-vectors)
-14. [References](#14-references)
+9. [Producer Variation](#9-producer-variation)
+10. [Processing Algorithms](#10-processing-algorithms)
+11. [Error Handling](#11-error-handling)
+12. [Security Considerations](#12-security-considerations)
+13. [Implementation Requirements](#13-implementation-requirements)
+14. [Test Vectors](#14-test-vectors)
+15. [References](#15-references)
 
 ## 1. Introduction
 
 ### 1.1 Motivation
 
-PSPF/2025 packages require structured metadata to describe their contents, execution requirements, and provenance. JSON provides an ideal balance between human readability, cross-language support, and parsing efficiency for v0 implementations. Future versions may introduce binary formats for performance-critical applications.
+A PSPF/2025 package is a launcher binary followed by data slots and an 8192-byte index (FEP-0001). The index carries offsets, sizes and checksums — the numbers needed to find and verify bytes. It carries no names, no descriptions and no instructions.
+
+The metadata document supplies those. It is what lets a reader report that a file is `myapp v2.1.0`, list its slots and their purposes, name the command it runs, and state whether it is signed — without extracting anything and without executing the launcher.
+
+JSON is used because three implementations in three languages must agree on it, and because the document is small enough that parsing cost does not matter next to the slot data it describes.
 
 ### 1.2 Scope
 
-This specification defines:
-- Complete JSON schema for PSPF/2025 package metadata
-- Validation rules and semantic constraints
-- Encoding and normalization requirements
-- Cross-language parsing algorithms
-- Extension mechanisms for vendor-specific fields
+This document specifies:
 
-This specification does NOT define:
-- Binary wire format (reserved for future versions)
-- Network transmission protocols
-- Metadata compression algorithms (handled at package level)
-- Runtime behavior of metadata fields
+- the fields of the metadata document, their types and their optionality
+- the validation a reader performs before trusting the document
+- the encoding and compression under which the document is stored
+- a JSON Schema that a conforming document satisfies
+- the points on which the three implementations differ
+
+This document does not specify:
+
+- the binary container, index layout or slot descriptors — FEP-0001
+- operation codes and their semantics — FEP-0003
+- the attestation slot, signing keys and policy evaluation — FEP-0004
 
 ### 1.3 Requirements Language
 
-The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in BCP 14 [RFC2119](https://www.rfc-editor.org/rfc/rfc2119.html) [RFC8174](https://www.rfc-editor.org/rfc/rfc8174.html) when, and only when, they appear in all capitals, as shown here.
+The key words MUST, MUST NOT, REQUIRED, SHALL, SHALL NOT, SHOULD, SHOULD NOT, RECOMMENDED, MAY and OPTIONAL are to be interpreted as described in [RFC2119].
+
+A field marked REQUIRED is one every conforming producer writes and every reader may rely on. A field marked OPTIONAL may be absent, and a reader MUST behave correctly when it is.
 
 ### 1.4 Related Documents
 
-- **FEP-0001**: Core binary format and operation chains
-- **FEP-0003**: Operation registry and allocation policy
-- **RFC 7159**: The JavaScript Object Notation (JSON) Data Interchange Format
-- **RFC 4627**: JSON Media Type
+| Document | Covers |
+|----------|--------|
+| FEP-0001 | Binary container, magic trailer, index block, slot descriptors |
+| FEP-0003 | Operation registry and operation codes |
+| FEP-0004 | Security attestation, signing keys, package policy |
 
 ## 2. Conventions and Terminology
 
 ### 2.1 Definitions
 
-**Metadata**: Structured information describing package contents and requirements
-**Slot Definition**: JSON object describing a single data slot in the package
-**Operation String**: Human-readable representation of an operation chain
-**Canonical Form**: Normalized JSON representation for signature verification
-**Extension Field**: Vendor-specific field prefixed with "x-"
+**Package**: A single file containing a launcher, slots, and a magic trailer.
+
+**Slot**: One addressable region of package data, described by both a binary descriptor in the index and an entry in the `slots` array of this document.
+
+**Metadata document**: The JSON object this specification defines.
+
+**Metadata archive**: The metadata document as stored in the package — UTF-8 JSON, gzip-compressed. The index's metadata checksum covers these bytes.
+
+**Workenv**: The directory a launcher extracts into at run time.
+
+**Producer**: An implementation that writes packages. Three exist: `flavor-python`, `flavor-go`, `flavor-rs`.
+
+**Reader**: An implementation that parses a metadata document.
 
 ### 2.2 Notation Conventions
 
-JSON examples use standard JSON notation with comments for clarity (comments are not valid in actual JSON):
+Field paths use dots: `package.name`, `slots[].checksum`.
 
-```json
-{
-  "field": "value",    // Comment for documentation
-  "number": 123,       // Integer value
-  "array": [1, 2, 3]   // Array of integers
-}
-```
-
-ABNF grammar follows [RFC5234] notation.
-
-Regular expressions use PCRE syntax.
+JSON examples are shown indented for readability. The stored form is not indented (Section 6).
 
 ### 2.3 Data Type Definitions
 
-| JSON Type | PSPF Type  | Range/Format                           |
-|-----------|------------|-----------------------------------------|
-| string    | identifier | `^[a-z0-9][a-z0-9_-]*$` max 255 chars |
-| string    | version    | Semantic versioning or custom format   |
-| string    | checksum   | Hex string, lowercase, no prefix       |
-| string    | operations | Operation chain string (see Section 7) |
-| number    | uint32     | 0 to 4,294,967,295                    |
-| number    | uint64     | 0 to 18,446,744,073,709,551,615      |
-| number    | timestamp  | Unix timestamp (seconds since epoch)   |
-| string    | path       | Forward slashes, no ".." traversal     |
+| Type | JSON representation | Notes |
+|------|---------------------|-------|
+| string | string | UTF-8 |
+| integer | number | No fractional part |
+| boolean | boolean | |
+| object | object | |
+| array | array | |
+| checksum | string | `"<algorithm>:<hex>"`, e.g. `"sha256:34c4e0…"` |
+| timestamp | string | RFC3339 |
+| mode | string | Octal, quoted: `"0755"` |
 
-## 3. JSON Metadata Structure
+## 3. Document Structure
 
 ### 3.1 Root Object
 
-The metadata MUST be a single JSON object with the following structure:
+A complete document, taken from a package built by `flavor-rs`:
 
 ```json
 {
-  "format_version": "2025.0.0",
+  "format": "PSPF/2025",
+  "format_version": "1.0.0",
   "package": {
-    "name": "package-name",
-    "version": "1.0.0",
-    "description": "Package description",
-    "author": "Author Name",
-    "license": "License-Identifier",
-    "homepage": "https://example.com"
-  },
-  "build": {
-    "timestamp": 1704067200,
-    "platform": "linux_x86_64",
-    "builder": "flavorpack-0.1.0",
-    "source_hash": "abc123...",
-    "reproducible": true
+    "name": "format-compat-fixture",
+    "version": "1.0.0"
   },
   "slots": [
     {
-      "id": 0,
-      "name": "slot-name",
-      "purpose": "code",
+      "slot": 0,
+      "id": "payload",
+      "source": "/build/inputs/payload.txt",
+      "target": "data/payload.txt",
+      "size": 125,
+      "checksum": "sha256:34c4e0f57a67a89825fd5e3c48e70c535ade2032de5ac3698fea31def5a13454",
+      "operations": "",
+      "purpose": "data",
       "lifecycle": "runtime",
-      "operations": "tar.gz",
-      "size": 1024,
-      "original_size": 2048,
-      "checksum": "deadbeef",
-      "permissions": "755"
+      "permissions": "0644",
+      "resolution": "build"
     }
   ],
   "execution": {
-    "entry_point": "./bin/app",
-    "args": ["--config", "app.conf"],
-    "env": {
-      "KEY": "value"
+    "primary_slot": 0,
+    "command": "true",
+    "env": {}
+  },
+  "verification": {
+    "integrity_seal": {
+      "required": true,
+      "algorithm": "ed25519"
     },
-    "working_directory": "."
+    "signed": true,
+    "require_verification": true
   },
-  "dependencies": {
-    "runtime": ["libc.so.6"],
-    "optional": ["libfoo.so.1"]
+  "build": {
+    "tool": "flavor-rs",
+    "tool_version": "0.4.6",
+    "timestamp": "2026-08-31T21:05:39.665548+00:00",
+    "deterministic": true,
+    "platform": {
+      "os": "macos",
+      "arch": "aarch64",
+      "host": "macos/aarch64 build-host.local"
+    }
   },
-  "extensions": {
-    "x-vendor-field": "vendor-specific-value"
-  }
+  "launcher": {
+    "tool": "launcher-stub.sh",
+    "tool_version": "0.4.6",
+    "size": 503,
+    "checksum": "sha256:02b29c4db29e4141af819c700414368a14d89ea6e9bddd66760a61b706643d21",
+    "capabilities": ["mmap", "signed"]
+  },
+  "compatibility": {
+    "min_format_version": "1.0.0",
+    "features": []
+  },
+  "setup_commands": []
 }
 ```
 
 ### 3.2 Object Hierarchy
 
 ```
-root
-├── format_version* (string)
-├── package* (object)
-│   ├── name* (string)
-│   ├── version* (string)
-│   ├── description (string)
-│   ├── author (string)
-│   ├── license (string)
-│   └── homepage (string)
-├── build (object)
-│   ├── timestamp (number)
-│   ├── platform (string)
-│   ├── builder (string)
-│   ├── source_hash (string)
-│   └── reproducible (boolean)
-├── slots* (array)
-│   └── [slot] (object)
-│       ├── id* (number)
-│       ├── name* (string)
-│       ├── purpose* (string)
-│       ├── lifecycle* (string)
-│       ├── operations* (string)
-│       ├── size* (number)
-│       ├── original_size (number)
-│       ├── checksum* (string)
-│       └── permissions (string)
-├── execution (object)
-│   ├── entry_point (string)
-│   ├── args (array of strings)
-│   ├── env (object)
-│   └── working_directory (string)
-├── dependencies (object)
-│   ├── runtime (array of strings)
-│   └── optional (array of strings)
-└── extensions (object)
-    └── x-* (any)
-
-* = required field
+metadata (object)
+├── format (string, REQUIRED)
+├── format_version (string, OPTIONAL)
+├── package (object, REQUIRED)
+│   ├── name (string, REQUIRED)
+│   ├── version (string, REQUIRED)
+│   └── description (string, OPTIONAL)
+├── slots (array, REQUIRED)
+│   └── [] (object)
+│       ├── slot (integer, REQUIRED)
+│       ├── id (string, REQUIRED)
+│       ├── source (string, REQUIRED)
+│       ├── target (string, REQUIRED)
+│       ├── size (integer, REQUIRED)
+│       ├── checksum (string, REQUIRED)
+│       ├── operations (string, REQUIRED)
+│       ├── purpose (string, REQUIRED)
+│       ├── lifecycle (string, REQUIRED)
+│       ├── permissions (string|null, OPTIONAL)
+│       ├── resolution (string, OPTIONAL)
+│       └── self_ref (boolean, OPTIONAL)
+├── execution (object, REQUIRED for interoperability — see §9.1)
+│   ├── primary_slot (integer, OPTIONAL, default 0)
+│   ├── command (string, REQUIRED)
+│   └── env (object, OPTIONAL, default {})
+├── verification (object, OPTIONAL)
+│   ├── integrity_seal (object, REQUIRED within)
+│   │   ├── required (boolean, REQUIRED)
+│   │   └── algorithm (string, REQUIRED)
+│   ├── signed (boolean, OPTIONAL, default false)
+│   ├── require_verification (boolean, OPTIONAL, default true)
+│   └── trust_signatures (object, OPTIONAL)
+├── build (object, OPTIONAL)
+├── launcher (object, OPTIONAL)
+├── compatibility (object, OPTIONAL)
+├── cache_validation (object, OPTIONAL)
+├── runtime (object, OPTIONAL)
+├── workenv (object, OPTIONAL)
+├── setup_commands (array, OPTIONAL, default [])
+└── policy (object, OPTIONAL — FEP-0004)
 ```
+
+Readers ignore members they do not recognise. A producer MAY add fields; a reader MUST NOT fail on them.
 
 ## 4. Field Specifications
 
 ### 4.1 Root Level Fields
 
-#### 4.1.1 format_version (REQUIRED)
+#### 4.1.1 format (REQUIRED)
 
 **Type**: string  
-**Pattern**: `^\d{4}\.\d+\.\d+$`  
-**Example**: "2025.0.0"  
+**Value**: `"PSPF/2025"`
 
-Identifies the metadata format version. For v0, this MUST be "2025.0.0".
+Names the format. Every producer writes this exact string.
 
-#### 4.1.2 package (REQUIRED)
+#### 4.1.2 format_version (OPTIONAL)
 
-**Type**: object  
+**Type**: string  
+**Example**: `"1.0.0"`
 
-Contains basic package identification and information.
+Version of the metadata structure. Readers treat an absent or empty value as unversioned and fall back on `format`. See §9.2.
 
-#### 4.1.3 build (OPTIONAL)
+#### 4.1.3 package (REQUIRED)
 
-**Type**: object  
+**Type**: object
 
-Contains build-time information for reproducibility and provenance.
+Identity of the package. Section 4.2.
 
 #### 4.1.4 slots (REQUIRED)
 
 **Type**: array of objects  
-**Min Items**: 0  
-**Max Items**: 65535  
+**Min Items**: 0
 
-Array of slot definitions. MAY be empty for launcher-only packages.
+One entry per data slot, in index order. MAY be empty for a package that carries no slots. Section 4.3.
 
-#### 4.1.5 execution (OPTIONAL)
+#### 4.1.5 execution (REQUIRED for interoperability)
 
-**Type**: object  
+**Type**: object
 
-Runtime execution parameters and environment configuration.
+How the package runs. Section 4.4.
 
-#### 4.1.6 dependencies (OPTIONAL)
+Two of the three implementations treat this object as optional and refuse at the point of execution when it is absent; the Rust reader requires it to parse the document at all. A producer that intends its packages to be readable by every implementation MUST write it. See §9.1.
 
-**Type**: object  
+#### 4.1.6 verification (OPTIONAL)
 
-External dependencies required or recommended for package execution.
+**Type**: object
 
-#### 4.1.7 extensions (OPTIONAL)
+What verification the package declares for itself. Section 4.5.
 
-**Type**: object  
+#### 4.1.7 build (OPTIONAL)
 
-Vendor-specific extensions. All keys MUST begin with "x-".
+**Type**: object
+
+Provenance: which tool built the package, when, and on what platform. Section 4.6.
+
+#### 4.1.8 launcher (OPTIONAL)
+
+**Type**: object
+
+The launcher binary prefixed to the package. Section 4.7.
+
+#### 4.1.9 compatibility (OPTIONAL)
+
+**Type**: object
+
+The minimum format version and the feature names a reader needs. Section 4.8.
+
+#### 4.1.10 cache_validation (OPTIONAL)
+
+**Type**: object
+
+A file and expected content a launcher checks to decide whether an existing workenv is still good. Section 4.9.
+
+#### 4.1.11 runtime (OPTIONAL)
+
+**Type**: object
+
+Environment manipulation applied to the process the launcher starts. Section 4.10.
+
+#### 4.1.12 workenv (OPTIONAL)
+
+**Type**: object
+
+Directories to create in the workenv and environment variables scoped to it. Section 4.11.
+
+#### 4.1.13 setup_commands (OPTIONAL)
+
+**Type**: array  
+**Default**: `[]`
+
+Commands run after extraction and before the main command.
+
+#### 4.1.14 policy (OPTIONAL)
+
+**Type**: object
+
+Package-declared execution policy. Its contents are specified by FEP-0004 §8; this document treats the value as opaque and preserves it verbatim.
 
 ### 4.2 Package Object Fields
 
 #### 4.2.1 name (REQUIRED)
 
 **Type**: string  
-**Pattern**: `^[a-z0-9][a-z0-9_-]*$`  
-**Min Length**: 1  
-**Max Length**: 255  
-**Example**: "my-application"  
+**Example**: `"myapp"`
 
-Package identifier. MUST be lowercase alphanumeric with hyphens and underscores.
+Package name. Section 7.1 gives the recommended grammar.
 
 #### 4.2.2 version (REQUIRED)
 
 **Type**: string  
-**Pattern**: `^[0-9]+(\.[0-9]+)*([+-].+)?$`  
-**Max Length**: 255  
-**Example**: "1.2.3-beta+build.456"  
+**Example**: `"2.1.0"`
 
-Package version. SHOULD follow semantic versioning but MAY use custom schemes.
+Package version. Section 7.2 gives the recommended grammar.
 
 #### 4.2.3 description (OPTIONAL)
 
-**Type**: string  
-**Max Length**: 4096  
-**Example**: "A high-performance web server"  
+**Type**: string
 
-Human-readable package description.
-
-#### 4.2.4 author (OPTIONAL)
-
-**Type**: string  
-**Max Length**: 255  
-**Example**: "Jane Doe <jane@example.com>"  
-
-Package author or maintainer.
-
-#### 4.2.5 license (OPTIONAL)
-
-**Type**: string  
-**Max Length**: 255  
-**Example**: "MIT" or "Apache-2.0"  
-
-SPDX license identifier or custom license name.
-
-#### 4.2.6 homepage (OPTIONAL)
-
-**Type**: string  
-**Format**: URI  
-**Max Length**: 2048  
-**Example**: "https://example.com/project"  
-
-Project homepage or documentation URL.
+Human-readable summary.
 
 ### 4.3 Slot Object Fields
 
-#### 4.3.1 id (REQUIRED)
+Each entry describes one slot. The binary slot descriptor in the index (FEP-0001) is authoritative for offsets, sizes and the packed operation chain; this entry supplies the names and intent.
 
-**Type**: number  
-**Minimum**: 0  
-**Maximum**: 4294967295  
-**Example**: 0  
+#### 4.3.1 slot (REQUIRED)
 
-Unique slot identifier within the package. MUST be unique across all slots.
+**Type**: integer  
+**Minimum**: 0
 
-#### 4.3.2 name (REQUIRED)
+Index of the slot. Validates position: the entry at array position *n* has `slot` equal to *n*.
 
-**Type**: string  
-**Pattern**: `^[a-zA-Z0-9][a-zA-Z0-9_.-]*$`  
-**Max Length**: 255  
-**Example**: "python-runtime"  
-
-Human-readable slot name.
-
-#### 4.3.3 purpose (REQUIRED)
+#### 4.3.2 id (REQUIRED)
 
 **Type**: string  
-**Enum**: ["code", "data", "config", "media"]  
-**Example**: "code"  
+**Example**: `"payload"`
 
-Slot content classification:
-- `code`: Executable binaries or scripts
-- `data`: Application data files
-- `config`: Configuration files
-- `media`: Images, audio, video, or other media
+Identifier for the slot, unique within the package.
 
-#### 4.3.4 lifecycle (REQUIRED)
-
-**Type**: string  
-**Enum**: See table below  
-**Example**: "runtime"  
-
-| Value      | Description                              | Extraction Behavior           |
-|------------|------------------------------------------|-------------------------------|
-| init       | First run only, then removed            | Extract once, delete after    |
-| startup    | Extract at every startup                | Always extract fresh          |
-| runtime    | Extract on first use (default)          | Extract once, keep cached     |
-| shutdown   | Extract during cleanup                  | Extract at termination        |
-| cache      | Performance cache, can regenerate       | Extract if missing            |
-| temporary  | Remove after session ends               | Extract, delete at exit       |
-| lazy       | Load on-demand                          | Extract when accessed         |
-| eager      | Load immediately on startup             | Extract before execution      |
-| dev        | Development mode only                   | Extract if DEV flag set       |
-| config     | User-modifiable config files           | Extract if not present        |
-| platform   | Platform/OS specific content            | Extract if platform matches  |
-
-#### 4.3.5 operations (REQUIRED)
-
-**Type**: string  
-**Pattern**: See Section 7  
-**Example**: "tar.gz" or "tar|gzip"  
-
-Operation chain string describing transformations applied to slot data.
-
-#### 4.3.6 size (REQUIRED)
-
-**Type**: number  
-**Minimum**: 0  
-**Maximum**: 2^53-1 (JSON safe integer)  
-**Example**: 1048576  
-
-Size of slot data as stored in package (after operations applied).
-
-#### 4.3.7 original_size (OPTIONAL)
-
-**Type**: number  
-**Minimum**: 0  
-**Maximum**: 2^53-1  
-**Example**: 4194304  
-
-Original size before operations applied. If omitted, assumed equal to `size`.
-
-#### 4.3.8 checksum (REQUIRED)
+#### 4.3.3 source (REQUIRED)
 
 **Type**: string
-**Pattern**: `^[a-f0-9]{16}$`
-**Example**: "deadbeef01234567"
 
-SHA-256 hash of stored slot data (first 8 bytes) as 16-character hex string.
+Path the slot content was read from at build time. Provenance only; a reader MUST NOT resolve it. It records a path on the build machine and has no meaning on the machine running the package. MAY be empty for a slot the producer synthesised.
 
-#### 4.3.9 permissions (OPTIONAL)
+#### 4.3.4 target (REQUIRED)
 
 **Type**: string  
-**Pattern**: `^[0-7]{3,4}$`  
-**Example**: "755" or "0644"  
+**Example**: `"data/payload.txt"`
 
-Unix-style permissions as octal string.
+Where the slot is written inside the workenv. Section 5.2.2 constrains the value.
 
-### 4.4 Build Object Fields
+#### 4.3.5 size (REQUIRED)
 
-#### 4.4.1 timestamp (OPTIONAL)
+**Type**: integer  
+**Minimum**: 0
 
-**Type**: number  
-**Example**: 1704067200  
+Size in bytes of the slot as stored — after any operations in the chain have been applied.
 
-Unix timestamp of package creation.
-
-#### 4.4.2 platform (OPTIONAL)
+#### 4.3.6 checksum (REQUIRED)
 
 **Type**: string  
-**Pattern**: `^[a-z]+_[a-z0-9]+$`  
-**Example**: "linux_x86_64", "darwin_arm64", "windows_amd64"  
+**Example**: `"sha256:34c4e0f57a67a89825fd5e3c48e70c535ade2032de5ac3698fea31def5a13454"`
 
-Target platform identifier.
+Digest of the stored slot bytes, in `algorithm:hex` form.
 
-#### 4.4.3 builder (OPTIONAL)
-
-**Type**: string  
-**Max Length**: 255  
-**Example**: "flavorpack-0.1.0"  
-
-Tool and version used to create package.
-
-#### 4.4.4 source_hash (OPTIONAL)
+#### 4.3.7 operations (REQUIRED)
 
 **Type**: string  
-**Pattern**: `^[a-f0-9]{64}$`  
-**Example**: "abc123..."  
+**Examples**: `""`, `"gzip"`, `"tar|gzip"`, `"none"`
 
-SHA-256 hash of source code tree.
+The operation chain applied to the slot, as a descriptive label. The empty string and `"none"` both denote a slot stored verbatim.
 
-#### 4.4.5 reproducible (OPTIONAL)
+The authoritative chain is the packed operation codes in the binary slot descriptor (FEP-0001), registered in FEP-0003. A reader that extracts slots MUST use the packed codes. This field is for display.
+
+#### 4.3.8 purpose (REQUIRED)
+
+**Type**: string
+
+What the slot holds. Producers use `code`, `data`, `config` and `media`; readers accept any string.
+
+#### 4.3.9 lifecycle (REQUIRED)
+
+**Type**: string
+
+When the slot is extracted and how long it survives. Producers use the values below; readers accept any string.
+
+| Value | Meaning |
+|-------|---------|
+| `runtime` | Extract on first use, keep cached |
+| `startup` | Extract fresh at every start |
+| `init` | Extract once, remove after first run |
+| `eager` | Extract before execution begins |
+| `lazy` | Extract when first accessed |
+| `cache` | Regenerable; extract if missing |
+| `temporary` | Remove when the session ends |
+| `attestation` | Attestation payload (FEP-0004) |
+
+#### 4.3.10 permissions (OPTIONAL)
+
+**Type**: string or null  
+**Example**: `"0644"`
+
+Unix mode for the extracted file, as a quoted octal string. `null` and absence both mean the reader chooses. Ignored on platforms without Unix modes.
+
+#### 4.3.11 resolution (OPTIONAL)
+
+**Type**: string  
+**Values**: `"build"`, `"runtime"`, `"lazy"`
+
+When the slot content was or will be resolved.
+
+#### 4.3.12 self_ref (OPTIONAL)
+
+**Type**: boolean
+
+True when the slot refers to the launcher binary itself rather than to separate stored bytes.
+
+### 4.4 Execution Object Fields
+
+#### 4.4.1 command (REQUIRED)
+
+**Type**: string  
+**Example**: `"{workenv}/bin/app --config {workenv}/etc/app.conf"`
+
+The command line the launcher runs after extraction. Placeholders are substituted first:
+
+| Placeholder | Substitution |
+|-------------|--------------|
+| `{workenv}` | Absolute path of the workenv directory |
+| `{slot:N}` | Extracted path of slot *N* |
+
+#### 4.4.2 primary_slot (OPTIONAL)
+
+**Type**: integer  
+**Default**: `0`  
+**Minimum**: 0
+
+Index of the slot the package treats as its principal content. Absence is equivalent to `0`.
+
+#### 4.4.3 env (OPTIONAL)
+
+**Type**: object, string values  
+**Default**: `{}`  
+**Example**: `{"MODE": "prod"}`
+
+Environment variables set for the command. Values MAY contain the placeholders listed in §4.4.1.
+
+`env` is the key. A reader MUST read the environment from it.
+
+### 4.5 Verification Object Fields
+
+#### 4.5.1 integrity_seal (REQUIRED within `verification`)
+
+**Type**: object
+
+| Field | Type | Required | Meaning |
+|-------|------|----------|---------|
+| `required` | boolean | Yes | Whether the seal must be present and valid |
+| `algorithm` | string | Yes | Signature algorithm, e.g. `"ed25519"` |
+
+Declares the package's integrity seal. The seal itself lives in the index (FEP-0001); verifying it is specified by FEP-0004.
+
+This object states what the package asks of a reader. It is not evidence: a reader MUST NOT treat `required: true` or `signed: true` as showing that a valid signature exists. Only checking the seal in the index shows that.
+
+#### 4.5.2 signed (OPTIONAL)
 
 **Type**: boolean  
-**Example**: true  
+**Default**: `false`
 
-Whether package was built reproducibly.
+Whether the producer signed the package.
 
-### 4.5 Execution Object Fields
+#### 4.5.3 require_verification (OPTIONAL)
 
-#### 4.5.1 entry_point (OPTIONAL)
+**Type**: boolean  
+**Default**: `true`
 
-**Type**: string  
-**Max Length**: 4096  
-**Example**: "./bin/app"  
+Whether a launcher refuses to run the package when verification fails.
 
-Path to main executable within extracted package.
+#### 4.5.4 trust_signatures (OPTIONAL)
 
-#### 4.5.2 args (OPTIONAL)
+**Type**: object
 
-**Type**: array of strings  
-**Max Items**: 1024  
-**Example**: ["--config", "app.conf"]  
+| Field | Type | Required | Meaning |
+|-------|------|----------|---------|
+| `required` | boolean | Yes | Whether a trusted signature must be present |
+| `signers` | array | No | Accepted signers; defaults to `[]` |
 
-Default command-line arguments.
+Each entry of `signers`:
 
-#### 4.5.3 env (OPTIONAL)
+| Field | Type | Required |
+|-------|------|----------|
+| `name` | string | Yes |
+| `key_id` | string | Yes |
+| `algorithm` | string | Yes |
 
-**Type**: object  
-**Max Properties**: 1024  
-**Example**: {"PATH": "/app/bin:$PATH"}  
+### 4.6 Build Object Fields
 
-Environment variables to set. Values MAY contain variable references.
+| Field | Type | Required | Meaning |
+|-------|------|----------|---------|
+| `tool` | string | Yes | Producer name, e.g. `"flavor-rs"` |
+| `tool_version` | string | Yes | Producer version |
+| `timestamp` | string | Yes | RFC3339 build time |
+| `deterministic` | boolean | No | Defaults to `false` |
+| `platform` | object | Yes | Build platform |
 
-#### 4.5.4 working_directory (OPTIONAL)
+`platform`:
 
-**Type**: string  
-**Default**: "."  
-**Example**: "./data"  
+| Field | Type | Required | Meaning |
+|-------|------|----------|---------|
+| `os` | string | Yes | Build operating system |
+| `arch` | string | Yes | Build architecture |
+| `host` | string | No | Build host identity |
 
-Working directory for execution relative to extraction root.
+`host` names the machine that built the package. Producers write it only when `FLAVOR_INCLUDE_BUILD_HOST=1` is set, since it is an identifier a package need not carry. See §12.3.
+
+The values of `os` and `arch` are producer-defined strings and are not comparable between producers. See §9.3.
+
+### 4.7 Launcher Object Fields
+
+| Field | Type | Required | Meaning |
+|-------|------|----------|---------|
+| `tool` | string | Yes | Launcher implementation name |
+| `tool_version` | string | Yes | Launcher version |
+| `size` | integer | Yes | Launcher size in bytes |
+| `checksum` | string | Yes | Digest of the launcher bytes, `algorithm:hex` |
+| `capabilities` | array of strings | Yes | Capability names, e.g. `["mmap", "signed"]` |
+
+`size` MUST equal the launcher size recorded in the index (FEP-0001), which is the value verification uses.
+
+### 4.8 Compatibility Object Fields
+
+| Field | Type | Required | Meaning |
+|-------|------|----------|---------|
+| `min_format_version` | string | Yes | Lowest format version that can read the package |
+| `features` | array of strings | Yes | Feature names a reader needs; MAY be empty |
+
+### 4.9 Cache Validation Object Fields
+
+| Field | Type | Required | Meaning |
+|-------|------|----------|---------|
+| `check_file` | string | Yes | Path within the workenv to read |
+| `expected_content` | string | No | Content that marks the workenv current |
+
+A launcher reads `check_file` in an existing workenv and re-extracts when the content does not match.
+
+### 4.10 Runtime Object Fields
+
+**Type**: object with a single OPTIONAL member, `env`.
+
+`runtime.env` directs how the launcher builds the environment of the command, distinct from `execution.env`, which only adds variables:
+
+| Field | Type | Meaning |
+|-------|------|---------|
+| `set` | object | Variables to set, overriding any inherited value |
+| `map` | object | Variables to rename, mapping source name to target name |
+| `unset` | array of strings | Variables to remove |
+| `pass` | array of strings | Variables to inherit; others are dropped |
+
+All four are OPTIONAL.
+
+### 4.11 Workenv Object Fields
+
+| Field | Type | Required | Meaning |
+|-------|------|----------|---------|
+| `directories` | array of objects | No | Directories to create before extraction |
+| `env` | object | No | Environment variables scoped to the workenv |
+
+Each entry of `directories`:
+
+| Field | Type | Required | Meaning |
+|-------|------|----------|---------|
+| `path` | string | Yes | Directory path, MAY contain `{workenv}` |
+| `mode` | string | No | Octal mode, e.g. `"0700"` |
 
 ## 5. Validation Rules
 
 ### 5.1 Structural Validation
 
-The JSON document MUST:
-1. Be valid JSON according to [RFC7159]
-2. Have a single root object
-3. Include all required fields
-4. Not exceed 10MB when uncompressed
-5. Use UTF-8 encoding without BOM
+The stored document MUST:
+
+1. Be valid JSON per [RFC7159]
+2. Have a single object at its root
+3. Contain every REQUIRED field
+4. Be UTF-8 without a byte order mark
+5. Not exceed 10 MB when decompressed
 
 ### 5.2 Semantic Validation
 
 #### 5.2.1 Slot Validation
 
-- Slot IDs MUST be unique within the package
-- Slot names SHOULD be unique (warning if not)
-- Slot checksums MUST be exactly 8 hex characters
-- Operations strings MUST use only supported operations
+1. `slots[n].slot` MUST equal *n*
+2. `slots[].id` MUST be unique within the package
+3. The length of `slots` MUST equal the slot count in the index
+4. `slots[].size` MUST equal the size in the corresponding slot descriptor
+5. `slots[].checksum` MUST match the digest of the stored slot bytes
+
+Items 3 to 5 compare this document against the index. A mismatch means the two disagree about the same package and the reader MUST reject it.
 
 #### 5.2.2 Path Validation
 
-All path strings MUST:
-- Use forward slashes as separators
-- Not contain ".." components
-- Not begin with "/" (relative paths only)
-- Not contain null bytes
-- Be valid UTF-8
+`slots[].target` and `workenv.directories[].path` MUST NOT:
+
+1. Be absolute after placeholder substitution
+2. Contain a `..` component
+3. Resolve outside the workenv root
+4. Contain a NUL byte
+
+A reader MUST check these after substitution, not before: a placeholder can expand into a traversal.
 
 #### 5.2.3 Cross-Reference Validation
 
-- `slot.size` MUST match actual slot data size in package
-- `slot.checksum` MUST match computed Adler-32 of slot data
-- `execution.entry_point` SHOULD reference an extracted file
+1. `execution.primary_slot`, when it names a slot, MUST be a valid index into `slots`
+2. `{slot:N}` in `execution.command` MUST name a valid index
+3. `launcher.size` MUST equal the launcher size in the index
 
-### 5.3 Extension Field Validation
+### 5.3 Unknown Field Handling
 
-Extension fields in the `extensions` object:
-- MUST begin with "x-" prefix
-- MAY contain any valid JSON value
-- SHOULD use lowercase names with hyphens
-- MUST NOT conflict with standard fields
+A reader MUST ignore members it does not recognise, at every level. This is what lets a package written by a newer producer stay readable.
 
-## 6. Encoding and Serialization
+## 6. Encoding and Storage
 
-### 6.1 JSON Encoding Rules
+### 6.1 JSON Encoding
 
-Metadata MUST be encoded as:
-- UTF-8 without byte order mark (BOM)
-- No trailing whitespace
-- No comments (not valid JSON)
-- Unix line endings (LF, not CRLF)
+The document MUST be encoded as:
 
-### 6.2 Canonical Form
+- UTF-8, no byte order mark
+- No comments
+- LF line endings where any are present
 
-For signature verification, metadata MUST be normalized to canonical form:
+Producers write the document compactly, without indentation.
 
-1. **Object Key Ordering**: All object keys MUST be sorted lexicographically
-2. **Whitespace**: No unnecessary whitespace (compact form)
-3. **Number Format**: No leading zeros, no trailing decimal points
-4. **String Escaping**: Minimal escaping (only required characters)
-5. **Unicode Normalization**: NFC normalization for all strings
+### 6.2 Compression
 
-Canonical encoding:
-```
-jsonCanonical = json.dumps(
-    metadata,
-    separators=(',', ':'),
-    sort_keys=True,
-    ensure_ascii=False
-)
-```
+The document is gzip-compressed before storage. The compressed bytes are the metadata archive, and they begin with the gzip magic `1f 8b`. A reader detects that magic and decompresses; a document stored without compression is read as-is.
 
-### 6.3 Compression
+### 6.3 Integrity
 
-When stored in packages, metadata SHOULD be compressed using GZIP with:
-- Compression level: 9 (best compression)
-- No embedded filename or timestamp
-- CRC32 verification enabled
+The index records `metadata_checksum`, the SHA-256 of the **stored archive bytes** — the gzip-compressed form, exactly as it sits in the file.
 
-## 7. ABNF Grammar
+A reader verifying the metadata MUST hash the stored bytes. It MUST NOT re-serialise the document, re-order keys, or re-compress it before hashing: gzip output is not reproducible across compressors and JSON serialisation is not reproducible across languages, so any of those produces a digest that does not match.
 
-### 7.1 Operation String Grammar
+The Ed25519 integrity seal covers the index, which carries this checksum. The metadata is therefore sealed through the index rather than signed directly.
+
+## 7. Identifier and Version Grammar
+
+The grammars here describe what producers generate. Readers accept any string, so a document that departs from them is still readable; a producer SHOULD follow them.
+
+### 7.1 Package Name
 
 ```abnf
-operation-string = simple-op / compound-op / pipe-chain
+package-name = name-start *name-char
 
-simple-op = "raw" / "gzip" / "bzip2" / "xz" / "zstd" / "tar"
+name-start = LOWER / DIGIT
+name-char  = LOWER / DIGIT / "-" / "_"
 
-compound-op = "tar.gz" / "tar.bz2" / "tar.xz" / "tar.zst" /
-              "tgz" / "tbz2" / "txz"
-
-pipe-chain = operation 1*( "|" operation )
-
-operation = ALPHA 1*( ALPHA / DIGIT / "_" )
-
-ALPHA = %x41-5A / %x61-7A  ; A-Z / a-z
-DIGIT = %x30-39            ; 0-9
+LOWER = %x61-7A  ; a-z
+DIGIT = %x30-39  ; 0-9
 ```
 
-### 7.2 Version String Grammar
+### 7.2 Version String
 
 ```abnf
 version = major [ "." minor [ "." patch ] ] [ prerelease ] [ build ]
@@ -578,652 +688,376 @@ minor = 1*DIGIT
 patch = 1*DIGIT
 
 prerelease = "-" 1*prerelease-char
-build = "+" 1*build-char
+build      = "+" 1*build-char
 
 prerelease-char = ALPHA / DIGIT / "-" / "."
-build-char = ALPHA / DIGIT / "-" / "."
+build-char      = ALPHA / DIGIT / "-" / "."
 ```
 
-### 7.3 Identifier Grammar
+### 7.3 Slot Identifier
 
 ```abnf
-identifier = identifier-start *identifier-char
+slot-id = slot-id-start *slot-id-char
 
-identifier-start = LOWER / DIGIT
-identifier-char = LOWER / DIGIT / "-" / "_"
-
-LOWER = %x61-7A  ; a-z
+slot-id-start = LOWER / DIGIT / "_"
+slot-id-char  = LOWER / DIGIT / "-" / "_"
 ```
+
+A leading underscore marks a slot the producer synthesised rather than one the caller supplied. `_attestation` (FEP-0004) is the one in use.
+
+### 7.4 Checksum
+
+```abnf
+checksum  = algorithm ":" hex
+algorithm = 1*( LOWER / DIGIT )
+hex       = 1*HEXDIG
+```
+
+The prefix appears exactly once. `"sha256:sha256:…"` is malformed. See §9.4.
 
 ## 8. JSON Schema Definition
 
-### 8.1 Complete JSON Schema
+The schema below is satisfied by every package in `tests/fixtures/format_compat/`, which covers all three producers.
+
+`additionalProperties` is not constrained: §5.3 requires readers to tolerate unknown members, and a schema that forbade them would reject documents this specification requires readers to accept.
 
 ```json
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://pspf.io/schemas/2025.0.0/metadata.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://provide.io/schemas/pspf-2025/metadata.json",
   "title": "PSPF/2025 Package Metadata",
   "type": "object",
-  "required": ["format_version", "package", "slots"],
-  "additionalProperties": false,
+  "required": ["format", "package", "slots"],
   "properties": {
-    "format_version": {
-      "type": "string",
-      "const": "2025.0.0"
-    },
+    "format": { "type": "string", "const": "PSPF/2025" },
+    "format_version": { "type": "string" },
     "package": {
       "type": "object",
       "required": ["name", "version"],
-      "additionalProperties": false,
       "properties": {
-        "name": {
-          "type": "string",
-          "pattern": "^[a-z0-9][a-z0-9_-]*$",
-          "minLength": 1,
-          "maxLength": 255
-        },
-        "version": {
-          "type": "string",
-          "pattern": "^[0-9]+(\\.[0-9]+)*([+-].+)?$",
-          "maxLength": 255
-        },
-        "description": {
-          "type": "string",
-          "maxLength": 4096
-        },
-        "author": {
-          "type": "string",
-          "maxLength": 255
-        },
-        "license": {
-          "type": "string",
-          "maxLength": 255
-        },
-        "homepage": {
-          "type": "string",
-          "format": "uri",
-          "maxLength": 2048
-        }
-      }
-    },
-    "build": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "timestamp": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "platform": {
-          "type": "string",
-          "pattern": "^[a-z]+_[a-z0-9]+$"
-        },
-        "builder": {
-          "type": "string",
-          "maxLength": 255
-        },
-        "source_hash": {
-          "type": "string",
-          "pattern": "^[a-f0-9]{64}$"
-        },
-        "reproducible": {
-          "type": "boolean"
-        }
+        "name": { "type": "string", "minLength": 1, "maxLength": 255 },
+        "version": { "type": "string", "minLength": 1, "maxLength": 255 },
+        "description": { "type": "string" }
       }
     },
     "slots": {
       "type": "array",
-      "minItems": 0,
       "maxItems": 65535,
       "items": {
         "type": "object",
-        "required": ["id", "name", "purpose", "lifecycle", "operations", "size", "checksum"],
-        "additionalProperties": false,
+        "required": [
+          "slot", "id", "source", "target",
+          "size", "checksum", "operations", "purpose", "lifecycle"
+        ],
         "properties": {
-          "id": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 4294967295
-          },
-          "name": {
-            "type": "string",
-            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.-]*$",
-            "maxLength": 255
-          },
-          "purpose": {
-            "type": "string",
-            "enum": ["code", "data", "config", "media"]
-          },
-          "lifecycle": {
-            "type": "string",
-            "enum": ["init", "startup", "runtime", "shutdown", "cache", 
-                     "temporary", "lazy", "eager", "dev", "config", "platform"]
-          },
-          "operations": {
-            "type": "string",
-            "pattern": "^(raw|gzip|bzip2|xz|zstd|tar|tar\\.gz|tar\\.bz2|tar\\.xz|tar\\.zst|tgz|tbz2|txz|([a-z]+)(\\|[a-z]+)*)$"
-          },
-          "size": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          },
-          "original_size": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          },
-          "checksum": {
-            "type": "string",
-            "pattern": "^[a-f0-9]{16}$"
-          },
-          "permissions": {
-            "type": "string",
-            "pattern": "^[0-7]{3,4}$"
-          }
+          "slot": { "type": "integer", "minimum": 0 },
+          "id": { "type": "string", "minLength": 1, "maxLength": 255 },
+          "source": { "type": "string", "maxLength": 4096 },
+          "target": { "type": "string", "maxLength": 4096 },
+          "size": { "type": "integer", "minimum": 0 },
+          "checksum": { "type": "string", "pattern": "^[a-z0-9]+:[0-9a-fA-F]+$|^[0-9a-fA-F]+$" },
+          "operations": { "type": "string" },
+          "purpose": { "type": "string" },
+          "lifecycle": { "type": "string" },
+          "permissions": { "type": ["string", "null"] },
+          "resolution": { "type": "string", "enum": ["build", "runtime", "lazy"] },
+          "self_ref": { "type": "boolean" }
         }
       }
     },
     "execution": {
       "type": "object",
-      "additionalProperties": false,
+      "required": ["command"],
       "properties": {
-        "entry_point": {
-          "type": "string",
-          "maxLength": 4096
-        },
-        "args": {
-          "type": "array",
-          "maxItems": 1024,
-          "items": {
-            "type": "string"
+        "primary_slot": { "type": "integer", "minimum": 0 },
+        "command": { "type": "string", "maxLength": 65535 },
+        "env": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "required": ["integrity_seal"],
+      "properties": {
+        "integrity_seal": {
+          "type": "object",
+          "required": ["required", "algorithm"],
+          "properties": {
+            "required": { "type": "boolean" },
+            "algorithm": { "type": "string" }
           }
         },
+        "signed": { "type": "boolean" },
+        "require_verification": { "type": "boolean" },
+        "trust_signatures": {
+          "type": "object",
+          "required": ["required"],
+          "properties": {
+            "required": { "type": "boolean" },
+            "signers": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["name", "key_id", "algorithm"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "key_id": { "type": "string" },
+                  "algorithm": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "build": {
+      "type": "object",
+      "required": ["tool", "tool_version", "timestamp", "platform"],
+      "properties": {
+        "tool": { "type": "string" },
+        "tool_version": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "deterministic": { "type": "boolean" },
+        "platform": {
+          "type": "object",
+          "required": ["os", "arch"],
+          "properties": {
+            "os": { "type": "string" },
+            "arch": { "type": "string" },
+            "host": { "type": "string" }
+          }
+        }
+      }
+    },
+    "launcher": {
+      "type": "object",
+      "required": ["tool", "tool_version", "size", "checksum", "capabilities"],
+      "properties": {
+        "tool": { "type": "string" },
+        "tool_version": { "type": "string" },
+        "size": { "type": "integer", "minimum": 0 },
+        "checksum": { "type": "string" },
+        "capabilities": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "required": ["min_format_version", "features"],
+      "properties": {
+        "min_format_version": { "type": "string" },
+        "features": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "cache_validation": {
+      "type": "object",
+      "required": ["check_file"],
+      "properties": {
+        "check_file": { "type": "string" },
+        "expected_content": { "type": "string" }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "properties": {
         "env": {
           "type": "object",
-          "maxProperties": 1024,
-          "additionalProperties": {
-            "type": "string"
+          "properties": {
+            "set": { "type": "object", "additionalProperties": { "type": "string" } },
+            "map": { "type": "object", "additionalProperties": { "type": "string" } },
+            "unset": { "type": "array", "items": { "type": "string" } },
+            "pass": { "type": "array", "items": { "type": "string" } }
           }
-        },
-        "working_directory": {
-          "type": "string",
-          "maxLength": 4096
         }
       }
     },
-    "dependencies": {
+    "workenv": {
       "type": "object",
-      "additionalProperties": false,
       "properties": {
-        "runtime": {
+        "directories": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "object",
+            "required": ["path"],
+            "properties": {
+              "path": { "type": "string" },
+              "mode": { "type": "string" }
+            }
           }
         },
-        "optional": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
+        "env": { "type": "object", "additionalProperties": { "type": "string" } }
       }
     },
-    "extensions": {
-      "type": "object",
-      "patternProperties": {
-        "^x-": {}
-      },
-      "additionalProperties": false
-    }
+    "setup_commands": { "type": "array" },
+    "policy": { "type": "object" }
   }
 }
 ```
 
-## 9. Processing Algorithms
+## 9. Producer Variation
 
-### 9.1 Metadata Parsing Algorithm
+The three implementations do not agree on everything. Each item below is a difference a reader encounters in packages that exist, with the issue tracking it. A producer aiming for packages every implementation can read should follow the guidance in each.
 
-```
-function parseMetadata(jsonBytes):
-    // 1. Decode UTF-8
-    text = utf8Decode(jsonBytes)
-    if error:
-        return ERROR_INVALID_ENCODING
-    
-    // 2. Parse JSON
-    try:
-        metadata = jsonParse(text)
-    catch:
-        return ERROR_INVALID_JSON
-    
-    // 3. Validate against schema
-    if not validateSchema(metadata, PSPF_SCHEMA):
-        return ERROR_SCHEMA_VIOLATION
-    
-    // 4. Check format version
-    if metadata.format_version != "2025.0.0":
-        return ERROR_UNSUPPORTED_VERSION
-    
-    // 5. Validate semantic constraints
-    if not validateSemantics(metadata):
-        return ERROR_SEMANTIC_VIOLATION
-    
-    return metadata
-```
+### 9.1 The execution block
 
-### 9.2 Canonical Form Algorithm
+`flavor-go` declares `execution` optional and refuses at the point of execution when it is missing. `flavor-python` behaves the same way. `flavor-rs` requires the object to parse the document at all, so a package without one cannot be inspected or verified by it, only rejected.
 
-```
-function canonicalize(metadata):
-    // 1. Deep copy to avoid mutation
-    canonical = deepCopy(metadata)
-    
-    // 2. Sort all object keys recursively
-    canonical = sortKeysRecursive(canonical)
-    
-    // 3. Normalize numbers
-    canonical = normalizeNumbers(canonical)
-    
-    // 4. Normalize Unicode strings to NFC
-    canonical = normalizeUnicode(canonical)
-    
-    // 5. Serialize with minimal whitespace
-    json = JSON.stringify(canonical, null, 0)
-    
-    // 6. Ensure consistent separators
-    json = json.replace(/: /g, ':')
-    json = json.replace(/, /g, ',')
-    
-    return json
-```
+Tracked in provide-io/flavorpack#48. Until it closes, write `execution`.
 
-### 9.3 Checksum Verification Algorithm
+### 9.2 format_version
+
+`flavor-rs` and `flavor-python` write `"1.0.0"`. `flavor-go` writes the empty string.
+
+A reader MUST NOT depend on this field to decide how to parse. `format` identifies the format; `compatibility.min_format_version` states the requirement.
+
+### 9.3 Platform naming
+
+`build.platform` records the build machine in each producer's own vocabulary. On the same Apple Silicon host:
+
+| Producer | `os` | `arch` |
+|----------|------|--------|
+| `flavor-rs` | `macos` | `aarch64` |
+| `flavor-go` | `darwin` | `arm64` |
+| `flavor-python` | `darwin` | `arm64` |
+
+The pairs name the same platform. A reader MUST NOT compare these values across producers or use them to decide whether a package will run.
+
+### 9.4 Checksum prefixes
+
+`launcher.checksum` written by `flavor-python` carries the algorithm prefix twice — `"sha256:sha256:02b2…"`. The digest after the second prefix is correct.
+
+A reader parsing a checksum should strip the algorithm prefix repeatedly rather than once. Tracked in provide-io/flavorpack#49.
+
+### 9.5 Target paths
+
+`flavor-python` writes `slots[].target` with an explicit `{workenv}/` prefix; `flavor-rs` and `flavor-go` write a path relative to the workenv with no prefix. Both denote the same location. A reader MUST accept either, and MUST apply §5.2.2 after substitution.
+
+## 10. Processing Algorithms
+
+### 10.1 Reading
 
 ```
-function verifyMetadataChecksum(metadata, expectedHash):
-    // 1. Canonicalize metadata
-    canonical = canonicalize(metadata)
-    
-    // 2. Encode to UTF-8
-    bytes = utf8Encode(canonical)
-    
-    // 3. Compute SHA-256
-    computedHash = sha256(bytes)
-    
-    // 4. Compare hashes
-    return constantTimeEqual(computedHash, expectedHash)
+1. Read the index from the magic trailer                    (FEP-0001)
+2. Read metadata_offset and metadata_size from the index
+3. Read that many bytes at that offset                       -> archive
+4. If archive begins with 1f 8b, gunzip it                   -> document
+5. Parse the document as UTF-8 JSON
+6. Apply the structural validation of §5.1
+7. Apply the semantic validation of §5.2
 ```
 
-## 10. Error Handling
+Step 6 precedes step 7 because the cross-checks in §5.2 read fields that §5.1 has not yet shown to exist.
 
-### 10.1 Error Codes
+### 10.2 Verifying
 
-```c
-// JSON Errors (1000-1099)
-#define ERROR_INVALID_ENCODING      1000
-#define ERROR_INVALID_JSON          1001
-#define ERROR_SCHEMA_VIOLATION      1002
-#define ERROR_UNSUPPORTED_VERSION   1003
-#define ERROR_SEMANTIC_VIOLATION    1004
-
-// Field Errors (1100-1199)
-#define ERROR_MISSING_REQUIRED      1100
-#define ERROR_INVALID_TYPE          1101
-#define ERROR_INVALID_PATTERN       1102
-#define ERROR_INVALID_ENUM          1103
-#define ERROR_OUT_OF_RANGE          1104
-
-// Slot Errors (1200-1299)
-#define ERROR_DUPLICATE_SLOT_ID     1200
-#define ERROR_INVALID_OPERATIONS    1201
-#define ERROR_CHECKSUM_MISMATCH     1202
-#define ERROR_SIZE_MISMATCH         1203
-
-// Path Errors (1300-1399)
-#define ERROR_PATH_TRAVERSAL        1300
-#define ERROR_INVALID_PATH          1301
-#define ERROR_ABSOLUTE_PATH         1302
+```
+1. archive <- the stored metadata bytes, before decompression
+2. digest  <- SHA-256(archive)
+3. Compare against index.metadata_checksum
 ```
 
-### 10.2 Error Recovery
+The comparison is over the stored bytes. See §6.3.
 
-Implementations SHOULD attempt graceful degradation:
+### 10.3 Extracting
 
-1. **Missing Optional Fields**: Use defaults where sensible
-2. **Unknown Extension Fields**: Ignore "x-" prefixed fields
-3. **Version Mismatch**: Attempt compatibility if minor version
-4. **Encoding Issues**: Try alternative encodings (UTF-16, Latin-1)
+```
+For each entry of slots, in order:
+  1. Find the matching slot descriptor in the index
+  2. Read the stored bytes for that descriptor
+  3. Verify them against slots[].checksum
+  4. Apply the inverse of the packed operation chain    (FEP-0003)
+  5. Substitute placeholders in slots[].target
+  6. Validate the result per §5.2.2
+  7. Write the file and apply slots[].permissions
+```
 
-### 10.3 Diagnostic Output
+Step 4 uses the packed codes in the descriptor, not the `operations` string (§4.3.7). Step 6 follows step 5, never precedes it.
 
-Error messages MUST include:
-- Error code
-- Field path (e.g., "slots[2].checksum")
-- Expected vs actual values
-- Line/column number if available
+## 11. Error Handling
 
-Example:
+| Condition | Reader behaviour |
+|-----------|------------------|
+| Archive will not decompress | Reject the package |
+| Document is not valid JSON | Reject the package |
+| A REQUIRED field is absent | Reject the package |
+| Slot count disagrees with the index | Reject the package |
+| A slot checksum does not match | Reject the package |
+| A target path fails §5.2.2 | Reject the package |
+| `execution` absent | Read and report normally; refuse to run |
+| `command` absent or empty | Read and report normally; refuse to run |
+| An unrecognised member is present | Ignore it and continue |
+
+Rejecting means refusing every operation on the package. Refusing to run means inspection and verification still work, and only execution fails. The distinction matters: a package that cannot run is exactly one an operator wants to be able to inspect.
+
+## 12. Security Considerations
+
+### 12.1 The metadata is not evidence
+
+Every field in `verification` is a claim the package makes about itself, written by whoever built it. A reader MUST establish that a package is signed by checking the seal in the index, never by reading `verification.signed`.
+
+### 12.2 Path traversal
+
+`slots[].target` and `workenv.directories[].path` become filesystem paths. They arrive from the package, so an attacker who can write a package controls them. §5.2.2 applies to every one, after substitution.
+
+### 12.3 What the document discloses
+
+The document travels with the package and is readable by anyone holding it, without verification and without extraction.
+
+`slots[].source` records build-machine paths, which can carry usernames and directory layout. `build.platform.host` names the build machine; producers write it only under `FLAVOR_INCLUDE_BUILD_HOST=1` for that reason. `execution.env` and `workenv.env` are stored in the clear and MUST NOT carry secrets.
+
+### 12.4 Size limits
+
+A reader MUST bound the decompressed document (§5.1) before parsing it. The archive is compressed, so a small package can carry a document that expands without limit.
+
+## 13. Implementation Requirements
+
+A conforming reader MUST:
+
+1. Parse a document containing only the REQUIRED fields
+2. Ignore members it does not recognise (§5.3)
+3. Apply the defaults in Section 4 for absent OPTIONAL fields
+4. Verify the metadata against the stored bytes (§6.3)
+5. Validate every path after substitution (§5.2.2)
+6. Bound the decompressed size before parsing (§12.4)
+7. Read the package environment from `execution.env`
+8. Take the operation chain from the slot descriptor, not `operations`
+
+A conforming producer MUST:
+
+1. Write every REQUIRED field
+2. Write `format` as `"PSPF/2025"`
+3. Write `slots` in index order with `slot` matching position
+4. Write checksums as `algorithm:hex`, the prefix appearing once
+5. Write `execution`, until #48 closes (§9.1)
+6. Write the package environment under `env`
+
+## 14. Test Vectors
+
+The packages in `tests/fixtures/format_compat/v1/` are built once by each producer and committed. `rust.psp`, `go.psp` and `python.psp` carry the same payload and are signed with the same derived key, so a change that alters what a producer writes shows up as a difference between them.
+
+`tests/fixtures/format_compat/execution/omits-primary-slot.json` is a document that omits `primary_slot` and carries a non-empty `env`. Every implementation reads it, resolves `primary_slot` to `0`, and sees `MODE=prod`.
+
+The harnesses:
+
+- `tests/format_2025/test_format_compat.py`
+- `src/flavor-go/pkg/psp/format_2025/format_compat_test.go`
+- `src/flavor-rs/tests/format_compat.rs`
+
+A minimal conforming document:
+
 ```json
 {
-  "error": 1102,
-  "field": "slots[2].checksum",
-  "message": "Invalid pattern",
-  "expected": "^[a-f0-9]{8}$",
-  "actual": "DEADBEEF",
-  "line": 45,
-  "column": 23
+  "format": "PSPF/2025",
+  "package": {"name": "minimal", "version": "1.0.0"},
+  "slots": [],
+  "execution": {"command": "true"}
 }
 ```
 
-## 11. Security Considerations
+## 15. References
 
-### 11.1 Input Validation
-
-Implementations MUST protect against:
-
-**JSON Bombs**: Deeply nested structures or large expansions
-- Maximum nesting depth: 100 levels
-- Maximum string length: 10MB
-- Maximum array size: 65535 items
-- Maximum object properties: 10000
-
-**Resource Exhaustion**: 
-- Limit total metadata size to 10MB uncompressed
-- Timeout parsing after 5 seconds
-- Limit memory usage during parsing
-
-**Injection Attacks**:
-- Sanitize all strings before use in commands
-- Validate paths to prevent directory traversal
-- Escape special characters in environment variables
-
-### 11.2 Trust Boundaries
-
-Metadata is untrusted input until verified:
-
-1. Parse and validate structure
-2. Verify metadata checksum from index block
-3. Verify package signature
-4. Only then trust content
-
-### 11.3 Information Disclosure
-
-Sensitive information in metadata:
-- Build paths may reveal system layout
-- Environment variables may contain secrets
-- Source hashes may reveal proprietary code structure
-
-Implementations SHOULD:
-- Redact sensitive paths in logs
-- Not expose full metadata to untrusted code
-- Sanitize error messages
-
-## 12. Implementation Requirements
-
-### 12.1 Parser Requirements
-
-All implementations MUST:
-1. Accept any valid JSON according to schema
-2. Reject invalid JSON with appropriate errors
-3. Handle UTF-8, UTF-16, and UTF-32 encodings
-4. Support full Unicode range including emoji
-5. Parse numbers up to 2^53-1 accurately
-
-### 12.2 Cross-Language Compatibility
-
-#### Python Implementation
-```python
-import json
-import jsonschema
-from typing import Dict, Any
-
-def parse_metadata(data: bytes) -> Dict[str, Any]:
-    """Parse and validate PSPF metadata."""
-    text = data.decode('utf-8')
-    metadata = json.loads(text)
-    jsonschema.validate(metadata, PSPF_SCHEMA)
-    return metadata
-
-def canonicalize(metadata: Dict[str, Any]) -> bytes:
-    """Convert to canonical form."""
-    return json.dumps(
-        metadata,
-        separators=(',', ':'),
-        sort_keys=True,
-        ensure_ascii=False
-    ).encode('utf-8')
-```
-
-#### Go Implementation
-```go
-package pspf
-
-import (
-    "encoding/json"
-    "github.com/xeipuuv/gojsonschema"
-)
-
-type Metadata struct {
-    FormatVersion string   `json:"format_version"`
-    Package      Package  `json:"package"`
-    Slots        []Slot   `json:"slots"`
-    // ... other fields
-}
-
-func ParseMetadata(data []byte) (*Metadata, error) {
-    var meta Metadata
-    if err := json.Unmarshal(data, &meta); err != nil {
-        return nil, err
-    }
-    
-    // Validate against schema
-    result, err := ValidateSchema(meta)
-    if err != nil || !result.Valid() {
-        return nil, ErrSchemaViolation
-    }
-    
-    return &meta, nil
-}
-```
-
-#### Rust Implementation
-```rust
-use serde::{Deserialize, Serialize};
-use serde_json;
-use jsonschema;
-
-#[derive(Debug, Deserialize, Serialize)]
-struct Metadata {
-    format_version: String,
-    package: Package,
-    slots: Vec<Slot>,
-    // ... other fields
-}
-
-fn parse_metadata(data: &[u8]) -> Result<Metadata, Error> {
-    let text = std::str::from_utf8(data)?;
-    let metadata: Metadata = serde_json::from_str(text)?;
-    
-    // Validate against schema
-    let schema = json!(PSPF_SCHEMA);
-    let compiled = jsonschema::JSONSchema::compile(&schema)?;
-    compiled.validate(&json!(metadata))?;
-    
-    Ok(metadata)
-}
-```
-
-### 12.3 Performance Requirements
-
-Implementations SHOULD meet these targets:
-
-- **Parsing**: < 10ms for 100KB metadata
-- **Validation**: < 5ms for schema validation
-- **Canonicalization**: < 2ms for typical metadata
-- **Memory Usage**: < 10x metadata size
-
-## 13. Test Vectors
-
-### 13.1 Minimal Valid Metadata
-
-**Input**:
-```json
-{
-  "format_version": "2025.0.0",
-  "package": {
-    "name": "test",
-    "version": "1.0.0"
-  },
-  "slots": []
-}
-```
-
-**Canonical Form** (hex):
-```
-7b22666f726d61745f76657273696f6e223a22323032352e302e30222c227061636b616765223a7b226e616d65223a2274657374222c2276657273696f6e223a22312e302e30227d2c22736c6f7473223a5b5d7d
-```
-
-**SHA-256**: `5f95b7cf2f47fc5b7866ea021fe51cea6bc3bbceb9d3eb87a1244bd8db576eb0`
-
-### 13.2 Complete Metadata Example
-
-**Input**:
-```json
-{
-  "format_version": "2025.0.0",
-  "package": {
-    "name": "example-app",
-    "version": "2.1.0-beta+build.123",
-    "description": "Example application",
-    "author": "PSPF Team",
-    "license": "MIT",
-    "homepage": "https://pspf.io"
-  },
-  "build": {
-    "timestamp": 1704067200,
-    "platform": "linux_x86_64",
-    "builder": "flavorpack-0.1.0",
-    "source_hash": "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789",
-    "reproducible": true
-  },
-  "slots": [
-    {
-      "id": 0,
-      "name": "runtime",
-      "purpose": "code",
-      "lifecycle": "startup",
-      "operations": "tar.gz",
-      "size": 1048576,
-      "original_size": 4194304,
-      "checksum": "deadbeef",
-      "permissions": "755"
-    },
-    {
-      "id": 1,
-      "name": "config",
-      "purpose": "config",
-      "lifecycle": "config",
-      "operations": "gzip",
-      "size": 1024,
-      "checksum": "cafebabe"
-    }
-  ],
-  "execution": {
-    "entry_point": "./bin/app",
-    "args": ["--config", "/etc/app.conf"],
-    "env": {
-      "APP_HOME": "/opt/app",
-      "LOG_LEVEL": "info"
-    },
-    "working_directory": "."
-  },
-  "dependencies": {
-    "runtime": ["libc.so.6", "libssl.so.3"],
-    "optional": ["libcuda.so.12"]
-  },
-  "extensions": {
-    "x-vendor-signature": "xyz789",
-    "x-custom-field": {
-      "nested": "value"
-    }
-  }
-}
-```
-
-### 13.3 Invalid Examples
-
-**Duplicate Slot ID**:
-```json
-{
-  "format_version": "2025.0.0",
-  "package": {"name": "test", "version": "1.0.0"},
-  "slots": [
-    {"id": 0, "name": "slot1", ...},
-    {"id": 0, "name": "slot2", ...}  // ERROR: Duplicate ID
-  ]
-}
-```
-Expected Error: `ERROR_DUPLICATE_SLOT_ID (1200)`
-
-**Invalid Operation String**:
-```json
-{
-  "format_version": "2025.0.0",
-  "package": {"name": "test", "version": "1.0.0"},
-  "slots": [{
-    "id": 0,
-    "operations": "invalid|operation",  // ERROR: Unknown operation
-    ...
-  }]
-}
-```
-Expected Error: `ERROR_INVALID_OPERATIONS (1201)`
-
-**Path Traversal Attempt**:
-```json
-{
-  "execution": {
-    "entry_point": "../../etc/passwd"  // ERROR: Path traversal
-  }
-}
-```
-Expected Error: `ERROR_PATH_TRAVERSAL (1300)`
-
-## 14. References
-
-### 14.1 Normative References
-
-[RFC2119](https://www.rfc-editor.org/rfc/rfc2119.html) Bradner, S., "Key words for use in RFCs to Indicate Requirement Levels", BCP 14, RFC 2119, March 1997.
-
-[RFC8174](https://www.rfc-editor.org/rfc/rfc8174.html) Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words", BCP 14, RFC 8174, May 2017.
-
-[RFC7159] Bray, T., Ed., "The JavaScript Object Notation (JSON) Data Interchange Format", RFC 7159, March 2014.
-
-[RFC5234] Crocker, D., Ed., and P. Overell, "Augmented BNF for Syntax Specifications: ABNF", STD 68, RFC 5234, January 2008.
-
-[RFC4627] Crockford, D., "The application/json Media Type for JavaScript Object Notation (JSON)", RFC 4627, July 2006.
-
-### 14.2 Informative References
-
-[FEP-0001] "PSPF/2025 Core Format & Operation Chains Specification", FEP-0001, January 2025.
-
-[FEP-0003] "PSPF/2025 Operation Registry and Allocation Policy", FEP-0003, January 2025.
-
-[JSON-SCHEMA] "JSON Schema: A Media Type for Describing JSON Documents", draft-handrews-json-schema-02, September 2019.
-
-[SEMVER] Preston-Werner, T., "Semantic Versioning 2.0.0", https://semver.org/spec/v2.0.0.html
-
-[SPDX] "Software Package Data Exchange (SPDX) Specification", https://spdx.org/specifications
-
----
-
-**Authors' Addresses**
-
-[Author contact information]
-
-**Copyright Notice**
-
-Copyright (c) 2025 IETF Trust and the persons identified as the document authors. All rights reserved.
+- [RFC2119] Bradner, S., "Key words for use in RFCs to Indicate Requirement Levels", BCP 14, RFC 2119, March 1997.
+- [RFC7159] Bray, T., "The JavaScript Object Notation (JSON) Data Interchange Format", RFC 7159, March 2014.
+- [RFC3339] Klyne, G. and C. Newman, "Date and Time on the Internet: Timestamps", RFC 3339, July 2002.
+- [RFC1952] Deutsch, P., "GZIP file format specification version 4.3", RFC 1952, May 1996.
+- [FEP-0001] PSPF/2025 Core Format and Operation Chains
+- [FEP-0003] PSPF/2025 Operation Registry
+- [FEP-0004] PSPF/2025 Security Attestation Extension
