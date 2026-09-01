@@ -175,10 +175,10 @@ func TestVerifyBundleDirectSuccess(t *testing.T) {
 	t.Parallel()
 
 	logger := logging.NewNullLogger()
-	bundle := buildSingleSlotBundleForTests(t, []byte("verify file content"), []byte("verify file content"), nil, SlotMetadata{
-		ID:     "verify-slot",
-		Target: "{workenv}/bin/app.txt",
-	}, 0, false)
+	// A sealed bundle, not the shared helper's: that one leaves the signature
+	// and index checksum unset, which the *BadSeal execution tests rely on, and
+	// which a real verifier is supposed to reject.
+	bundle, _, _, _ := buildSealedBundle(t)
 
 	output := captureStdout(t, func() {
 		verifyBundle(bundle, logger)
