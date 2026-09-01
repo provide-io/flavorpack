@@ -12,7 +12,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use flavor::psp::format_2025::{self, Reader};
+use flavor::psp::format_2025::{self, Metadata, Reader};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 
@@ -181,4 +181,36 @@ fn every_producer_derives_the_same_key() {
             "{name}: producers disagree on the key derived from the seed"
         );
     }
+}
+
+/// One metadata document that every implementation must read the same way.
+///
+/// `primary_slot` was required here and optional in Go and Python, so a package
+/// without it was ordinary to them and unopenable to this reader. The document
+/// omits the field and carries a non-empty `env`, which is the key Python and
+/// this implementation both use. See
+/// tests/fixtures/format_compat/execution/README.md.
+#[test]
+fn execution_block_omitting_primary_slot_is_readable() {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../tests/fixtures/format_compat/execution/omits-primary-slot.json");
+    let raw = fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
+
+    // The fixture has to keep exercising the missing field to be worth anything.
+    let document: Value = serde_json::from_str(&raw).expect("parse fixture");
+    assert!(
+        document["execution"].get("primary_slot").is_none(),
+        "the fixture must keep omitting primary_slot"
+    );
+
+    let metadata: Metadata =
+        serde_json::from_str(&raw).expect("metadata must parse without primary_slot");
+
+    assert_eq!(metadata.execution.primary_slot, 0);
+    assert_eq!(metadata.execution.command, "true");
+    assert_eq!(
+        metadata.execution.env.get("MODE").map(String::as_str),
+        Some("prod"),
+        "the environment must be read from the \"env\" key"
+    );
 }

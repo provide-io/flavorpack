@@ -80,9 +80,36 @@ type CacheValidationInfo struct {
 }
 
 type ExecutionInfo struct {
-	PrimarySlot int               `json:"primary_slot"`
-	Command     string            `json:"command"`
-	Environment map[string]string `json:"environment,omitempty"`
+	// PrimarySlot is what {primary} refers to. A missing field is 0, which is
+	// what Python's executor and the Rust reader also settle on (#36).
+	PrimarySlot int    `json:"primary_slot"`
+	Command     string `json:"command"`
+	// Environment is written under "env" -- the key the Rust and Python
+	// implementations both read and write. This used to be tagged
+	// "environment", so an env block from either of them was dropped in
+	// silence: a package setting MODE=prod ran here with no MODE and no error.
+	// UnmarshalJSON still accepts "environment" so packages Go built before it
+	// agreed with the others keep working.
+	Environment map[string]string `json:"env,omitempty"`
+}
+
+// UnmarshalJSON reads the package environment from "env", falling back to the
+// "environment" key this implementation used to write. If a package somehow
+// carries both, "env" wins -- it is the one the other implementations read.
+func (e *ExecutionInfo) UnmarshalJSON(data []byte) error {
+	type executionInfoAlias ExecutionInfo
+	aux := struct {
+		*executionInfoAlias
+		Legacy map[string]string `json:"environment,omitempty"`
+	}{executionInfoAlias: (*executionInfoAlias)(e)}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	if len(e.Environment) == 0 {
+		e.Environment = aux.Legacy
+	}
+	return nil
 }
 
 type RuntimeInfo struct {
