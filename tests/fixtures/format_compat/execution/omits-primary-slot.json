@@ -1,0 +1,14 @@
+{
+  "format": "PSPF/2025",
+  "package": {
+    "name": "execution-block-contract",
+    "version": "1.0.0"
+  },
+  "slots": [],
+  "execution": {
+    "command": "true",
+    "env": {
+      "MODE": "prod"
+    }
+  }
+}

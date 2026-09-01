@@ -1,5 +1,7 @@
 package format_2025
 
+import "encoding/json"
+
 // BuildOptions represents the configuration for building a PSPF package.
 //
 // This struct defines the complete configuration needed to build a PSPF/2025
@@ -43,9 +45,31 @@ type PackageConfig struct {
 
 // ExecutionConfig defines how the package should be executed
 type ExecutionConfig struct {
-	PrimarySlot int               `json:"primary_slot,omitempty"`
-	Command     string            `json:"command"`
-	Environment map[string]string `json:"environment,omitempty"`
+	PrimarySlot int    `json:"primary_slot,omitempty"`
+	Command     string `json:"command"`
+	// Environment is read from "env", the key Python writes into the manifest
+	// it hands this builder. It was tagged "environment", so a caller's
+	// execution environment was dropped at build time before it ever reached a
+	// bundle (#36). "environment" is still accepted for older manifests.
+	Environment map[string]string `json:"env,omitempty"`
+}
+
+// UnmarshalJSON reads the execution environment from "env", falling back to the
+// "environment" key older manifests use. If both are present, "env" wins.
+func (c *ExecutionConfig) UnmarshalJSON(data []byte) error {
+	type executionConfigAlias ExecutionConfig
+	aux := struct {
+		*executionConfigAlias
+		Legacy map[string]string `json:"environment,omitempty"`
+	}{executionConfigAlias: (*executionConfigAlias)(c)}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	if len(c.Environment) == 0 {
+		c.Environment = aux.Legacy
+	}
+	return nil
 }
 
 // RuntimeConfig contains runtime environment configuration

@@ -65,6 +65,12 @@ pub struct SlotMetadata {
 /// Execution configuration
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ExecutionInfo {
+    /// Which slot `{primary}` refers to. Optional, defaulting to 0: Go leaves a
+    /// missing field at its zero value and Python's executor reads it with
+    /// `.get("primary_slot", 0)`, so packages built by either are valid without
+    /// it. Requiring it here made the same bytes readable by two
+    /// implementations and unopenable by the third (#36).
+    #[serde(default)]
     pub primary_slot: usize,
     pub command: String,
     #[serde(default)]
@@ -196,6 +202,29 @@ pub struct DirectorySpec {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    /// A package whose metadata omits `execution.primary_slot` must still be
+    /// readable. Go leaves the field at 0 and Python's executor reads it with
+    /// `.get("primary_slot", 0)`, so a package built by either is valid without
+    /// it. Rust used to reject the whole document -- `missing field
+    /// primary_slot` -- which made the same bytes a package to two
+    /// implementations and unopenable to the third. See #36.
+    #[test]
+    fn metadata_without_primary_slot_defaults_to_zero() {
+        let json = br#"{
+            "format": "PSPF/2025",
+            "package": {"name": "demo", "version": "1.0.0"},
+            "slots": [],
+            "execution": {"command": "true"}
+        }"#;
+
+        let metadata: Metadata =
+            serde_json::from_slice(json).expect("metadata without primary_slot must parse");
+
+        assert_eq!(metadata.execution.primary_slot, 0);
+        assert_eq!(metadata.execution.command, "true");
+        assert!(metadata.execution.env.is_empty());
+    }
 
     fn sample_slot() -> SlotMetadata {
         SlotMetadata {
