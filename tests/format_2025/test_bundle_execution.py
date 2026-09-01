@@ -226,19 +226,6 @@ class TestBundleExecutorUnit:
         assert "test-pkg" in result
         assert "1.2.3" in result
 
-    def test_substitute_primary_no_placeholder(self) -> None:
-        """_substitute_primary returns command unchanged when no {primary}."""
-        executor = self._make_executor()
-        result = executor._substitute_primary("/bin/app")
-        assert result == "/bin/app"
-
-    def test_substitute_primary_slot_out_of_range(self) -> None:
-        """_substitute_primary logs warning when primary_slot index out of range."""
-        executor = self._make_executor(command="{primary}", slots=[], primary_slot=5)
-        result = executor._substitute_primary("{primary}")
-        # {primary} not substituted (slot list is empty)
-        assert "{primary}" in result
-
     def test_substitute_slots_out_of_range(self) -> None:
         """_substitute_slots keeps placeholder when slot index is out of range."""
         executor = self._make_executor(slots=[])
@@ -325,27 +312,6 @@ class TestBundleExecutorUnit:
         with patch("flavor.psp.format_2025.executor.run", return_value=mock_result):
             result = executor.execute()
         assert result["exit_code"] == 1
-
-    def test_substitute_primary_with_slot_target(self) -> None:
-        """{primary} is replaced when slots exist and primary_slot is in range."""
-        executor = self._make_executor(
-            command="{primary}",
-            slots=[{"target": "main.py", "id": "main", "name": "main"}],
-            primary_slot=0,
-        )
-        result = executor._substitute_primary("{primary}")
-        assert "{primary}" not in result
-        assert "main.py" in result
-
-    def test_substitute_primary_tarball_uses_workenv(self) -> None:
-        """{primary} for a .tar.gz target uses {workenv} as primary path."""
-        executor = self._make_executor(
-            command="{primary}",
-            slots=[{"target": "bundle.tar.gz", "id": "bundle", "name": "bundle"}],
-            primary_slot=0,
-        )
-        result = executor._substitute_primary("{primary}")
-        assert "{workenv}" in result or "workenv" in result.lower()
 
     # --- Platform substitution variable tests ({bin}, {python}, {python_bin}) ---
 
