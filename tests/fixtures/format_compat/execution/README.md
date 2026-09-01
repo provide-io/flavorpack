@@ -9,10 +9,10 @@ Two disagreements, both found in #36:
 a missing field at its zero value and Python's executor reads it with
 `.get("primary_slot", 0)`, so a package without the field is ordinary to both.
 Rust rejected the whole document — `missing field primary_slot` — so the same
-bytes were a package to two implementations and unopenable to the third. The
-field is only ever read to resolve `{primary}` and to print a debug line, and
-every construction site in the Rust tree sets it to 0. It is optional, and Rust
-now defaults it.
+bytes were a package to two implementations and unopenable to the third. No
+launcher acts on the field — each reads it to print a debug line — and every
+construction site in the Rust tree sets it to 0. It is optional, and Rust
+defaults it.
 
 **The environment was written under two different keys.** Rust and Python both
 read and write `env`. Go declared the field as `environment`. So Go silently

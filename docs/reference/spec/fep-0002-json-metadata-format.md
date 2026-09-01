@@ -443,12 +443,29 @@ True when the slot refers to the launcher binary itself rather than to separate 
 **Type**: string  
 **Example**: `"{workenv}/bin/app --config {workenv}/etc/app.conf"`
 
-The command line the launcher runs after extraction. Placeholders are substituted first:
+The command line the launcher runs after extraction. Placeholders are
+substituted first.
+
+Three are substituted by every launcher, and a producer may rely on them:
 
 | Placeholder | Substitution |
 |-------------|--------------|
 | `{workenv}` | Absolute path of the workenv directory |
+| `{package_name}` | `package.name` |
+| `{version}` | `package.version` |
+
+Five more are substituted by some launchers and passed through literally by the
+rest. A command using one runs correctly under the launchers that expand it and
+receives the placeholder text verbatim under the others, which fails at the
+point the command runs and nowhere earlier. §9.6 gives the support matrix, and
+the divergence is tracked in provide-io/flavorpack#52.
+
+| Placeholder | Substitution |
+|-------------|--------------|
 | `{slot:N}` | Extracted path of slot *N* |
+| `{bin}` | The workenv's binary directory |
+| `{python}` | Interpreter path |
+| `{python_bin}` | Interpreter's binary directory |
 
 #### 4.4.2 primary_slot (OPTIONAL)
 
@@ -457,6 +474,12 @@ The command line the launcher runs after extraction. Placeholders are substitute
 **Minimum**: 0
 
 Index of the slot the package treats as its principal content. Absence is equivalent to `0`.
+
+No launcher acts on the value. Each reads it to print a debug line, and
+extraction, the working directory and the command are all decided without it. It
+is carried so a package can record which slot it is about, and a reader may
+report it, but a producer MUST NOT expect setting it to change how the package
+runs.
 
 #### 4.4.3 env (OPTIONAL)
 
@@ -929,6 +952,29 @@ A reader parsing a checksum should strip the algorithm prefix repeatedly rather 
 ### 9.5 Target paths
 
 `flavor-python` writes `slots[].target` with an explicit `{workenv}/` prefix; `flavor-rs` and `flavor-go` write a path relative to the workenv with no prefix. Both denote the same location. A reader MUST accept either, and MUST apply §5.2.2 after substitution.
+
+### 9.6 Command placeholders
+
+The launchers expand different sets of placeholders in `execution.command`:
+
+| Placeholder | Rust | Go | Python |
+|-------------|------|----|--------|
+| `{workenv}` | yes | yes | yes |
+| `{package_name}` | yes | yes | yes |
+| `{version}` | yes | yes | yes |
+| `{slot:N}` | no | yes | yes |
+| `{bin}` | no | no | yes |
+| `{python}` | no | no | yes |
+| `{python_bin}` | no | no | yes |
+
+A command that depends on any of the last five runs under some launchers and
+passes the placeholder text to the shell under the others. `{slot:N}` is the one
+to watch: two launchers implement it, and the third is the default launcher for
+packages the Python builder produces.
+
+A producer targeting every launcher should confine itself to the first three.
+
+Tracked in provide-io/flavorpack#52.
 
 ## 10. Processing Algorithms
 
