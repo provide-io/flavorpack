@@ -100,7 +100,7 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 		logger.Debug("💻 Running in CLI mode")
 		if len(args) < 1 {
 			// Default to info command when no args provided
-			showBundleInfo(exePath, logger)
+			showBundleInfo(os.Stdout, exePath, logger)
 			return
 		}
 
@@ -110,18 +110,18 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 		case "version":
 			fmt.Println(LauncherVersion)
 		case "info":
-			showBundleInfo(exePath, logger)
+			showBundleInfo(os.Stdout, exePath, logger)
 		case "verify":
-			verifyBundle(exePath, logger)
+			verifyBundle(os.Stdout, exePath, logger)
 		case "metadata":
-			showMetadata(exePath, logger)
+			showMetadata(os.Stdout, exePath, logger)
 		case "extract":
 			if len(args) < 3 {
 				fmt.Fprintf(os.Stderr, "Error: extract requires slot index and output directory\n")
 				fmt.Fprintf(os.Stderr, "Usage: extract <slot_index> <output_dir>\n")
 				osExitFn(ExitInvalidArgs)
 			}
-			extractSlot(exePath, args[1], args[2], logger)
+			extractSlot(os.Stdout, exePath, args[1], args[2], logger)
 		case "run":
 			// Run with remaining arguments
 			if err := execBundle(exePath, args[1:], userCwd, logger); err != nil {

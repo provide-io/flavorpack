@@ -1,6 +1,8 @@
 package format_2025
 
 import (
+	"errors"
+	"io"
 	"os"
 	"runtime"
 	"strings"
@@ -200,9 +202,18 @@ func TestLaunchWithLogLevelRunCommandPostExitFn(t *testing.T) {
 	_ = capturedCode
 }
 
-// TestShowMetadataEncodeFailure covers the encoder.Encode failure path
-// at lines 224-227 in showMetadata. By replacing os.Stdout with a closed pipe,
-// json.NewEncoder(os.Stdout).Encode(...) will fail.
+// failingWriter fails every write. It is how showMetadata's encoder.Encode
+// error path is reached now that showMetadata writes to the writer it is given
+// rather than to os.Stdout -- the test used to point the process-global
+// os.Stdout at a closed pipe, which broke any concurrent test that was writing.
+type failingWriter struct{}
+
+func (failingWriter) Write([]byte) (int, error) {
+	return 0, errors.New("write failed")
+}
+
+// TestShowMetadataEncodeFailure covers the encoder.Encode failure path in
+// showMetadata.
 func TestShowMetadataEncodeFailure(t *testing.T) {
 	bundle := buildLauncherTestBundle(t)
 	logger := logging.NewNullLogger()
@@ -215,23 +226,9 @@ func TestShowMetadataEncodeFailure(t *testing.T) {
 	}
 	t.Cleanup(func() { osExitFn = oldExit })
 
-	oldStdout := os.Stdout
-	// Create a pipe and close the write-end so writes to os.Stdout fail.
-	r, w, err := os.Pipe()
-	if err != nil {
-		t.Fatalf("os.Pipe(): %v", err)
-	}
-	os.Stdout = w
-	if err := w.Close(); err != nil {
-		t.Fatalf("w.Close(): %v", err)
-	}
-	r.Close() //nolint:errcheck
-
-	defer func() { os.Stdout = oldStdout }()
-
 	func() {
 		defer func() { _ = recover() }()
-		showMetadata(bundle, logger)
+		showMetadata(failingWriter{}, bundle, logger)
 	}()
 
 	if capturedCode != 1 {
@@ -247,7 +244,7 @@ func TestShowMetadataNewReaderFailure(t *testing.T) {
 	logger := logging.NewNullLogger()
 
 	exitCode, panicked := withStubbedExit(func() {
-		showMetadata(bundle, logger)
+		showMetadata(io.Discard, bundle, logger)
 	})
 	if panicked {
 		t.Fatal("unexpected non-exit panic")
