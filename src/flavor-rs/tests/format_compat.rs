@@ -185,28 +185,22 @@ fn every_producer_derives_the_same_key() {
 
 /// One metadata document that every implementation must read the same way.
 ///
-/// `primary_slot` was required here and optional in Go and Python, so a package
-/// without it was ordinary to them and unopenable to this reader. The document
-/// omits the field and carries a non-empty `env`, which is the key Python and
-/// this implementation both use. See
-/// tests/fixtures/format_compat/execution/README.md.
+/// The counterpart — that packages carrying `execution.primary_slot` still
+/// parse, which every package in `v1/` does — is asserted by
+/// `old_packages_still_verify` here, and probed explicitly in the Go and Python
+/// harnesses, which can reach the raw metadata bytes.
+///
+/// The environment is written under `env` by Python and this implementation,
+/// and Go read `environment`, so a block set by either of the others was
+/// dropped in silence. See tests/fixtures/format_compat/execution/README.md.
 #[test]
-fn execution_block_omitting_primary_slot_is_readable() {
+fn execution_block_is_readable() {
     let path = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../tests/fixtures/format_compat/execution/omits-primary-slot.json");
+        .join("../../tests/fixtures/format_compat/execution/execution-block.json");
     let raw = fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
 
-    // The fixture has to keep exercising the missing field to be worth anything.
-    let document: Value = serde_json::from_str(&raw).expect("parse fixture");
-    assert!(
-        document["execution"].get("primary_slot").is_none(),
-        "the fixture must keep omitting primary_slot"
-    );
+    let metadata: Metadata = serde_json::from_str(&raw).expect("fixture must parse");
 
-    let metadata: Metadata =
-        serde_json::from_str(&raw).expect("metadata must parse without primary_slot");
-
-    assert_eq!(metadata.execution.primary_slot, 0);
     assert_eq!(metadata.execution.command, "true");
     assert_eq!(
         metadata.execution.env.get("MODE").map(String::as_str),

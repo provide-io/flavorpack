@@ -22,12 +22,12 @@ func TestExecutionInfoReadsEnvKey(t *testing.T) {
 	}{
 		{
 			name: "env is the key the other implementations write",
-			in:   `{"primary_slot":0,"command":"true","env":{"MODE":"prod"}}`,
+			in:   `{"command":"true","env":{"MODE":"prod"}}`,
 			want: map[string]string{"MODE": "prod"},
 		},
 		{
 			name: "environment is still accepted from packages Go built before",
-			in:   `{"primary_slot":0,"command":"true","environment":{"MODE":"prod"}}`,
+			in:   `{"command":"true","environment":{"MODE":"prod"}}`,
 			want: map[string]string{"MODE": "prod"},
 		},
 		{
@@ -94,16 +94,23 @@ func TestExecutionInfoWritesEnvKey(t *testing.T) {
 	}
 }
 
-// A missing primary_slot is valid -- Rust now defaults it too (#36).
-func TestExecutionInfoPrimarySlotDefaultsToZero(t *testing.T) {
+// Packages carry execution fields this struct does not model, and must stay
+// readable. primary_slot is the case that matters: every package built before it
+// was dropped carries it. encoding/json ignores members with no field, so this
+// holds as long as nobody reaches for DisallowUnknownFields.
+func TestExecutionInfoIgnoresUnmodelledFields(t *testing.T) {
 	t.Parallel()
 
 	var e ExecutionInfo
-	if err := json.Unmarshal([]byte(`{"command":"true"}`), &e); err != nil {
-		t.Fatalf("Unmarshal error = %v", err)
+	raw := `{"primary_slot":3,"command":"true","env":{"MODE":"prod"},"something_later":1}`
+	if err := json.Unmarshal([]byte(raw), &e); err != nil {
+		t.Fatalf("a package carrying unmodelled fields must parse: %v", err)
 	}
-	if e.PrimarySlot != 0 {
-		t.Errorf("PrimarySlot = %d, want 0", e.PrimarySlot)
+	if e.Command != "true" {
+		t.Errorf("Command = %q, want %q", e.Command, "true")
+	}
+	if e.Environment["MODE"] != "prod" {
+		t.Errorf("Environment = %v, want MODE=prod", e.Environment)
 	}
 }
 

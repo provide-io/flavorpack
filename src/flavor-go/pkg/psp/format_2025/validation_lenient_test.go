@@ -17,7 +17,7 @@ func buildUnsignedBundle(t *testing.T) string {
 			storedData: []byte("hello"),
 		},
 	}, Metadata{
-		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution: &ExecutionInfo{Command: "/bin/true"},
 		Build:     &BuildInfo{Tool: "test"},
 	})
 }

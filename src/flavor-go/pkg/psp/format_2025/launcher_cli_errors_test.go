@@ -61,7 +61,7 @@ func buildBundleWithBadIndex(t *testing.T) string {
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution:     &ExecutionInfo{Command: "/bin/true"},
 		Slots:         []SlotMetadata{{Slot: 0, ID: "slot-0", Target: "{workenv}", Size: 0}},
 	})
 	if err != nil {

@@ -69,7 +69,7 @@ def test_committed_packages_satisfy_the_published_schema(name: str) -> None:
 
 def test_execution_contract_fixture_satisfies_the_published_schema() -> None:
     """The execution-block fixture is a conforming document, not just a readable one."""
-    document = json.loads((FIXTURE_ROOT / "execution" / "omits-primary-slot.json").read_text(encoding="utf-8"))
+    document = json.loads((FIXTURE_ROOT / "execution" / "execution-block.json").read_text(encoding="utf-8"))
     errors = list(Draft202012Validator(SCHEMA).iter_errors(document))
     assert not errors, "\n".join(f"{list(e.path)}: {e.message}" for e in errors)
 

@@ -148,7 +148,6 @@ mod tests {
                 })
                 .collect(),
             execution: ExecutionInfo {
-                primary_slot: 0,
                 command: "echo hi".to_string(),
                 env: std::collections::HashMap::new(),
             },

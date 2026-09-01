@@ -50,7 +50,7 @@ class TestPSPFCore:
         return {
             "format": "PSPF/2025",
             "package": {"name": "test-bundle", "version": "1.0.0"},
-            "execution": {"primary_slot": 0, "command": "{workenv}/hello.sh"},
+            "execution": {"command": "{workenv}/hello.sh"},
             "verification": {"integrity_seal": {"required": True, "algorithm": "ed25519"}},
         }
 

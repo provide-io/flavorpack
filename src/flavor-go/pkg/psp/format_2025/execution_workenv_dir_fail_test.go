@@ -29,7 +29,7 @@ func TestRunBundleWithCwdWorkenvDirectoryMkdirAllFailure(t *testing.T) {
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "test", Version: "1.0.0"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution:     &ExecutionInfo{Command: "/bin/true"},
 		Build:         &BuildInfo{Tool: "test"},
 		Workenv: &WorkenvInfo{
 			Directories: []DirectorySpec{
@@ -96,7 +96,7 @@ func TestRunBundleWithCwdWorkenvDirectoryWithMode(t *testing.T) {
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "test", Version: "1.0.0"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution:     &ExecutionInfo{Command: "/bin/true"},
 		Build:         &BuildInfo{Tool: "test"},
 		Workenv: &WorkenvInfo{
 			Directories: []DirectorySpec{

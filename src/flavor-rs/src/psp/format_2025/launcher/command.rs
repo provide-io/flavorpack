@@ -225,7 +225,6 @@ mod tests {
             },
             slots: Vec::new(),
             execution: ExecutionInfo {
-                primary_slot: 0,
                 command: "echo hello".to_string(),
                 env: HashMap::from([(String::from("EXEC_ONLY"), String::from("execution"))]),
             },

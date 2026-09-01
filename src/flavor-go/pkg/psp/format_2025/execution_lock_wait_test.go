@@ -23,7 +23,7 @@ func TestRunBundleWaitForExtractionFails(t *testing.T) {
 			storedData: []byte("hello"),
 		},
 	}, Metadata{
-		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution: &ExecutionInfo{Command: "/bin/true"},
 		Build:     &BuildInfo{Tool: "test"},
 	})
 
@@ -62,7 +62,7 @@ func TestRunBundleCheckWorkenvValidityAfterWaitFails(t *testing.T) {
 			storedData: []byte("hello"),
 		},
 	}, Metadata{
-		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution: &ExecutionInfo{Command: "/bin/true"},
 		Build:     &BuildInfo{Tool: "test"},
 	})
 
@@ -108,7 +108,7 @@ func TestRunBundleChmodValidatedFails(t *testing.T) {
 			storedData: []byte("hello"),
 		},
 	}, Metadata{
-		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution: &ExecutionInfo{Command: "/bin/true"},
 		Build:     &BuildInfo{Tool: "test"},
 		Workenv: &WorkenvInfo{
 			Directories: []DirectorySpec{

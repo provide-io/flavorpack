@@ -35,7 +35,7 @@ func TestRunBundleWithCwdHasSBOMTrue(t *testing.T) {
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "test", Version: "1.0.0"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution:     &ExecutionInfo{Command: "/bin/true"},
 		Build:         &BuildInfo{Tool: "test"},
 		Slots: []SlotMetadata{
 			{Slot: 0, ID: "attestation-slot", Target: "{workenv}", Lifecycle: "attestation"},
@@ -110,7 +110,7 @@ func TestRunBundleWithCwdWorkenvDirectoryEscapesWorkenv(t *testing.T) {
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "test", Version: "1.0.0"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution:     &ExecutionInfo{Command: "/bin/true"},
 		Build:         &BuildInfo{Tool: "test"},
 		Slots:         []SlotMetadata{{Slot: 0, ID: "slot", Target: "{workenv}"}},
 		Workenv: &WorkenvInfo{

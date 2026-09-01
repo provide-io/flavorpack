@@ -38,7 +38,7 @@ func TestRunBundleWithCwdEnumerateAndExecuteNoMatches(t *testing.T) {
 				},
 			},
 		},
-		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution: &ExecutionInfo{Command: "/bin/true"},
 		Build:     &BuildInfo{Tool: "test"},
 	})
 
@@ -83,7 +83,7 @@ func TestRunBundleWithCwdEnumerateAndExecuteGlobError(t *testing.T) {
 				},
 			},
 		},
-		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution: &ExecutionInfo{Command: "/bin/true"},
 		Build:     &BuildInfo{Tool: "test"},
 	})
 

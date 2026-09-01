@@ -306,7 +306,6 @@ def mock_test_package(temp_dir: Path, test_builder: PSPFBuilder) -> Path:
         },
         execution={
             "command": "/usr/bin/python3 {slot:0}",
-            "primary_slot": 0,
             "environment": {"TEST_VAR": "test_value"},
         },
     )

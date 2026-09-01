@@ -132,21 +132,39 @@ def test_every_producer_derives_the_same_key() -> None:
     assert len(set(keys.values())) == 1, f"producers disagree on the derived key: {keys}"
 
 
-def test_execution_block_omitting_primary_slot_is_readable() -> None:
+def test_execution_block_is_readable() -> None:
     """One metadata document, read the same way by all three implementations.
 
-    ``primary_slot`` was required by Rust and optional everywhere else, and the
-    environment was written under ``env`` by Rust and Python but read from
-    ``environment`` by Go. So the same bytes were a package to two
-    implementations and not to the third, and an environment set by any of them
-    was invisible to Go. See tests/fixtures/format_compat/execution/README.md.
+    The environment is written under ``env`` by Rust and Python, and Go read
+    ``environment``, so a block set by either of the others was dropped in
+    silence. See tests/fixtures/format_compat/execution/README.md.
     """
-    document = json.loads((EXECUTION_DIR / "omits-primary-slot.json").read_text(encoding="utf-8"))
+    document = json.loads((EXECUTION_DIR / "execution-block.json").read_text(encoding="utf-8"))
     execution = document["execution"]
 
-    assert "primary_slot" not in execution, "the fixture must keep exercising the missing field"
-    assert execution.get("primary_slot", 0) == 0
+    assert execution["command"] == "true"
     assert execution["env"] == {"MODE": "prod"}
+
+
+def test_committed_packages_carry_unmodelled_execution_fields() -> None:
+    """Packages carrying execution fields nothing models must stay readable.
+
+    Every package in ``v1/`` was built while ``execution.primary_slot`` was
+    written, and no implementation models it now. Readers ignore members they do
+    not declare, so the packages still parse; a stricter decoder would make each
+    of them unopenable. The fixtures are the witness — if the field stops
+    appearing here they were rebuilt, and the tolerance they prove went too.
+    """
+    found = False
+
+    for name in FIXTURE_NAMES:
+        with PSPFReader(FIXTURE_DIR / name) as reader:
+            metadata = reader.read_metadata()
+        assert metadata["package"]["name"], f"{name}: metadata did not parse usefully"
+        if "primary_slot" in metadata.get("execution", {}):
+            found = True
+
+    assert found, "no committed fixture carries primary_slot; this test no longer proves anything"
 
 
 # 🌶️📦🔚

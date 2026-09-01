@@ -401,7 +401,6 @@ def create_python_builder_metadata(
     metadata = {
         "package": {"name": package_name, "version": version},
         "execution": {
-            "primary_slot": 0,
             "command": runtime_command,
             "env": {},
         },

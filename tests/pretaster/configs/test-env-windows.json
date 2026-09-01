@@ -34,7 +34,6 @@
   "execution": {
     "command": "/bin/bash {workenv}/scripts/env_test.sh",
     "args": [],
-    "env": {},
-    "primary_slot": 0
+    "env": {}
   }
 }

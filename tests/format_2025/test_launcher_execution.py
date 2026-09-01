@@ -74,7 +74,7 @@ class TestSlotTableReading:
             builder = PSPFBuilder.create().metadata(
                 format="PSPF/2025",
                 package={"name": "test-slots", "version": "1.0.0"},
-                execution={"command": "/usr/bin/python3 {slot:1}", "primary_slot": 0},
+                execution={"command": "/usr/bin/python3 {slot:1}"},
             )
 
             # Add slots
@@ -321,7 +321,7 @@ sys.exit(0)
                     "version": "1.0.0",
                     "entry_point": "/usr/bin/python3 {slot:0}",
                 },
-                execution={"command": "/usr/bin/python3 {slot:0}", "primary_slot": 0},
+                execution={"command": "/usr/bin/python3 {slot:0}"},
             )
 
             # Add slot

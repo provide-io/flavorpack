@@ -80,10 +80,7 @@ type CacheValidationInfo struct {
 }
 
 type ExecutionInfo struct {
-	// PrimarySlot is what {primary} refers to. A missing field is 0, which is
-	// what Python's executor and the Rust reader also settle on (#36).
-	PrimarySlot int    `json:"primary_slot"`
-	Command     string `json:"command"`
+	Command string `json:"command"`
 	// Environment is written under "env" -- the key the Rust and Python
 	// implementations both read and write. This used to be tagged
 	// "environment", so an env block from either of them was dropped in
