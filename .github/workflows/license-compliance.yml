@@ -16,19 +16,33 @@ on:
         type: boolean
         default: true
   
+  # These paths are the ones the jobs below actually scan. They used to be bare
+  # basenames -- 'go.mod', 'Cargo.toml' -- which match only at the repository
+  # root, and this repo keeps none of them there. Of the eleven patterns, two
+  # could ever match: four named files that do not exist here, four pointed at
+  # the wrong directory, and uv.lock, which is what pins the Python versions,
+  # was not listed at all. A Rust or Go dependency change never reached this
+  # workflow at PR time.
   pull_request:
     paths:
-      - 'requirements*.txt'
+      # Python: the job runs `uv sync` from the repository root.
       - 'pyproject.toml'
-      - 'poetry.lock'
-      - 'Pipfile*'
-      - 'go.mod'
-      - 'go.sum'
-      - 'Cargo.toml'
-      - 'Cargo.lock'
-      - 'package.json'
+      - 'uv.lock'
+      # Go: the job scans src/flavor-go.
+      - 'src/flavor-go/go.mod'
+      - 'src/flavor-go/go.sum'
+      # Rust: the job scans src/flavor-rs, against its committed policy.
+      - 'src/flavor-rs/Cargo.toml'
+      - 'src/flavor-rs/Cargo.lock'
+      - 'src/flavor-rs/deny.toml'
+      # The licence and notice text this repo ships under.
       - 'LICENSE*'
       - 'NOTICE*'
+      - 'LICENSES/**'
+      # This workflow and the scripts it calls, so a change to the checking
+      # itself is checked by the PR that makes it.
+      - '.github/workflows/license-compliance.yml'
+      - 'ci/license-*.sh'
   
   schedule:
     # Run monthly on the 1st at 5 AM UTC
@@ -441,85 +455,16 @@ jobs:
           cargo install cargo-license
           cargo install cargo-deny
       
-      - name: 📋 Generate License Report
-        run: |
-          echo "## 🦀 Rust License Compliance" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          cd src/flavor-rs
-          
-          # Generate license report
-          cargo license --json > rust-licenses.json 2>&1 || true
-          cargo license > rust-licenses.txt 2>&1 || true
-          
-          echo "### Rust Crate Licenses" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          head -50 rust-licenses.txt >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-      
-      - name: 🔍 Check Compliance with cargo-deny
+      # Reports every crate's licence, then enforces src/flavor-rs/deny.toml.
+      # Script policy: this used to be 74 lines of inline YAML that wrote its
+      # own deny.toml over the committed one and tested tee's exit status
+      # instead of cargo-deny's. Keep it in ci/.
+      - name: 🔍 Report and check Rust licences
         id: check
-        run: |
-          echo "### Rust License Compliance Check" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          cd src/flavor-rs
-          
-          # Create cargo-deny config for license checking (cargo-deny v0.14+ syntax)
-          cat > deny.toml << 'DENYEOF'
-          [licenses]
-          version = 2
-          unlicensed = "deny"
-          allow = [
-              "MIT",
-              "Apache-2.0",
-              "Apache-2.0 WITH LLVM-exception",
-              "BSD-2-Clause",
-              "BSD-3-Clause",
-              "ISC",
-              "Unicode-3.0",
-              "Unicode-DFS-2016",
-              "CC0-1.0",
-              "OpenSSL",
-              "Zlib",
-          ]
-          deny = [
-              "GPL-2.0",
-              "GPL-3.0",
-              "AGPL-3.0",
-          ]
+        env:
+          STRICT_MODE: ${{ inputs.strict_mode }}
+        run: ./ci/license-check-rust.sh
 
-          [[licenses.exceptions]]
-          allow = ["Unicode-DFS-2016", "Unicode-3.0"]
-          name = "unicode-ident"
-
-          [bans]
-          multiple-versions = "warn"
-          wildcards = "allow"
-
-          [sources]
-          unknown-registry = "warn"
-          unknown-git = "warn"
-          DENYEOF
-          
-          # Run cargo-deny check
-          if cargo deny check licenses 2>&1 | tee cargo-deny-licenses.log; then
-            echo "compliant=true" >> $GITHUB_OUTPUT
-            echo "✅ All Rust dependencies are license compliant" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "compliant=false" >> $GITHUB_OUTPUT
-            
-            if [ "${{ inputs.strict_mode }}" = "true" ]; then
-              echo "❌ Rust license compliance failed (strict mode)" >> $GITHUB_STEP_SUMMARY
-              exit 1
-            else
-              echo "⚠️ Rust license compliance issues detected:" >> $GITHUB_STEP_SUMMARY
-              echo '```' >> $GITHUB_STEP_SUMMARY
-              grep -E "error\[|warning\[" cargo-deny-licenses.log | head -20 >> $GITHUB_STEP_SUMMARY
-              echo '```' >> $GITHUB_STEP_SUMMARY
-            fi
-          fi
-      
       - name: 📤 Upload Rust License Reports
         if: always()
         uses: actions/upload-artifact@v7

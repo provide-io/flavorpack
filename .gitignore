@@ -93,6 +93,10 @@ coverage.xml
 src/flavor-go/coverage_*.out
 src/flavor-go/coverage.out
 src/flavor-go/coverage.txt
+# Written by ci/license-check-rust.sh
+src/flavor-rs/rust-licenses.json
+src/flavor-rs/rust-licenses.txt
+src/flavor-rs/cargo-deny-licenses.log
 tests/pretaster/logs/
 # Written by ci/run-tests.sh, ci/pr-tests.sh and ci/quality-checks.sh, which
 # are worth running locally -- see the 03b notes in docs/development/ci-cd.md.
