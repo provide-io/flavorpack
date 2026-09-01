@@ -36,6 +36,7 @@ pytestmark = [
 FIXTURE_ROOT = Path(__file__).resolve().parents[1] / "fixtures" / "format_compat"
 GENERATION = "v1"
 FIXTURE_DIR = FIXTURE_ROOT / GENERATION
+EXECUTION_DIR = FIXTURE_ROOT / "execution"
 
 
 def _expected() -> dict[str, Any]:
@@ -129,6 +130,23 @@ def test_every_producer_derives_the_same_key() -> None:
     """
     keys = {name: EXPECTED["fixtures"][name]["public_key"] for name in FIXTURE_NAMES}
     assert len(set(keys.values())) == 1, f"producers disagree on the derived key: {keys}"
+
+
+def test_execution_block_omitting_primary_slot_is_readable() -> None:
+    """One metadata document, read the same way by all three implementations.
+
+    ``primary_slot`` was required by Rust and optional everywhere else, and the
+    environment was written under ``env`` by Rust and Python but read from
+    ``environment`` by Go. So the same bytes were a package to two
+    implementations and not to the third, and an environment set by any of them
+    was invisible to Go. See tests/fixtures/format_compat/execution/README.md.
+    """
+    document = json.loads((EXECUTION_DIR / "omits-primary-slot.json").read_text(encoding="utf-8"))
+    execution = document["execution"]
+
+    assert "primary_slot" not in execution, "the fixture must keep exercising the missing field"
+    assert execution.get("primary_slot", 0) == 0
+    assert execution["env"] == {"MODE": "prod"}
 
 
 # 🌶️📦🔚

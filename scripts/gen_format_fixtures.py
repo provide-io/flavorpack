@@ -138,10 +138,11 @@ def build_with_python(payload: Path, launcher: Path, output: Path) -> None:
 
     result = (
         PSPFBuilder.create()
-        # The execution block has to be passed explicitly here. The Go and Rust
-        # builders derive it from the manifest, and the Rust reader treats
-        # primary_slot as required, so a fixture without it is one the Rust
-        # implementation cannot open at all.
+        # The execution block has to be passed explicitly here; the Go and Rust
+        # builders derive theirs from the manifest. primary_slot is spelled out
+        # to keep this generation's fixtures byte-identical to the committed
+        # ones. It is optional as of #36 -- Rust used to reject metadata without
+        # it, which is why this comment used to say the field was required.
         .metadata(
             name=PACKAGE_NAME,
             version=PACKAGE_VERSION,
