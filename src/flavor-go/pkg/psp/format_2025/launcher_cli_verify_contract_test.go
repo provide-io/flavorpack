@@ -19,6 +19,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"hash/adler32"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -136,9 +137,9 @@ func runVerify(t *testing.T, path string) (code int, output string) {
 	osExitFn = func(c int) { code = c; panic(launcherExitCode{code: c}) }
 	t.Cleanup(func() { osExitFn = oldExit })
 
-	output = captureStdout(t, func() {
+	output = captureCLIOutput(func(out io.Writer) {
 		defer func() { _ = recover() }()
-		verifyBundle(path, logging.NewNullLogger())
+		verifyBundle(out, path, logging.NewNullLogger())
 	})
 	return code, output
 }

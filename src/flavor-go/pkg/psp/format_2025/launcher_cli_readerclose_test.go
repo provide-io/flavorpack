@@ -2,6 +2,7 @@ package format_2025
 
 import (
 	"errors"
+	"io"
 	"os"
 	"testing"
 
@@ -32,7 +33,7 @@ func TestShowBundleInfoReaderCloseLogs(t *testing.T) {
 	// showBundleInfo always calls the deferred reader close, so the error path is exercised
 	func() {
 		defer func() { _ = recover() }()
-		showBundleInfo(bundle, logging.NewNullLogger())
+		showBundleInfo(io.Discard, bundle, logging.NewNullLogger())
 	}()
 
 	_ = exitCalled
@@ -75,7 +76,7 @@ func TestShowBundleInfoVerifyMagicTrailerFailsViaNonPSPFFile(t *testing.T) {
 
 	func() {
 		defer func() { _ = recover() }()
-		showBundleInfo(notBundle, logging.NewNullLogger())
+		showBundleInfo(io.Discard, notBundle, logging.NewNullLogger())
 	}()
 
 	if !exitCalled {
@@ -106,7 +107,7 @@ func TestExtractSlotReaderCloseLogs(t *testing.T) {
 
 	func() {
 		defer func() { _ = recover() }()
-		extractSlot(bundle, "0", outputDir, logging.NewNullLogger())
+		extractSlot(io.Discard, bundle, "0", outputDir, logging.NewNullLogger())
 	}()
 
 	_ = exitCalled
@@ -134,7 +135,7 @@ func TestShowMetadataReaderCloseLogs(t *testing.T) {
 
 	func() {
 		defer func() { _ = recover() }()
-		showMetadata(bundle, logging.NewNullLogger())
+		showMetadata(io.Discard, bundle, logging.NewNullLogger())
 	}()
 
 	_ = exitCalled
@@ -162,7 +163,7 @@ func TestVerifyBundleReaderCloseLogs(t *testing.T) {
 
 	func() {
 		defer func() { _ = recover() }()
-		verifyBundle(bundle, logging.NewNullLogger())
+		verifyBundle(io.Discard, bundle, logging.NewNullLogger())
 	}()
 
 	_ = exitCalled

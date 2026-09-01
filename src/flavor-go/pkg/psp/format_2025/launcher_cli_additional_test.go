@@ -40,20 +40,22 @@ func TestLauncherCLIAdditionalHelper(t *testing.T) {
 	}
 
 	logger := logging.NewNullLogger()
+	// This process is standing in for the launcher. Its stdout is what the
+	// parent reads back with CombinedOutput, so these write to the real one.
 	switch os.Getenv(EnvLauncherMode) {
 	case "launch":
 		LaunchWithLogLevel(bundle, args, "", "")
 	case "show-metadata":
-		showMetadata(bundle, logger)
+		showMetadata(os.Stdout, bundle, logger)
 	case "verify":
-		verifyBundle(bundle, logger)
+		verifyBundle(os.Stdout, bundle, logger)
 	case "show-info":
-		showBundleInfo(bundle, logger)
+		showBundleInfo(os.Stdout, bundle, logger)
 	case "extract":
 		if len(args) < 2 {
 			t.Fatal("missing extract arguments")
 		}
-		extractSlot(bundle, args[0], args[1], logger)
+		extractSlot(os.Stdout, bundle, args[0], args[1], logger)
 	default:
 		t.Fatalf("unsupported launcher CLI helper mode %q", os.Getenv(EnvLauncherMode))
 	}

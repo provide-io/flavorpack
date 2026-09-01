@@ -86,36 +86,23 @@ func TestDetectLauncherTypeSpecialCases(t *testing.T) {
 	}
 }
 
-func captureStdout(t *testing.T, fn func()) string {
-	t.Helper()
-
-	oldStdout := os.Stdout
-	r, w, err := os.Pipe()
-	if err != nil {
-		t.Fatalf("os.Pipe() error = %v", err)
-	}
-	os.Stdout = w
-	defer func() {
-		os.Stdout = oldStdout
-	}()
-
-	outC := make(chan string, 1)
-	go func() {
-		var buf bytes.Buffer
-		_, _ = io.Copy(&buf, r)
-		outC <- buf.String()
-	}()
-
-	fn()
-
-	if err := w.Close(); err != nil {
-		t.Fatalf("Close(writer) error = %v", err)
-	}
-	out := <-outC
-	if err := r.Close(); err != nil {
-		t.Fatalf("Close(reader) error = %v", err)
-	}
-	return out
+// captureCLIOutput runs fn with a private buffer and returns what fn wrote to
+// it.
+//
+// It replaces a helper that swapped the process-global os.Stdout for a pipe.
+// That helper restored the previous value on the way out, which is only correct
+// when capture windows nest. They do not: TestVerifyBundleDirectSuccess calls
+// t.Parallel(), so its window overlaps the other parallel tests in this package,
+// and an overlapping-but-not-nested pair restores a stale os.Stdout. The loser
+// captured an empty string while its output went to the terminal -- which turned
+// "assert the output contains X" into a flake, and the one assertion written as
+// "if output != \"\" && ..." into a check that passed on having captured nothing.
+//
+// Nothing here is process-global, so concurrent captures cannot interact.
+func captureCLIOutput(fn func(out io.Writer)) string {
+	var buf bytes.Buffer
+	fn(&buf)
+	return buf.String()
 }
 
 func TestCLIMetadataAndVerificationPaths(t *testing.T) {
@@ -125,23 +112,23 @@ func TestCLIMetadataAndVerificationPaths(t *testing.T) {
 		Target: "{workenv}/bin/app.txt",
 	}, 0, false)
 
-	infoOutput := captureStdout(t, func() {
-		showBundleInfo(bundle, logger)
+	infoOutput := captureCLIOutput(func(out io.Writer) {
+		showBundleInfo(out, bundle, logger)
 	})
 	if !strings.Contains(infoOutput, "demo v1.0.0") || !strings.Contains(infoOutput, "Slots: 1 (none) | Verified: ✓") {
 		t.Fatalf("showBundleInfo() output = %q", infoOutput)
 	}
 
-	metadataOutput := captureStdout(t, func() {
-		showMetadata(bundle, logger)
+	metadataOutput := captureCLIOutput(func(out io.Writer) {
+		showMetadata(out, bundle, logger)
 	})
 	if !strings.Contains(metadataOutput, "\"name\": \"demo\"") {
 		t.Fatalf("showMetadata() output = %q", metadataOutput)
 	}
 
 	extractDest := filepath.Join(t.TempDir(), "extract")
-	extractOutput := captureStdout(t, func() {
-		extractSlot(bundle, "0", extractDest, logger)
+	extractOutput := captureCLIOutput(func(out io.Writer) {
+		extractSlot(out, bundle, "0", extractDest, logger)
 	})
 	if !strings.Contains(extractOutput, "Extracted slot 0 (cli-slot) to") {
 		t.Fatalf("extractSlot() output = %q", extractOutput)
@@ -159,8 +146,8 @@ func TestShowBundleInfoReportsCodecInfo(t *testing.T) {
 		Operations: "gzip",
 	}, 0, false)
 
-	output := captureStdout(t, func() {
-		showBundleInfo(bundle, logger)
+	output := captureCLIOutput(func(out io.Writer) {
+		showBundleInfo(out, bundle, logger)
 	})
 
 	if !strings.Contains(output, "demo v1.0.0") {
@@ -180,8 +167,8 @@ func TestVerifyBundleDirectSuccess(t *testing.T) {
 	// which a real verifier is supposed to reject.
 	bundle, _, _, _ := buildSealedBundle(t)
 
-	output := captureStdout(t, func() {
-		verifyBundle(bundle, logger)
+	output := captureCLIOutput(func(out io.Writer) {
+		verifyBundle(out, bundle, logger)
 	})
 	if !strings.Contains(output, "✓ Magic sequence valid") || !strings.Contains(output, "✓ Bundle verification passed") {
 		t.Fatalf("verifyBundle() output = %q", output)
@@ -204,35 +191,35 @@ func TestCLIHelpersExitOnInvalidInputs(t *testing.T) {
 		{
 			name: "show info invalid bundle",
 			fn: func() {
-				showBundleInfo(filepath.Join(t.TempDir(), "missing.psp"), logger)
+				showBundleInfo(io.Discard, filepath.Join(t.TempDir(), "missing.psp"), logger)
 			},
 			wantCode: 1,
 		},
 		{
 			name: "show metadata invalid bundle",
 			fn: func() {
-				showMetadata(filepath.Join(t.TempDir(), "missing.psp"), logger)
+				showMetadata(io.Discard, filepath.Join(t.TempDir(), "missing.psp"), logger)
 			},
 			wantCode: 1,
 		},
 		{
 			name: "verify invalid bundle",
 			fn: func() {
-				verifyBundle(filepath.Join(t.TempDir(), "missing.psp"), logger)
+				verifyBundle(io.Discard, filepath.Join(t.TempDir(), "missing.psp"), logger)
 			},
 			wantCode: 1,
 		},
 		{
 			name: "extract invalid index",
 			fn: func() {
-				extractSlot(bundle, "nope", t.TempDir(), logger)
+				extractSlot(io.Discard, bundle, "nope", t.TempDir(), logger)
 			},
 			wantCode: 1,
 		},
 		{
 			name: "extract out of range",
 			fn: func() {
-				extractSlot(bundle, "9", t.TempDir(), logger)
+				extractSlot(io.Discard, bundle, "9", t.TempDir(), logger)
 			},
 			wantCode: 1,
 		},
@@ -283,7 +270,7 @@ func TestVerifyBundleDirectFailure(t *testing.T) {
 		osExitFn = oldExitFn
 	})
 
-	output := captureStdout(t, func() {
+	output := captureCLIOutput(func(out io.Writer) {
 		defer func() {
 			r := recover()
 			if r == nil {
@@ -297,7 +284,7 @@ func TestVerifyBundleDirectFailure(t *testing.T) {
 				t.Fatalf("exit code = %d, want 1", got.code)
 			}
 		}()
-		verifyBundle(bundle, logger)
+		verifyBundle(out, bundle, logger)
 	})
 
 	if !strings.Contains(output, "Bundle verification failed") {

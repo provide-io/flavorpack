@@ -2,6 +2,8 @@ package format_2025
 
 import (
 	"errors"
+	"io"
+	"strings"
 	"testing"
 
 	"github.com/provide-io/flavor/go/flavor/pkg/logging"
@@ -28,11 +30,18 @@ func TestShowBundleInfoVerifyMagicTrailerFails(t *testing.T) {
 	}
 
 	// showBundleInfo should complete normally (✗ is just displayed, not fatal)
-	func() {
+	output := captureCLIOutput(func(out io.Writer) {
 		defer func() { _ = recover() }()
-		showBundleInfo(bundle, logging.NewNullLogger())
-	}()
+		showBundleInfo(out, bundle, logging.NewNullLogger())
+	})
 
-	// exitCalled should be false — VerifyMagicTrailer failure is non-fatal (just changes display)
-	_ = exitCalled
+	// This used to end at "_ = exitCalled", so the branch it names was set up
+	// and then never checked -- showBundleInfo could have printed anything, or
+	// nothing. Asserting on the report is what makes it a test.
+	if exitCalled {
+		t.Error("a failed magic trailer is non-fatal to info; showBundleInfo must not exit")
+	}
+	if !strings.Contains(output, "Verified: ✗") {
+		t.Errorf("expected the report to mark the bundle unverified, got %q", output)
+	}
 }

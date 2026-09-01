@@ -32,7 +32,7 @@ func TestShowBundleInfoBadMagicTrailer(t *testing.T) {
 	// It will exit if ReadIndex fails due to a version mismatch from the bad trailer.
 	// So we call it and verify it either exits or doesn't — we just want line 73-75 hit.
 	exitCode, panicked := withStubbedExit(func() {
-		showBundleInfo(bundlePath, logger)
+		showBundleInfo(io.Discard, bundlePath, logger)
 	})
 	if panicked {
 		t.Fatal("unexpected non-exit panic in showBundleInfo")
