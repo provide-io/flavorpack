@@ -19,7 +19,7 @@ import time
 from typing import Any
 
 from provide.foundation import logger
-from provide.foundation.crypto import format_checksum as calculate_checksum
+from provide.foundation.crypto import format_checksum
 from provide.foundation.platform import get_arch_name, get_os_name
 
 from flavor.config.defaults import (
@@ -212,7 +212,7 @@ def prepare_slots(slots: list[SlotMetadata], options: BuildOptions) -> list[Prep
             checksum_data_size=len(data_to_checksum),
             checksum_type="sha256",
         )
-        checksum_str = calculate_checksum(data_to_checksum, "sha256")
+        checksum_str = format_checksum(data_to_checksum, "sha256")
         # Compute SHA-256 truncated to 8 bytes for binary descriptor
         hash_bytes = hashlib.sha256(data_to_checksum).digest()[:8]
         checksum_uint64 = int.from_bytes(hash_bytes, byteorder="little")
@@ -354,7 +354,8 @@ def _prepare_attestation_slot(
     launcher_type = "rust"
     launcher_data = load_launcher_binary(launcher_type, explicit_path=spec.options.launcher_bin)
     launcher_version = extract_launcher_version(launcher_data)
-    launcher_hash = f"sha256:{calculate_checksum(launcher_data, 'sha256')}"
+    # format_checksum returns "sha256:<hex>"; the prefix belongs to it, not here.
+    launcher_hash = format_checksum(launcher_data, "sha256")
 
     # ---- python version ------------------------------------------------------
     py_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"

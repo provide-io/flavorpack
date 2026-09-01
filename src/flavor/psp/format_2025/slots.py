@@ -283,12 +283,12 @@ class SlotMetadata:
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
-        from provide.foundation.crypto import format_checksum as calculate_checksum
+        from provide.foundation.crypto import format_checksum
 
         # Ensure checksum has prefix
         if not self.checksum:
             # Create a placeholder checksum from the id
-            self.checksum = calculate_checksum(self.id.encode(), "sha256")
+            self.checksum = format_checksum(self.id.encode(), "sha256")
 
         return {
             "slot": self.index,  # Position validator
