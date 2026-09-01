@@ -3,6 +3,7 @@ package format_2025
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strconv"
@@ -15,7 +16,7 @@ var readerCloseFn = (*Reader).Close
 var verifyMagicTrailerFn = (*Reader).VerifyMagicTrailer
 
 // showBundleInfo displays bundle information in human-readable format
-func showBundleInfo(exePath string, logger *slog.Logger) {
+func showBundleInfo(out io.Writer, exePath string, logger *slog.Logger) {
 	// Prepare bundle path (may extract from PE resources on Windows)
 	bundlePath, cleanup, err := prepareBundlePath(exePath, logger)
 	if err != nil {
@@ -77,27 +78,27 @@ func showBundleInfo(exePath string, logger *slog.Logger) {
 		verifyStatus = "✗"
 	}
 
-	fmt.Printf("%s v%s [PSPF/%s]\n",
+	fmt.Fprintf(out, "%s v%s [PSPF/%s]\n",
 		metadata.Package.Name,
 		metadata.Package.Version,
 		strings.TrimPrefix(metadata.Format, "PSPF/"))
 
-	fmt.Printf("Built with: %s | Launcher: %s | Size: %.1fMB\n",
+	fmt.Fprintf(out, "Built with: %s | Launcher: %s | Size: %.1fMB\n",
 		builderType,
 		launcherType,
 		float64(index.PackageSize)/(1024*1024))
 
-	fmt.Printf("Slots: %d (%s) | Verified: %s\n",
+	fmt.Fprintf(out, "Slots: %d (%s) | Verified: %s\n",
 		len(metadata.Slots),
 		codecInfo,
 		verifyStatus)
 
-	fmt.Printf("\nRun with: %s\n", metadata.Execution.Command)
-	fmt.Printf("CLI Mode: Use 'run' to execute, 'extract' to unpack\n")
+	fmt.Fprintf(out, "\nRun with: %s\n", metadata.Execution.Command)
+	fmt.Fprintf(out, "CLI Mode: Use 'run' to execute, 'extract' to unpack\n")
 }
 
 // extractSlot extracts a specific slot to an output directory
-func extractSlot(exePath, slotStr, outputDir string, logger *slog.Logger) {
+func extractSlot(out io.Writer, exePath, slotStr, outputDir string, logger *slog.Logger) {
 	slotIndex, err := strconv.Atoi(slotStr)
 	if err != nil {
 		logger.Error("Invalid slot index", "slot", slotStr)
@@ -143,7 +144,7 @@ func extractSlot(exePath, slotStr, outputDir string, logger *slog.Logger) {
 		osExitFn(1)
 	}
 
-	fmt.Printf("Extracted slot %d (%s) to %s\n", slotIndex, slot.ID, outputPath)
+	fmt.Fprintf(out, "Extracted slot %d (%s) to %s\n", slotIndex, slot.ID, outputPath)
 }
 
 // detectLauncherType attempts to determine the launcher implementation language
@@ -193,7 +194,7 @@ func detectLauncherType(exePath string) string {
 }
 
 // showMetadata outputs the raw JSON metadata
-func showMetadata(exePath string, logger *slog.Logger) {
+func showMetadata(out io.Writer, exePath string, logger *slog.Logger) {
 	// Prepare bundle path (may extract from PE resources on Windows)
 	bundlePath, cleanup, err := prepareBundlePath(exePath, logger)
 	if err != nil {
@@ -222,7 +223,7 @@ func showMetadata(exePath string, logger *slog.Logger) {
 	}
 
 	// Output raw JSON metadata
-	encoder := json.NewEncoder(os.Stdout)
+	encoder := json.NewEncoder(out)
 	encoder.SetIndent("", "  ")
 	if err := encoder.Encode(metadata); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: Failed to encode metadata: %v\n", err)
@@ -242,7 +243,7 @@ func showMetadata(exePath string, logger *slog.Logger) {
 //
 // The set below matches the Rust verifier's conjunction, so the same package
 // gets the same verdict from either implementation.
-func verifyBundle(exePath string, logger *slog.Logger) {
+func verifyBundle(out io.Writer, exePath string, logger *slog.Logger) {
 	// Prepare bundle path (may extract from PE resources on Windows)
 	bundlePath, cleanup, err := prepareBundlePath(exePath, logger)
 	if err != nil {
@@ -264,7 +265,7 @@ func verifyBundle(exePath string, logger *slog.Logger) {
 		}
 	}()
 
-	fmt.Println("Verifying bundle integrity...")
+	fmt.Fprintln(out, "Verifying bundle integrity...")
 
 	errors := []string{}
 
@@ -278,7 +279,7 @@ func verifyBundle(exePath string, logger *slog.Logger) {
 		case !ok:
 			errors = append(errors, fmt.Sprintf("%s verification failed", label))
 		default:
-			fmt.Printf("✓ %s valid\n", label)
+			fmt.Fprintf(out, "✓ %s valid\n", label)
 		}
 	}
 
@@ -307,7 +308,7 @@ func verifyBundle(exePath string, logger *slog.Logger) {
 			if _, err := reader.ReadSlot(i); err != nil {
 				errors = append(errors, fmt.Sprintf("Slot %d (%s) read failed: %v", i, slot.ID, err))
 			} else {
-				fmt.Printf("✓ Slot %d (%s) checksum valid\n", i, slot.ID)
+				fmt.Fprintf(out, "✓ Slot %d (%s) checksum valid\n", i, slot.ID)
 			}
 		}
 	}
@@ -317,11 +318,11 @@ func verifyBundle(exePath string, logger *slog.Logger) {
 	record("Attestation policy hash", true, reader.VerifyAttestationPolicyHash())
 
 	if len(errors) == 0 {
-		fmt.Println("\n✓ Bundle verification passed")
+		fmt.Fprintln(out, "\n✓ Bundle verification passed")
 	} else {
-		fmt.Println("\n✗ Bundle verification failed:")
+		fmt.Fprintln(out, "\n✗ Bundle verification failed:")
 		for _, err := range errors {
-			fmt.Printf("  - %s\n", err)
+			fmt.Fprintf(out, "  - %s\n", err)
 		}
 		osExitFn(1)
 	}
