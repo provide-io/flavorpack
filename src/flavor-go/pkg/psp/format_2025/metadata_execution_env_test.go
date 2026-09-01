@@ -134,3 +134,28 @@ func TestExecutionConfigReadsEnvKey(t *testing.T) {
 		})
 	}
 }
+
+// Both custom unmarshalers must still surface a malformed document rather than
+// swallowing the error and leaving a zero value behind.
+func TestExecutionUnmarshalRejectsMalformedJSON(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		name string
+		into json.Unmarshaler
+	}{
+		{"ExecutionInfo", &ExecutionInfo{}},
+		{"ExecutionConfig", &ExecutionConfig{}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			if err := tc.into.UnmarshalJSON([]byte(`{"command":`)); err == nil {
+				t.Error("expected an error from truncated JSON, got nil")
+			}
+			if err := tc.into.UnmarshalJSON([]byte(`{"env":"not-a-map"}`)); err == nil {
+				t.Error("expected an error when env is not an object, got nil")
+			}
+		})
+	}
+}
