@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"hash/adler32"
 	"io"
 )
 
@@ -39,6 +40,75 @@ func (r *Reader) VerifyMagicTrailer() (bool, error) {
 	}
 
 	return true, nil
+}
+
+// VerifyIndexChecksum recomputes the Adler-32 over the index block and compares
+// it to the value the index carries.
+//
+// ReadIndex deliberately does not do this -- it validates only the format
+// version -- so anything that wants the guarantee has to ask for it. The
+// checksum covers the index with its own four bytes zeroed, which is the order
+// the builder writes it in.
+func (r *Reader) VerifyIndexChecksum() (bool, error) {
+	index, err := r.ReadIndex()
+	if err != nil {
+		return false, err
+	}
+
+	// Compare against the bytes on disk rather than a re-Pack of the parsed
+	// struct: a round trip that dropped a field would otherwise agree with
+	// itself and report a valid index.
+	raw, err := r.ReadMagicTrailer()
+	if err != nil {
+		return false, err
+	}
+	if len(raw) != IndexSize {
+		return false, fmt.Errorf("invalid index size: %d", len(raw))
+	}
+
+	zeroed := make([]byte, IndexSize)
+	copy(zeroed, raw)
+	binary.LittleEndian.PutUint32(zeroed[4:8], 0)
+
+	return adler32.Checksum(zeroed) == index.IndexChecksum, nil
+}
+
+// VerifyMetadataChecksum compares the SHA-256 of the metadata archive against
+// the digest recorded in the index.
+//
+// ReadMetadata gunzips and decodes but never checks this, so metadata could be
+// replaced wholesale and still parse.
+func (r *Reader) VerifyMetadataChecksum() (bool, error) {
+	index, err := r.ReadIndex()
+	if err != nil {
+		return false, err
+	}
+
+	archive, err := r.ReadMetadataArchive()
+	if err != nil {
+		return false, err
+	}
+
+	digest := sha256.Sum256(archive)
+	return bytes.Equal(digest[:], index.MetadataChecksum[:]), nil
+}
+
+// VerifyPackageSize checks that the index agrees with the file it describes.
+func (r *Reader) VerifyPackageSize() (bool, error) {
+	index, err := r.ReadIndex()
+	if err != nil {
+		return false, err
+	}
+	if err := r.Open(); err != nil {
+		return false, err
+	}
+
+	info, err := r.file.Stat()
+	if err != nil {
+		return false, err
+	}
+
+	return index.PackageSize == uint64(info.Size()), nil
 }
 
 // VerifyAllChecksums verifies all slot checksums

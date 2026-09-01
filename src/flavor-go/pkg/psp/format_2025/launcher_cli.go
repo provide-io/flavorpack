@@ -230,7 +230,18 @@ func showMetadata(exePath string, logger *slog.Logger) {
 	}
 }
 
-// verifyBundle performs integrity verification on the bundle
+// verifyBundle performs integrity verification on the bundle.
+//
+// Every line this prints is a check that was actually made. It did not used to
+// be: "Index checksum valid" was printed whenever the index parsed, "Metadata
+// checksum valid" whenever it gunzipped, and the Ed25519 seal was not consulted
+// at all. The checks that were real -- the magic bookends and the slot digests
+// -- are unkeyed, so anyone able to rewrite the file could recompute them. The
+// signature is the only check that needs the signing key, and it was the one
+// being skipped.
+//
+// The set below matches the Rust verifier's conjunction, so the same package
+// gets the same verdict from either implementation.
 func verifyBundle(exePath string, logger *slog.Logger) {
 	// Prepare bundle path (may extract from PE resources on Windows)
 	bundlePath, cleanup, err := prepareBundlePath(exePath, logger)
@@ -257,35 +268,53 @@ func verifyBundle(exePath string, logger *slog.Logger) {
 
 	errors := []string{}
 
-	_, err = verifyMagicTrailerFn(reader)
-	if err != nil {
-		errors = append(errors, fmt.Sprintf("Magic verification failed: %v", err))
-	} else {
-		fmt.Println("✓ Magic sequence valid")
+	// record one result. A check that could not run is a failure: "could not
+	// tell" is not the same as "fine", and reporting it as a pass is how this
+	// command came to vouch for things it had never looked at.
+	record := func(label string, ok bool, err error) {
+		switch {
+		case err != nil:
+			errors = append(errors, fmt.Sprintf("%s verification failed: %v", label, err))
+		case !ok:
+			errors = append(errors, fmt.Sprintf("%s verification failed", label))
+		default:
+			fmt.Printf("✓ %s valid\n", label)
+		}
 	}
 
-	_, err = reader.ReadIndex()
-	if err != nil {
-		errors = append(errors, fmt.Sprintf("Index verification failed: %v", err))
-	} else {
-		fmt.Println("✓ Index checksum valid")
-	}
+	magicOK, err := verifyMagicTrailerFn(reader)
+	record("Magic sequence", magicOK, err)
+
+	indexOK, err := reader.VerifyIndexChecksum()
+	record("Index checksum", indexOK, err)
+
+	metadataOK, err := reader.VerifyMetadataChecksum()
+	record("Metadata checksum", metadataOK, err)
+
+	sizeOK, err := reader.VerifyPackageSize()
+	record("Package size", sizeOK, err)
+
+	// An absent seal counts as a failure, not an exemption -- an unsigned
+	// package is exactly what an attacker would hand you.
+	sealOK, err := reader.VerifyIntegritySeal()
+	record("Integrity seal", sealOK, err)
 
 	metadata, err := reader.ReadMetadata()
 	if err != nil {
-		errors = append(errors, fmt.Sprintf("Metadata verification failed: %v", err))
+		errors = append(errors, fmt.Sprintf("Metadata read failed: %v", err))
 	} else {
-		fmt.Println("✓ Metadata checksum valid")
-
 		for i, slot := range metadata.Slots {
-			_, err := reader.ReadSlot(i)
-			if err != nil {
+			if _, err := reader.ReadSlot(i); err != nil {
 				errors = append(errors, fmt.Sprintf("Slot %d (%s) read failed: %v", i, slot.ID, err))
 			} else {
 				fmt.Printf("✓ Slot %d (%s) checksum valid\n", i, slot.ID)
 			}
 		}
 	}
+
+	// Both are fail-closed and no-ops on a package without attestation.
+	record("Attestation SBOM digest", true, reader.VerifyAttestationSbomDigest())
+	record("Attestation policy hash", true, reader.VerifyAttestationPolicyHash())
 
 	if len(errors) == 0 {
 		fmt.Println("\n✓ Bundle verification passed")
