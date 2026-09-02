@@ -30,22 +30,6 @@ func withBuildExitTrap(t *testing.T) (exitCode *int, cleanup func()) {
 	return exitCode, func() { buildExitFn = old }
 }
 
-// recoverBuilderExit must be called from inside a deferred function that wraps
-// a buildExitFn-trapped call. It calls recover() and returns (true, exitCode) if
-// a builderExitCode panic was caught, or (false, 0) if no panic occurred.
-// Unexpected panics are re-panicked.
-func recoverBuilderExit() (exited bool, code int) {
-	r := recover()
-	if r == nil {
-		return false, 0
-	}
-	ec, ok := r.(builderExitCode)
-	if !ok {
-		panic(r)
-	}
-	return true, ec.code
-}
-
 // assertBuilderExited must be called directly from a deferred function.
 // It calls recover() and asserts that a builderExitCode panic occurred with the
 // expected exit code.

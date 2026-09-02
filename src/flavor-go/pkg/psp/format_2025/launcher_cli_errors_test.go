@@ -245,7 +245,7 @@ func TestShowBundleInfoVerifyStatusFail(t *testing.T) {
 		}
 		defer func() {
 			osExitFn = old
-			recover() // swallow exit panic
+			_ = recover() // swallow exit panic
 		}()
 		showBundleInfo(out, bundle, logger)
 	})
@@ -310,7 +310,7 @@ func TestVerifyBundleSlotReadFailure(t *testing.T) {
 		}
 		defer func() {
 			osExitFn = old
-			recover()
+			_ = recover()
 		}()
 		verifyBundle(out, bundlePath, logger)
 	})
@@ -386,7 +386,7 @@ func TestVerifyBundleWithCleanupAndReaderFailure(t *testing.T) {
 		}
 		defer func() {
 			osExitFn = old
-			recover()
+			_ = recover()
 		}()
 		verifyBundle(out, "/fake/exe", logging.NewNullLogger())
 	})

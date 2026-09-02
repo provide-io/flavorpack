@@ -53,12 +53,10 @@ class TestWheelBuilderCriticalFeatures:
                 "flavor.packaging.python.pypapip_manager.PyPaPipManager.download_wheels_from_requirements",
                 side_effect=mock_download_side_effect,
             ) as mock_download:
-                # Even with use_uv_for_download=True, should still use PyPA pip
                 result = self.wheel_builder.download_wheels_for_resolved_deps(
                     python_exe,
                     requirements_file,
                     wheel_dir,
-                    use_uv_for_download=True,  # This should be ignored
                 )
 
                 # Verify PyPA pip was used

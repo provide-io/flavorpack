@@ -4,7 +4,6 @@ package format_2025
 
 import (
 	"os"
-	"runtime"
 	"testing"
 
 	"github.com/provide-io/flavor/go/flavor/pkg/logging"
@@ -14,9 +13,7 @@ import (
 // when os.OpenFile returns a non-IsExist error (EACCES / permission denied).
 // We make the Extract() directory non-writable so OpenFile with O_CREATE fails.
 func TestTryAcquireLockPermissionDenied(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("chmod-based permission tests are not reliable on Windows")
-	}
+	// The //go:build !windows tag above already keeps this off Windows.
 	if os.Getuid() == 0 {
 		t.Skip("cannot test permission errors as root")
 	}

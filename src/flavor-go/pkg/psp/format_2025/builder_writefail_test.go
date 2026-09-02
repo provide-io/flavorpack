@@ -91,12 +91,12 @@ func TestDoBuildLauncherWriteFailureExits(t *testing.T) {
 		t.Fatalf("os.Pipe() error = %v", err)
 	}
 	// Close the read end so writes fail
-	pr.Close()
+	_ = pr.Close()
 
 	old := openOutputFileFn
 	t.Cleanup(func() {
 		openOutputFileFn = old
-		pw.Close()
+		_ = pw.Close()
 	})
 	openOutputFileFn = func(_ string, _ int, _ os.FileMode) (*os.File, error) {
 		return pw, nil
@@ -221,7 +221,7 @@ func TestDoBuildAlignmentPaddingWriteFailure(t *testing.T) {
 	old := openOutputFileFn
 	t.Cleanup(func() {
 		openOutputFileFn = old
-		devFull.Close()
+		_ = devFull.Close()
 	})
 	openOutputFileFn = func(_ string, _ int, _ os.FileMode) (*os.File, error) {
 		return devFull, nil
@@ -254,7 +254,7 @@ func TestDoBuildPackageEmojiWriteFailure(t *testing.T) {
 	old := openOutputFileFn
 	t.Cleanup(func() {
 		openOutputFileFn = old
-		devFull.Close()
+		_ = devFull.Close()
 	})
 	openOutputFileFn = func(_ string, _ int, _ os.FileMode) (*os.File, error) {
 		return devFull, nil

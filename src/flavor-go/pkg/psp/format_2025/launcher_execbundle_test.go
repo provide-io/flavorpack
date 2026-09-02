@@ -62,13 +62,10 @@ func TestExecBundleReplaceSyscallError(t *testing.T) {
 	logger := logging.NewNullLogger()
 
 	err := execBundleReplace(bundle, nil, t.TempDir(), logger)
+	// Any error is fine; this only checks that one propagated.
 	if err == nil {
 		t.Fatal("expected error from syscallExecFn")
 	}
-	if !errors.Is(err, nil) {
-		// Any error is fine; just checking it propagated.
-	}
-	_ = err
 }
 
 // TestExecBundleReplaceLookPathSuccess covers the lookPathInEnv success path

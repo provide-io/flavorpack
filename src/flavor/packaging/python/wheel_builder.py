@@ -282,16 +282,18 @@ class WheelBuilder:
         python_exe: Path,
         requirements_file: Path,
         wheel_dir: Path,
-        use_uv_for_download: bool = False,
     ) -> list[Path]:
         """
         Download wheels for resolved dependencies.
+
+        Downloads always go through PyPA pip; see the strategy note below. A
+        ``use_uv_for_download`` flag sat in this signature and was never read,
+        so a caller asking for UV silently got pip.
 
         Args:
             python_exe: Python executable to use
             requirements_file: Locked requirements file
             wheel_dir: Directory to download wheels to
-            use_uv_for_download: Whether to use UV for downloading
 
         Returns:
             List of downloaded wheel file paths

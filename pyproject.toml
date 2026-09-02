@@ -60,6 +60,20 @@ dev = [
     "jsonschema>=4.0",
     "types-jsonschema>=4.0",
 ]
+# The linters ci/quality-checks.sh runs. Pinned to a minor series: an
+# unpinned install means the finding set moves without a commit, so a
+# blocking check can start failing, or quietly stop reporting, because
+# an upstream release shipped.
+# Floors are what CI enforced when this group was introduced, so a sync can
+# never quietly weaken a check; ceilings stop a major release changing what is
+# enforced without a commit. uv.lock records the exact versions.
+quality = [
+    "ruff>=0.16.5,<0.17",
+    "mypy>=2.3.1,<3",
+    "bandit[toml]>=1.9.4,<2",
+    "xenon>=0.9.3,<0.10",
+    "vulture>=2.16,<3",
+]
 docs = [
     "provide-testkit[docs]>=0.4.0",
     "mkdocs-mermaid2-plugin>=1.1.0",
@@ -319,6 +333,23 @@ entry_point = "flavor.cli:main"
 [tool.flavor.execution]
 # Pass all environment variables through, especially cache-related ones
 # This ensures the packaged flavor can access the workenv cache
+[tool.vulture]
+# Names required by a protocol the caller does not read: the three __exit__
+# arguments, and the (instance, attribute, value) an attrs validator receives.
+# Renaming them to _ would break the signature they have to match.
+ignore_names = ["exc_type", "exc_val", "exc_tb", "instance", "attribute"]
+# Protobuf output. Its cross-module imports register message types by import
+# side effect, so they read as unused, and the files are regenerated rather
+# than edited.
+exclude = ["*/generated/*"]
+# 80 catches unused variables and imports. It does not catch unused functions
+# or classes, which vulture rates at 60, so a clean run here is not a claim
+# that the tree holds no dead code. 60 currently reports 177 names, most of
+# them exported constants with no internal caller; lowering the threshold
+# means triaging those first.
+min_confidence = 80
+paths = ["src/"]
+
 [tool.codespell]
 # "stip" is intentional test data (toml key), "nd" is a variable name,
 # "requestor" and "shs" are used in spec docs with specific meaning

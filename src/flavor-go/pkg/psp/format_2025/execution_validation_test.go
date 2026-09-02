@@ -422,12 +422,6 @@ func TestRunBundleWithCwdPrepareBundlePathError(t *testing.T) {
 	}
 }
 
-// findAttestationPolicyHashOffset finds the offset of AttestationPolicyHash in the index.
-// From index.go Pack(): copy(buf[1504:1568], idx.AttestationPolicyHash[:])
-func findAttestationPolicyHashOffset() int {
-	return 1504
-}
-
 // Verify our patch offset assumptions by checking a known bundle index.
 func TestIndexPatchOffsets(t *testing.T) {
 	t.Parallel()

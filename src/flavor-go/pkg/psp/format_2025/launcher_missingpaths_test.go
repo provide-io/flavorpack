@@ -40,7 +40,7 @@ func TestLaunchWithLogLevelNonCLIExecBundleError(t *testing.T) {
 	t.Setenv(EnvWorkenvCache, "false")
 	t.Setenv(EnvValidation, "none")
 	// Ensure CLI mode is OFF
-	os.Unsetenv(EnvLauncherCLI)
+	_ = os.Unsetenv(EnvLauncherCLI)
 
 	// Inject syscallExecFn to return an error that doesn't match any keyword,
 	// so the final osExitFn(ExitExecutionError) at line 178 is hit.
@@ -86,8 +86,8 @@ func TestLaunchWithLogLevelNonCLIExitPSPFError(t *testing.T) {
 	cacheRoot := t.TempDir()
 	t.Setenv(EnvCacheDir, cacheRoot)
 	t.Setenv(EnvWorkenvCache, "false")
-	os.Unsetenv(EnvLauncherCLI)
-	os.Unsetenv(EnvValidation)
+	_ = os.Unsetenv(EnvLauncherCLI)
+	_ = os.Unsetenv(EnvValidation)
 
 	// Force exec mode to avoid spawn complications
 	t.Setenv(EnvExecMode, "exec")
@@ -138,7 +138,7 @@ func TestLaunchWithLogLevelNonCLIExitExtractionError(t *testing.T) {
 	t.Setenv(EnvWorkenvCache, "false")
 	t.Setenv(EnvValidation, "none")
 	t.Setenv(EnvExecMode, "exec")
-	os.Unsetenv(EnvLauncherCLI)
+	_ = os.Unsetenv(EnvLauncherCLI)
 
 	func() {
 		defer func() { _ = recover() }()
@@ -291,7 +291,7 @@ func TestLaunchWithLogLevelNonCLIExitIOError(t *testing.T) {
 	t.Setenv(EnvWorkenvCache, "false")
 	t.Setenv(EnvValidation, "none")
 	t.Setenv(EnvExecMode, "exec")
-	os.Unsetenv(EnvLauncherCLI)
+	_ = os.Unsetenv(EnvLauncherCLI)
 
 	func() {
 		defer func() { _ = recover() }()

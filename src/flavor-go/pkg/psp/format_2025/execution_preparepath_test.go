@@ -65,7 +65,7 @@ func TestPrepareBundlePathWriteFailure(t *testing.T) {
 			return nil, err
 		}
 		// Close it immediately — subsequent Write will fail
-		f.Close()
+		_ = f.Close()
 		return f, nil
 	}
 
