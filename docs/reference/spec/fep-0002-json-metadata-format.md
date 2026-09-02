@@ -444,15 +444,21 @@ True when the slot refers to the launcher binary itself rather than to separate 
 The command line the launcher runs after extraction. Placeholders are
 substituted first.
 
-Three are substituted by every launcher, and a producer may rely on them:
+Four are substituted by every launcher, and a producer may rely on them:
 
 | Placeholder | Substitution |
 |-------------|--------------|
 | `{workenv}` | Absolute path of the workenv directory |
 | `{package_name}` | `package.name` |
 | `{version}` | `package.version` |
+| `{slot:N}` | Path of slot *N* in the workenv |
 
-Five more are substituted by some launchers and passed through literally by the
+A slot resolves to where its content sits once extracted: `workenv/<target>` for
+a slot with a target, `workenv/slot_<N>_<id>` for one without, and the workenv
+itself for a slot whose operations include `tar`, whose entries are spread
+across it rather than gathered at one path.
+
+Three more are substituted by some launchers and passed through literally by the
 rest. A command using one runs correctly under the launchers that expand it and
 receives the placeholder text verbatim under the others, which fails at the
 point the command runs and nowhere earlier. §9.6 gives the support matrix, and
@@ -460,7 +466,6 @@ the divergence is tracked in provide-io/flavorpack#52.
 
 | Placeholder | Substitution |
 |-------------|--------------|
-| `{slot:N}` | Extracted path of slot *N* |
 | `{bin}` | The workenv's binary directory |
 | `{python}` | Interpreter path |
 | `{python_bin}` | Interpreter's binary directory |
@@ -944,17 +949,15 @@ The launchers expand different sets of placeholders in `execution.command`:
 | `{workenv}` | yes | yes | yes |
 | `{package_name}` | yes | yes | yes |
 | `{version}` | yes | yes | yes |
-| `{slot:N}` | no | yes | yes |
+| `{slot:N}` | yes | yes | yes |
 | `{bin}` | no | no | yes |
 | `{python}` | no | no | yes |
 | `{python_bin}` | no | no | yes |
 
-A command that depends on any of the last five runs under some launchers and
-passes the placeholder text to the shell under the others. `{slot:N}` is the one
-to watch: two launchers implement it, and the third is the default launcher for
-packages the Python builder produces.
+A command that depends on any of the last three runs under Python and passes the
+placeholder text to the shell under the others.
 
-A producer targeting every launcher should confine itself to the first three.
+A producer targeting every launcher should confine itself to the first four.
 
 Tracked in provide-io/flavorpack#52.
 
