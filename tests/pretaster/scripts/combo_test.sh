@@ -16,8 +16,11 @@ case "$CMD" in
         exit 0
         ;;
     env)
-        env | sort | head -10
-        echo "  ... ($(env | wc -l) total)"
+        # Only the launcher's own variables. This runs inside a package under
+        # test, so the environment is whatever the developer or the CI runner
+        # had set, and its output goes to a build log.
+        env | grep '^FLAVOR_' | sort
+        echo "  ... ($(env | wc -l) variables in total, $(env | grep -c '^FLAVOR_') of them FLAVOR_*)"
         exit 0
         ;;
     argv)
