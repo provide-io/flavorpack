@@ -24,7 +24,6 @@
   "execution": {
     "command": "{workenv}/bin/permission-test",
     "args": [],
-    "env": {},
-    "primary_slot": 0
+    "env": {}
   }
 }

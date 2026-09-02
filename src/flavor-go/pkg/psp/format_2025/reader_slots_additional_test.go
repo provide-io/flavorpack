@@ -74,7 +74,7 @@ func buildSingleSlotBundleForTests(t *testing.T, storedData, originalData []byte
 			Version: "1.0.0",
 		},
 		Slots:     []SlotMetadata{slotMeta},
-		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution: &ExecutionInfo{Command: "/bin/true"},
 		Build:     &BuildInfo{Tool: "flavor-go"},
 	}
 	metaJSON, err := json.Marshal(metadata)

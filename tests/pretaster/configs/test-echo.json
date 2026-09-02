@@ -35,7 +35,6 @@
   "execution": {
     "command": "{workenv}/bin/tastesh {workenv}/scripts/echo_test.sh",
     "args": [],
-    "env": {},
-    "primary_slot": 1
+    "env": {}
   }
 }

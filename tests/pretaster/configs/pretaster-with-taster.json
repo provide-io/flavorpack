@@ -71,7 +71,6 @@
     "env": {
       "PRETASTER_MODE": "builder",
       "BUNDLED_TASTER": "{workenv}/bin/taster.psp"
-    },
-    "primary_slot": 0
+    }
   }
 }

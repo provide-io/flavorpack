@@ -473,7 +473,7 @@ mod tests {
         offset += 64;
 
         // Write gzip metadata
-        let meta_json = br#"{"format":"PSPF/2025","package":{"name":"test","version":"0.0.1"},"slots":[],"execution":{"primary_slot":0,"command":"echo"}}"#;
+        let meta_json = br#"{"format":"PSPF/2025","package":{"name":"test","version":"0.0.1"},"slots":[],"execution":{"command":"echo"}}"#;
         let mut gz_buf = Vec::new();
         {
             let mut enc = GzEncoder::new(&mut gz_buf, Compression::default());
@@ -740,11 +740,11 @@ mod tests {
         // Must include "format" and "execution" to satisfy Metadata deserialization.
         let meta_json: Vec<u8> = if let Some(p) = policy_json {
             format!(
-                r#"{{"format":"PSPF/2025","package":{{"name":"test","version":"0.0.1"}},"slots":[],"execution":{{"primary_slot":0,"command":"echo"}},"policy":{p}}}"#
+                r#"{{"format":"PSPF/2025","package":{{"name":"test","version":"0.0.1"}},"slots":[],"execution":{{"command":"echo"}},"policy":{p}}}"#
             )
             .into_bytes()
         } else {
-            br#"{"format":"PSPF/2025","package":{"name":"test","version":"0.0.1"},"slots":[],"execution":{"primary_slot":0,"command":"echo"}}"#.to_vec()
+            br#"{"format":"PSPF/2025","package":{"name":"test","version":"0.0.1"},"slots":[],"execution":{"command":"echo"}}"#.to_vec()
         };
 
         let mut gz_buf = Vec::new();

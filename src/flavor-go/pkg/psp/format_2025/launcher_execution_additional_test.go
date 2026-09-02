@@ -44,7 +44,7 @@ func TestExtractAndMergeSlotsToWorkenvMergesSlotZeroDirectoriesAndMarksExtractio
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution:     &ExecutionInfo{Command: "/bin/true"},
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	}
 
@@ -128,7 +128,7 @@ func TestExtractAndMergeSlotsToWorkenvMergesHigherSlotDirectoriesIntoWorkenvRoot
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution:     &ExecutionInfo{Command: "/bin/true"},
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	}
 
@@ -187,7 +187,7 @@ func TestExtractAndMergeSlotsToWorkenvReportsCopyFailureWhenDestinationIsDirecto
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution:     &ExecutionInfo{Command: "/bin/true"},
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	}
 

@@ -83,7 +83,7 @@ func buildMultiSlotBundleForTests(t *testing.T, specs []multiSlotBundleSpec, met
 		metadata.Package.Version = "1.0.0"
 	}
 	if metadata.Execution == nil {
-		metadata.Execution = &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"}
+		metadata.Execution = &ExecutionInfo{Command: "/bin/true"}
 	}
 	if metadata.Build == nil {
 		metadata.Build = &BuildInfo{Tool: "flavor-go"}
@@ -387,8 +387,7 @@ func TestRunBundleWithCwdPreparesWorkenvAndCommands(t *testing.T) {
 			},
 		},
 		Execution: &ExecutionInfo{
-			PrimarySlot: 0,
-			Command:     "/bin/true {slot:0} {slot:1} {workenv}",
+			Command: "/bin/true {slot:0} {slot:1} {workenv}",
 			Environment: map[string]string{
 				"CUSTOM_SLOT": "{slot:0}",
 			},
@@ -519,7 +518,7 @@ func TestRunBundleWithCwdMergesTarSlotDirectories(t *testing.T) {
 			Name:    "demo",
 			Version: "1.0.0",
 		},
-		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution: &ExecutionInfo{Command: "/bin/true"},
 		Build:     &BuildInfo{Tool: "flavor-go"},
 	})
 
@@ -562,7 +561,7 @@ func TestExtractAndMergeSlotsToWorkenvMergesContentAndWritesMetadata(t *testing.
 			Name:    "demo",
 			Version: "1.0.0",
 		},
-		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution: &ExecutionInfo{Command: "/bin/true"},
 		Build:     &BuildInfo{Tool: "flavor-go"},
 	}
 
@@ -666,7 +665,7 @@ func TestExtractAndMergeSlotsToWorkenvMovesSlotTopLevelFilesToWorkenvRoot(t *tes
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution:     &ExecutionInfo{Command: "/bin/true"},
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	}
 
@@ -732,7 +731,7 @@ func TestExtractAndMergeSlotsToWorkenvMergesRegularTargetDirectories(t *testing.
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution:     &ExecutionInfo{Command: "/bin/true"},
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	}
 
@@ -799,7 +798,7 @@ func TestExtractAndMergeSlotsToWorkenvCleansUpTempDirOnExtractionFailure(t *test
 			Name:    "demo",
 			Version: "1.0.0",
 		},
-		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution: &ExecutionInfo{Command: "/bin/true"},
 		Build:     &BuildInfo{Tool: "flavor-go"},
 	}
 
@@ -872,7 +871,7 @@ func TestExtractAndMergeSlotsToWorkenvFailsWhenTempExtractionCannotBeCreated(t *
 			Name:    "demo",
 			Version: "1.0.0",
 		},
-		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution: &ExecutionInfo{Command: "/bin/true"},
 		Build:     &BuildInfo{Tool: "flavor-go"},
 	})
 
@@ -912,7 +911,7 @@ func TestExtractAndMergeSlotsToWorkenvMovesRegularFilesToWorkenv(t *testing.T) {
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution:     &ExecutionInfo{Command: "/bin/true"},
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	}
 
@@ -970,7 +969,7 @@ func TestExtractAndMergeSlotsToWorkenvFailsWhenMetadataPathIsAFile(t *testing.T)
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution:     &ExecutionInfo{Command: "/bin/true"},
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	}
 
@@ -1163,7 +1162,7 @@ func TestRunBundleWithCwdRejectsInvalidSetupCommand(t *testing.T) {
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
 		SetupCommands: []interface{}{`"`},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution:     &ExecutionInfo{Command: "/bin/true"},
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	})
 
@@ -1193,7 +1192,7 @@ func TestRunBundleWithCwdIgnoresUnknownSetupCommandType(t *testing.T) {
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
 		SetupCommands: []interface{}{map[string]interface{}{"type": "mystery", "command": ""}, 123},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution:     &ExecutionInfo{Command: "/bin/true"},
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	})
 
@@ -1227,7 +1226,7 @@ func TestRunBundleWithCwdRejectsPolicyViolation(t *testing.T) {
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution:     &ExecutionInfo{Command: "/bin/true"},
 		Build:         &BuildInfo{Tool: "flavor-go"},
 		Policy: &PackagePolicy{
 			RequireEnv: []string{"MISSING_REQUIRED_ENV"},
@@ -1266,7 +1265,7 @@ func TestRunBundleWithCwdRejectsUnsignedBundleWhenTrustedKeyRequired(t *testing.
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution:     &ExecutionInfo{Command: "/bin/true"},
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	})
 
@@ -1322,7 +1321,7 @@ func TestRunBundleWithCwdRejectsUnsupportedOsKeychainPolicy(t *testing.T) {
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution:     &ExecutionInfo{Command: "/bin/true"},
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	})
 
@@ -1356,7 +1355,7 @@ func TestRunBundleWithCwdRejectsInvalidOperatorPolicyFile(t *testing.T) {
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution:     &ExecutionInfo{Command: "/bin/true"},
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	})
 
@@ -1389,7 +1388,7 @@ func TestRunBundleWithCwdRejectsWriteFilePathEscapeViaPackageNamePlaceholder(t *
 			"path":    "{workenv}/{package_name}.txt",
 			"content": "hello",
 		}},
-		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution: &ExecutionInfo{Command: "/bin/true"},
 		Build:     &BuildInfo{Tool: "flavor-go"},
 	})
 
@@ -1446,7 +1445,7 @@ func TestRunBundleWithCwdRejectsOutOfRangeWriteFileMode(t *testing.T) {
 				"mode":    float64(math.MaxUint32) + 1,
 			},
 		},
-		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution: &ExecutionInfo{Command: "/bin/true"},
 		Build:     &BuildInfo{Tool: "flavor-go"},
 	})
 
@@ -1474,7 +1473,7 @@ func TestRunBundleWithCwdRejectsEscapingWorkenvDirectory(t *testing.T) {
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution:     &ExecutionInfo{Command: "/bin/true"},
 		Build:         &BuildInfo{Tool: "flavor-go"},
 		Workenv: &WorkenvInfo{
 			Directories: []DirectorySpec{
@@ -1515,7 +1514,7 @@ func TestRunBundleWithCwdRejectsEscapingWriteFileSetupPath(t *testing.T) {
 				"content": "payload",
 			},
 		},
-		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution: &ExecutionInfo{Command: "/bin/true"},
 		Build:     &BuildInfo{Tool: "flavor-go"},
 	})
 
@@ -1554,7 +1553,7 @@ func TestRunBundleWithCwdRejectsEscapingEnumeratePath(t *testing.T) {
 				},
 			},
 		},
-		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution: &ExecutionInfo{Command: "/bin/true"},
 		Build:     &BuildInfo{Tool: "flavor-go"},
 	})
 
@@ -1585,7 +1584,7 @@ func TestRunBundleWithCwdFailsWhenMetadataDirCannotBeCreated(t *testing.T) {
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
 		SetupCommands: []interface{}{"/bin/true"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution:     &ExecutionInfo{Command: "/bin/true"},
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	})
 
@@ -1622,7 +1621,7 @@ func TestRunBundleWithCwdRejectsInvalidExecutionCommandSyntax(t *testing.T) {
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: `"`},
+		Execution:     &ExecutionInfo{Command: `"`},
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	})
 
@@ -1651,7 +1650,7 @@ func TestRunBundleWithCwdRejectsEmptyExecutionCommand(t *testing.T) {
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: ""},
+		Execution:     &ExecutionInfo{Command: ""},
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	})
 
@@ -1681,7 +1680,7 @@ func TestRunBundleWithCwdFailsWhenSetupCommandExecutionFails(t *testing.T) {
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
 		SetupCommands: []interface{}{"/definitely/missing/setup-binary"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution:     &ExecutionInfo{Command: "/bin/true"},
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	})
 
@@ -1784,7 +1783,7 @@ func TestRunBundleWithCwdRejectsMissingSlotReference(t *testing.T) {
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true {slot:1}"},
+		Execution:     &ExecutionInfo{Command: "/bin/true {slot:1}"},
 		Build:         &BuildInfo{Tool: "flavor-go"},
 	})
 
@@ -1901,7 +1900,7 @@ func TestLaunchWithLogLevelNonCLIExitClassification(t *testing.T) {
 				Format:        "PSPF/2025",
 				FormatVersion: "2025.0",
 				Package:       PackageInfo{Name: "demo", Version: "1.0.0"},
-				Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+				Execution:     &ExecutionInfo{Command: "/bin/true"},
 				Build:         &BuildInfo{Tool: "flavor-go"},
 			}),
 			env: map[string]string{

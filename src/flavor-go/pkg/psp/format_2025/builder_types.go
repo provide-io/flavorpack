@@ -45,8 +45,7 @@ type PackageConfig struct {
 
 // ExecutionConfig defines how the package should be executed
 type ExecutionConfig struct {
-	PrimarySlot int    `json:"primary_slot,omitempty"`
-	Command     string `json:"command"`
+	Command string `json:"command"`
 	// Environment is read from "env", the key Python writes into the manifest
 	// it hands this builder. It was tagged "environment", so a caller's
 	// execution environment was dropped at build time before it ever reached a

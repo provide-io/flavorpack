@@ -308,7 +308,6 @@ func doBuild(logger *slog.Logger, manifestPath, outputPath, launcherBin, private
 		SetupCommands:   config.SetupCommands,
 		Slots:           []SlotMetadata{},
 		Execution: &ExecutionInfo{
-			PrimarySlot: config.Execution.PrimarySlot,
 			Command:     config.Execution.Command,
 			Environment: config.Execution.Environment,
 		},

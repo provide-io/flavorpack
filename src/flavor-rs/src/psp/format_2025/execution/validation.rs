@@ -289,7 +289,6 @@ mod tests {
                 self_ref: None,
             }],
             execution: ExecutionInfo {
-                primary_slot: 0,
                 command: "python app.py".to_string(),
                 env: HashMap::new(),
             },

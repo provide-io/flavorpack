@@ -29,7 +29,6 @@
     "args": [],
     "env": {
       "TEST_MODE": "lite"
-    },
-    "primary_slot": 0
+    }
   }
 }

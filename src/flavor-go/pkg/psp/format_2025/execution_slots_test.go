@@ -27,7 +27,7 @@ func buildSlotsBundleForSlotsTest(t *testing.T, slotID string, slotContents []by
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "test", Version: "0.0.1"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution:     &ExecutionInfo{Command: "/bin/true"},
 		Build:         &BuildInfo{Tool: "flavor-go"},
 		Slots:         []SlotMetadata{slotMeta},
 	}
@@ -76,7 +76,7 @@ func buildSlotsBundleWithTarForSlotsTest(t *testing.T, tarFileName string, tarFi
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "test", Version: "0.0.1"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution:     &ExecutionInfo{Command: "/bin/true"},
 		Build:         &BuildInfo{Tool: "flavor-go"},
 		Slots:         []SlotMetadata{slotMeta},
 	}
@@ -413,7 +413,7 @@ func TestExtractAndMergeSlotsToWorkenv_BinDirShebangFix(t *testing.T) {
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "test", Version: "0.0.1"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution:     &ExecutionInfo{Command: "/bin/true"},
 		Build:         &BuildInfo{Tool: "flavor-go"},
 		Slots:         []SlotMetadata{slotMeta},
 	}
@@ -466,7 +466,7 @@ func TestExtractAndMergeSlotsToWorkenv_ExtractSlotFailure(t *testing.T) {
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "test", Version: "0.0.1"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution:     &ExecutionInfo{Command: "/bin/true"},
 		Build:         &BuildInfo{Tool: "flavor-go"},
 		Slots:         []SlotMetadata{slotMeta},
 	}
@@ -635,7 +635,7 @@ func TestExtractAndMergeSlotsToWorkenv_MultipleSlots(t *testing.T) {
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "multi", Version: "1.0.0"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution:     &ExecutionInfo{Command: "/bin/true"},
 		Build:         &BuildInfo{Tool: "flavor-go"},
 		Slots:         []SlotMetadata{metaA, metaB},
 	}
