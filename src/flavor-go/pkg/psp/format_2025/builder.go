@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/ed25519"
-	cryptorand "crypto/rand"
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/json"
@@ -17,7 +16,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strconv"
 	"strings"
 	"time"
 
@@ -208,128 +206,10 @@ func doBuild(logger *slog.Logger, manifestPath, outputPath, launcherBin, private
 	}
 	logger.Debug("📈 Index details", "format", "PSPF2025", "version", fmt.Sprintf("0x%08x", index.FormatVersion), "launcher_size", index.LauncherSize)
 
-	// 🔐 Get or generate Ed25519 keys
-	var publicKey ed25519.PublicKey
-	var privateKey ed25519.PrivateKey
+	publicKey, privateKey := resolveSigningKeys(privateKeyPath, publicKeyPath, keySeed, logger)
+	recordSigningKeyInIndex(index, publicKey, logger)
 
-	if privateKeyPath != "" {
-		// Priority 1: Load keys from files
-		logger.Debug("🔐 Loading keys from files", "private", privateKeyPath, "public", publicKeyPath)
-		privateKey, publicKey, err = loadKeysFromFiles(privateKeyPath, publicKeyPath)
-		if err != nil {
-			logger.Error("❌ Failed to load keys", "error", err)
-			buildExitFn(1)
-		}
-		logger.Info("🔑 Using provided keys")
-	} else if keySeed != "" {
-		// Priority 2: Use deterministic seed
-		logger.Debug("🔐 Generating deterministic key pair from seed")
-
-		// Allow seed from environment variable
-		actualSeed := keySeed
-		if keySeed == "env" {
-			actualSeed = os.Getenv(EnvKeySeed)
-			if actualSeed == "" {
-				logger.Error("❌ FLAVOR_KEY_SEED environment variable not set")
-				buildExitFn(1)
-			}
-		}
-
-		seed := sha256.Sum256([]byte(actualSeed))
-		privateKey = ed25519.NewKeyFromSeed(seed[:])
-		publicKey = privateKey.Public().(ed25519.PublicKey)
-		logger.Info("🔑 Using seed-based key generation", "seed_hash", fmt.Sprintf("%x", seed[:8]))
-	} else {
-		// Priority 3: Generate random ephemeral keys
-		logger.Debug("🔐 Generating random ephemeral key pair")
-		publicKey, privateKey, err = ed25519GenerateKeyFn(cryptorand.Reader)
-		if err != nil {
-			logger.Error("❌ Failed to generate ephemeral keys", "error", err)
-			buildExitFn(1)
-		}
-		logger.Debug("🎲 Using random key generation")
-	}
-	copy(index.PublicKey[:], publicKey[:32])
-	if fingerprint, err := ComputeKeyFingerprint(publicKey); err != nil {
-		logger.Error("❌ Failed to compute signing key fingerprint", "error", err)
-		buildExitFn(1)
-	} else {
-		copy(index.AttestationKeyFp[:], fingerprint)
-	}
-
-	// Build metadata
-	var buildTimestamp string
-	var buildHost string
-
-	// Check for SOURCE_DATE_EPOCH for reproducible timestamps
-	if epochStr := os.Getenv("SOURCE_DATE_EPOCH"); epochStr != "" {
-		if epochInt, err := strconv.ParseInt(epochStr, 10, 64); err == nil {
-			buildTimestamp = time.Unix(epochInt, 0).UTC().Format(time.RFC3339)
-		} else {
-			buildTimestamp = time.Now().UTC().Format(time.RFC3339)
-		}
-		buildHost = fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)
-	} else {
-		hostname, err := hostnameFunc()
-		buildTimestamp = time.Now().UTC().Format(time.RFC3339)
-		if err != nil {
-			logger.Warn("⚠️ Failed to resolve hostname, using platform-only build host", "error", err)
-			buildHost = fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)
-		} else {
-			buildHost = fmt.Sprintf("%s/%s %s", runtime.GOOS, runtime.GOARCH, hostname)
-		}
-	}
-
-	// Convert cache validation config if present
-	var cacheValidation *CacheValidationInfo
-	if config.CacheValidation != nil {
-		cacheValidation = &CacheValidationInfo{
-			CheckFile:       config.CacheValidation.CheckFile,
-			ExpectedContent: config.CacheValidation.ExpectedContent,
-		}
-	}
-
-	// Convert runtime config if present
-	var runtimeInfo *RuntimeInfo
-	if config.Runtime != nil {
-		runtimeInfo = &RuntimeInfo{
-			Env: config.Runtime.Env,
-		}
-	}
-
-	metadata := &Metadata{
-		Format: "PSPF/2025",
-		Package: PackageInfo{
-			Name:        config.Package.Name,
-			Version:     config.Package.Version,
-			Description: config.Package.Description,
-		},
-		CacheValidation: cacheValidation,
-		SetupCommands:   config.SetupCommands,
-		Slots:           []SlotMetadata{},
-		Execution: &ExecutionInfo{
-			Command:     config.Execution.Command,
-			Environment: config.Execution.Environment,
-		},
-		Runtime: runtimeInfo,
-		Verification: &VerificationInfo{
-			IntegritySeal: IntegritySealInfo{
-				Required:  true,
-				Algorithm: "ed25519",
-			},
-		},
-		Build: &BuildInfo{
-			Tool:          "flavor-go",
-			ToolVersion:   "1.0.0",
-			Timestamp:     buildTimestamp,
-			Deterministic: false,
-			Platform: PlatformInfo{
-				OS:   runtime.GOOS,
-				Arch: runtime.GOARCH,
-				Host: buildHost,
-			},
-		},
-	}
+	metadata := buildPackageMetadata(&config, logger)
 
 	// 📦 Process slots using SlotProcessor (aligns with Rust implementation)
 	slotProcessor := NewSlotProcessor(config.Slots, logger)
