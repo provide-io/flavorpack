@@ -12,7 +12,11 @@ pub struct Metadata {
     pub format_version: Option<String>,
     pub package: PackageInfo,
     pub slots: Vec<SlotMetadata>,
-    pub execution: ExecutionInfo,
+    /// How the package runs. Optional per FEP-0002 §4.1.5: a package that
+    /// cannot be executed is still one worth inspecting and verifying, so the
+    /// refusal belongs at the point of execution rather than at parse time.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub execution: Option<ExecutionInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub verification: Option<VerificationInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -65,6 +69,12 @@ pub struct SlotMetadata {
 /// Execution configuration
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ExecutionInfo {
+    /// The command the launcher runs. Optional, defaulting to empty: Go leaves
+    /// a missing field at the zero value, and the Python builder writes
+    /// `"execution": {}` for a package that configures none. Requiring it here
+    /// made those packages unreadable rather than unrunnable — `info` on one
+    /// reported `missing field command` (#48).
+    #[serde(default)]
     pub command: String,
     #[serde(default)]
     pub env: HashMap<String, String>,
@@ -196,6 +206,29 @@ mod tests {
     use super::*;
     use serde_json::json;
 
+    /// A package with no execution block is still readable.
+    ///
+    /// FEP-0002 §4.1.5 lists `execution` as OPTIONAL, and the root schema's
+    /// required set is format, package and slots. The Go launcher agrees: it
+    /// reads such a package and refuses at the point of execution. Requiring it
+    /// here meant `info`, `verify` and `metadata` failed too, so a package that
+    /// cannot run also could not be inspected — which is when inspecting it
+    /// matters most. See #48.
+    #[test]
+    fn metadata_without_an_execution_block_parses() {
+        let json = br#"{
+            "format": "PSPF/2025",
+            "package": {"name": "demo", "version": "1.0.0"},
+            "slots": []
+        }"#;
+
+        let metadata: Metadata =
+            serde_json::from_slice(json).expect("metadata without execution must parse");
+
+        assert!(metadata.execution.is_none());
+        assert_eq!(metadata.package.name, "demo");
+    }
+
     /// Packages carry fields this reader does not model, and must stay readable.
     ///
     /// `execution.primary_slot` is the case that matters: every package built
@@ -214,11 +247,9 @@ mod tests {
         let metadata: Metadata =
             serde_json::from_slice(json).expect("a package carrying primary_slot must parse");
 
-        assert_eq!(metadata.execution.command, "true");
-        assert_eq!(
-            metadata.execution.env.get("MODE").map(String::as_str),
-            Some("prod")
-        );
+        let execution = metadata.execution.as_ref().expect("execution");
+        assert_eq!(execution.command, "true");
+        assert_eq!(execution.env.get("MODE").map(String::as_str), Some("prod"));
     }
 
     fn sample_slot() -> SlotMetadata {
@@ -264,10 +295,10 @@ mod tests {
                 version: "1.2.3".to_string(),
             },
             slots: vec![sample_slot()],
-            execution: ExecutionInfo {
+            execution: Some(ExecutionInfo {
                 command: "run".to_string(),
                 env: HashMap::from([(String::from("MODE"), String::from("test"))]),
-            },
+            }),
             verification: Some(VerificationInfo {
                 integrity_seal: IntegritySealInfo {
                     required: true,
@@ -341,7 +372,13 @@ mod tests {
         assert_eq!(decoded.slots.len(), 1);
         assert_eq!(decoded.slots[0].self_ref, Some(true));
         assert_eq!(
-            decoded.execution.env.get("MODE").map(String::as_str),
+            decoded
+                .execution
+                .as_ref()
+                .expect("execution")
+                .env
+                .get("MODE")
+                .map(String::as_str),
             Some("test")
         );
         assert!(

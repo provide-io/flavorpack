@@ -71,10 +71,10 @@ pub(super) fn create_metadata(
             version: manifest.package.version.clone(),
         },
         slots: vec![],
-        execution: ExecutionInfo {
+        execution: Some(ExecutionInfo {
             command: manifest.execution.command.clone(),
             env: manifest.execution.env.clone(),
-        },
+        }),
         verification: Some(VerificationInfo {
             integrity_seal: IntegritySealInfo {
                 required: true,
@@ -275,11 +275,9 @@ mod tests {
         assert_eq!(metadata.format, "PSPF/2025");
         assert_eq!(metadata.package.name, "demo");
         assert_eq!(metadata.package.version, "1.2.3");
-        assert_eq!(metadata.execution.command, "run");
-        assert_eq!(
-            metadata.execution.env.get("MODE").map(String::as_str),
-            Some("test")
-        );
+        let execution = metadata.execution.as_ref().expect("execution");
+        assert_eq!(execution.command, "run");
+        assert_eq!(execution.env.get("MODE").map(String::as_str), Some("test"));
         assert!(
             metadata
                 .verification

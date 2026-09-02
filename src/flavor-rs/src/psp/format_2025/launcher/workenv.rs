@@ -147,10 +147,10 @@ mod tests {
                     self_ref: None,
                 })
                 .collect(),
-            execution: ExecutionInfo {
+            execution: Some(ExecutionInfo {
                 command: "echo hi".to_string(),
                 env: std::collections::HashMap::new(),
-            },
+            }),
             verification: None,
             build: Some(crate::psp::format_2025::metadata::BuildInfo {
                 tool: "builder".to_string(),

@@ -192,10 +192,10 @@ mod tests {
                 resolution: None,
                 self_ref: None,
             }],
-            execution: ExecutionInfo {
+            execution: Some(ExecutionInfo {
                 command: "run".to_string(),
                 env: HashMap::new(),
-            },
+            }),
             verification: None,
             build: None,
             launcher: None,
