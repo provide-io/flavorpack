@@ -6,13 +6,11 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"log/slog"
 
 	"github.com/provide-io/flavor/go/flavor/pkg/logging"
-	"github.com/provide-io/flavor/go/flavor/pkg/utils/shellparse"
 )
 
 var (
@@ -302,109 +300,22 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger *slo
 	// workenv root. Derive them from the targets instead.
 	commandSlotPaths := buildSlotPaths(metadata, workenvDirForCmd, logger)
 
-	command := metadata.Execution.Command
-	for idx, path := range commandSlotPaths {
-		placeholder := fmt.Sprintf("{slot:%d}", idx)
-		// Convert slot paths to forward slashes for command string on Windows
-		command = strings.ReplaceAll(command, placeholder, filepath.ToSlash(path))
-	}
-	command = strings.ReplaceAll(command, "{workenv}", workenvDirForCmd)
-	command = strings.ReplaceAll(command, "{package_name}", metadata.Package.Name)
-	command = strings.ReplaceAll(command, "{version}", metadata.Package.Version)
-
-	if strings.Contains(command, "{slot:") {
-		for i := 0; i < len(metadata.Slots); i++ {
-			placeholder := fmt.Sprintf("{slot:%d}", i)
-			if strings.Contains(command, placeholder) {
-				logger.Error("❌ Missing slot reference", "slot", i, "error", ErrMissingSlot)
-				return nil, fmt.Errorf("%w: slot %d", ErrMissingSlot, i)
-			}
-		}
-	}
-
-	// Use shell-aware parser to handle quoted arguments
-	parts, err := shellparse.Split(command)
+	command, err := resolveCommandPlaceholders(metadata, commandSlotPaths, workenvDirForCmd, logger)
 	if err != nil {
-		logger.Error("❌ Failed to parse command", "command", command, "error", err)
-		return nil, fmt.Errorf("failed to parse command %q: %w", command, err)
-	}
-	if len(parts) == 0 {
-		logger.Error("Empty command")
-		return nil, errors.New("empty command")
+		return nil, err
 	}
 
-	cmdArgs := parts[1:]
-	if len(args) > 0 {
-		cmdArgs = append(cmdArgs, args...)
+	cmd, cmdArgs, err := buildExecCommand(command, args, logger)
+	if err != nil {
+		return nil, err
 	}
-
-	// Resolve executable for cross-platform compatibility
-	resolvedExec := resolveExecutable(parts[0], logger)
-	cmd := execCommandValidated(resolvedExec, cmdArgs...)
 
 	originalCmd := os.Args[0]
 	binaryName := filepath.Base(originalCmd)
-
 	cmd.Args = append([]string{binaryName}, cmdArgs...)
 	logger.Debug("🏷️ Attempted to set argv[0] (Go limitation: won't work)", "argv0", binaryName, "original", originalCmd, "fullArgs", cmd.Args)
 
-	// Setup environment variables in proper layering order
-	parentEnv := os.Environ()
-	logger.Debug("🌍 Inheriting parent environment", "vars_count", len(parentEnv))
-	cmd.Env = parentEnv
-
-	// Set FLAVOR_CACHE BEFORE workenv environment (which overwrites HOME)
-	cmd.Env = setFlavorCacheBeforeWorkenv(cmd.Env, logger)
-
-	// Add FLAVOR_* variables
-	cmd.Env = setEnv(cmd.Env, EnvWorkenv, workenvDir)
-	logger.Debug("➕ Added FLAVOR_WORKENV", "path", workenvDir)
-
-	cmd.Env = setEnv(cmd.Env, EnvOriginalCommand, originalCmd)
-	cmd.Env = setEnv(cmd.Env, EnvCommandName, binaryName)
-	logger.Debug("🏷️ Added command name environment variables",
-		EnvOriginalCommand, originalCmd,
-		EnvCommandName, binaryName)
-
-	// Prepend workenv/bin to PATH
-	pathFound := false
-	for i, env := range cmd.Env {
-		if strings.HasPrefix(env, "PATH=") {
-			binDir := "bin"
-			if runtime.GOOS == "windows" {
-				binDir = "Scripts"
-			}
-			cmd.Env[i] = fmt.Sprintf("PATH=%s%s%s", filepath.Join(workenvDir, binDir), string(os.PathListSeparator), strings.TrimPrefix(env, "PATH="))
-			pathFound = true
-			break
-		}
-	}
-	if !pathFound {
-		binDir := "bin"
-		if runtime.GOOS == "windows" {
-			binDir = "Scripts"
-		}
-		cmd.Env = setEnv(cmd.Env, "PATH", filepath.Join(workenvDir, binDir))
-	}
-
-	// Process runtime.env configuration
-	if metadata.Runtime != nil && metadata.Runtime.Env != nil {
-		logger.Debug("🔄 Processing runtime.env configuration")
-		cmd.Env = processRuntimeEnv(cmd.Env, metadata.Runtime.Env, logger)
-	}
-
-	// Add package-defined environment variables
-	if metadata.Execution.Environment != nil {
-		logger.Debug("➕ Adding package-defined environment variables", "count", len(metadata.Execution.Environment))
-		for k, v := range metadata.Execution.Environment {
-			for idx, path := range commandSlotPaths {
-				placeholder := fmt.Sprintf("{slot:%d}", idx)
-				v = strings.ReplaceAll(v, placeholder, filepath.ToSlash(path))
-			}
-			cmd.Env = setEnv(cmd.Env, k, v)
-			logging.Trace(logger, "➕ Added package env var", "key", k, "value", v)
-		}
-	}
+	cmd.Env = buildCommandEnvironment(metadata, commandSlotPaths, workenvDir, originalCmd, binaryName, logger)
 
 	cmd.Dir = userCwd
 	logger.Debug("📂 Setting working directory", "path", userCwd)
