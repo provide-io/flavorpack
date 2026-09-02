@@ -399,8 +399,7 @@ mod tests {
         assert!(result.is_err());
         assert!(
             result
-                .err()
-                .expect("error")
+                .expect_err("error")
                 .to_string()
                 .contains("only supported on Windows")
         );

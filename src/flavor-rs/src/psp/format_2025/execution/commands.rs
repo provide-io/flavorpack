@@ -356,6 +356,41 @@ fn build_workenv_path(workenv_dir: &Path, existing_path: Option<&str>) -> String
     }
 }
 
+/// Execute main command with environment
+pub fn execute_main_command(
+    command: &str,
+    args: &[String],
+    env: HashMap<String, String>,
+    workdir: &Path,
+) -> Result<i32> {
+    let parts = shell_split(command);
+    if parts.is_empty() {
+        return Ok(0);
+    }
+
+    let resolved_cmd = resolve_executable(&parts[0]);
+    let mut cmd = Command::new(&resolved_cmd);
+
+    // Add command arguments
+    if parts.len() > 1 {
+        cmd.args(&parts[1..]);
+    }
+
+    // Add user arguments
+    cmd.args(args);
+
+    // Set working directory
+    cmd.current_dir(workdir);
+
+    // Set environment
+    cmd.envs(env);
+
+    // Execute and get status
+    let status = cmd.status()?;
+
+    Ok(status.code().unwrap_or(1))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -641,39 +676,4 @@ mod tests {
             .expect("command should execute");
         assert_eq!(result, 7);
     }
-}
-
-/// Execute main command with environment
-pub fn execute_main_command(
-    command: &str,
-    args: &[String],
-    env: HashMap<String, String>,
-    workdir: &Path,
-) -> Result<i32> {
-    let parts = shell_split(command);
-    if parts.is_empty() {
-        return Ok(0);
-    }
-
-    let resolved_cmd = resolve_executable(&parts[0]);
-    let mut cmd = Command::new(&resolved_cmd);
-
-    // Add command arguments
-    if parts.len() > 1 {
-        cmd.args(&parts[1..]);
-    }
-
-    // Add user arguments
-    cmd.args(args);
-
-    // Set working directory
-    cmd.current_dir(workdir);
-
-    // Set environment
-    cmd.envs(env);
-
-    // Execute and get status
-    let status = cmd.status()?;
-
-    Ok(status.code().unwrap_or(1))
 }

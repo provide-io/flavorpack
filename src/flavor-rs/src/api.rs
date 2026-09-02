@@ -130,7 +130,7 @@ mod tests {
     use tempfile::tempdir;
 
     fn write_synthetic_pspf_package(path: &Path) {
-        let mut bytes = vec![0u8; MAGIC_TRAILER_SIZE as usize];
+        let mut bytes = vec![0u8; MAGIC_TRAILER_SIZE];
         bytes[..PACKAGE_EMOJI_BYTES.len()].copy_from_slice(PACKAGE_EMOJI_BYTES);
         let trailer_start = bytes.len() - MAGIC_WAND_EMOJI_BYTES.len();
         bytes[trailer_start..].copy_from_slice(MAGIC_WAND_EMOJI_BYTES);
