@@ -606,8 +606,14 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger *slo
 		return nil, errors.New("no execution configuration found")
 	}
 
+	// {slot:N} resolves to where a slot sits in the finished workenv. slotPaths
+	// reports neither: after extraction it names a temporary directory that is
+	// removed before this runs, and on the cached path every entry is the
+	// workenv root. Derive them from the targets instead.
+	commandSlotPaths := buildSlotPaths(metadata, workenvDirForCmd, logger)
+
 	command := metadata.Execution.Command
-	for idx, path := range slotPaths {
+	for idx, path := range commandSlotPaths {
 		placeholder := fmt.Sprintf("{slot:%d}", idx)
 		// Convert slot paths to forward slashes for command string on Windows
 		command = strings.ReplaceAll(command, placeholder, filepath.ToSlash(path))
@@ -702,9 +708,9 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger *slo
 	if metadata.Execution.Environment != nil {
 		logger.Debug("➕ Adding package-defined environment variables", "count", len(metadata.Execution.Environment))
 		for k, v := range metadata.Execution.Environment {
-			for idx, path := range slotPaths {
+			for idx, path := range commandSlotPaths {
 				placeholder := fmt.Sprintf("{slot:%d}", idx)
-				v = strings.ReplaceAll(v, placeholder, path)
+				v = strings.ReplaceAll(v, placeholder, filepath.ToSlash(path))
 			}
 			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
 			logging.Trace(logger, "➕ Added package env var", "key", k, "value", v)

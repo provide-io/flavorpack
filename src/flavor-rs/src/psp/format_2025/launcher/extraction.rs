@@ -87,8 +87,14 @@ pub(super) fn build_slot_paths(
     let mut slot_paths = HashMap::new();
 
     for slot in &metadata.slots {
-        // Target field specifies where to extract (relative to workenv)
-        let slot_path = workenv_path.join(normalize_slot_target(&slot.target));
+        // A tar slot spreads its entries across the workenv and has no single
+        // path of its own, so it resolves to the workenv. The Go launcher and
+        // Python's executor settle on the same answer.
+        let slot_path = if slot.operations.contains("tar") {
+            workenv_path.to_path_buf()
+        } else {
+            workenv_path.join(normalize_slot_target(&slot.target))
+        };
         slot_paths.insert(slot.index, slot_path);
     }
 

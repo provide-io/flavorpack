@@ -8,7 +8,7 @@ mod validation;
 pub use commands::{
     execute_command, execute_main_command, execute_setup_commands, run_command, shell_split,
 };
-pub use placeholders::substitute_placeholders;
+pub use placeholders::{substitute_placeholders, substitute_slots};
 pub use validation::{
     IndexMetadata, check_workenv_validity_full, save_index_metadata, save_package_checksum,
 };

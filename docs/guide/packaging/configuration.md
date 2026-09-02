@@ -358,8 +358,9 @@ shell = false  # Direct execution (faster)
 | Placeholder | Expands To | Example |
 |-------------|------------|---------|
 | `{workenv}` | Cache directory | `/home/user/.cache/flavor/workenv/pspf-abc123` |
-| `{slot:N}` | Slot N path | `/home/user/.cache/flavor/workenv/pspf-abc123/slots/0` |
-| `{package}` | Package file path | `/path/to/myapp.psp` |
+| `{slot:N}` | Slot N path | `/home/user/.cache/flavor/workenv/pspf-abc123/data/payload.txt` |
+| `{package_name}` | Package name | `myapp` |
+| `{version}` | Package version | `2.1.0` |
 
 ### Signal Handling
 

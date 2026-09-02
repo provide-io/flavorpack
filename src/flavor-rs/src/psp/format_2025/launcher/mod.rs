@@ -556,8 +556,13 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
     };
 
     // Prepare command
+    //
+    // Slot paths are rebuilt against the final workenv rather than taken from
+    // extraction, which reports the temporary directory it unpacked into. That
+    // directory is gone by the time the command runs.
+    let slot_paths = build_slot_paths(&metadata, &workenv_path);
     let (executable, cmd_args, env_map) =
-        prepare_command(&metadata, &workenv_path, package_path, args)?;
+        prepare_command(&metadata, &workenv_path, package_path, args, &slot_paths)?;
 
     // Get execution mode
     let exec_mode = env::var(crate::env_vars::EXEC_MODE).unwrap_or_else(|_| "exec".to_string());

@@ -1,13 +1,13 @@
 //! Command preparation and environment setup
 
-use super::super::execution::{shell_split, substitute_placeholders};
+use super::super::execution::{shell_split, substitute_placeholders, substitute_slots};
 use super::super::metadata::Metadata;
 use super::super::runtime::process_runtime_env;
 use crate::exceptions::{FlavorError, Result};
 use log::{debug, warn};
 use std::collections::HashMap;
 use std::env;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 /// Resolve executable path using PATH environment variable
 ///
@@ -99,16 +99,33 @@ pub fn resolve_executable(executable: &str) -> String {
     }
 }
 
+/// Report the first `{slot:N}` left in `text` that names a slot the package
+/// declares, or `None` when every reference resolved.
+fn unresolved_slot_reference(text: &str, slot_count: usize) -> Option<usize> {
+    (0..slot_count).find(|index| text.contains(&format!("{{slot:{index}}}")))
+}
+
 /// Prepare the command to execute
 pub(super) fn prepare_command(
     metadata: &Metadata,
     workenv_path: &Path,
     package_path: &Path,
     args: &[String],
+    slot_paths: &HashMap<usize, PathBuf>,
 ) -> Result<(String, Vec<String>, HashMap<String, String>)> {
-    // Substitute placeholders in command
-    let command =
-        substitute_placeholders(&metadata.execution.command, workenv_path, &metadata.package);
+    // Slot references resolve first: a slot path may itself contain {workenv},
+    // and the basic substitution has to see it. Go and Python order it the same
+    // way.
+    let command = substitute_slots(&metadata.execution.command, slot_paths);
+    let command = substitute_placeholders(&command, workenv_path, &metadata.package);
+
+    // A reference to a slot the package declares but did not extract would
+    // reach the shell as its own text. Refuse instead.
+    if let Some(index) = unresolved_slot_reference(&command, metadata.slots.len()) {
+        return Err(FlavorError::Generic(format!(
+            "Command references slot {index}, which has no extracted path"
+        )));
+    }
 
     debug!("🎯 Final command: {command}");
 
@@ -157,8 +174,9 @@ pub(super) fn prepare_command(
     if let Some(ref workenv_info) = metadata.workenv {
         if let Some(ref workenv_env) = workenv_info.env {
             for (key, value) in workenv_env {
+                let expanded_value = substitute_slots(value, slot_paths);
                 let expanded_value =
-                    substitute_placeholders(value, workenv_path, &metadata.package);
+                    substitute_placeholders(&expanded_value, workenv_path, &metadata.package);
                 // Don't override FLAVOR_CACHE_DIR if it's already set
                 if key != crate::env_vars::CACHE_DIR
                     || !env_map.contains_key(crate::env_vars::CACHE_DIR)
@@ -170,8 +188,14 @@ pub(super) fn prepare_command(
     }
 
     // Add execution environment variables (layer 3)
+    //
+    // FEP-0002 §4.4.3: values take the same placeholders as the command. These
+    // were inserted verbatim, so a package that set DATA={slot:0} handed the
+    // placeholder text to its own process.
     for (key, value) in &metadata.execution.env {
-        env_map.insert(key.clone(), value.clone());
+        let expanded = substitute_slots(value, slot_paths);
+        let expanded = substitute_placeholders(&expanded, workenv_path, &metadata.package);
+        env_map.insert(key.clone(), expanded);
     }
 
     // Add FLAVOR_WORKENV
@@ -209,6 +233,7 @@ pub(super) fn prepare_command(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::psp::format_2025::metadata::SlotMetadata;
     use crate::psp::format_2025::metadata::{
         ExecutionInfo, Metadata, PackageInfo, RuntimeEnv, RuntimeInfo, WorkenvInfo,
     };
@@ -355,6 +380,75 @@ mod tests {
         assert_eq!(resolved, "flavor-tool");
     }
 
+    /// `{slot:N}` in the command resolves to that slot's extracted path.
+    ///
+    /// Go and Python both substitute it, and this implementation is the default
+    /// launcher for packages the Python builder produces, so a command using it
+    /// reached the shell here as the literal text `{slot:0}`. See #52.
+    #[test]
+    fn prepare_command_resolves_slot_references() {
+        let mut metadata = sample_metadata();
+        metadata.execution.command = "/bin/echo {slot:0}".to_string();
+        metadata
+            .execution
+            .env
+            .insert(String::from("DATA"), String::from("{slot:0}"));
+
+        let slot_paths = HashMap::from([(0usize, PathBuf::from("/tmp/flavor-workenv/data.txt"))]);
+
+        let (_executable, args, env_map) = prepare_command(
+            &metadata,
+            Path::new("/tmp/flavor-workenv"),
+            &PathBuf::from("/tmp/demo.psp"),
+            &[],
+            &slot_paths,
+        )
+        .expect("prepare command");
+
+        assert_eq!(args, vec!["/tmp/flavor-workenv/data.txt".to_string()]);
+        assert_eq!(
+            env_map.get("DATA").map(String::as_str),
+            Some("/tmp/flavor-workenv/data.txt"),
+            "slot references in environment values resolve too"
+        );
+    }
+
+    /// A reference to a declared slot with no extracted path is refused rather
+    /// than handed to the shell as its own text.
+    #[test]
+    fn prepare_command_refuses_an_unresolved_slot_reference() {
+        let mut metadata = sample_metadata();
+        metadata.execution.command = "/bin/echo {slot:0}".to_string();
+        metadata.slots.push(SlotMetadata {
+            index: 0,
+            id: "payload".to_string(),
+            source: String::new(),
+            target: "data.txt".to_string(),
+            size: 1,
+            checksum: "sha256:ab".to_string(),
+            operations: String::new(),
+            purpose: "data".to_string(),
+            lifecycle: "runtime".to_string(),
+            permissions: None,
+            resolution: None,
+            self_ref: None,
+        });
+
+        let err = prepare_command(
+            &metadata,
+            Path::new("/tmp/flavor-workenv"),
+            &PathBuf::from("/tmp/demo.psp"),
+            &[],
+            &HashMap::new(),
+        )
+        .expect_err("a slot with no extracted path must not reach the shell");
+
+        assert!(
+            err.to_string().contains("slot 0"),
+            "error should name the slot: {err}"
+        );
+    }
+
     #[test]
     fn test_prepare_command_applies_env_layers_and_path_prepend() {
         let metadata = sample_metadata();
@@ -368,6 +462,7 @@ mod tests {
             workenv_path,
             &package_path,
             &[String::from("--flag")],
+            &HashMap::new(),
         )
         .expect("prepare command");
 
