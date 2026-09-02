@@ -85,7 +85,7 @@ case "$LANGUAGE" in
     cd src/flavor-rs || exit 1
     say "## 🦀 Rust Code Quality"
     say ""
-    check blocking "Clippy"       cargo clippy --all-features -- -D warnings
+    check blocking "Clippy"       cargo clippy --all-features --all-targets -- -D warnings
     check blocking "Rustfmt"      cargo fmt -- --check
     check advisory "Cargo machete" cargo machete
     ;;

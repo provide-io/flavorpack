@@ -55,6 +55,12 @@
     clippy::too_many_arguments, // Some functions need refactoring
     missing_docs,               // Documentation is in progress
 )]
+// A test says what it expects and stops when that is not what it got, so the
+// error-handling lints above are noise there -- 437 of the 478 they reported
+// were unwrap/expect in tests. Allowing that family under cfg(test) leaves the
+// rest of the lints watching test code, which is what nothing was doing before:
+// they were switched off wholesale by CI running clippy without --all-targets.
+#![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used, clippy::panic,))]
 
 pub mod api;
 pub mod env_vars;
