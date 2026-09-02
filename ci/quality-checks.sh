@@ -9,9 +9,9 @@
 # check writes to the job summary either way.
 #
 # Blocking status is decided by what passes on main today, not by how
-# important a check feels. golangci-lint (20 issues), staticcheck, gocyclo and
-# cargo machete are advisory because they are unmeasured or currently failing;
-# promote them once their backlog is clear.
+# important a check feels. golangci-lint and staticcheck report nothing on main
+# and are enforced, as is cargo machete once it could actually run. gocyclo
+# stays advisory while its backlog is open; promote it as it clears.
 #
 # Note on exit codes: checks redirect to a log rather than piping to tee. In a
 # pipeline it is tee's status that survives, not the tool's, which is one of
@@ -50,10 +50,28 @@ report() {
 }
 
 # check <blocking|advisory> <label> <command...>
+#
+# A tool that is not installed exits 127, and reporting that as "found issues"
+# describes a lint failure that never happened. Worse, on an advisory check it
+# reads as a known backlog, which is how `cargo machete` sat in this file
+# reporting "no such command" without anyone noticing. A missing tool fails the
+# run whatever the check's status is.
 check() {
   local kind="$1" label="$2"; shift 2
   local slug; slug="$(echo "$label" | tr '[:upper:] ' '[:lower:]-')"
   local log="$LOG_DIR/${slug}.log"
+
+  if ! command -v "$1" > /dev/null 2>&1; then
+    say "❌ ${label} could not run: '$1' is not installed"
+    say ""
+    say "This is a setup failure, not a lint result. The check reported nothing"
+    say "because it never ran."
+    echo "--- ${label} ---" >&2
+    echo "'$1' is not installed; ${label} never ran." >&2
+    BLOCKING_FAILED=1
+    return
+  fi
+
   "$@" > "$log" 2>&1
   report "$kind" "$label" "$log" "$?"
 }
@@ -70,15 +88,15 @@ case "$LANGUAGE" in
     check blocking "Mypy"         mypy src/flavor
     check blocking "Bandit"       bandit -r src -ll
     check advisory "Xenon complexity" xenon --max-absolute B --max-modules A --max-average A src/
-    check advisory "Vulture dead code" vulture src/ --min-confidence 80
+    check blocking "Vulture dead code" vulture
     ;;
   go)
     cd src/flavor-go || exit 1
     say "## 🐹 Go Code Quality"
     say ""
     check blocking "Go vet"       go vet ./...
-    check advisory "GolangCI-Lint" golangci-lint run
-    check advisory "Staticcheck"  staticcheck ./...
+    check blocking "GolangCI-Lint" golangci-lint run
+    check blocking "Staticcheck"  staticcheck ./...
     check advisory "Gocyclo"      gocyclo -over 15 .
     ;;
   rust)
@@ -87,7 +105,7 @@ case "$LANGUAGE" in
     say ""
     check blocking "Clippy"       cargo clippy --all-features --all-targets -- -D warnings
     check blocking "Rustfmt"      cargo fmt -- --check
-    check advisory "Cargo machete" cargo machete
+    check blocking "Cargo machete" cargo machete
     ;;
   *)
     echo "❌ Unknown language: $LANGUAGE" >&2

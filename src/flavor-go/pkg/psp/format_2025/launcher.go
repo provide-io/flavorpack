@@ -123,12 +123,11 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 			}
 			extractSlot(os.Stdout, exePath, args[1], args[2], logger)
 		case "run":
-			// Run with remaining arguments
-			if err := execBundle(exePath, args[1:], userCwd, logger); err != nil {
-				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-				osExitFn(ExitExecutionError)
-			}
-			// If we reach here, exec failed
+			// execBundle only returns when it has failed: a successful run either
+			// replaces this process or exits with the child's status. Guarding the
+			// result against nil would read as though returning is the normal case.
+			err := execBundle(exePath, args[1:], userCwd, logger)
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			osExitFn(ExitExecutionError)
 		case "help", "--help":
 			fmt.Println("PSPF Package Launcher - CLI Mode")
@@ -157,20 +156,20 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 		return
 	}
 
-	if err := execBundle(exePath, args, userCwd, logger); err != nil {
-		logger.Error("❌ Failed to exec command", "error", err)
-		// Determine error type based on error message
-		errStr := err.Error()
-		if strings.Contains(errStr, "PSPF") || strings.Contains(errStr, "magic") {
-			osExitFn(ExitPSPFError)
-		} else if strings.Contains(errStr, "extract") || strings.Contains(errStr, "slot") {
-			osExitFn(ExitExtractionError)
-		} else if strings.Contains(errStr, "file") || strings.Contains(errStr, "I/O") {
-			osExitFn(ExitIOError)
-		}
-		osExitFn(ExitExecutionError)
+	// Reaching the next line at all means the bundle did not run: on success
+	// execBundle replaces this process or exits with the child's status.
+	err = execBundle(exePath, args, userCwd, logger)
+	logger.Error("❌ Failed to exec command", "error", err)
+
+	// Determine error type based on error message
+	errStr := err.Error()
+	if strings.Contains(errStr, "PSPF") || strings.Contains(errStr, "magic") {
+		osExitFn(ExitPSPFError)
+	} else if strings.Contains(errStr, "extract") || strings.Contains(errStr, "slot") {
+		osExitFn(ExitExtractionError)
+	} else if strings.Contains(errStr, "file") || strings.Contains(errStr, "I/O") {
+		osExitFn(ExitIOError)
 	}
-	// If we reach here, exec failed (shouldn't happen on Unix)
 	osExitFn(ExitExecutionError)
 }
 

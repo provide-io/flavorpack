@@ -1,8 +1,6 @@
 package format_2025
 
 import (
-	"archive/tar"
-	"bytes"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -10,63 +8,6 @@ import (
 
 	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 )
-
-// buildTarSlotBundle creates a bundle whose slot 0 payload is a tar archive
-// containing a directory entry named dirName with one file inside.
-func buildTarSlotBundle(t *testing.T, dirName, fileName string, content []byte) (string, *Metadata) {
-	t.Helper()
-
-	var buf bytes.Buffer
-	tw := tar.NewWriter(&buf)
-
-	// Write directory entry
-	if err := tw.WriteHeader(&tar.Header{
-		Typeflag: tar.TypeDir,
-		Name:     dirName + "/",
-		Mode:     0o755,
-	}); err != nil {
-		t.Fatalf("WriteHeader(dir): %v", err)
-	}
-
-	// Write file inside directory
-	hdr := &tar.Header{
-		Name: dirName + "/" + fileName,
-		Mode: 0o644,
-		Size: int64(len(content)),
-	}
-	if err := tw.WriteHeader(hdr); err != nil {
-		t.Fatalf("WriteHeader(file): %v", err)
-	}
-	if _, err := tw.Write(content); err != nil {
-		t.Fatalf("Write(file): %v", err)
-	}
-	if err := tw.Close(); err != nil {
-		t.Fatalf("Close: %v", err)
-	}
-	tarData := buf.Bytes()
-
-	slotMeta := SlotMetadata{
-		Slot:   0,
-		ID:     "tar-dir-slot",
-		Target: "{workenv}",
-		Size:   int64(len(tarData)),
-	}
-	md := Metadata{
-		Format:        "PSPF/2025",
-		FormatVersion: "2025.0",
-		Package:       PackageInfo{Name: "test", Version: "0.0.1"},
-		Execution:     &ExecutionInfo{Command: "/bin/true"},
-		Build:         &BuildInfo{Tool: "flavor-go"},
-		Slots:         []SlotMetadata{slotMeta},
-	}
-	spec := multiSlotBundleSpec{
-		meta:         slotMeta,
-		storedData:   tarData,
-		originalData: tarData,
-	}
-	path := buildMultiSlotBundleForTests(t, []multiSlotBundleSpec{spec}, md)
-	return path, &md
-}
 
 // TestExtractAndMergeSlotsToWorkenv_Slot0DirCopyDirAllFailure covers the error
 // path on line 145-149: copyDirAll fails when copying a slot_0_* subdirectory

@@ -32,7 +32,7 @@ func TestCaptureCLIOutputIsolatesConcurrentCaptures(t *testing.T) {
 	go func() {
 		defer wg.Done()
 		outA = captureCLIOutput(func(out io.Writer) {
-			fmt.Fprintln(out, "AAA")
+			_, _ = fmt.Fprintln(out, "AAA")
 			<-bOpened // hold A's window open until B's has started
 		})
 		close(aClosed)
@@ -43,7 +43,7 @@ func TestCaptureCLIOutputIsolatesConcurrentCaptures(t *testing.T) {
 		outB = captureCLIOutput(func(out io.Writer) {
 			close(bOpened)
 			<-aClosed // write only after A has finished and "restored"
-			fmt.Fprintln(out, "BBB")
+			_, _ = fmt.Fprintln(out, "BBB")
 		})
 	}()
 

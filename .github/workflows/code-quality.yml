@@ -59,14 +59,11 @@ jobs:
         with:
           python-version: '3.11'
 
-      # Only the tools ci/quality-checks.sh actually runs. black, isort, flake8,
-      # pydocstyle, pycodestyle, mccabe, radon, pylint, safety and pip-audit were
-      # installed here but either unused or, for black and isort, checking against
-      # a formatter the project does not use (pyproject.toml configures ruff).
+      # The linters live in the pinned "quality" dependency group so a local run
+      # and this one enforce the same versions. Installing them unpinned here
+      # meant an upstream release could change what CI enforces with no commit.
       - name: 📦 Install Quality Tools
-        run: |
-          uv sync
-          uv pip install ruff mypy bandit[toml] xenon vulture
+        run: uv sync --group quality
 
       - name: 🔍 Python Quality Checks
         run: source .venv/bin/activate && ci/quality-checks.sh python
@@ -97,22 +94,12 @@ jobs:
           cache-dependency-path: |
             src/flavor-go/go.sum
       
+      # Pinned versions, and only the tools quality-checks.sh runs.
       - name: 📦 Install Go Quality Tools
-        run: |
-          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-          go install golang.org/x/tools/cmd/goimports@latest
-          go install honnef.co/go/tools/cmd/staticcheck@latest
-          go install github.com/securego/gosec/v2/cmd/gosec@latest
-          go install github.com/go-critic/go-critic/cmd/gocritic@latest
-          go install github.com/jgautheron/goconst/cmd/goconst@latest
-          go install github.com/kisielk/errcheck@latest
-          go install github.com/mdempsky/unconvert@latest
-          go install github.com/gordonklaus/ineffassign@latest
-          go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
-          go install github.com/client9/misspell/cmd/misspell@latest
-      
-      # Blocking: go vet. Advisory: golangci-lint (20 open issues on main),
-      # staticcheck, gocyclo -- promote once their backlog is clear.
+        run: ci/install-go-quality-tools.sh
+
+      # Blocking: go vet, golangci-lint, staticcheck. Advisory: gocyclo, whose
+      # backlog is complexity in existing functions rather than new findings.
       - name: 🔍 Go Quality Checks
         run: ci/quality-checks.sh go
 
@@ -141,37 +128,20 @@ jobs:
           components: rustfmt, clippy
           cache: true
 
+      # Cached by binary, not gated on the cache: the installer verifies the
+      # tool is runnable, so a stale cache cannot silently skip installation.
       - name: 📦 Cache Rust Quality Tools
         uses: actions/cache@v6
-        id: cache-rust-tools
         with:
-          path: |
-            ~/.cargo/bin/cargo-audit
-            ~/.cargo/bin/cargo-outdated
-            ~/.cargo/bin/cargo-machete
-            ~/.cargo/bin/cargo-deny
-            ~/.cargo/bin/cargo-geiger
-          key: rust-tools-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}-v1
-          restore-keys: |
-            rust-tools-${{ runner.os }}-v1
+          path: ~/.cargo/bin/cargo-machete
+          key: rust-tools-${{ runner.os }}-cargo-machete-0.9.1
 
+      # Pinned, and only the tool quality-checks.sh runs.
       - name: 📦 Install Rust Quality Tools
-        if: steps.cache-rust-tools.outputs.cache-hit != 'true'
-        run: |
-          # Install cargo-binstall from prebuilt binary (avoids compiling aws-lc-sys from source)
-          curl -L --proto '=https' --tlsv1.2 -sSf \
-            https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh \
-            | bash || cargo install cargo-binstall --quiet || true
-
-          # Try binstall first, fallback to cargo install
-          cargo binstall --no-confirm cargo-audit || cargo install cargo-audit --quiet
-          cargo binstall --no-confirm cargo-outdated || cargo install cargo-outdated --quiet
-          cargo binstall --no-confirm cargo-machete || cargo install cargo-machete --quiet
-          cargo binstall --no-confirm cargo-deny || cargo install cargo-deny --quiet
-          cargo binstall --no-confirm cargo-geiger || cargo install cargo-geiger --quiet
+        run: ci/install-rust-quality-tools.sh
       
       # Blocking: clippy, rustfmt -- both green on main.
-      # Advisory: cargo machete (unmeasured).
+      # All three Rust checks are enforced; cargo machete reports nothing on main.
       - name: 🔍 Rust Quality Checks
         run: ci/quality-checks.sh rust
 

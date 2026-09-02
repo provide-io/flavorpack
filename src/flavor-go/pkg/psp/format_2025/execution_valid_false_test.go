@@ -239,11 +239,6 @@ func TestRunBundleWaitForExtractionTimeout(t *testing.T) {
 	bundle := "/fake/bundle.pspf"
 	paths := NewWorkenvPaths(cacheRoot, bundle)
 
-	// Create extract dir and lock file
-	if err := errors.New(""); err == nil {
-		// Create extract directory
-	}
-
 	logger := logging.NewNullLogger()
 
 	// Write a lock file so WaitForExtraction sees it

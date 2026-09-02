@@ -78,23 +78,23 @@ func showBundleInfo(out io.Writer, exePath string, logger *slog.Logger) {
 		verifyStatus = "✗"
 	}
 
-	fmt.Fprintf(out, "%s v%s [PSPF/%s]\n",
+	_, _ = fmt.Fprintf(out, "%s v%s [PSPF/%s]\n",
 		metadata.Package.Name,
 		metadata.Package.Version,
 		strings.TrimPrefix(metadata.Format, "PSPF/"))
 
-	fmt.Fprintf(out, "Built with: %s | Launcher: %s | Size: %.1fMB\n",
+	_, _ = fmt.Fprintf(out, "Built with: %s | Launcher: %s | Size: %.1fMB\n",
 		builderType,
 		launcherType,
 		float64(index.PackageSize)/(1024*1024))
 
-	fmt.Fprintf(out, "Slots: %d (%s) | Verified: %s\n",
+	_, _ = fmt.Fprintf(out, "Slots: %d (%s) | Verified: %s\n",
 		len(metadata.Slots),
 		codecInfo,
 		verifyStatus)
 
-	fmt.Fprintf(out, "\nRun with: %s\n", metadata.Execution.Command)
-	fmt.Fprintf(out, "CLI Mode: Use 'run' to execute, 'extract' to unpack\n")
+	_, _ = fmt.Fprintf(out, "\nRun with: %s\n", metadata.Execution.Command)
+	_, _ = fmt.Fprintf(out, "CLI Mode: Use 'run' to execute, 'extract' to unpack\n")
 }
 
 // extractSlot extracts a specific slot to an output directory
@@ -144,7 +144,7 @@ func extractSlot(out io.Writer, exePath, slotStr, outputDir string, logger *slog
 		osExitFn(1)
 	}
 
-	fmt.Fprintf(out, "Extracted slot %d (%s) to %s\n", slotIndex, slot.ID, outputPath)
+	_, _ = fmt.Fprintf(out, "Extracted slot %d (%s) to %s\n", slotIndex, slot.ID, outputPath)
 }
 
 // detectLauncherType attempts to determine the launcher implementation language
@@ -198,7 +198,7 @@ func showMetadata(out io.Writer, exePath string, logger *slog.Logger) {
 	// Prepare bundle path (may extract from PE resources on Windows)
 	bundlePath, cleanup, err := prepareBundlePath(exePath, logger)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: Failed to prepare bundle path: %v\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "Error: Failed to prepare bundle path: %v\n", err)
 		osExitFn(1)
 	}
 	if cleanup != nil {
@@ -207,7 +207,7 @@ func showMetadata(out io.Writer, exePath string, logger *slog.Logger) {
 
 	reader, err := NewReaderWithLogger(bundlePath, logger)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: Failed to create reader: %v\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "Error: Failed to create reader: %v\n", err)
 		osExitFn(1)
 	}
 	defer func() {
@@ -218,7 +218,7 @@ func showMetadata(out io.Writer, exePath string, logger *slog.Logger) {
 
 	metadata, err := reader.ReadMetadata()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: Failed to read metadata: %v\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "Error: Failed to read metadata: %v\n", err)
 		osExitFn(1)
 	}
 
@@ -226,7 +226,7 @@ func showMetadata(out io.Writer, exePath string, logger *slog.Logger) {
 	encoder := json.NewEncoder(out)
 	encoder.SetIndent("", "  ")
 	if err := encoder.Encode(metadata); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: Failed to encode metadata: %v\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "Error: Failed to encode metadata: %v\n", err)
 		osExitFn(1)
 	}
 }
@@ -265,7 +265,7 @@ func verifyBundle(out io.Writer, exePath string, logger *slog.Logger) {
 		}
 	}()
 
-	fmt.Fprintln(out, "Verifying bundle integrity...")
+	_, _ = fmt.Fprintln(out, "Verifying bundle integrity...")
 
 	errors := []string{}
 
@@ -279,7 +279,7 @@ func verifyBundle(out io.Writer, exePath string, logger *slog.Logger) {
 		case !ok:
 			errors = append(errors, fmt.Sprintf("%s verification failed", label))
 		default:
-			fmt.Fprintf(out, "✓ %s valid\n", label)
+			_, _ = fmt.Fprintf(out, "✓ %s valid\n", label)
 		}
 	}
 
@@ -308,7 +308,7 @@ func verifyBundle(out io.Writer, exePath string, logger *slog.Logger) {
 			if _, err := reader.ReadSlot(i); err != nil {
 				errors = append(errors, fmt.Sprintf("Slot %d (%s) read failed: %v", i, slot.ID, err))
 			} else {
-				fmt.Fprintf(out, "✓ Slot %d (%s) checksum valid\n", i, slot.ID)
+				_, _ = fmt.Fprintf(out, "✓ Slot %d (%s) checksum valid\n", i, slot.ID)
 			}
 		}
 	}
@@ -318,11 +318,11 @@ func verifyBundle(out io.Writer, exePath string, logger *slog.Logger) {
 	record("Attestation policy hash", true, reader.VerifyAttestationPolicyHash())
 
 	if len(errors) == 0 {
-		fmt.Fprintln(out, "\n✓ Bundle verification passed")
+		_, _ = fmt.Fprintln(out, "\n✓ Bundle verification passed")
 	} else {
-		fmt.Fprintln(out, "\n✗ Bundle verification failed:")
+		_, _ = fmt.Fprintln(out, "\n✗ Bundle verification failed:")
 		for _, err := range errors {
-			fmt.Fprintf(out, "  - %s\n", err)
+			_, _ = fmt.Fprintf(out, "  - %s\n", err)
 		}
 		osExitFn(1)
 	}

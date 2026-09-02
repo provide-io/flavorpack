@@ -113,7 +113,7 @@ func TestSpawnBundleWorkenvSetup(t *testing.T) {
 	// Should either error or succeed — just verify no panic.
 	_ = spawnBundle(bundle, nil, t.TempDir(), logger)
 	// Remove the custom workenv env after the test to avoid polluting others.
-	os.Unsetenv(EnvWorkenv)
+	_ = os.Unsetenv(EnvWorkenv)
 }
 
 // TestSpawnBundlePrepareFails verifies that spawnBundle returns a non-nil error

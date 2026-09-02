@@ -5,8 +5,6 @@ package format_2025
 
 import "runtime"
 
-// currentGOOS and currentGOARCH are package-level variables that mirror
-// runtime.GOOS and runtime.GOARCH. They exist so tests can override them
-// to exercise platform-specific branches without requiring that platform.
+// currentGOOS mirrors runtime.GOOS as a package-level variable so tests can
+// override it and exercise platform-specific branches without that platform.
 var currentGOOS = runtime.GOOS
-var currentGOARCH = runtime.GOARCH
