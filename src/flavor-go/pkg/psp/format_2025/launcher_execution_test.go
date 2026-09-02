@@ -469,15 +469,14 @@ func TestRunBundleWithCwdPreparesWorkenvAndCommands(t *testing.T) {
 		t.Fatalf("expected setup command output to exist: %v", err)
 	}
 
-	env := strings.Join(cmd.Env, "\n")
-	if !strings.Contains(env, EnvWorkenv+"="+workenvDir) {
-		t.Fatalf("expected FLAVOR_WORKENV to point at workenv, env=%q", env)
+	if got := envValue(t, cmd.Env, EnvWorkenv); got != workenvDir {
+		t.Errorf("%s = %q, want %q", EnvWorkenv, got, workenvDir)
 	}
-	if !strings.Contains(env, "RUNTIME_FLAG=on") {
-		t.Fatalf("expected runtime env entry in cmd.Env, env=%q", env)
+	if got := envValue(t, cmd.Env, "RUNTIME_FLAG"); got != "on" {
+		t.Errorf("RUNTIME_FLAG = %q, want %q", got, "on")
 	}
-	if !strings.Contains(env, "CUSTOM_SLOT=") || !strings.Contains(env, "slot_0_slot-alpha") {
-		t.Fatalf("expected slot placeholder expansion in cmd.Env, env=%q", env)
+	if got := envValue(t, cmd.Env, "CUSTOM_SLOT"); !strings.Contains(got, "slot_0_slot-alpha") {
+		t.Errorf("CUSTOM_SLOT = %q, want the slot placeholder expanded", got)
 	}
 }
 
@@ -1137,8 +1136,8 @@ func TestRunBundleWithCwdUsesCustomWorkenvPath(t *testing.T) {
 	if _, err := os.Stat(expectedWorkenv); err != nil {
 		t.Fatalf("expected derived workenv to exist: %v", err)
 	}
-	if env := strings.Join(cmd.Env, "\n"); !strings.Contains(env, EnvWorkenv+"="+expectedWorkenv) {
-		t.Fatalf("expected FLAVOR_WORKENV=%s in env, got env=%q", expectedWorkenv, env)
+	if got := envValue(t, cmd.Env, EnvWorkenv); got != expectedWorkenv {
+		t.Errorf("%s = %q, want %q", EnvWorkenv, got, expectedWorkenv)
 	}
 }
 
