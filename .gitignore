@@ -118,3 +118,21 @@ Users/
 # repositories in this suite.
 keys/
 *.private-key.pem
+
+# Compiled output. These were committed once and purged from history; the
+# repository carried ~150MB of them across 14 versions of the Go launcher alone.
+# Build them, do not track them.
+src/flavor-go/flavor-go-launcher
+src/flavor-go/flavor-go-builder
+src/flavor-go/main
+src/flavor-go/*.test
+src/flavor-go/pretaster-psp-*/
+src/ingredients/bin/
+tests/pretaster/failure-diagnostics/
+
+# cargo-mutants writes its run into the crate directory
+src/flavor-rs/.cargo-mutants.out/
+
+# Scratch file listings
+flavor-bfiles.txt
+bfiles-*.txt
