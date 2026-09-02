@@ -85,6 +85,32 @@ def test_minimal_document_from_section_14_is_conforming() -> None:
     assert not list(Draft202012Validator(SCHEMA).iter_errors(minimal))
 
 
+def test_an_empty_execution_block_is_conforming() -> None:
+    """A package that configures no command is readable, and refused when run.
+
+    The Python builder writes ``"execution": {}`` for such a package. Rust
+    required ``command`` within the block and so could not read those packages at
+    all — ``info`` reported ``missing field command``. See #48.
+    """
+    document = {
+        "format": "PSPF/2025",
+        "package": {"name": "minimal", "version": "1.0.0"},
+        "slots": [],
+        "execution": {},
+    }
+    assert not list(Draft202012Validator(SCHEMA).iter_errors(document))
+
+
+def test_a_document_with_no_execution_block_is_conforming() -> None:
+    """FEP-0002 §4.1.5 lists execution as OPTIONAL."""
+    document = {
+        "format": "PSPF/2025",
+        "package": {"name": "minimal", "version": "1.0.0"},
+        "slots": [],
+    }
+    assert not list(Draft202012Validator(SCHEMA).iter_errors(document))
+
+
 def test_unknown_members_are_accepted() -> None:
     """§5.3 requires readers to tolerate unknown members, so the schema must too.
 
@@ -127,15 +153,6 @@ def test_unknown_members_are_accepted() -> None:
                         "lifecycle": "runtime",
                     }
                 ],
-            },
-        ),
-        (
-            "execution without a command",
-            {
-                "format": "PSPF/2025",
-                "package": {"name": "m", "version": "1"},
-                "slots": [],
-                "execution": {},
             },
         ),
         (
