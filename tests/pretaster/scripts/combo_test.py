@@ -29,9 +29,13 @@ def handle_command(cmd: str, *args: str) -> int:  # noqa: C901 - command dispatc
         print(f"  Workenv: {os.getenv('FLAVOR_WORKENV', 'Not set')}")
         return 0
     elif cmd == "env":
-        for key in sorted(os.environ.keys())[:10]:
-            print(f"  {key}={os.environ[key][:50]}")
-        print(f"  ... ({len(os.environ)} total)")
+        # Only the launcher's own variables. This runs inside a package under
+        # test, so the environment is whatever the developer or the CI runner
+        # had set, and its output goes to a build log.
+        flavor_keys = sorted(k for k in os.environ if k.startswith("FLAVOR_"))
+        for key in flavor_keys:
+            print(f"  {key}={os.environ[key]}")
+        print(f"  ... ({len(os.environ)} variables in total, {len(flavor_keys)} of them FLAVOR_*)")
         return 0
     elif cmd == "argv":
         print("📝 Arguments received:")
