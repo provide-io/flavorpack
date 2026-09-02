@@ -58,7 +58,7 @@ fmt:
 
 lint:
 	@echo "🔍 Linting Rust code..."
-	@cargo clippy -- -D warnings
+	@cargo clippy --all-targets -- -D warnings
 	@echo "✅ Clippy linting passed"
 
 security:

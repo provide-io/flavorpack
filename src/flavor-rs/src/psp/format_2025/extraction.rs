@@ -443,7 +443,7 @@ mod tests {
     }
 
     fn write_octal(field: &mut [u8], value: u64, width: usize) {
-        let mut encoded = format!("{value:0width$o}", width = width).into_bytes();
+        let mut encoded = format!("{value:0width$o}").into_bytes();
         encoded.push(0);
         if field.len() > encoded.len() {
             encoded.push(b' ');
@@ -598,8 +598,9 @@ mod tests {
         let temp_dir = tempdir().expect("tempdir");
         let target = temp_dir.path().join("nested/tool");
         let mut descriptor = SlotDescriptor::new(0);
-        descriptor.permissions = 0o755u16 as u8;
-        descriptor.permissions_high = (0o755u16 >> 8) as u8;
+        let [low, high] = 0o755u16.to_le_bytes();
+        descriptor.permissions = low;
+        descriptor.permissions_high = high;
 
         extract_single_file(b"hello, world", &target, &[descriptor], 0)
             .expect("extract single file");
@@ -650,13 +651,13 @@ mod tests {
         #[test]
         fn prop_resolve_always_under_dest(target in "([a-z0-9_./]{0,50})") {
             let dest = Path::new("/tmp/workenv");
-            match resolve_in_workenv(dest, Path::new(&target)) {
-                Ok(resolved) => prop_assert!(
+            // Rejection is always safe; only an accepted path has to be checked.
+            if let Ok(resolved) = resolve_in_workenv(dest, Path::new(&target)) {
+                prop_assert!(
                     resolved.starts_with(dest),
                     "Resolved path {:?} escapes {:?}",
                     resolved, dest
-                ),
-                Err(_) => {} // Rejection is always safe
+                );
             }
         }
 

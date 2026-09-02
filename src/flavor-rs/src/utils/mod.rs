@@ -71,10 +71,10 @@ mod tests {
 
     #[test]
     fn is_env_true_handles_truthy_and_falsey_values() {
-        assert!(matches!(is_env_true_from_value(Some("true")), true));
-        assert!(matches!(is_env_true_from_value(Some("YES")), true));
-        assert!(matches!(is_env_true_from_value(Some("0")), false));
-        assert!(matches!(is_env_true_from_value(None), false));
+        assert!(is_env_true_from_value(Some("true")));
+        assert!(is_env_true_from_value(Some("YES")));
+        assert!(!is_env_true_from_value(Some("0")));
+        assert!(!is_env_true_from_value(None));
     }
 
     #[test]

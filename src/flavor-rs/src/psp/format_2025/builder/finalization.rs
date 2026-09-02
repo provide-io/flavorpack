@@ -301,7 +301,7 @@ mod tests {
         assert_eq!(slot_table_size, SLOT_DESCRIPTOR_SIZE as u64);
         assert_eq!(descriptor_table_offset % SLOT_ALIGNMENT, 0);
 
-        stream_slot_data(&mut out, &mut descriptors, &[slot_path.clone()])
+        stream_slot_data(&mut out, &mut descriptors, std::slice::from_ref(&slot_path))
             .expect("stream slot data");
         let streamed_offset = descriptors[0].offset;
         assert!(streamed_offset >= descriptor_table_offset + SLOT_DESCRIPTOR_SIZE as u64);
