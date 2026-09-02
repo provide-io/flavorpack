@@ -92,3 +92,31 @@ func TestNoTestFormatsTheWholeEnvironment(t *testing.T) {
 		t.Fatal("no test files scanned; this guard is checking nothing")
 	}
 }
+
+// assertNoDuplicateEnvKeys fails when a key appears more than once in the
+// environment handed to a package.
+//
+// exec.Cmd deduplicates before starting the process and keeps the last
+// occurrence, so a duplicate is survivable — but only because of that rule.
+// Anything reading the slice directly sees the first entry, and a launcher that
+// grew a direct execve path would inherit neither the rule nor the intent.
+func assertNoDuplicateEnvKeys(t *testing.T, env []string) {
+	t.Helper()
+
+	seen := make(map[string]int, len(env))
+	for _, entry := range env {
+		key, _, found := strings.Cut(entry, "=")
+		if !found {
+			continue
+		}
+		seen[key]++
+	}
+
+	for key, count := range seen {
+		if count > 1 {
+			// The key is named; the values are not, since they are whatever the
+			// environment held.
+			t.Errorf("%s appears %d times in the environment handed to the package", key, count)
+		}
+	}
+}
