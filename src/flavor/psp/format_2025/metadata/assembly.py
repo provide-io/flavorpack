@@ -13,7 +13,7 @@ from pathlib import Path
 import socket
 from typing import Any
 
-from provide.foundation.crypto import format_checksum as calculate_checksum
+from provide.foundation.crypto import format_checksum
 from provide.foundation.platform import get_arch_name, get_os_name, get_platform_string
 from provide.foundation.utils import get_version
 
@@ -195,7 +195,7 @@ def get_launcher_info(launcher_type: str) -> dict[str, Any]:
     }
 
     tool_name = launcher_map.get(launcher_type, "flavor-rs-launcher")
-    checksum = calculate_checksum(launcher_data, "sha256")
+    checksum = format_checksum(launcher_data, "sha256")
 
     return {
         "data": launcher_data,

@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any, BinaryIO
 
 from provide.foundation import logger
-from provide.foundation.crypto import Ed25519Signer, format_checksum as calculate_checksum
+from provide.foundation.crypto import Ed25519Signer, format_checksum
 from provide.foundation.file import (
     align_offset,
     align_to_page,
@@ -146,7 +146,7 @@ def _create_launcher_info(launcher_data: bytes) -> dict[str, Any]:
         "data": launcher_data,
         "tool": "launcher",
         "tool_version": extract_launcher_version(launcher_data),
-        "checksum": calculate_checksum(launcher_data, "sha256"),
+        "checksum": format_checksum(launcher_data, "sha256"),
         "capabilities": ["mmap", "async", "sandbox"],
     }
 
