@@ -148,8 +148,11 @@ class TestLauncherAvailability:
         mock_find.return_value = Path("launcher-windows-amd64")
         orchestrator = orchestrator_factory()
         orchestrator.build_package()
-        mock_logger.assert_called_once()
-        assert "mismatch" in mock_logger.call_args[0][0].lower()
+        # logger is a shared singleton, so this mock also catches the launcher
+        # read-back skip that a foreign launcher triggers. Assert the mismatch
+        # warning is among the calls rather than that it is the only one.
+        warnings = [str(call).lower() for call in mock_logger.call_args_list]
+        assert any("mismatch" in warning for warning in warnings), warnings
 
 
 class TestLauncherReproducibility:
