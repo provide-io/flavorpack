@@ -7,12 +7,10 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strconv"
 	"strings"
 
 	"log/slog"
 
-	"github.com/provide-io/flavor/go/flavor/internal/workenv"
 	"github.com/provide-io/flavor/go/flavor/pkg/logging"
 	"github.com/provide-io/flavor/go/flavor/pkg/utils/shellparse"
 )
@@ -170,115 +168,15 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger *slo
 		return nil, fmt.Errorf("failed to read index: %w", err)
 	}
 
-	// Check signing key trust status from the embedded public key.
-	// The attestation fingerprint, when present, must match the derived public-key fingerprint.
-	keyTrusted := false
-	hasPublicKey := false
-	for _, b := range index.PublicKey {
-		if b != 0 {
-			hasPublicKey = true
-			break
-		}
-	}
-	attestationFP := strings.TrimRight(string(index.AttestationKeyFp[:]), "\x00")
-	if hasPublicKey {
-		fp, err := ComputeKeyFingerprint(index.PublicKey[:])
-		if err != nil {
-			logger.Warn("⚠️ Failed to derive signing key fingerprint", "error", err)
-		} else {
-			if attestationFP != "" && attestationFP != fp {
-				return nil, fmt.Errorf("attestation key fingerprint does not match embedded public key")
-			}
-
-			trusted, err := IsKeyTrusted(fp, true)
-			if err != nil {
-				logger.Warn("⚠️ Failed to check trusted key store", "error", err)
-			} else if trusted == nil {
-				logger.Warn("⚠️ No trusted-keys store found; requiring a trusted key will fail closed", "fingerprint", fp)
-			} else if *trusted {
-				keyTrusted = true
-			} else {
-				fmt.Fprintf(os.Stderr, "⚠️ SECURITY WARNING: Package signing key is not in the trusted store\n")
-				fmt.Fprintf(os.Stderr, "⚠️ Key fingerprint: %s\n", fp)
-				fmt.Fprintf(os.Stderr, "⚠️ Use 'flavor trust add <key-file>' to trust this key\n")
-				logger.Warn("⚠️ Package signing key not in trusted store", "fingerprint", fp)
-			}
-		}
-	} else if attestationFP != "" {
-		return nil, fmt.Errorf("attestation key fingerprint is present but public key is missing")
+	// The attestation fingerprint, when present, must match the derived
+	// public-key fingerprint. keyTrusted is an input to EnforcePolicy below.
+	keyTrusted, err := checkSigningKeyTrust(index, logger)
+	if err != nil {
+		return nil, err
 	}
 
-	validationLevel := getValidationLevel()
-
-	switch validationLevel {
-	case ValidationNone:
-		fmt.Fprintf(os.Stderr, "⚠️ SECURITY WARNING: Skipping all integrity verification (FLAVOR_VALIDATION=none)\n")
-		fmt.Fprintf(os.Stderr, "⚠️ This is NOT RECOMMENDED for production use\n")
-		logger.Warn("⚠️ VALIDATION DISABLED: Skipping integrity verification", "level", validationLevel)
-	default:
-		logger.Debug("🔍 Verifying package integrity", "level", validationLevel)
-		valid, err := verifyIntegritySealFn(reader)
-		if err != nil {
-			switch validationLevel {
-			case ValidationMinimal, ValidationRelaxed:
-				fmt.Fprintf(os.Stderr, "⚠️ SECURITY WARNING: Failed to verify integrity seal: %v\n", err)
-				fmt.Fprintf(os.Stderr, "⚠️ Continuing due to validation level: %v\n", validationLevel)
-				logger.Warn("⚠️ Failed to verify integrity seal, continuing", "error", err, "level", validationLevel)
-			default: // ValidationStrict, ValidationStandard
-				logger.Error("❌ Failed to verify integrity seal", "error", err)
-				return nil, fmt.Errorf("failed to verify integrity seal: %w", err)
-			}
-		} else if !valid {
-			switch validationLevel {
-			case ValidationMinimal, ValidationRelaxed:
-				fmt.Fprintf(os.Stderr, "⚠️ SECURITY WARNING: Package integrity verification failed\n")
-				fmt.Fprintf(os.Stderr, "⚠️ Package may be corrupted or tampered with\n")
-				fmt.Fprintf(os.Stderr, "⚠️ Continuing due to validation level: %v\n", validationLevel)
-				logger.Warn("⚠️ Package integrity verification failed, continuing", "level", validationLevel)
-			case ValidationStandard:
-				fmt.Fprintf(os.Stderr, "🚨 SECURITY WARNING: Package integrity verification failed\n")
-				fmt.Fprintf(os.Stderr, "🚨 Package may be corrupted or tampered with\n")
-				fmt.Fprintf(os.Stderr, "🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)\n")
-				logger.Warn("⚠️ Package integrity verification failed, continuing with standard validation")
-			default: // ValidationStrict
-				logger.Error("❌ Package integrity verification failed")
-				return nil, errors.New("package integrity verification failed")
-			}
-		} else {
-			logger.Debug("✅ Package integrity verified")
-		}
-
-		// Verify attestation SBOM digest (fail-closed: digest present but slot absent = error)
-		logger.Debug("🔍 Verifying attestation SBOM digest", "level", validationLevel)
-		if err := reader.VerifyAttestationSbomDigest(); err != nil {
-			switch validationLevel {
-			case ValidationMinimal, ValidationRelaxed:
-				fmt.Fprintf(os.Stderr, "⚠️ SECURITY WARNING: Failed to verify attestation SBOM digest: %v\n", err)
-				fmt.Fprintf(os.Stderr, "⚠️ Continuing due to validation level: %v\n", validationLevel)
-				logger.Warn("⚠️ Failed to verify attestation SBOM digest, continuing", "error", err, "level", validationLevel)
-			default: // ValidationStrict, ValidationStandard
-				logger.Error("❌ Failed to verify attestation SBOM digest", "error", err)
-				return nil, fmt.Errorf("failed to verify attestation SBOM digest: %w", err)
-			}
-		} else {
-			logger.Debug("✅ Attestation SBOM digest verified")
-		}
-
-		// Verify attestation policy hash (fail-closed: hash present but no policy = error)
-		logger.Debug("🔍 Verifying attestation policy hash", "level", validationLevel)
-		if err := reader.VerifyAttestationPolicyHash(); err != nil {
-			switch validationLevel {
-			case ValidationMinimal, ValidationRelaxed:
-				fmt.Fprintf(os.Stderr, "⚠️ SECURITY WARNING: Failed to verify attestation policy hash: %v\n", err)
-				fmt.Fprintf(os.Stderr, "⚠️ Continuing due to validation level: %v\n", validationLevel)
-				logger.Warn("⚠️ Failed to verify attestation policy hash, continuing", "error", err, "level", validationLevel)
-			default: // ValidationStrict, ValidationStandard
-				logger.Error("❌ Failed to verify attestation policy hash", "error", err)
-				return nil, fmt.Errorf("failed to verify attestation policy hash: %w", err)
-			}
-		} else {
-			logger.Debug("✅ Attestation policy hash verified")
-		}
+	if err := verifyPackageIntegrity(reader, getValidationLevel(), logger); err != nil {
+		return nil, err
 	}
 
 	metadata, err := reader.ReadMetadata()
@@ -294,96 +192,21 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger *slo
 		logger.Debug("⚠️ No execution configuration present in metadata")
 	}
 
-	// Policy enforcement
-	opPolicy, policyErr := LoadOperatorPolicy()
-	if policyErr != nil {
-		logger.Error("❌ Failed to load operator policy", "error", policyErr)
-		return nil, fmt.Errorf("failed to load operator policy: %w", policyErr)
+	if err := enforcePackagePolicy(metadata, index, keyTrusted, logger); err != nil {
+		return nil, err
 	}
 
-	var pkgPolicy PackagePolicy
-	if metadata.Policy != nil {
-		pkgPolicy = *metadata.Policy
+	paths, workenvDir, err := resolveWorkenvPaths(exePath, logger)
+	if err != nil {
+		return nil, err
 	}
 
-	effective := MergePolicy(pkgPolicy, opPolicy)
-
-	hasSBOM := false
-	for _, slot := range metadata.Slots {
-		if slot.Lifecycle == "attestation" {
-			hasSBOM = true
-			break
-		}
-	}
-
-	buildTimestamp, tsErr := uint64ToInt64Checked(index.BuildTimestamp, "build timestamp")
-	if tsErr != nil {
-		logger.Error("❌ Invalid build timestamp", "error", tsErr)
-		return nil, fmt.Errorf("invalid build timestamp: %w", tsErr)
-	}
-	policyWarnings, enforceErr := EnforcePolicy(effective, buildTimestamp, hasSBOM, keyTrusted)
-	for _, w := range policyWarnings {
-		logger.Warn("⚠️  Policy warning", "message", w)
-	}
-	if enforceErr != nil {
-		logger.Error("❌ Policy violation", "error", enforceErr)
-		return nil, fmt.Errorf("policy violation: %w", enforceErr)
-	}
-	logger.Debug("✅ Policy enforcement passed")
-
-	// Create WorkenvPaths structure
-	var paths *WorkenvPaths
-	if customWorkenv := os.Getenv(EnvWorkenv); customWorkenv != "" {
-		// Use custom workenv path from environment variable
-		logger.Info("📁 Using custom work environment from FLAVOR_WORKENV", "path", customWorkenv)
-		// Extract cache dir from custom workenv (go up two levels)
-		cacheDir := filepath.Dir(filepath.Dir(customWorkenv))
-		paths = NewWorkenvPaths(cacheDir, exePath)
-	} else {
-		// Get cache directory using workenv.GetCacheRoot() for cross-platform consistency
-		cacheDir := workenv.GetCacheRoot()
-		paths = NewWorkenvPaths(cacheDir, exePath)
-	}
-
-	workenvDir := paths.Workenv()
-
-	// Convert to forward slashes for command string substitution on Windows
-	// This prevents backslashes from being treated as escape characters by the shell parser
+	// Forward slashes so the shell parser does not read Windows separators as
+	// escape characters during command substitution.
 	workenvDirForCmd := filepath.ToSlash(workenvDir)
-	if err := mkdirAllValidated(workenvDir, os.FileMode(DirPerms)); err != nil {
-		logger.Error("❌ Failed to create work environment directory", "error", err)
-		return nil, fmt.Errorf("failed to create work environment directory: %w", err)
-	}
-	logger.Info("📁 Work environment", "path", workenvDir)
 
-	// Setup workenv directories if specified
-	if metadata.Workenv != nil && metadata.Workenv.Directories != nil {
-		for _, dirSpec := range metadata.Workenv.Directories {
-			// Substitute {workenv} placeholder in the path
-			dirPath := strings.ReplaceAll(dirSpec.Path, "{workenv}", workenvDir)
-			// Path traversal protection: ensure dirPath stays within workenvDir
-			if err := ensurePathWithinWorkenv(dirPath, workenvDir, dirSpec.Path); err != nil {
-				return nil, fmt.Errorf("directory path %q escapes work environment directory", dirSpec.Path)
-			}
-			logger.Debug("📁 Creating directory", "path", dirPath)
-			if err := mkdirAllValidated(dirPath, os.FileMode(DirPerms)); err != nil {
-				logger.Error("❌ Failed to create directory", "path", dirPath, "error", err)
-				return nil, fmt.Errorf("failed to create directory %s: %w", dirPath, err)
-			}
-
-			// Set permissions if specified
-			if dirSpec.Mode != "" {
-				// Parse octal mode string (e.g., "0700")
-				mode, err := strconv.ParseUint(strings.TrimPrefix(dirSpec.Mode, "0"), 8, 32)
-				if err == nil {
-					if err := chmodValidatedFn(dirPath, os.FileMode(mode)); err != nil {
-						logger.Debug("Failed to set permissions", "path", dirPath, "mode", dirSpec.Mode, "error", err)
-					} else {
-						logger.Debug("🔒 Set permissions", "path", dirPath, "mode", dirSpec.Mode)
-					}
-				}
-			}
-		}
+	if err := createWorkenvDirectories(metadata, workenvDir, logger); err != nil {
+		return nil, err
 	}
 
 	// Check if we should use cache
@@ -407,198 +230,65 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger *slo
 		logger.Info("📦 FLAVOR_WORKENV_CACHE=false, forcing fresh extraction")
 	}
 
-	slotPaths := make(map[int]string)
+	// Every branch below assigns it.
+	var slotPaths map[int]string
 
-	if !workenvValid {
-		// Check disk space before extraction
+	if workenvValid {
+		logger.Info("✅ Work environment is valid, skipping persistent slot extraction")
+		slotPaths = workenvSlotPaths(metadata, paths)
+	} else {
 		if err := checkDiskSpace(paths, metadata, logger); err != nil {
 			return nil, err
 		}
 
-		// Acquire lock before extraction
 		acquiredLock, err := tryAcquireLockFn(paths, logger)
 		if err != nil {
 			logger.Error("❌ Failed to acquire extraction lock", "error", err)
 			return nil, err
 		}
-		if !acquiredLock {
-			// Another process is extracting, wait for it
+
+		if acquiredLock {
+			// Only a holder releases. ReleaseLock removes the lock file without
+			// checking who owns it, so releasing one this process never took
+			// deletes whichever process's lock is there.
+			defer ReleaseLock(paths, logger)
+
+			slotPaths, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logger)
+			if err != nil {
+				return nil, err
+			}
+
+			// Recorded for the next launch's cache check.
+			if err := savePackageChecksum(paths, index.IndexChecksum, logger); err != nil {
+				logger.Warn("⚠️ Failed to save package checksum", "error", err)
+			}
+		} else {
+			// Another process holds the lock. Wait for its extraction and use
+			// it: extracting into the same work environment alongside it is
+			// what the lock exists to prevent.
 			logger.Info("⏳ Another process is extracting, waiting...")
 			if err := waitForExtractionFn(paths, 60, logger); err != nil {
 				return nil, err
 			}
-			// Re-check validity after waiting
+
 			valid, err := checkWorkenvValidityAfterWaitFn(paths, index, metadata, logger)
 			if err != nil {
 				return nil, err
 			}
 			if !valid {
-				return nil, fmt.Errorf("cache extraction by another process failed validation")
+				return nil, errors.New("cache extraction by another process failed validation")
 			}
+
 			workenvValid = true
-		}
-		defer ReleaseLock(paths, logger)
-
-		// Extract and merge slots to workenv
-		slotPaths, err = extractAndMergeSlotsToWorkenv(reader, metadata, paths, index, logger)
-		if err != nil {
-			return nil, err
-		}
-
-		// Save package checksum for future cache validation
-		if err := savePackageChecksum(paths, index.IndexChecksum, logger); err != nil {
-			logger.Warn("⚠️ Failed to save package checksum", "error", err)
-		}
-	} else {
-		logger.Info("✅ Work environment is valid, skipping persistent slot extraction")
-		for _, slot := range metadata.Slots {
-			slotPaths[slot.Slot] = paths.Workenv()
+			slotPaths = workenvSlotPaths(metadata, paths)
 		}
 	}
 
-	// Run setup commands if cache is invalid
+	// Setup commands run once, against a freshly extracted work environment.
 	if !workenvValid && len(metadata.SetupCommands) > 0 {
-		logger.Info("🔧 Running setup commands", "count", len(metadata.SetupCommands))
-		metadataDir := filepath.Join(workenvDir, "metadata")
-		if err := mkdirAllValidated(metadataDir, os.FileMode(DirPerms)); err != nil {
-			logger.Error("❌ Failed to create metadata directory", "error", err)
-			return nil, fmt.Errorf("failed to create metadata directory: %w", err)
+		if err := runSetupCommands(metadata, workenvDir, workenvDirForCmd, userCwd, slotPaths, logger); err != nil {
+			return nil, err
 		}
-
-		for i, setupCmdInterface := range metadata.SetupCommands {
-			logger.Debug("🔧 Processing setup command", "index", i)
-			var cmdToRun string
-			var cmdArgs []string
-
-			switch cmd := setupCmdInterface.(type) {
-			case string:
-				cmdToRun = cmd
-			case map[string]interface{}:
-				cmdType, _ := cmd["type"].(string)
-				command, _ := cmd["command"].(string)
-
-				command = strings.ReplaceAll(command, "{workenv}", workenvDirForCmd)
-				command = strings.ReplaceAll(command, "{package_name}", metadata.Package.Name)
-				command = strings.ReplaceAll(command, "{version}", metadata.Package.Version)
-
-				if cmdType == "enumerate_and_execute" {
-					if enumerate, ok := cmd["enumerate"].(map[string]interface{}); ok {
-						path, _ := enumerate["path"].(string)
-						pattern, _ := enumerate["pattern"].(string)
-
-						path = strings.ReplaceAll(path, "{workenv}", workenvDir)
-						if err := ensurePathWithinWorkenv(path, workenvDir, path); err != nil {
-							logger.Error("❌ Enumerate path escapes work environment directory", "path", path, "error", err)
-							return nil, err
-						}
-
-						matches, err := filepath.Glob(filepath.Join(path, pattern))
-						if err != nil {
-							logger.Warn("⚠️ Failed to enumerate files", "error", err)
-						}
-
-						parts := strings.Fields(command)
-						if len(parts) > 0 && len(matches) > 0 {
-							cmdArgs = append(parts[1:], matches...)
-							cmdToRun = parts[0]
-						} else {
-							cmdToRun = command
-						}
-					}
-				} else if cmdType == "write_file" {
-					path, _ := cmd["path"].(string)
-					content, _ := cmd["content"].(string)
-
-					path = strings.ReplaceAll(path, "{workenv}", workenvDir)
-					path = strings.ReplaceAll(path, "{package_name}", metadata.Package.Name)
-					path = strings.ReplaceAll(path, "{version}", metadata.Package.Version)
-					if err := ensurePathWithinWorkenv(path, workenvDir, path); err != nil {
-						logger.Error("❌ Write-file path escapes work environment directory", "path", path, "error", err)
-						return nil, err
-					}
-
-					content = strings.ReplaceAll(content, "{workenv}", workenvDirForCmd)
-					content = strings.ReplaceAll(content, "{package_name}", metadata.Package.Name)
-					content = strings.ReplaceAll(content, "{version}", metadata.Package.Version)
-
-					mode := os.FileMode(0644)
-					if modeFloat, ok := cmd["mode"].(float64); ok {
-						modeChecked, modeErr := float64ToFileModeChecked(modeFloat, "setup command mode")
-						if modeErr != nil {
-							logger.Error("❌ Invalid setup file mode", "mode", modeFloat, "error", modeErr)
-							return nil, modeErr
-						}
-						mode = modeChecked
-					}
-
-					if err := writeFileValidated(path, []byte(content+"\n"), mode); err != nil {
-						logger.Error("❌ Failed to write file", "path", path, "error", err)
-						return nil, fmt.Errorf("failed to write file %s: %w", path, err)
-					}
-
-					continue
-				} else {
-					cmdToRun = command
-				}
-			default:
-				logger.Warn("⚠️ Unknown setup command type", "type", fmt.Sprintf("%T", setupCmdInterface))
-				continue
-			}
-
-			if cmdToRun != "" {
-				if len(cmdArgs) == 0 {
-					cmdToRun = strings.ReplaceAll(cmdToRun, "{workenv}", workenvDirForCmd)
-					cmdToRun = strings.ReplaceAll(cmdToRun, "{package_name}", metadata.Package.Name)
-					cmdToRun = strings.ReplaceAll(cmdToRun, "{version}", metadata.Package.Version)
-				}
-
-				var setupExec *exec.Cmd
-				if len(cmdArgs) > 0 {
-					// Resolve executable for cross-platform compatibility
-					resolvedCmd := resolveExecutable(cmdToRun, logger)
-					setupExec = execCommandValidated(resolvedCmd, cmdArgs...)
-				} else {
-					// Use shell-aware parser to handle quoted arguments
-					parts, err := shellparse.Split(cmdToRun)
-					if err != nil {
-						logger.Error("❌ Failed to parse setup command", "command", cmdToRun, "error", err)
-						return nil, fmt.Errorf("failed to parse setup command %q: %w", cmdToRun, err)
-					}
-					if len(parts) == 0 {
-						continue
-					}
-					// Resolve executable for cross-platform compatibility
-					resolvedExec := resolveExecutable(parts[0], logger)
-					setupExec = execCommandValidated(resolvedExec, parts[1:]...)
-				}
-
-				setupExec.Dir = userCwd
-
-				setupExec.Env = os.Environ()
-				setupExec.Env = setEnv(setupExec.Env, EnvWorkenv, workenvDir)
-
-				for i, env := range setupExec.Env {
-					if strings.HasPrefix(env, "PATH=") {
-						binDir := "bin"
-						if runtime.GOOS == "windows" {
-							binDir = "Scripts"
-						}
-						setupExec.Env[i] = fmt.Sprintf("PATH=%s%s%s", filepath.Join(workenvDir, binDir), string(os.PathListSeparator), strings.TrimPrefix(env, "PATH="))
-						break
-					}
-				}
-
-				logger.Debug("🏃 Running setup command", "command", cmdToRun, "args", cmdArgs, "cwd", userCwd)
-				if output, err := setupExec.CombinedOutput(); err != nil {
-					logger.Error("❌ Setup command failed", "command", cmdToRun, "output", string(output))
-					return nil, fmt.Errorf("setup command %s failed: %w", cmdToRun, err)
-				}
-			}
-		}
-
-		// Clean up init lifecycle slots after setup commands have run
-		logger.Info("🧹 Cleaning up lifecycle slots...")
-		cleanupLifecycleSlots(workenvDir, metadata, slotPaths, logger)
 	}
 
 	if metadata.Execution == nil {
