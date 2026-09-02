@@ -1,7 +1,6 @@
 package format_2025
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -28,48 +27,10 @@ var launcherStderrWriter io.Writer = os.Stderr
 
 // LaunchWithLogLevel launches with explicit log level control
 func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource string) {
-	// Determine log level and source
-	var logLevel string
-	var logSource string
+	logger, actualLevel, logSource, closeLog := setupLauncherLogging(cliLogLevel, cliLogSource)
+	defer closeLog()
 
-	if cliLogLevel != "" {
-		logLevel = cliLogLevel
-		logSource = cliLogSource
-	} else if envLevel := os.Getenv(EnvLauncherLogLevel); envLevel != "" {
-		logLevel = envLevel
-		logSource = EnvLauncherLogLevel
-	} else if envLevel := os.Getenv(EnvLogLevel); envLevel != "" {
-		logLevel = envLevel
-		logSource = EnvLogLevel
-	} else {
-		logLevel = "warn" // Default to warn for production; set FLAVOR_LOG_LEVEL for more detail
-		logSource = "default"
-	}
-
-	// Parse the actual level string for logging the configured level in debug output.
-	actualLevel := logLevel
-	if strings.HasPrefix(logLevel, "json:") {
-		actualLevel = logLevel[len("json:"):]
-	} else if logLevel == "json" {
-		actualLevel = "info"
-	}
-
-	setUTF8ConsoleOutput()
-
-	// Determine log output destination.
-	var logOutput io.Writer
-	if logPath := os.Getenv(EnvLogPath); logPath != "" {
-		if file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, FilePerms); err == nil {
-			defer func() { _ = file.Close() }()
-			logOutput = file
-		}
-	} else if !logging.IsJSONFormat(logLevel) {
-		logOutput = logging.NewPrefixWriter("🐹 ", launcherStderrWriter)
-	}
-	logging.Setup(logLevel, logOutput)
-	logger := logging.NewLogger(context.Background(), "flavor-go.launcher")
-
-	// Only log startup messages in CLI mode
+	// Startup chatter belongs to CLI mode; otherwise stdout is the package's.
 	if isEnvTrue(EnvLauncherCLI) {
 		logger.Info("🐹🐹🐹 Hello from Flavor's Go Launcher 🐹🐹🐹")
 		logger.Debug("Log level", "level", actualLevel, "source", logSource)
@@ -77,17 +38,7 @@ func LaunchWithLogLevel(exePath string, args []string, cliLogLevel, cliLogSource
 	}
 	logger.Debug("📖 Reading PSPF bundle")
 
-	envVars := os.Environ()
-	logger.Debug("🔧 Environment variables received from parent process", "count", len(envVars))
-
-	if logging.IsEnabled(logger, logging.LevelTrace) {
-		for _, env := range envVars {
-			parts := strings.SplitN(env, "=", 2)
-			if len(parts) == 2 {
-				logging.Trace(logger, "📝 Environment variable", "key", parts[0], "value", parts[1])
-			}
-		}
-	}
+	traceEnvironment(logger)
 
 	userCwd, err := osGetWdFn()
 	if err != nil {
