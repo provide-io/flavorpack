@@ -24,6 +24,7 @@ from flavor.packaging.orchestrator_helpers import (
     create_python_slot_tarballs,
     find_builder_executable,
     find_launcher_executable,
+    verify_built_package,
     write_manifest_file,
 )
 from flavor.packaging.python.packager import PythonPackager
@@ -176,6 +177,15 @@ class PackagingOrchestrator:
             self._build_with_external_builder()
         else:
             self._build_with_python_builder()
+
+        # The builder and the launcher prepended to its output are versioned
+        # separately, so a package can build clean and be unreadable by the very
+        # launcher it ships. Catch that here rather than in a user's hands.
+        verify_built_package(
+            Path(self.output_flavor_path),
+            launcher_name=self._launcher_path.name,
+            host_platform=self.platform,
+        )
 
     @log_only_error_context(
         context_provider=lambda: {"operation": "build_with_python_builder"},

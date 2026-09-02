@@ -12,11 +12,18 @@ import tarfile
 from typing import Any
 
 from provide.foundation import logger
+from provide.foundation.errors import ProcessError
 from provide.foundation.file.formats import write_json
 from provide.foundation.platform import is_windows
+from provide.foundation.process import run
 from provide.foundation.serialization import json_dumps
 
-from flavor.config.defaults import ENV_BUILDER_BIN, ENV_LAUNCHER_BIN
+from flavor.config.defaults import (
+    ENV_BUILDER_BIN,
+    ENV_LAUNCHER_BIN,
+    ENV_LAUNCHER_CLI,
+    ENV_LAUNCHER_LOG_LEVEL,
+)
 from flavor.exceptions import BuildError
 from flavor.packaging.defaults import DEFAULT_ENV_ISOLATION_UNSET, WINDOWS_SYSTEM_PASS
 
@@ -372,6 +379,110 @@ def find_launcher_executable(launcher_bin: str | None) -> Path:
                 "\n"
                 f"🔍 Searched locations: {manager.helpers_bin.as_posix()}, {manager.installed_helpers_bin.as_posix()}"
             ) from e
+
+
+def _run_launcher_verify(package_path: Path) -> Any:
+    """Run a package's own launcher against it in CLI mode."""
+    return run(
+        [package_path.as_posix(), "verify"],
+        env={
+            **os.environ,
+            ENV_LAUNCHER_CLI: "1",
+            # Launchers log at debug by default, which buries the one line that
+            # says why the package was rejected under startup trace.
+            ENV_LAUNCHER_LOG_LEVEL: "error",
+        },
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+
+def _last_lines(output: str | None, count: int = 3) -> str:
+    """Return the final non-empty lines of launcher output.
+
+    The diagnosis is the last thing a launcher prints, and anything a stray
+    logger emits first would otherwise be reported as the reason.
+    """
+    lines = [line.strip() for line in (output or "").splitlines() if line.strip()]
+    return "\n   ".join(lines[-count:])
+
+
+def verify_built_package(package_path: Path, *, launcher_name: str, host_platform: str) -> None:
+    """Ask a freshly built package's own launcher to read it back.
+
+    A PSPF package is a launcher with slots appended, so every build joins two
+    independently versioned halves: the builder that writes the metadata and the
+    launcher binary prepended to it. Nothing else makes them agree. When the
+    builder stops writing a field the embedded launcher requires, the build still
+    succeeds and the package fails at run time, wherever it has reached by then.
+
+    Running the package's own launcher against it turns that into a build
+    failure. It needs no compatibility matrix, because the launcher under test is
+    the one being shipped, and it holds for fields nobody has thought of yet.
+
+    Args:
+        package_path: The package the builder just wrote.
+        launcher_name: File name of the launcher embedded in it, which carries
+            the platform it was built for.
+        host_platform: Platform this build is running on.
+
+    Raises:
+        BuildError: The package is missing, or its launcher will not read it.
+    """
+    if not package_path.exists():
+        raise BuildError(f"Build reported success but produced no file: {package_path}")
+
+    # Running the package means running the launcher inside it, which only works
+    # when that launcher is native. A foreign one is a deliberate --launcher-bin
+    # choice, already warned about when the launcher is resolved.
+    if host_platform not in launcher_name and "any" not in launcher_name:
+        logger.warning(
+            "⚠️🚀 Skipping launcher read-back: embedded launcher is not native",
+            launcher=launcher_name,
+            host=host_platform,
+            package=package_path.name,
+            consequence="a launcher that cannot read this package would not be caught here",
+        )
+        return
+
+    logger.info("🔍🚀 Asking the embedded launcher to read the package back...")
+    try:
+        result = _run_launcher_verify(package_path)
+    except ProcessError as exc:
+        # The package could not be started at all -- a noexec mount, a lost exec
+        # bit. That says nothing about the package, but it does mean this build
+        # never confirmed the one thing it was supposed to, so it does not pass.
+        raise BuildError(
+            f"❌ Could not run {package_path.name} to check it.\n"
+            "\n"
+            "   The build cannot confirm the embedded launcher reads the package, "
+            "so it stops rather than report a check it never made.\n"
+            "\n"
+            f"   {exc}\n"
+            "\n"
+            "💡 Usually the output directory is mounted noexec, or the package lost "
+            "its execute bit."
+        ) from exc
+
+    if result.returncode == 0:
+        logger.info("✅🚀 Embedded launcher reads the package it ships in")
+        return
+
+    said = _last_lines(result.stderr) or _last_lines(result.stdout)
+    raise BuildError(
+        f"❌ The launcher embedded in {package_path.name} cannot read the package it ships in.\n"
+        "\n"
+        "   Anyone running this package would get the same failure, so the build "
+        "stops here instead.\n"
+        "\n"
+        f"   Launcher said: {said or f'exit status {result.returncode}, no output'}\n"
+        "\n"
+        "💡 This usually means the builder and the launcher are different versions:\n"
+        f"   • rebuild the helpers so both halves match ({ENV_LAUNCHER_BIN} overrides which "
+        "launcher is used)\n"
+        "   • or the metadata changed in a way the launcher cannot parse"
+    )
 
 
 def create_python_builder_metadata(

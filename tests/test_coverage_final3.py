@@ -468,6 +468,7 @@ class TestOrchestratorBranches:
             patch("flavor.packaging.orchestrator.os.access", return_value=True),
             patch("flavor.packaging.orchestrator.logger") as mock_logger,
             patch.object(orch, "_build_with_python_builder"),
+            patch("flavor.packaging.orchestrator.verify_built_package"),
             patch(
                 "flavor.packaging.orchestrator.get_platform_string",
                 return_value="darwin_arm64",
@@ -515,6 +516,7 @@ class TestOrchestratorBranches:
             patch("flavor.packaging.orchestrator.os.access", return_value=True),
             patch("flavor.packaging.orchestrator.run") as mock_run,
             patch.object(orch, "_detect_launcher_type", return_value="rust"),
+            patch("flavor.packaging.orchestrator.verify_built_package"),
         ):
             orch.platform = "darwin_arm64"
             orch.build_package()

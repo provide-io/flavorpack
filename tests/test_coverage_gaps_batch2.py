@@ -1575,6 +1575,9 @@ class TestPackagingOrchestrator:
             patch("flavor.packaging.orchestrator.find_launcher_executable", return_value=launcher),
             patch("flavor.packaging.orchestrator.os.access", return_value=True),
             patch.object(orch, "_build_with_python_builder") as mock_build,
+            # The mocked builder writes no package, so the post-build read-back
+            # has nothing to run. It has its own tests.
+            patch("flavor.packaging.orchestrator.verify_built_package"),
         ):
             orch.build_package()
         mock_build.assert_called_once()

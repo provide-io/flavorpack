@@ -652,6 +652,18 @@ A reader MUST check these after substitution, not before: a placeholder can expa
 
 A reader MUST ignore members it does not recognise, at every level. This is what lets a package written by a newer producer stay readable.
 
+### 5.4 Compatibility Directions
+
+Two directions are possible between a package and the code reading it. This specification promises one.
+
+**A newer reader accepts an older package.** Every implementation is checked against packages committed before it (§14), so a change that breaks this direction fails its own suite rather than someone's install.
+
+**An older reader is not promised a newer package.** A producer that begins writing a member, or stops writing an OPTIONAL one, remains conforming. A reader built before that change may reject the result, and nothing in this specification prevents it.
+
+That asymmetry places one obligation on readers. A reader MUST NOT mark a member OPTIONAL in this specification as required in its own parser — an absent OPTIONAL member takes the default in Section 4 (§13). Requiredness is expressed differently by each implementation: a struct field that is not `Option` in Rust, a schema entry listed under `required`, a constructor argument without a default. Any of them rejects every conforming package that omits the member.
+
+The cost of getting this wrong is paid late. A package carries the launcher that runs it, so the producer writing the metadata and the launcher reading it are versioned separately and only their combination ships. A producer that stops writing an OPTIONAL member the embedded launcher requires produces a package that builds clean and fails when someone runs it. §13 requires the producer to close that gap before reporting success.
+
 ## 6. Encoding and Storage
 
 ### 6.1 JSON Encoding
@@ -1054,6 +1066,9 @@ A conforming producer MUST:
 3. Write `slots` in index order with `slot` matching position
 4. Write checksums as `algorithm:hex`, the prefix appearing once
 5. Write the package environment under `env`
+6. Confirm the launcher it embeds reads the package it just wrote, before reporting success (§5.4)
+
+Requirement 6 is a check the producer makes against its own output, not a compatibility matrix: the launcher under test is the one being shipped. It holds for members no one has defined yet, and it turns a failure that would surface in whoever runs the package into a failure of the build that made it.
 
 ## 14. Test Vectors
 

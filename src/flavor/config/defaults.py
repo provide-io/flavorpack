@@ -173,6 +173,11 @@ ENV_TRUSTED_KEYS_DIR = "FLAVOR_TRUSTED_KEYS_DIR"
 ENV_LOG_LEVEL = "FLAVOR_LOG_LEVEL"
 ENV_VALIDATION = "FLAVOR_VALIDATION"
 ENV_LAUNCHER_BIN = "FLAVOR_LAUNCHER_BIN"
+# Set to "1" to make a package's embedded launcher take a subcommand (info,
+# verify, extract) instead of running the payload. Read by both the Go and Rust
+# launchers; see src/flavor-rs/src/env_vars.rs and
+# src/flavor-go/pkg/psp/format_2025/envvars.go.
+ENV_LAUNCHER_CLI = "FLAVOR_LAUNCHER_CLI"
 ENV_WORKENV_BASE = "FLAVOR_WORKENV_BASE"
 ENV_WORKENV = "FLAVOR_WORKENV"
 
