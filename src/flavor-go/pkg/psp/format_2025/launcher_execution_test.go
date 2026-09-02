@@ -1139,6 +1139,7 @@ func TestRunBundleWithCwdUsesCustomWorkenvPath(t *testing.T) {
 	if got := envValue(t, cmd.Env, EnvWorkenv); got != expectedWorkenv {
 		t.Errorf("%s = %q, want %q", EnvWorkenv, got, expectedWorkenv)
 	}
+	assertNoDuplicateEnvKeys(t, cmd.Env)
 }
 
 func TestRunBundleWithCwdRejectsInvalidSetupCommand(t *testing.T) {

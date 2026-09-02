@@ -575,7 +575,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger *slo
 				setupExec.Dir = userCwd
 
 				setupExec.Env = os.Environ()
-				setupExec.Env = append(setupExec.Env, fmt.Sprintf("%s=%s", EnvWorkenv, workenvDir))
+				setupExec.Env = setEnv(setupExec.Env, EnvWorkenv, workenvDir)
 
 				for i, env := range setupExec.Env {
 					if strings.HasPrefix(env, "PATH=") {
@@ -667,12 +667,11 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger *slo
 	cmd.Env = setFlavorCacheBeforeWorkenv(cmd.Env, logger)
 
 	// Add FLAVOR_* variables
-	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", EnvWorkenv, workenvDir))
+	cmd.Env = setEnv(cmd.Env, EnvWorkenv, workenvDir)
 	logger.Debug("➕ Added FLAVOR_WORKENV", "path", workenvDir)
 
-	cmd.Env = append(cmd.Env,
-		fmt.Sprintf("%s=%s", EnvOriginalCommand, originalCmd),
-		fmt.Sprintf("%s=%s", EnvCommandName, binaryName))
+	cmd.Env = setEnv(cmd.Env, EnvOriginalCommand, originalCmd)
+	cmd.Env = setEnv(cmd.Env, EnvCommandName, binaryName)
 	logger.Debug("🏷️ Added command name environment variables",
 		EnvOriginalCommand, originalCmd,
 		EnvCommandName, binaryName)
@@ -695,7 +694,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger *slo
 		if runtime.GOOS == "windows" {
 			binDir = "Scripts"
 		}
-		cmd.Env = append(cmd.Env, fmt.Sprintf("PATH=%s", filepath.Join(workenvDir, binDir)))
+		cmd.Env = setEnv(cmd.Env, "PATH", filepath.Join(workenvDir, binDir))
 	}
 
 	// Process runtime.env configuration
@@ -712,7 +711,7 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger *slo
 				placeholder := fmt.Sprintf("{slot:%d}", idx)
 				v = strings.ReplaceAll(v, placeholder, filepath.ToSlash(path))
 			}
-			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
+			cmd.Env = setEnv(cmd.Env, k, v)
 			logging.Trace(logger, "➕ Added package env var", "key", k, "value", v)
 		}
 	}
