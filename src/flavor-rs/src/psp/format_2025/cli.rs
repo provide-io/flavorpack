@@ -89,7 +89,10 @@ pub fn show_info(exe_path: &Path) -> i32 {
     println!("  Verified: {}", verified);
     println!();
     println!("🚀 Execution:");
-    println!("  Command: {}", metadata.execution.command);
+    match &metadata.execution {
+        Some(execution) => println!("  Command: {}", execution.command),
+        None => println!("  Command: none — this package declares no execution block"),
+    }
 
     0
 }

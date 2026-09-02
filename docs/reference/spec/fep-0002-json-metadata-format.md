@@ -199,8 +199,8 @@ metadata (object)
 │       ├── permissions (string|null, OPTIONAL)
 │       ├── resolution (string, OPTIONAL)
 │       └── self_ref (boolean, OPTIONAL)
-├── execution (object, REQUIRED for interoperability — see §9.1)
-│   ├── command (string, REQUIRED)
+├── execution (object, OPTIONAL)
+│   ├── command (string, OPTIONAL)
 │   └── env (object, OPTIONAL, default {})
 ├── verification (object, OPTIONAL)
 │   ├── integrity_seal (object, REQUIRED within)
@@ -252,13 +252,13 @@ Identity of the package. Section 4.2.
 
 One entry per data slot, in index order. MAY be empty for a package that carries no slots. Section 4.3.
 
-#### 4.1.5 execution (REQUIRED for interoperability)
+#### 4.1.5 execution (OPTIONAL)
 
 **Type**: object
 
 How the package runs. Section 4.4.
 
-Two of the three implementations treat this object as optional and refuse at the point of execution when it is absent; the Rust reader requires it to parse the document at all. A producer that intends its packages to be readable by every implementation MUST write it. See §9.1.
+A package without one is read, reported on and verified like any other, and refused when something tries to run it. That refusal belongs at the point of execution: a package that cannot run is exactly the one an operator wants to be able to inspect.
 
 #### 4.1.6 verification (OPTIONAL)
 
@@ -436,13 +436,16 @@ True when the slot refers to the launcher binary itself rather than to separate 
 
 ### 4.4 Execution Object Fields
 
-#### 4.4.1 command (REQUIRED)
+#### 4.4.1 command (OPTIONAL)
 
 **Type**: string  
 **Example**: `"{workenv}/bin/app --config {workenv}/etc/app.conf"`
 
-The command line the launcher runs after extraction. Placeholders are
-substituted first.
+The command line the launcher runs after extraction. A document with no command,
+or an empty one, describes a package that cannot be run; readers report on it
+normally and refuse when asked to execute it.
+
+Placeholders are substituted first.
 
 Four are substituted by every launcher, and a producer may rely on them:
 
@@ -778,7 +781,6 @@ The schema below is satisfied by every package in `tests/fixtures/format_compat/
     },
     "execution": {
       "type": "object",
-      "required": ["command"],
       "properties": {
         "command": { "type": "string", "maxLength": 65535 },
         "env": { "type": "object", "additionalProperties": { "type": "string" } }
@@ -906,19 +908,13 @@ The schema below is satisfied by every package in `tests/fixtures/format_compat/
 
 The three implementations do not agree on everything. Each item below is a difference a reader encounters in packages that exist, with the issue tracking it. A producer aiming for packages every implementation can read should follow the guidance in each.
 
-### 9.1 The execution block
-
-`flavor-go` declares `execution` optional and refuses at the point of execution when it is missing. `flavor-python` behaves the same way. `flavor-rs` requires the object to parse the document at all, so a package without one cannot be inspected or verified by it, only rejected.
-
-Tracked in provide-io/flavorpack#48. Until it closes, write `execution`.
-
-### 9.2 format_version
+### 9.1 format_version
 
 `flavor-rs` and `flavor-python` write `"1.0.0"`. `flavor-go` writes the empty string.
 
 A reader MUST NOT depend on this field to decide how to parse. `format` identifies the format; `compatibility.min_format_version` states the requirement.
 
-### 9.3 Platform naming
+### 9.2 Platform naming
 
 `build.platform` records the build machine in each producer's own vocabulary. On the same Apple Silicon host:
 
@@ -930,17 +926,17 @@ A reader MUST NOT depend on this field to decide how to parse. `format` identifi
 
 The pairs name the same platform. A reader MUST NOT compare these values across producers or use them to decide whether a package will run.
 
-### 9.4 Checksum prefixes
+### 9.3 Checksum prefixes
 
 `launcher.checksum` written by `flavor-python` carries the algorithm prefix twice — `"sha256:sha256:02b2…"`. The digest after the second prefix is correct.
 
 A reader parsing a checksum should strip the algorithm prefix repeatedly rather than once. Tracked in provide-io/flavorpack#49.
 
-### 9.5 Target paths
+### 9.4 Target paths
 
 `flavor-python` writes `slots[].target` with an explicit `{workenv}/` prefix; `flavor-rs` and `flavor-go` write a path relative to the workenv with no prefix. Both denote the same location. A reader MUST accept either, and MUST apply §5.2.2 after substitution.
 
-### 9.6 Command placeholders
+### 9.5 Command placeholders
 
 The launchers expand different sets of placeholders in `execution.command`:
 
@@ -1057,8 +1053,7 @@ A conforming producer MUST:
 2. Write `format` as `"PSPF/2025"`
 3. Write `slots` in index order with `slot` matching position
 4. Write checksums as `algorithm:hex`, the prefix appearing once
-5. Write `execution`, until #48 closes (§9.1)
-6. Write the package environment under `env`
+5. Write the package environment under `env`
 
 ## 14. Test Vectors
 

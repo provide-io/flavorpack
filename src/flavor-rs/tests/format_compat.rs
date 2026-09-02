@@ -201,9 +201,13 @@ fn execution_block_is_readable() {
 
     let metadata: Metadata = serde_json::from_str(&raw).expect("fixture must parse");
 
-    assert_eq!(metadata.execution.command, "true");
+    let execution = metadata
+        .execution
+        .as_ref()
+        .expect("the fixture declares an execution block");
+    assert_eq!(execution.command, "true");
     assert_eq!(
-        metadata.execution.env.get("MODE").map(String::as_str),
+        execution.env.get("MODE").map(String::as_str),
         Some("prod"),
         "the environment must be read from the \"env\" key"
     );
