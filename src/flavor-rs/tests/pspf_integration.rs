@@ -189,7 +189,7 @@ fn reader_reads_metadata_from_real_bundle() {
     assert_eq!(metadata.slots.len(), 1);
     assert_eq!(metadata.slots[0].id, "payload");
     assert_eq!(
-        metadata.execution.command,
+        metadata.execution.as_ref().expect("execution").command,
         if cfg!(windows) {
             "cmd /C exit 0"
         } else {

@@ -266,7 +266,10 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
             build_info.timestamp, build_info.tool, build_info.tool_version
         );
     }
-    debug!("🔧 Command: {}", metadata.execution.command);
+    match &metadata.execution {
+        Some(execution) => debug!("🔧 Command: {}", execution.command),
+        None => debug!("🔧 No execution block"),
+    }
 
     // Get work environment paths
     let custom_workenv = env::var(crate::env_vars::WORKENV).ok();
@@ -427,12 +430,19 @@ pub fn launch(package_path: &Path, args: &[String], options: LaunchOptions) -> R
                     metadata.setup_commands.len()
                 );
                 let user_cwd = env::current_dir()?;
+                // A package with no execution block contributes no environment
+                // of its own; its setup commands still run.
+                let execution_env = metadata
+                    .execution
+                    .as_ref()
+                    .map(|execution| execution.env.clone())
+                    .unwrap_or_default();
                 if let Err(e) = execute_setup_commands(
                     &metadata.setup_commands,
                     &temp_dir,
                     &metadata.package,
                     &user_cwd,
-                    &metadata.execution.env,
+                    &execution_env,
                 ) {
                     // Clean up temporary directory on setup failure
                     error!("❌ Setup commands failed, cleaning up temporary directory");

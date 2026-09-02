@@ -113,10 +113,19 @@ pub(super) fn prepare_command(
     args: &[String],
     slot_paths: &HashMap<usize, PathBuf>,
 ) -> Result<(String, Vec<String>, HashMap<String, String>)> {
+    // The execution block is optional (FEP-0002 §4.1.5). A package without one
+    // is readable, verifiable and inspectable; it just cannot be run, and this
+    // is where that is decided.
+    let execution = metadata
+        .execution
+        .as_ref()
+        .filter(|execution| !execution.command.trim().is_empty())
+        .ok_or_else(|| FlavorError::Generic("No execution configuration found".to_string()))?;
+
     // Slot references resolve first: a slot path may itself contain {workenv},
     // and the basic substitution has to see it. Go and Python order it the same
     // way.
-    let command = substitute_slots(&metadata.execution.command, slot_paths);
+    let command = substitute_slots(&execution.command, slot_paths);
     let command = substitute_placeholders(&command, workenv_path, &metadata.package);
 
     // A reference to a slot the package declares but did not extract would
@@ -192,7 +201,7 @@ pub(super) fn prepare_command(
     // FEP-0002 §4.4.3: values take the same placeholders as the command. These
     // were inserted verbatim, so a package that set DATA={slot:0} handed the
     // placeholder text to its own process.
-    for (key, value) in &metadata.execution.env {
+    for (key, value) in &execution.env {
         let expanded = substitute_slots(value, slot_paths);
         let expanded = substitute_placeholders(&expanded, workenv_path, &metadata.package);
         env_map.insert(key.clone(), expanded);
@@ -249,10 +258,10 @@ mod tests {
                 version: "1.0.0".to_string(),
             },
             slots: Vec::new(),
-            execution: ExecutionInfo {
+            execution: Some(ExecutionInfo {
                 command: "echo hello".to_string(),
                 env: HashMap::from([(String::from("EXEC_ONLY"), String::from("execution"))]),
-            },
+            }),
             verification: None,
             build: None,
             launcher: None,
@@ -388,9 +397,9 @@ mod tests {
     #[test]
     fn prepare_command_resolves_slot_references() {
         let mut metadata = sample_metadata();
-        metadata.execution.command = "/bin/echo {slot:0}".to_string();
-        metadata
-            .execution
+        let execution = metadata.execution.as_mut().expect("execution");
+        execution.command = "/bin/echo {slot:0}".to_string();
+        execution
             .env
             .insert(String::from("DATA"), String::from("{slot:0}"));
 
@@ -413,12 +422,38 @@ mod tests {
         );
     }
 
+    /// A package with no execution block is refused where it is run, not where
+    /// it is read.
+    ///
+    /// FEP-0002 §4.1.5 makes the block optional, so such a package parses, and
+    /// `info`, `verify` and `metadata` all work on it. Running it is the one
+    /// thing that cannot, and that is what fails. See #48.
+    #[test]
+    fn prepare_command_refuses_a_package_with_no_execution_block() {
+        let mut metadata = sample_metadata();
+        metadata.execution = None;
+
+        let err = prepare_command(
+            &metadata,
+            Path::new("/tmp/flavor-workenv"),
+            &PathBuf::from("/tmp/demo.psp"),
+            &[],
+            &HashMap::new(),
+        )
+        .expect_err("a package with no execution block cannot be run");
+
+        assert!(
+            err.to_string().contains("execution"),
+            "error should say what is missing: {err}"
+        );
+    }
+
     /// A reference to a declared slot with no extracted path is refused rather
     /// than handed to the shell as its own text.
     #[test]
     fn prepare_command_refuses_an_unresolved_slot_reference() {
         let mut metadata = sample_metadata();
-        metadata.execution.command = "/bin/echo {slot:0}".to_string();
+        metadata.execution.as_mut().expect("execution").command = "/bin/echo {slot:0}".to_string();
         metadata.slots.push(SlotMetadata {
             index: 0,
             id: "payload".to_string(),
