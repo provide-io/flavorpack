@@ -37,7 +37,6 @@
     "args": [],
     "env": {
       "TEST_MODE": "pretaster"
-    },
-    "primary_slot": 1
+    }
   }
 }

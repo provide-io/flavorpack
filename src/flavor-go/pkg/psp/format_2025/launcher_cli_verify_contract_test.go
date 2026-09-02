@@ -71,7 +71,7 @@ func buildSealedBundle(t *testing.T) (path string, index *PSPFIndex, metaJSON []
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "sealed", Version: "1.0.0"},
 		Slots:         []SlotMetadata{{ID: "payload", Target: "{workenv}/payload", Slot: 0}},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution:     &ExecutionInfo{Command: "/bin/true"},
 		Build:         &BuildInfo{Tool: "verify-test"},
 	}
 	var err error
@@ -229,7 +229,7 @@ func TestVerifyRejectsTamperedMetadata(t *testing.T) {
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "altered", Version: "9.9.9"},
 		Slots:         []SlotMetadata{{ID: "payload", Target: "{workenv}/payload", Slot: 0}},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/false"},
+		Execution:     &ExecutionInfo{Command: "/bin/false"},
 		Build:         &BuildInfo{Tool: "verify-test"},
 	}
 	alteredJSON, err := json.Marshal(altered)

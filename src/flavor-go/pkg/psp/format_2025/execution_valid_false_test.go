@@ -18,7 +18,7 @@ func buildUnsignedBundleForValidTest(t *testing.T) string {
 			storedData: []byte("hello"),
 		},
 	}, Metadata{
-		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution: &ExecutionInfo{Command: "/bin/true"},
 		Build:     &BuildInfo{Tool: "test"},
 	})
 }
@@ -130,7 +130,7 @@ func TestRunBundleChmodValidatedFailLogs(t *testing.T) {
 			storedData: []byte("hello"),
 		},
 	}, Metadata{
-		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution: &ExecutionInfo{Command: "/bin/true"},
 		Build:     &BuildInfo{Tool: "test"},
 		Workenv: &WorkenvInfo{
 			Directories: []DirectorySpec{
@@ -166,7 +166,7 @@ func TestRunBundleCheckDiskSpaceFailReturnsError(t *testing.T) {
 			storedData: []byte("small"),
 		},
 	}, Metadata{
-		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution: &ExecutionInfo{Command: "/bin/true"},
 		Build:     &BuildInfo{Tool: "test"},
 	})
 
@@ -207,7 +207,7 @@ func TestRunBundleWaitForExtractionLockFileSetup(t *testing.T) {
 			storedData: []byte("hello"),
 		},
 	}, Metadata{
-		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution: &ExecutionInfo{Command: "/bin/true"},
 		Build:     &BuildInfo{Tool: "test"},
 	})
 

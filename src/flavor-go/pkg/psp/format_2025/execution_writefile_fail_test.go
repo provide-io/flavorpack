@@ -67,7 +67,7 @@ func TestRunBundleWriteFileValidatedFails(t *testing.T) {
 				"content": "hello",
 			},
 		},
-		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution: &ExecutionInfo{Command: "/bin/true"},
 		Build:     &BuildInfo{Tool: "test"},
 	})
 

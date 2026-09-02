@@ -99,7 +99,6 @@ entry_point = "echo 'Entry point'"
 
 [tool.flavor.execution]
 command = "{test_case["command"]}"
-primary_slot = 0
 
 [tool.flavor.slots]
 [[tool.flavor.slots.items]]

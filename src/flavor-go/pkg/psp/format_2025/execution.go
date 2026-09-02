@@ -289,7 +289,6 @@ func runBundleWithCwd(exePath string, args []string, userCwd string, logger *slo
 
 	logger.Info("📦 Package", "name", metadata.Package.Name, "version", metadata.Package.Version)
 	if metadata.Execution != nil {
-		logger.Debug("🎯 Primary slot", "slot", metadata.Execution.PrimarySlot)
 		logger.Debug("🔧 Command", "command", metadata.Execution.Command)
 	} else {
 		logger.Debug("⚠️ No execution configuration present in metadata")

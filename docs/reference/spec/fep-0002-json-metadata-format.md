@@ -138,7 +138,6 @@ A complete document, taken from a package built by `flavor-rs`:
     }
   ],
   "execution": {
-    "primary_slot": 0,
     "command": "true",
     "env": {}
   },
@@ -201,7 +200,6 @@ metadata (object)
 │       ├── resolution (string, OPTIONAL)
 │       └── self_ref (boolean, OPTIONAL)
 ├── execution (object, REQUIRED for interoperability — see §9.1)
-│   ├── primary_slot (integer, OPTIONAL, default 0)
 │   ├── command (string, REQUIRED)
 │   └── env (object, OPTIONAL, default {})
 ├── verification (object, OPTIONAL)
@@ -443,22 +441,31 @@ True when the slot refers to the launcher binary itself rather than to separate 
 **Type**: string  
 **Example**: `"{workenv}/bin/app --config {workenv}/etc/app.conf"`
 
-The command line the launcher runs after extraction. Placeholders are substituted first:
+The command line the launcher runs after extraction. Placeholders are
+substituted first.
+
+Three are substituted by every launcher, and a producer may rely on them:
 
 | Placeholder | Substitution |
 |-------------|--------------|
 | `{workenv}` | Absolute path of the workenv directory |
+| `{package_name}` | `package.name` |
+| `{version}` | `package.version` |
+
+Five more are substituted by some launchers and passed through literally by the
+rest. A command using one runs correctly under the launchers that expand it and
+receives the placeholder text verbatim under the others, which fails at the
+point the command runs and nowhere earlier. §9.6 gives the support matrix, and
+the divergence is tracked in provide-io/flavorpack#52.
+
+| Placeholder | Substitution |
+|-------------|--------------|
 | `{slot:N}` | Extracted path of slot *N* |
+| `{bin}` | The workenv's binary directory |
+| `{python}` | Interpreter path |
+| `{python_bin}` | Interpreter's binary directory |
 
-#### 4.4.2 primary_slot (OPTIONAL)
-
-**Type**: integer  
-**Default**: `0`  
-**Minimum**: 0
-
-Index of the slot the package treats as its principal content. Absence is equivalent to `0`.
-
-#### 4.4.3 env (OPTIONAL)
+#### 4.4.2 env (OPTIONAL)
 
 **Type**: object, string values  
 **Default**: `{}`  
@@ -630,9 +637,8 @@ A reader MUST check these after substitution, not before: a placeholder can expa
 
 #### 5.2.3 Cross-Reference Validation
 
-1. `execution.primary_slot`, when it names a slot, MUST be a valid index into `slots`
-2. `{slot:N}` in `execution.command` MUST name a valid index
-3. `launcher.size` MUST equal the launcher size in the index
+1. `{slot:N}` in `execution.command` MUST name a valid index
+2. `launcher.size` MUST equal the launcher size in the index
 
 ### 5.3 Unknown Field Handling
 
@@ -769,7 +775,6 @@ The schema below is satisfied by every package in `tests/fixtures/format_compat/
       "type": "object",
       "required": ["command"],
       "properties": {
-        "primary_slot": { "type": "integer", "minimum": 0 },
         "command": { "type": "string", "maxLength": 65535 },
         "env": { "type": "object", "additionalProperties": { "type": "string" } }
       }
@@ -930,6 +935,29 @@ A reader parsing a checksum should strip the algorithm prefix repeatedly rather 
 
 `flavor-python` writes `slots[].target` with an explicit `{workenv}/` prefix; `flavor-rs` and `flavor-go` write a path relative to the workenv with no prefix. Both denote the same location. A reader MUST accept either, and MUST apply §5.2.2 after substitution.
 
+### 9.6 Command placeholders
+
+The launchers expand different sets of placeholders in `execution.command`:
+
+| Placeholder | Rust | Go | Python |
+|-------------|------|----|--------|
+| `{workenv}` | yes | yes | yes |
+| `{package_name}` | yes | yes | yes |
+| `{version}` | yes | yes | yes |
+| `{slot:N}` | no | yes | yes |
+| `{bin}` | no | no | yes |
+| `{python}` | no | no | yes |
+| `{python_bin}` | no | no | yes |
+
+A command that depends on any of the last five runs under some launchers and
+passes the placeholder text to the shell under the others. `{slot:N}` is the one
+to watch: two launchers implement it, and the third is the default launcher for
+packages the Python builder produces.
+
+A producer targeting every launcher should confine itself to the first three.
+
+Tracked in provide-io/flavorpack#52.
+
 ## 10. Processing Algorithms
 
 ### 10.1 Reading
@@ -1033,7 +1061,9 @@ A conforming producer MUST:
 
 The packages in `tests/fixtures/format_compat/v1/` are built once by each producer and committed. `rust.psp`, `go.psp` and `python.psp` carry the same payload and are signed with the same derived key, so a change that alters what a producer writes shows up as a difference between them.
 
-`tests/fixtures/format_compat/execution/omits-primary-slot.json` is a document that omits `primary_slot` and carries a non-empty `env`. Every implementation reads it, resolves `primary_slot` to `0`, and sees `MODE=prod`.
+`tests/fixtures/format_compat/execution/execution-block.json` is a document carrying a non-empty `env`. Every implementation reads it and sees `MODE=prod`.
+
+The `v1/` packages carry `execution.primary_slot`, which no implementation models. They must remain readable, and the harnesses assert it: a reader that rejected members it does not declare would make every package built to date unopenable.
 
 The harnesses:
 

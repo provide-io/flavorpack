@@ -65,12 +65,8 @@ class BundleExecutor:
         """
         logger.debug(f"🔍 prepare_command input: {base_command}")
 
-        # Primary slot substitution
-        command = self._substitute_primary(base_command)
-        logger.debug(f"🔍 after primary substitution: {command}")
-
         # Slot substitution - {slot:N} references
-        command = self._substitute_slots(command)
+        command = self._substitute_slots(base_command)
         logger.debug(f"🔍 after slot substitution: {command}")
 
         # Basic substitutions - {workenv}, {package_name}, {version}, and platform helpers
@@ -90,43 +86,6 @@ class BundleExecutor:
         if args:
             arg_str = " ".join(f'"{arg}"' if " " in arg else arg for arg in args)
             command = f"{command} {arg_str}"
-
-        return command
-
-    def _substitute_primary(self, command: str) -> str:
-        """Substitute {primary} reference in command.
-
-        Args:
-            command: Command with potential {primary} reference
-
-        Returns:
-            str: Command with primary slot substituted
-        """
-        if "{primary}" not in command:
-            return command
-
-        primary_slot = self.execution_config.get("primary_slot", 0)
-        slots = self.metadata.get("slots", [])
-
-        if primary_slot < len(slots):
-            # Use "target" field for actual file path, fallback to "id" or "name"
-            slot_name = self._normalize_slot_target(
-                slots[primary_slot].get(
-                    "target",
-                    slots[primary_slot].get("id", slots[primary_slot].get("name", f"slot_{primary_slot}")),
-                )
-            )
-            # For tarballs, use {workenv} placeholder
-            if slot_name.endswith(".tar.gz") or slot_name.endswith(".tgz"):
-                primary_path = "{workenv}"
-            else:
-                # For non-tarballs, use relative path
-                primary_path = slot_name
-            command = command.replace("{primary}", str(primary_path))
-            if logger.is_trace_enabled():
-                logger.trace(f"🔄 Substituted {{primary}} -> {primary_path}")
-        else:
-            logger.warning(f"⚠️ Primary slot {primary_slot} not found")
 
         return command
 

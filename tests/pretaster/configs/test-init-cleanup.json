@@ -33,7 +33,6 @@
   "execution": {
     "command": "/bin/bash {workenv}/scripts/init_cleanup_check.sh",
     "args": [],
-    "env": {},
-    "primary_slot": 0
+    "env": {}
   }
 }

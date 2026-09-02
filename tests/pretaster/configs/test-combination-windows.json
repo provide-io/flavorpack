@@ -25,7 +25,6 @@
   "execution": {
     "command": "/bin/bash {workenv}/scripts/combo_test.sh",
     "args": [],
-    "env": {},
-    "primary_slot": 0
+    "env": {}
   }
 }

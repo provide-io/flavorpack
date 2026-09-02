@@ -55,7 +55,7 @@ func buildBundleWithSlotNumberMismatch(t *testing.T) string {
 			},
 		},
 		// Command references {slot:0} — which won't be in slotPaths.
-		Execution: &ExecutionInfo{PrimarySlot: 1, Command: "/bin/true {slot:0}"},
+		Execution: &ExecutionInfo{Command: "/bin/true {slot:0}"},
 		Build:     &BuildInfo{Tool: "test"},
 	}
 	metaJSON, err := json.Marshal(meta)

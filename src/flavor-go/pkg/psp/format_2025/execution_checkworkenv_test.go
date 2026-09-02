@@ -37,7 +37,7 @@ func buildSignedExecutableBundle(t *testing.T) (string, ed25519.PublicKey) {
 		Slots: []SlotMetadata{
 			{ID: "slot", Target: "{workenv}", Slot: 0},
 		},
-		Execution: &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution: &ExecutionInfo{Command: "/bin/true"},
 		Build:     &BuildInfo{Tool: "test"},
 	}
 	metaJSON, err := json.Marshal(meta)

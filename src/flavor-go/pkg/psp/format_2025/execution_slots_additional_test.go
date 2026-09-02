@@ -55,7 +55,7 @@ func buildTarSlotBundle(t *testing.T, dirName, fileName string, content []byte) 
 		Format:        "PSPF/2025",
 		FormatVersion: "2025.0",
 		Package:       PackageInfo{Name: "test", Version: "0.0.1"},
-		Execution:     &ExecutionInfo{PrimarySlot: 0, Command: "/bin/true"},
+		Execution:     &ExecutionInfo{Command: "/bin/true"},
 		Build:         &BuildInfo{Tool: "flavor-go"},
 		Slots:         []SlotMetadata{slotMeta},
 	}

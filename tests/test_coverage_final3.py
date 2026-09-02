@@ -612,20 +612,6 @@ class TestEnvironmentTraceBranches:
 
 class TestExecutorBranches:
     @pytest.mark.unit
-    def test_substitute_primary_with_trace(self) -> None:
-        """Line 127: trace enabled => log substitution."""
-        from flavor.psp.format_2025.executor import BundleExecutor
-
-        executor = BundleExecutor.__new__(BundleExecutor)
-        executor.metadata = {"slots": [{"target": "app.py"}]}
-        executor.execution_config = {"primary_slot": 0}
-
-        with patch("flavor.psp.format_2025.executor.logger") as mock_logger:
-            mock_logger.is_trace_enabled.return_value = True
-            result = executor._substitute_primary("{primary}")
-        assert result == "app.py"
-
-    @pytest.mark.unit
     def test_prepare_environment_debug_log(self) -> None:
         """Branch 215->217: debug enabled logs env var count."""
         from flavor.psp.format_2025.executor import BundleExecutor
@@ -721,22 +707,3 @@ class TestDirectoriesDebugEntryBeyondBounds:
         struct.pack_into("<I", data, sect_off + 8, 0x1000)
 
         update_debug_directory(data, 0x100)
-
-
-# ---------------------------------------------------------------------------
-# Extra: executor primary_slot out of range
-# ---------------------------------------------------------------------------
-
-
-class TestExecutorPrimarySlotOutOfRange:
-    @pytest.mark.unit
-    def test_substitute_primary_slot_out_of_range(self) -> None:
-        """Line 129: primary_slot >= len(slots) => warning."""
-        from flavor.psp.format_2025.executor import BundleExecutor
-
-        executor = BundleExecutor.__new__(BundleExecutor)
-        executor.metadata = {"slots": []}
-        executor.execution_config = {"primary_slot": 5}
-
-        result = executor._substitute_primary("{primary}")
-        assert "{primary}" in result
