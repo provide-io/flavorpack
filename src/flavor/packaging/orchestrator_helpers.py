@@ -11,7 +11,7 @@ from pathlib import Path
 import tarfile
 from typing import Any
 
-from provide.foundation import logger
+from provide.foundation import logger, pout
 from provide.foundation.errors import ProcessError
 from provide.foundation.file.formats import write_json
 from provide.foundation.platform import is_windows
@@ -450,6 +450,8 @@ def verify_built_package(package_path: Path, *, launcher_name: str, host_platfor
     # when that launcher is native. A foreign one is a deliberate --launcher-bin
     # choice, already warned about when the launcher is resolved.
     if host_platform not in launcher_name and "any" not in launcher_name:
+        pout(f"  ⚠️  Skipping launcher read-back: {launcher_name} is not native to {host_platform}")
+        pout("     A launcher that cannot read this package will not be caught here.")
         logger.warning(
             "⚠️🚀 Skipping launcher read-back: embedded launcher is not native",
             launcher=launcher_name,
@@ -459,7 +461,10 @@ def verify_built_package(package_path: Path, *, launcher_name: str, host_platfor
         )
         return
 
-    logger.info("🔍🚀 Asking the embedded launcher to read the package back...")
+    # pout, not logger: the orchestrator's info logging is suppressed in CI, so
+    # a check that only logged would leave no evidence it ran. A check whose
+    # success is invisible cannot be told apart from one that did not happen.
+    pout("🔍 Asking the embedded launcher to read the package back...")
     try:
         result = _run_launcher_verify(package_path)
     except ProcessError as exc:
@@ -479,7 +484,7 @@ def verify_built_package(package_path: Path, *, launcher_name: str, host_platfor
         ) from exc
 
     if result.returncode == 0:
-        logger.info("✅🚀 Embedded launcher reads the package it ships in")
+        pout("  ✅ Embedded launcher reads the package it ships in")
         return
 
     said = _last_lines(result.stderr) or _last_lines(result.stdout)
