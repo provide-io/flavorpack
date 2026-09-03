@@ -10,8 +10,12 @@
 #
 # Blocking status is decided by what passes on main today, not by how
 # important a check feels. golangci-lint and staticcheck report nothing on main
-# and are enforced, as is cargo machete once it could actually run. gocyclo
-# stays advisory while its backlog is open; promote it as it clears.
+# and are enforced, as is cargo machete once it could actually run.
+#
+# The two complexity checks are enforced as ratchets: the blocking threshold is
+# what the tree holds today, so nothing may get worse, and an advisory check
+# beside it reports the distance to the target. Tighten the blocking one as the
+# advisory one clears.
 #
 # Note on exit codes: checks redirect to a log rather than piping to tee. In a
 # pipeline it is tee's status that survives, not the tool's, which is one of
@@ -87,7 +91,13 @@ case "$LANGUAGE" in
     check blocking "Ruff lint"    ruff check src/ tests/
     check blocking "Mypy"         mypy src/flavor
     check blocking "Bandit"       bandit -r src -ll
-    check advisory "Xenon complexity" xenon --max-absolute B --max-modules A --max-average A src/
+    # Two thresholds. The blocking one is a ratchet: it is set to what the tree
+    # holds today, so nothing may get worse, and it is meant to be tightened as
+    # the advisory one is cleared. The advisory one is the target -- B absolute,
+    # A modules and average -- and reports the 16 B-rank and 22 C-rank blocks
+    # still between here and there.
+    check blocking "Xenon complexity" xenon --max-absolute C --max-modules C --max-average B src/
+    check advisory "Xenon complexity (target)" xenon --max-absolute B --max-modules A --max-average A src/
     check blocking "Vulture dead code" vulture
     ;;
   go)
@@ -97,7 +107,11 @@ case "$LANGUAGE" in
     check blocking "Go vet"       go vet ./...
     check blocking "GolangCI-Lint" golangci-lint run
     check blocking "Staticcheck"  staticcheck ./...
-    check advisory "Gocyclo"      gocyclo -over 15 .
+    # Ratchet, as for xenon above: 32 is the worst function in the tree today
+    # (runBundleWithCwd), so this fails on anything worse. 15 is the target and
+    # lists what is still between the two.
+    check blocking "Gocyclo"      gocyclo -over 32 .
+    check advisory "Gocyclo (target)" gocyclo -over 15 .
     ;;
   rust)
     cd src/flavor-rs || exit 1
