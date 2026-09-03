@@ -194,9 +194,8 @@ jobs:
             "$LAUNCHER" \
             "${{ matrix.platform }}" \
             "${{ needs.setup.outputs.version }}"
-
-          # Export path for subsequent steps
-          echo "taster_path=$PWD/tests/taster/taster-${{ needs.setup.outputs.version }}-${{ matrix.platform }}.psp" >> $GITHUB_OUTPUT
+          # build-taster-with-psp.sh writes taster_path to $GITHUB_OUTPUT; it
+          # picks the extension, so it is the one that knows the name.
 
       - name: 🔍 Verify Built Package
         shell: bash
