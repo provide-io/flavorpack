@@ -242,7 +242,7 @@ jobs:
           - `flavor-${{ needs.prepare.outputs.version }}-windows_arm64.exe` - Windows ARM64
           
           ### Test Packages
-          - `taster-${{ needs.prepare.outputs.version }}-*.psp` - Comprehensive test suite
+          - `taster-${{ needs.prepare.outputs.version }}-*.psp` (`.exe` on Windows) - Comprehensive test suite
           
           ## 🔧 What's New
           
