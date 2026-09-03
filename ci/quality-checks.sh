@@ -121,6 +121,14 @@ case "$LANGUAGE" in
     check blocking "Rustfmt"      cargo fmt -- --check
     check blocking "Cargo machete" cargo machete
     ;;
+  shell)
+    say "## 🐚 Shell Code Quality"
+    say ""
+    # The release pipeline is ~50 shell scripts. Nothing linted them until
+    # v0.5.0 shipped short two platforms. warning is what the tree holds today;
+    # info and style still report 22 findings between them.
+    check blocking "ShellCheck" shellcheck --severity=warning ci/*.sh
+    ;;
   *)
     echo "❌ Unknown language: $LANGUAGE" >&2
     exit 2

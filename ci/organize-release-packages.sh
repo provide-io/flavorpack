@@ -40,8 +40,12 @@ for input_dir in "$@"; do
                 if [ -f "$psp" ]; then
                     basename=$(basename "$psp")
 
-                    # Replace version in filename (handles any semantic version)
-                    new_name=$(echo "$basename" | sed "s/-[0-9]\+\.[0-9]\+\.[0-9]\+\(-[^-]*\)\?-/-${VERSION}-/")
+                    # Replace version in filename (handles any semantic version).
+                    # -E because \+ and \? are GNU extensions to basic regex: on
+                    # BSD sed the expression matched nothing and the rename was
+                    # silently skipped. The release job runs on Linux, so this
+                    # only ever failed for someone running the script locally.
+                    new_name=$(echo "$basename" | sed -E "s/-[0-9]+\.[0-9]+\.[0-9]+(-[^-]*)?-/-${VERSION}-/")
 
                     echo "    Copying: $basename -> $new_name"
                     cp "$psp" "$OUTPUT_DIR/$new_name"

@@ -17,6 +17,7 @@ if [[ "$(uname -s)" == "FreeBSD" ]]; then
     exit 1
   fi
 else
+  # shellcheck disable=SC2209  # the command name, not its output
   MAKE_CMD=make
   MAKE_SHELL=""
 fi
@@ -97,7 +98,8 @@ fi
 cd tests/pretaster
 
 # Set workenv base for builders to resolve {workenv} placeholders
-export FLAVOR_WORKENV_BASE="$(pwd)"
+FLAVOR_WORKENV_BASE="$(pwd)"
+export FLAVOR_WORKENV_BASE
 echo "📁 Setting FLAVOR_WORKENV_BASE=$FLAVOR_WORKENV_BASE"
 echo "📂 Current directory: $(pwd)"
 echo "📂 Contents of scripts directory:"

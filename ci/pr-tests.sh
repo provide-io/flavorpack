@@ -20,7 +20,10 @@ SUMMARY="${GITHUB_STEP_SUMMARY:-/dev/stdout}"
 FAILED=0
 
 REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$REPO_ROOT"
+# set -e is deliberately not enabled here (checks are meant to run to
+# completion), so a failed cd would otherwise run every suite from whatever
+# directory the runner happened to be in.
+cd "$REPO_ROOT" || exit 1
 
 LOG_DIR="${PR_TESTS_LOG_DIR:-$REPO_ROOT/test-logs}"
 mkdir -p "$LOG_DIR"
