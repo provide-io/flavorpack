@@ -75,6 +75,38 @@ class TestVerifyBuiltPackage:
                 package, launcher_name="flavor-rs-launcher-linux_amd64", host_platform="linux_amd64"
             )
 
+    def test_result_is_visible_in_build_output(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """The check reports on stdout, not only through the logger.
+
+        The orchestrator's info logging is suppressed in CI, so a check that
+        only logged left no evidence it ran -- indistinguishable from one that
+        did not happen. That is the failure this whole function exists to
+        remove, so its own result has to be visible.
+        """
+        package = _stub_package(tmp_path / "good.psp", "exit 0")
+
+        verify_built_package(
+            package, launcher_name="flavor-rs-launcher-linux_amd64", host_platform="linux_amd64"
+        )
+
+        out = capsys.readouterr().out
+        assert "read the package back" in out, f"the check left no trace on stdout: {out!r}"
+        assert "reads the package it ships in" in out, f"the result was not reported: {out!r}"
+
+    def test_skip_is_visible_in_build_output(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+        """A skipped check says so where the build's other output goes."""
+        package = _stub_package(tmp_path / "foreign.psp", "exit 1")
+
+        verify_built_package(
+            package, launcher_name="flavor-rs-launcher-linux_arm64", host_platform="darwin_arm64"
+        )
+
+        out = capsys.readouterr().out
+        assert "Skipping launcher read-back" in out, f"the skip was silent: {out!r}"
+        assert "will not be caught here" in out, f"the skip did not say what it costs: {out!r}"
+
     def test_diagnosis_survives_leading_log_noise(self, tmp_path: Path) -> None:
         """The reason is the last thing printed, not the first.
 
