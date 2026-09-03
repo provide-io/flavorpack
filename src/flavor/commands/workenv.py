@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import datetime
+from typing import Any
 
 import click
 from provide.foundation.console import perr, pout
@@ -149,6 +150,70 @@ def workenv_remove(package_id: str, yes: bool) -> None:
         perr(f"❌ Package '{package_id}' not found")
 
 
+def _print_index_metadata(metadata_dir: str) -> None:
+    """Print the binary index as recorded at extraction, if it was recorded.
+
+    An index that will not read is reported and skipped: this is an inspection
+    command, and the rest of what it found is still worth showing.
+    """
+    from pathlib import Path
+
+    index_file = Path(metadata_dir) / "instance" / "index.json"
+    if not index_file.exists():
+        return
+
+    try:
+        index_data = read_json(index_file)
+    except Exception as e:
+        pout(f"  ⚠️  Error reading index.json: {e}")
+        return
+
+    pout("\n📋 Index Metadata:")
+    pout(f"  Format Version: 0x{index_data.get('format_version', 0):08x}")
+    pout(f"  Package Size: {index_data.get('package_size', 0):,} bytes")
+    pout(f"  Launcher Size: {index_data.get('launcher_size', 0):,} bytes")
+    pout(f"  Slot Count: {index_data.get('slot_count', 0)}")
+    pout(f"  Index Checksum: {index_data.get('index_checksum', 'N/A')}")
+
+    if (timestamp := index_data.get("build_timestamp", 0)) > 0:
+        dt = datetime.datetime.fromtimestamp(timestamp)
+        pout(f"  Build Time: {dt.strftime('%Y-%m-%d %H:%M:%S')}")
+
+    if index_data.get("capabilities"):
+        pout(f"  Capabilities: 0x{index_data['capabilities']:016x}")
+    if index_data.get("requirements"):
+        pout(f"  Requirements: 0x{index_data['requirements']:016x}")
+
+
+def _print_workenv_summary(package_id: str, info: dict[str, Any]) -> None:
+    """Print what the cache knows about one extracted package."""
+    pout("=" * 60)
+    pout(f"📦 Package: {package_id}")
+    pout("-" * 60)
+
+    pout(f"📁 Location: {info['content_dir']}")
+    pout(f"🗂️  Metadata Type: {info.get('metadata_type', 'none')}")
+
+    if info.get("extraction_complete"):
+        pout("✅ Extraction: Complete")
+    else:
+        pout("⚠️  Extraction: Incomplete")
+
+    if info.get("checksum"):
+        pout(f"🔐 Checksum: {info['checksum']}")
+
+    if metadata_dir := info.get("metadata_dir"):
+        _print_index_metadata(metadata_dir)
+
+    if pkg := info.get("package_info"):
+        pout(f"  Name: {pkg.get('name', 'unknown')}")
+        pout(f"  Version: {pkg.get('version', 'unknown')}")
+        if pkg.get("builder"):
+            pout(f"  Builder: {pkg.get('builder')}")
+
+    pout("")
+
+
 @workenv_group.command("inspect")
 @click.argument("package_id")
 @click.option(
@@ -157,77 +222,21 @@ def workenv_remove(package_id: str, yes: bool) -> None:
     is_flag=True,
     help="Output as JSON format",
 )
-def workenv_inspect(package_id: str, output_json: bool) -> None:  # noqa: C901
+def workenv_inspect(package_id: str, output_json: bool) -> None:
     """Inspect detailed metadata for a cached package extraction."""
     from flavor.cache import CacheManager
 
-    manager = CacheManager()
-    info = manager.inspect_workenv(package_id)
+    info = CacheManager().inspect_workenv(package_id)
 
     if not info.get("exists"):
         perr(f"❌ Package '{package_id}' not found")
         return
 
     if output_json:
-        # Output as JSON
         pout(json_dumps(info, indent=2, default=str))
-    else:
-        # Human-readable output
-        pout("=" * 60)
-        pout(f"📦 Package: {package_id}")
-        pout("-" * 60)
+        return
 
-        # Basic info
-        pout(f"📁 Location: {info['content_dir']}")
-        pout(f"🗂️  Metadata Type: {info.get('metadata_type', 'none')}")
-
-        if info.get("extraction_complete"):
-            pout("✅ Extraction: Complete")
-        else:
-            pout("⚠️  Extraction: Incomplete")
-
-        if info.get("checksum"):
-            pout(f"🔐 Checksum: {info['checksum']}")
-
-        # Index metadata from index.json
-        if info.get("metadata_dir"):
-            from pathlib import Path
-
-            index_file = Path(info["metadata_dir"]) / "instance" / "index.json"
-            if index_file.exists():
-                try:
-                    index_data = read_json(index_file)
-
-                    pout("\n📋 Index Metadata:")
-                    pout(f"  Format Version: 0x{index_data.get('format_version', 0):08x}")
-                    pout(f"  Package Size: {index_data.get('package_size', 0):,} bytes")
-                    pout(f"  Launcher Size: {index_data.get('launcher_size', 0):,} bytes")
-                    pout(f"  Slot Count: {index_data.get('slot_count', 0)}")
-                    pout(f"  Index Checksum: {index_data.get('index_checksum', 'N/A')}")
-
-                    if index_data.get("build_timestamp"):
-                        timestamp = index_data["build_timestamp"]
-                        if timestamp > 0:
-                            dt = datetime.datetime.fromtimestamp(timestamp)
-                            pout(f"  Build Time: {dt.strftime('%Y-%m-%d %H:%M:%S')}")
-
-                    # Capabilities and requirements
-                    if index_data.get("capabilities"):
-                        pout(f"  Capabilities: 0x{index_data['capabilities']:016x}")
-                    if index_data.get("requirements"):
-                        pout(f"  Requirements: 0x{index_data['requirements']:016x}")
-                except Exception as e:
-                    pout(f"  ⚠️  Error reading index.json: {e}")
-
-        # Package metadata
-        if info.get("package_info"):
-            pkg = info["package_info"]
-            pout(f"  Name: {pkg.get('name', 'unknown')}")
-            pout(f"  Version: {pkg.get('version', 'unknown')}")
-            if pkg.get("builder"):
-                pout(f"  Builder: {pkg.get('builder')}")
-
-        pout("")
+    _print_workenv_summary(package_id, info)
 
 
 # 🌶️📦🔚

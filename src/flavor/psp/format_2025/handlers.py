@@ -115,6 +115,56 @@ def _apply_single_operation(data: bytes, op: FoundationOp, compression_level: in
     return data
 
 
+def _reverse_single_operation(data: bytes, op: FoundationOp) -> bytes:
+    """Reverse a single compression operation.
+
+    The counterpart to _apply_single_operation. Compression levels are not
+    passed: a decompressor reads the level from the stream, so the value used
+    on the way in has no bearing here.
+
+    Args:
+        data: Compressed data
+        op: Foundation operation to reverse
+
+    Returns:
+        Decompressed data
+
+    Raises:
+        ArchiveError: If ZSTD is needed and the library is absent
+    """
+    if op == FoundationOp.TAR:
+        # TAR extraction is handled separately by extract_archive().
+        return data
+    if op == FoundationOp.GZIP:
+        result = GzipCompressor(level=6).decompress_bytes(data)
+        logger.trace("🗜️ Reversed GZIP compression", output_size=len(result))
+        return result
+    if op == FoundationOp.BZIP2:
+        result = Bzip2Compressor(level=9).decompress_bytes(data)
+        logger.trace("🗜️ Reversed BZIP2 compression", output_size=len(result))
+        return result
+    if op == FoundationOp.XZ:
+        result = XzCompressor().decompress_bytes(data)
+        logger.trace("🗜️ Reversed XZ compression", output_size=len(result))
+        return result
+    if op == FoundationOp.ZSTD:
+        try:
+            result = ZstdCompressor().decompress_bytes(data)
+        except ImportError as e:
+            # Unlike compression, this cannot be skipped: the data is already
+            # ZSTD and no other path reads it.
+            logger.error("❌ ZSTD library not available for decompression")
+            raise ArchiveError(
+                "ZSTD decompression required but zstandard library not installed. "
+                "Install with: pip install provide-foundation[compression]"
+            ) from e
+        logger.trace("🗜️ Reversed ZSTD compression", output_size=len(result))
+        return result
+
+    logger.warning(f"⚠️ Unsupported operation for reversal: {op}")
+    return data
+
+
 def apply_operations(
     data: bytes,
     packed_ops: int,
@@ -186,7 +236,7 @@ def apply_operations(
         raise ArchiveError(f"Operation application failed: {e}") from e
 
 
-def reverse_operations(data: bytes, packed_ops: int) -> bytes:  # noqa: C901
+def reverse_operations(data: bytes, packed_ops: int) -> bytes:
     """Reverse PSPF operation chain for extraction using Foundation tools.
 
     Args:
@@ -215,37 +265,10 @@ def reverse_operations(data: bytes, packed_ops: int) -> bytes:  # noqa: C901
         # Map to Foundation operations
         foundation_ops = map_operations(pspf_ops)
 
-        # Reverse operations in reverse order
+        # Applied in order on the way in, so undone in reverse on the way out.
         result = data
         for op in reversed(foundation_ops):
-            if op == FoundationOp.TAR:
-                # TAR extraction is handled separately by extract_archive()
-                continue
-            elif op == FoundationOp.GZIP:
-                gzip_compressor = GzipCompressor(level=6)  # level doesn't matter for decompression
-                result = gzip_compressor.decompress_bytes(result)
-                logger.trace("🗜️ Reversed GZIP compression", output_size=len(result))
-            elif op == FoundationOp.BZIP2:
-                bzip2_compressor = Bzip2Compressor(level=9)
-                result = bzip2_compressor.decompress_bytes(result)
-                logger.trace("🗜️ Reversed BZIP2 compression", output_size=len(result))
-            elif op == FoundationOp.XZ:
-                xz_compressor = XzCompressor()
-                result = xz_compressor.decompress_bytes(result)
-                logger.trace("🗜️ Reversed XZ compression", output_size=len(result))
-            elif op == FoundationOp.ZSTD:
-                try:
-                    zstd_compressor = ZstdCompressor()
-                    result = zstd_compressor.decompress_bytes(result)
-                    logger.trace("🗜️ Reversed ZSTD compression", output_size=len(result))
-                except ImportError as e:
-                    logger.error("❌ ZSTD library not available for decompression")
-                    raise ArchiveError(
-                        "ZSTD decompression required but zstandard library not installed. "
-                        "Install with: pip install provide-foundation[compression]"
-                    ) from e
-            else:
-                logger.warning(f"⚠️ Unsupported operation for reversal: {op}")
+            result = _reverse_single_operation(result, op)
 
         logger.debug(
             "✅ Operations reversed successfully",
