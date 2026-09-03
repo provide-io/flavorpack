@@ -426,7 +426,7 @@ dependencies = [
 
 [[package]]
 name = "flavor"
-version = "0.4.6"
+version = "0.5.0"
 dependencies = [
  "adler2",
  "anyhow",
