@@ -125,6 +125,17 @@ repos:
         files: ^src/flavor-rs/
         stages: [pre-push]
 
+      # ── Shell ──────────────────────────────────────────────────────────
+      # ci/ is ~50 scripts that are the release pipeline. Nothing linted them
+      # until v0.5.0 shipped short two platforms, and the bug that did it was
+      # valid shell -- so this is a floor, not a substitute for tests/ci/.
+      - id: shellcheck
+        name: shellcheck
+        entry: shellcheck --severity=warning
+        language: system
+        files: \.sh$
+        stages: [pre-commit, pre-push]
+
       # ── Cross-language ─────────────────────────────────────────────────
       - id: version-sync
         name: version sync check

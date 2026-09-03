@@ -29,6 +29,11 @@ on:
       - 'src/flavor-rs/Cargo.toml'
       - 'src/flavor-rs/fuzz/Cargo.toml'
       - '.github/workflows/code-quality.yml'
+      # The release pipeline is shell. Editing it used to trigger no check at
+      # all: every workflow listed only its own YAML, so a PR touching ci/ and
+      # another workflow ran zero jobs.
+      - 'ci/**'
+      - '.github/workflows/**'
   
   schedule:
     # Run daily at 2 AM UTC
@@ -154,9 +159,35 @@ jobs:
           if-no-files-found: ignore
 
   # Aggregate Quality Report
+  # ShellCheck over the release pipeline. ci/ is ~50 scripts that nothing
+  # linted until v0.5.0 shipped without its Windows binaries.
+  shell-quality:
+    name: 🐚 Shell Quality
+    runs-on: ubuntu-24.04
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      # ubuntu-24.04 ships shellcheck; install only if that changes.
+      - name: 📦 Ensure ShellCheck
+        run: command -v shellcheck || sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: 🔍 Shell Quality Checks
+        run: ci/quality-checks.sh shell
+
+      - name: 📤 Upload Shell Reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: shell-quality-reports
+          path: quality-logs/
+          if-no-files-found: ignore
+
   quality-report:
     name: 📊 Quality Report
-    needs: [python-quality, go-quality, rust-quality]
+    needs: [python-quality, go-quality, rust-quality, shell-quality]
     if: always()
     runs-on: ubuntu-24.04
     steps:

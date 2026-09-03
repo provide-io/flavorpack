@@ -41,6 +41,10 @@ on:
       - 'src/flavor-rs/Cargo.toml'
       - 'src/flavor-rs/Cargo.lock'
       - 'src/flavor-rs/Makefile'
+      # tests/ci/ covers the release pipeline's shell scripts; without this the
+      # tests exist and never run on a PR that changes what they cover.
+      - 'ci/**'
+      - 'tests/ci/**'
       # Fixtures are inputs to the suites, so a change to one has to re-run them.
       - 'tests/**'
       - 'ci/pr-tests.sh'

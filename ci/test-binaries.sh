@@ -57,7 +57,8 @@ determine_test_mode() {
 test_binary() {
     local binary="$1"
     local mode="$2"
-    local binary_name=$(basename "$binary")
+    local binary_name
+    binary_name=$(basename "$binary")
 
     local passed=true
     local size version help_check cli_mode format_info
@@ -118,7 +119,8 @@ PYJSON
         format-only|*)
             # Check binary format
             if command -v file >/dev/null 2>&1; then
-                local file_info=$(file "$binary" 2>&1)
+                local file_info
+                file_info=$(file "$binary" 2>&1)
                 if echo "$file_info" | grep -qE "executable|ELF|Mach-O|PE32"; then
                     format_info="valid"
 

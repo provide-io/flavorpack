@@ -9,8 +9,9 @@ HOST_ARCH=$(uname -m)
 
 if [ "$HOST_ARCH" = "amd64" ]; then
   # x86_64 FreeBSD: rustup has a host binary — install into working dir so it can be cached.
-  export RUSTUP_HOME="$(pwd)/vm-rust-home/rustup"
-  export CARGO_HOME="$(pwd)/vm-rust-home/cargo"
+  VM_RUST_HOME="$(pwd)/vm-rust-home"
+  export RUSTUP_HOME="${VM_RUST_HOME}/rustup"
+  export CARGO_HOME="${VM_RUST_HOME}/cargo"
 
   if [ -x "$CARGO_HOME/bin/rustc" ]; then
     echo "📦 Rust toolchain already cached — skipping install"

@@ -17,8 +17,9 @@ esac
 
 HOST_ARCH=$(uname -m)
 if [ "$HOST_ARCH" = "amd64" ]; then
-  export RUSTUP_HOME="$(pwd)/vm-rust-home/rustup"
-  export CARGO_HOME="$(pwd)/vm-rust-home/cargo"
+  VM_RUST_HOME="$(pwd)/vm-rust-home"
+  export RUSTUP_HOME="${VM_RUST_HOME}/rustup"
+  export CARGO_HOME="${VM_RUST_HOME}/cargo"
   export PATH="$CARGO_HOME/bin:$PATH"
 fi
 
