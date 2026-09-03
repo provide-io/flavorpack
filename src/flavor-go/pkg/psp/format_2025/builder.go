@@ -4,20 +4,15 @@ import (
 	"bytes"
 	"context"
 	"crypto/ed25519"
-	cryptorand "crypto/rand"
-	"crypto/sha256"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"hash/adler32"
 	"io"
 	"log/slog"
 	"math"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strconv"
 	"strings"
 	"time"
 
@@ -112,67 +107,15 @@ var buildImpl = doBuild
 // doBuild performs the actual build
 func doBuild(logger *slog.Logger, manifestPath, outputPath, launcherBin, privateKeyPath, publicKeyPath, keySeed string) {
 
-	// Read manifest
-	manifestData, err := readFileValidated(manifestPath)
-	if err != nil {
-		logger.Error("❌ Failed to read manifest", "error", err)
-		buildExitFn(1)
+	config, ok := loadBuildManifest(manifestPath, logger)
+	if !ok {
 		return
 	}
 
-	var config BuildOptions
-	if err := json.Unmarshal(manifestData, &config); err != nil {
-		logger.Error("❌ Failed to parse manifest", "error", err)
-		buildExitFn(1)
-		return
-	}
-
-	// 🚀 Get launcher binary path
-	// Priority: 1. Command-line arg, 2. FLAVOR_LAUNCHER_BIN env var
-	launcherPath := launcherBin
-	if launcherPath == "" {
-		launcherPath = getLauncherPath("")
-	}
-	if launcherPath == "" {
-		logger.Error("❌ Launcher binary path must be specified via --launcher-bin or FLAVOR_LAUNCHER_BIN environment variable")
-		buildExitFn(1)
-	}
-	logger.Info("🚀 Loading launcher", "path", launcherPath)
+	launcherData, launcherPath := loadLauncherBinary(launcherBin, logger)
 	// BuildConfig.Launcher was declared and logged but never assigned, so every
 	// build reported an empty launcher. Record the launcher actually embedded.
 	config.Launcher = launcherPath
-
-	// Check launcher version.
-	// Launchers deliberately never intercept arguments outside CLI mode -- every
-	// argument belongs to the packaged application -- so probing with --version
-	// was executed as the package and always failed. CLI mode is the supported
-	// channel, and its "version" command does not touch the bundle.
-	// Read stdout only; the launcher logs to stderr.
-	versionCmd := exec.Command(launcherPath, "version") // #nosec G204 -- launcherPath is operator-supplied and executed directly without shell expansion for a version probe.
-	versionCmd.Env = append(os.Environ(), EnvLauncherCLI+"=1")
-	versionOutput, err := versionCmd.Output()
-	if err != nil {
-		logger.Warn("⚠️ Failed to get launcher version", "error", err)
-	} else {
-		versionStr := strings.TrimSpace(string(versionOutput))
-		logger.Info("🔍 Launcher version", "version", versionStr)
-	}
-
-	logger.Debug("🔍 Launcher path", "path", launcherPath)
-	launcherData, err := readFileValidated(launcherPath)
-	if err != nil {
-		logger.Error("❌ Failed to read launcher", "error", err, "path", launcherPath)
-		buildExitFn(1)
-	}
-	logger.Debug("✅ Launcher loaded", "size", len(launcherData))
-
-	// Process launcher for Windows PE compatibility if needed
-	launcherData, err = processLauncherFn(launcherData, logger)
-	if err != nil {
-		logger.Error("❌ Failed to process launcher for PSPF", "error", err)
-		buildExitFn(1)
-	}
-	logger.Debug("✅ Launcher processed for PSPF", "size", len(launcherData))
 
 	// 📁 Create output directory if it doesn't exist
 	outputDir := filepath.Dir(outputPath)
@@ -208,128 +151,10 @@ func doBuild(logger *slog.Logger, manifestPath, outputPath, launcherBin, private
 	}
 	logger.Debug("📈 Index details", "format", "PSPF2025", "version", fmt.Sprintf("0x%08x", index.FormatVersion), "launcher_size", index.LauncherSize)
 
-	// 🔐 Get or generate Ed25519 keys
-	var publicKey ed25519.PublicKey
-	var privateKey ed25519.PrivateKey
+	publicKey, privateKey := resolveSigningKeys(privateKeyPath, publicKeyPath, keySeed, logger)
+	recordSigningKeyInIndex(index, publicKey, logger)
 
-	if privateKeyPath != "" {
-		// Priority 1: Load keys from files
-		logger.Debug("🔐 Loading keys from files", "private", privateKeyPath, "public", publicKeyPath)
-		privateKey, publicKey, err = loadKeysFromFiles(privateKeyPath, publicKeyPath)
-		if err != nil {
-			logger.Error("❌ Failed to load keys", "error", err)
-			buildExitFn(1)
-		}
-		logger.Info("🔑 Using provided keys")
-	} else if keySeed != "" {
-		// Priority 2: Use deterministic seed
-		logger.Debug("🔐 Generating deterministic key pair from seed")
-
-		// Allow seed from environment variable
-		actualSeed := keySeed
-		if keySeed == "env" {
-			actualSeed = os.Getenv(EnvKeySeed)
-			if actualSeed == "" {
-				logger.Error("❌ FLAVOR_KEY_SEED environment variable not set")
-				buildExitFn(1)
-			}
-		}
-
-		seed := sha256.Sum256([]byte(actualSeed))
-		privateKey = ed25519.NewKeyFromSeed(seed[:])
-		publicKey = privateKey.Public().(ed25519.PublicKey)
-		logger.Info("🔑 Using seed-based key generation", "seed_hash", fmt.Sprintf("%x", seed[:8]))
-	} else {
-		// Priority 3: Generate random ephemeral keys
-		logger.Debug("🔐 Generating random ephemeral key pair")
-		publicKey, privateKey, err = ed25519GenerateKeyFn(cryptorand.Reader)
-		if err != nil {
-			logger.Error("❌ Failed to generate ephemeral keys", "error", err)
-			buildExitFn(1)
-		}
-		logger.Debug("🎲 Using random key generation")
-	}
-	copy(index.PublicKey[:], publicKey[:32])
-	if fingerprint, err := ComputeKeyFingerprint(publicKey); err != nil {
-		logger.Error("❌ Failed to compute signing key fingerprint", "error", err)
-		buildExitFn(1)
-	} else {
-		copy(index.AttestationKeyFp[:], fingerprint)
-	}
-
-	// Build metadata
-	var buildTimestamp string
-	var buildHost string
-
-	// Check for SOURCE_DATE_EPOCH for reproducible timestamps
-	if epochStr := os.Getenv("SOURCE_DATE_EPOCH"); epochStr != "" {
-		if epochInt, err := strconv.ParseInt(epochStr, 10, 64); err == nil {
-			buildTimestamp = time.Unix(epochInt, 0).UTC().Format(time.RFC3339)
-		} else {
-			buildTimestamp = time.Now().UTC().Format(time.RFC3339)
-		}
-		buildHost = fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)
-	} else {
-		hostname, err := hostnameFunc()
-		buildTimestamp = time.Now().UTC().Format(time.RFC3339)
-		if err != nil {
-			logger.Warn("⚠️ Failed to resolve hostname, using platform-only build host", "error", err)
-			buildHost = fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)
-		} else {
-			buildHost = fmt.Sprintf("%s/%s %s", runtime.GOOS, runtime.GOARCH, hostname)
-		}
-	}
-
-	// Convert cache validation config if present
-	var cacheValidation *CacheValidationInfo
-	if config.CacheValidation != nil {
-		cacheValidation = &CacheValidationInfo{
-			CheckFile:       config.CacheValidation.CheckFile,
-			ExpectedContent: config.CacheValidation.ExpectedContent,
-		}
-	}
-
-	// Convert runtime config if present
-	var runtimeInfo *RuntimeInfo
-	if config.Runtime != nil {
-		runtimeInfo = &RuntimeInfo{
-			Env: config.Runtime.Env,
-		}
-	}
-
-	metadata := &Metadata{
-		Format: "PSPF/2025",
-		Package: PackageInfo{
-			Name:        config.Package.Name,
-			Version:     config.Package.Version,
-			Description: config.Package.Description,
-		},
-		CacheValidation: cacheValidation,
-		SetupCommands:   config.SetupCommands,
-		Slots:           []SlotMetadata{},
-		Execution: &ExecutionInfo{
-			Command:     config.Execution.Command,
-			Environment: config.Execution.Environment,
-		},
-		Runtime: runtimeInfo,
-		Verification: &VerificationInfo{
-			IntegritySeal: IntegritySealInfo{
-				Required:  true,
-				Algorithm: "ed25519",
-			},
-		},
-		Build: &BuildInfo{
-			Tool:          "flavor-go",
-			ToolVersion:   "1.0.0",
-			Timestamp:     buildTimestamp,
-			Deterministic: false,
-			Platform: PlatformInfo{
-				OS:   runtime.GOOS,
-				Arch: runtime.GOARCH,
-				Host: buildHost,
-			},
-		},
-	}
+	metadata := buildPackageMetadata(&config, logger)
 
 	// 📦 Process slots using SlotProcessor (aligns with Rust implementation)
 	slotProcessor := NewSlotProcessor(config.Slots, logger)
@@ -346,74 +171,10 @@ func doBuild(logger *slog.Logger, manifestPath, outputPath, launcherBin, private
 	// Add slot metadata to package metadata
 	metadata.Slots = slotMetadataList
 
-	// 📜 Create and write metadata (gzipped JSON) - RIGHT AFTER LAUNCHER
-	metadataPos, err := out.Seek(0, io.SeekCurrent)
-	if err != nil {
-		logger.Error("❌ Failed to get file position", "error", err)
-		buildExitFn(1)
-	}
-	logger.Debug("📜 Writing metadata (gzipped JSON)", "position", metadataPos)
-	metadataSize, signature, err := writeMetadataFn(out, metadata, privateKey, publicKey)
-	if err != nil {
-		logger.Error("❌ Failed to write metadata", "error", err)
-		buildExitFn(1)
-	}
-	logger.Debug("✅ Metadata written", "size", metadataSize)
+	// Metadata sits immediately after the launcher; its signature goes in the index.
+	signature := writePackageMetadata(out, metadata, privateKey, publicKey, index, logger)
 
-	index.MetadataOffset, err = int64ToUint64Checked(metadataPos, "metadata offset")
-	if err != nil {
-		logger.Error("❌ Failed to convert metadata offset", "error", err)
-		buildExitFn(1)
-	}
-	index.MetadataSize, err = intToUint64Checked(metadataSize, "metadata size")
-	if err != nil {
-		logger.Error("❌ Failed to convert metadata size", "error", err)
-		buildExitFn(1)
-	}
-
-	// Write slot table
-	currentPos, err := out.Seek(0, io.SeekCurrent)
-	if err != nil {
-		logger.Error("❌ Failed to get file position", "error", err)
-		buildExitFn(1)
-	}
-	slotTableOffset := AlignOffset(currentPos, SlotAlignment)
-	if _, err := out.Seek(slotTableOffset, 0); err != nil {
-		logger.Error("Failed to seek to slot table", "error", err)
-		buildExitFn(1)
-	}
-
-	index.SlotTableOffset, err = int64ToUint64Checked(slotTableOffset, "slot table offset")
-	if err != nil {
-		logger.Error("❌ Failed to convert slot table offset", "error", err)
-		buildExitFn(1)
-	}
-	index.SlotCount, err = intToUint32Checked(len(slotDescriptors), "slot count")
-	if err != nil {
-		logger.Error("❌ Failed to convert slot count", "error", err)
-		buildExitFn(1)
-	}
-	slotCount64, err := intToUint64Checked(len(slotDescriptors), "slot count")
-	if err != nil {
-		logger.Error("❌ Failed to convert slot count", "error", err)
-		buildExitFn(1)
-	}
-	index.SlotTableSize, err = multiplyUint64Checked(slotCount64, SlotDescriptorSize, "slot table size")
-	if err != nil {
-		logger.Error("❌ Failed to calculate slot table size", "error", err)
-		buildExitFn(1)
-	}
-
-	// Reserve space for slot table (we'll write it after calculating slot offsets)
-	slotTableSizeInt64, err := uint64ToInt64Checked(index.SlotTableSize, "slot table size")
-	if err != nil {
-		logger.Error("❌ Failed to convert slot table size", "error", err)
-		buildExitFn(1)
-	}
-	if _, err := out.Seek(slotTableOffset+slotTableSizeInt64, 0); err != nil {
-		logger.Error("Failed to seek past slot table", "error", err)
-		buildExitFn(1)
-	}
+	slotTableOffset := reserveSlotTable(out, index, len(slotDescriptors), logger)
 
 	// Now write the actual slot data and update descriptors with correct offsets
 	for i, compressed := range slotDataToWrite {
@@ -482,48 +243,8 @@ func doBuild(logger *slog.Logger, manifestPath, outputPath, launcherBin, private
 	// Store signature in index (first 64 bytes of 512-byte field)
 	copy(index.IntegritySignature[:64], signature)
 
-	// Calculate metadata checksum (SHA-256 of compressed data)
-	// Need to seek back and read the compressed data
-	savedPos, err := out.Seek(0, io.SeekCurrent)
-	if err != nil {
-		logger.Error("❌ Failed to get file position", "error", err)
-		buildExitFn(1)
-	}
-	if _, err := out.Seek(int64(metadataPos), 0); err != nil {
-		logger.Error("❌ Failed to seek to metadata position", "error", err)
-		buildExitFn(1)
-	}
-	compressedData := make([]byte, metadataSize)
-	if _, err := out.Read(compressedData); err != nil {
-		logger.Error("❌ Failed to read compressed metadata", "error", err)
-		buildExitFn(1)
-	}
-	if _, err := out.Seek(savedPos, 0); err != nil {
-		logger.Error("❌ Failed to restore seek position", "error", err)
-		buildExitFn(1)
-	}
-
-	// Compute full SHA-256 checksum (32 bytes)
-	metadataHash := sha256.Sum256(compressedData)
-	copy(index.MetadataChecksum[:], metadataHash[:])
-
-	// Update package size before writing MagicTrailer
-	// (add 8200 for the trailer that will be written)
-	currentPos, err = out.Seek(0, io.SeekCurrent)
-	if err != nil {
-		logger.Error("❌ Failed to get file position", "error", err)
-		buildExitFn(1)
-	}
-	currentPosUint64, err := int64ToUint64Checked(currentPos, "package size")
-	if err != nil {
-		logger.Error("❌ Failed to convert package size", "error", err)
-		buildExitFn(1)
-	}
-	index.PackageSize, err = addUint64Checked(currentPosUint64, MagicTrailerSize, "package size")
-	if err != nil {
-		logger.Error("❌ Failed to calculate package size", "error", err)
-		buildExitFn(1)
-	}
+	recordMetadataChecksum(out, index, logger)
+	recordPackageSize(out, index, logger)
 
 	// 🔐 Calculate index checksum (with checksum field as 0)
 	indexData := index.Pack()

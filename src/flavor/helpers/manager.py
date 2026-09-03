@@ -11,7 +11,7 @@ import contextlib
 from dataclasses import dataclass
 import hashlib
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from provide.foundation.file.directory import ensure_dir
 from provide.foundation.platform import get_platform_string
@@ -62,8 +62,50 @@ class HelperManager:
 
         self._binary_loader = BinaryLoader(self)
 
-    def list_helpers(self, platform_filter: bool = False) -> dict[str, list[HelperInfo]]:  # noqa: C901
+    _HELPER_BUCKETS: ClassVar[dict[str, str]] = {"launcher": "launchers", "builder": "builders"}
+
+    def _collect_helpers_from(
+        self,
+        directory: Path,
+        platform_filter: bool,
+        helpers: dict[str, list[HelperInfo]],
+        skip_known: bool,
+    ) -> None:
+        """Add every helper in one directory to the collection.
+
+        skip_known drops a helper whose name is already present. The first
+        directory searched does not skip: there is nothing before it, and a
+        name repeated inside a single directory is a different problem from the
+        same helper appearing in both a dev build and a wheel.
+        """
+        if not directory.exists():
+            return
+
+        for helper_path in directory.iterdir():
+            if not helper_path.is_file():
+                continue
+            if platform_filter and not self._is_platform_compatible(helper_path.name):
+                continue
+
+            info = self._get_helper_info(helper_path)
+            if info is None:
+                continue
+
+            bucket = self._HELPER_BUCKETS.get(info.type)
+            if bucket is None:
+                continue
+
+            if skip_known and any(known.name == info.name for group in helpers.values() for known in group):
+                continue
+
+            helpers[bucket].append(info)
+
+    def list_helpers(self, platform_filter: bool = False) -> dict[str, list[HelperInfo]]:
         """List all available helpers.
+
+        A dev build in dist/bin takes precedence over the copy embedded in an
+        installed wheel, so it is searched first and the wheel's copy of the
+        same helper is skipped.
 
         Args:
             platform_filter: Only show helpers compatible with current platform
@@ -73,37 +115,8 @@ class HelperManager:
         """
         helpers: dict[str, list[HelperInfo]] = {"launchers": [], "builders": []}
 
-        # Search for helpers in bin directory
-        if self.helpers_bin.exists():
-            for helper_path in self.helpers_bin.iterdir():
-                if helper_path.is_file():
-                    if platform_filter and not self._is_platform_compatible(helper_path.name):
-                        continue
-
-                    info = self._get_helper_info(helper_path)
-                    if info:
-                        if info.type == "launcher":
-                            helpers["launchers"].append(info)
-                        elif info.type == "builder":
-                            helpers["builders"].append(info)
-
-        # Also check embedded helpers from wheel installation
-        embedded_bin = Path(__file__).parent / "bin"
-        if embedded_bin.exists():
-            for helper_path in embedded_bin.iterdir():
-                if helper_path.is_file():
-                    if platform_filter and not self._is_platform_compatible(helper_path.name):
-                        continue
-
-                    info = self._get_helper_info(helper_path)
-                    if info:
-                        # Check if we already have this helper from dev build
-                        existing_names = [i.name for sublist in helpers.values() for i in sublist]
-                        if info.name not in existing_names:
-                            if info.type == "launcher":
-                                helpers["launchers"].append(info)
-                            elif info.type == "builder":
-                                helpers["builders"].append(info)
+        self._collect_helpers_from(self.helpers_bin, platform_filter, helpers, skip_known=False)
+        self._collect_helpers_from(Path(__file__).parent / "bin", platform_filter, helpers, skip_known=True)
 
         return helpers
 

@@ -1,7 +1,6 @@
 package format_2025
 
 import (
-	"archive/tar"
 	"bytes"
 	"compress/gzip"
 	"crypto/sha256"
@@ -9,8 +8,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
-	"strings"
 
 	"log/slog"
 
@@ -175,168 +172,28 @@ func (r *Reader) ExtractSlot(slotIndex int, destDir string) (string, error) {
 		return "", fmt.Errorf("%w: failed to read slot %d: %v", ErrSlotExtractionFailed, slotIndex, err)
 	}
 
-	// Read slot descriptor to get permissions
 	index, err := r.ReadIndex()
 	if err != nil {
 		return "", err
 	}
 
-	// Read slot table entry (64 bytes per entry) to get permissions
-	slotTableEntryOffset := int64(index.SlotTableOffset) + int64(slotIndex*64)
-	if _, err := fileSeekFn(r.file, slotTableEntryOffset, io.SeekStart); err != nil {
+	slotPermissions, err := r.readSlotPermissions(index, slotIndex)
+	if err != nil {
 		return "", err
 	}
 
-	var entryData [64]byte
-	if _, err := fileReadFn(r.file, entryData[:]); err != nil {
-		return "", err
-	}
-
-	// Extract permissions field (bytes 62-64)
-	slotPermissions := binary.LittleEndian.Uint16(entryData[62:64])
-
-	// Target field specifies where to extract (relative to workenv)
-	// Substitute {workenv} placeholder with the actual destDir
-	targetPath := slotMeta.Target
-	if strings.Contains(targetPath, "{workenv}") {
-		// Remove {workenv}/ prefix if present, as we're already extracting to destDir
-		targetPath = strings.ReplaceAll(targetPath, "{workenv}/", "")
-		targetPath = strings.ReplaceAll(targetPath, "{workenv}", "")
-	}
-
-	// Determine extraction paths based on target and whether it's a TAR archive
-	var destPath, extractDir string
-
-	// Check if this is a tarball first (needed for logic below)
+	targetPath := resolveSlotTarget(slotMeta.Target)
 	isTar := isTarball(decompressed)
 
-	if isTar {
-		// TAR slots always extract to destDir regardless of target — the tar entries encode the
-		// directory structure (e.g., "wheels/foo.whl"). This matches Rust launcher behavior
-		// where extract_tarball ignores slot_target and extracts directly to the workenv path.
-		// Using targetPath as an extraction subdirectory would double-nest the content:
-		// e.g., target="wheels" + tar entry "wheels/foo.whl" → wheels/wheels/foo.whl (wrong).
-		destPath = destDir
-		extractDir = destDir
-	} else if targetPath == "" || targetPath == "." {
-		// Non-TAR slots targeting {workenv}: extract to slot-specific subdirectory for atomic move
-		slotSubdir := fmt.Sprintf("slot_%d_%s", slotIndex, slotMeta.ID)
-		destPath = filepath.Join(destDir, slotSubdir)
-		extractDir = destPath
-	} else {
-		// Non-TAR (single file) slots with explicit target path
-		destPath = filepath.Join(destDir, targetPath)
-		// Ensure the target path does not escape the destination directory
-		cleanBase := filepath.Clean(destDir)
-		if !strings.HasPrefix(destPath, cleanBase+string(os.PathSeparator)) && destPath != cleanBase {
-			return "", fmt.Errorf("target path %q escapes extraction directory", targetPath)
-		}
-		extractDir = destPath
+	destPath, err := slotDestination(destDir, targetPath, slotIndex, slotMeta.ID, isTar)
+	if err != nil {
+		return "", err
 	}
 
 	logging.Trace(logger, "🔍 Slot data check", "isTarball", isTar, "dataLen", len(decompressed), "destPath", destPath)
 
 	if isTar {
-
-		// Ensure extraction directory exists
-		if err := tarMkdirAllFn(extractDir, os.FileMode(DirPerms)); err != nil {
-			return "", fmt.Errorf("%w: failed to create extraction directory for slot %d: %v", ErrSlotExtractionFailed, slotIndex, err)
-		}
-
-		tr := tar.NewReader(bytes.NewReader(decompressed))
-		for {
-			hdr, err := tr.Next()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return "", fmt.Errorf("%w: tar extraction failed for slot %d: %v", ErrSlotExtractionFailed, slotIndex, err)
-			}
-
-			target := filepath.Join(extractDir, hdr.Name)
-			cleanTarget := filepath.Clean(target)
-			cleanBase := filepath.Clean(extractDir)
-			if !strings.HasPrefix(cleanTarget, cleanBase+string(os.PathSeparator)) && cleanTarget != cleanBase {
-				return "", fmt.Errorf("tar entry %q escapes extraction directory", hdr.Name)
-			}
-
-			switch hdr.Typeflag {
-			case tar.TypeDir:
-				if err := tarMkdirAllFn(target, os.FileMode(hdr.Mode)); err != nil {
-					return "", fmt.Errorf("%w: failed to create directory during extraction: %v", ErrSlotExtractionFailed, err)
-				}
-			case tar.TypeReg:
-				// Ensure parent directory exists
-				if err := tarMkdirAllFn(filepath.Dir(target), os.FileMode(DirPerms)); err != nil {
-					return "", err
-				}
-
-				out, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.FileMode(hdr.Mode))
-				if err != nil {
-					return "", err
-				}
-
-				if _, err := tarIoCopyFn(out, tr); err != nil {
-					if closeErr := tarOutCloseFn(out); closeErr != nil {
-						// Log but don't mask the original error
-						_ = closeErr
-					}
-					return "", err
-				}
-				if err := tarOutCloseFn(out); err != nil {
-					return "", fmt.Errorf("failed to close output file: %w", err)
-				}
-
-				// Set executable bit if needed
-				if hdr.Mode&0111 != 0 {
-					if err := tarChmodFn(target, os.FileMode(hdr.Mode)); err != nil {
-						// Best effort - log but don't fail
-						_ = err
-					}
-				}
-			case tar.TypeSymlink:
-				return "", fmt.Errorf("tar entry %q contains a symlink — symlinks are not permitted in PSPF packages", hdr.Name)
-			}
-		}
-
-		// Return the directory where we extracted
-		return extractDir, nil
+		return extractTarball(decompressed, destPath, slotIndex)
 	}
-
-	// Single file - write directly
-	// Special case: if destPath is a directory (like for Python going to cache root),
-	// write to a file inside it
-	if info, err := os.Stat(destPath); err == nil && info.IsDir() {
-		// This is the case where Python tarball goes to cache root
-		// Just return the directory since it's a tarball that will be extracted
-		logging.Trace(logger, "🔍 Destination is existing directory, skipping write", "destPath", destPath)
-		return destPath, nil
-	}
-
-	if err := os.MkdirAll(filepath.Dir(destPath), os.FileMode(DirPerms)); err != nil {
-		return "", err
-	}
-
-	// Use permissions from slot descriptor if available, otherwise use defaults
-	var perm os.FileMode
-	if slotPermissions != 0 {
-		perm = os.FileMode(slotPermissions)
-	} else {
-		perm = os.FileMode(FilePerms) // 0600 - secure by default
-	}
-
-	// Log what we're about to write
-	logging.Trace(logger, "📝 Writing single file", "destPath", destPath, "dataLen", len(decompressed), "permissions", fmt.Sprintf("%04o", perm))
-
-	// Check first few bytes to see if it's still compressed
-	if len(decompressed) >= 3 && decompressed[0] == 0x1f && decompressed[1] == 0x8b && decompressed[2] == 0x08 {
-		logger.Warn("⚠️ Data appears to still be gzipped!", "firstBytes", fmt.Sprintf("%x", decompressed[:10]))
-	}
-
-	if err := os.WriteFile(destPath, decompressed, perm); err != nil {
-		return "", fmt.Errorf("%w: failed to write slot %d to disk: %v", ErrSlotExtractionFailed, slotIndex, err)
-	}
-
-	logging.Trace(logger, "✅ Wrote file", "path", destPath, "size", len(decompressed))
-	return destPath, nil
+	return writeSlotFile(decompressed, destPath, slotPermissions, slotIndex, logger)
 }

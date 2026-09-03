@@ -83,7 +83,123 @@ def validate_metadata(metadata: dict[str, Any]) -> list[str]:
     return errors
 
 
-def validate_slots(slots: list[SlotMetadata]) -> list[str]:  # noqa: C901
+# Rebuilt on every slot before; a slot's purpose and lifecycle are fixed
+# vocabularies, so they belong to the module rather than the loop.
+VALID_PURPOSES = (
+    "data",
+    "payload",
+    "code",
+    "runtime",
+    "config",
+    "tool",
+    "media",
+    "asset",
+    "library",
+    "binary",
+    "installer",
+)
+
+VALID_LIFECYCLES = (
+    "init",
+    "startup",
+    "runtime",
+    "shutdown",
+    "cache",
+    "temporary",
+    "lazy",
+    "eager",
+    "dev",
+    "config",
+    "platform",
+    "persistent",
+    "volatile",
+)
+
+
+def _validate_slot_source(slot: SlotMetadata) -> list[str]:
+    """Check that a declared source path exists and is something readable."""
+    if not slot.source:
+        return []
+
+    source_path = Path(slot.source)
+    if not source_path.exists():
+        return [f"🔍 Slot {slot.id}: Source path does not exist: {slot.source}"]
+    if not source_path.is_file() and not source_path.is_dir():
+        return [f"🔍 Slot {slot.id}: Source path is not a file or directory: {slot.source}"]
+    return []
+
+
+def _validate_slot_vocabulary(slot: SlotMetadata) -> list[str]:
+    """Check the fields drawn from a fixed set of values."""
+    errors: list[str] = []
+
+    if slot.purpose not in VALID_PURPOSES:
+        errors.append(
+            f"🎯 Slot '{slot.id}' has invalid purpose '{slot.purpose}'. "
+            f"Valid options: {', '.join(VALID_PURPOSES)}"
+        )
+
+    if slot.lifecycle not in VALID_LIFECYCLES:
+        errors.append(
+            f"♻️ Slot '{slot.id}' has invalid lifecycle '{slot.lifecycle}'. "
+            f"Valid options: {', '.join(VALID_LIFECYCLES)}"
+        )
+
+    return errors
+
+
+def _validate_slot_fields(slot: SlotMetadata) -> list[str]:
+    """Check one slot in isolation, ignoring how it relates to the others."""
+    errors: list[str] = []
+
+    if slot.size < 0:
+        errors.append(f"📏 Slot '{slot.id}' has negative size: {slot.size}")
+
+    # operations is a string like "tar.gz" or "TAR|GZIP".
+    if not isinstance(slot.operations, str):
+        errors.append(
+            f"🗜️ Slot '{slot.id}' has invalid operations type: "
+            f"expected string, got {type(slot.operations).__name__}"
+        )
+
+    errors.extend(_validate_slot_source(slot))
+
+    try:
+        normalize_workenv_target(slot.target)
+    except ValueError as exc:
+        errors.append(f"📁 Slot {slot.id}: invalid target path: {exc}")
+
+    errors.extend(_validate_slot_vocabulary(slot))
+
+    if slot.checksum and not isinstance(slot.checksum, str):  # pragma: no cover
+        errors.append(f"🔐 Slot '{slot.id}' checksum must be a string")
+
+    return errors
+
+
+def _validate_slot_identity(slot: SlotMetadata, seen_indices: set[int], seen_names: set[str]) -> list[str]:
+    """Check what a slot's index and name mean relative to the slots before it.
+
+    Both sets are updated here, including for a slot that was rejected: a third
+    slot repeating the same index should be reported against the first, not
+    silently accepted because the second was already an error.
+    """
+    errors: list[str] = []
+
+    if slot.index in seen_indices:
+        errors.append(f"🔢 Duplicate slot index {slot.index} for slot '{slot.id}'")
+    seen_indices.add(slot.index)
+
+    if not slot.id or not slot.id.strip():
+        errors.append(f"📝 Slot at index {slot.index} has empty name")
+    elif slot.id in seen_names:
+        errors.append(f"📝 Duplicate slot name '{slot.id}'")
+    seen_names.add(slot.id)
+
+    return errors
+
+
+def validate_slots(slots: list[SlotMetadata]) -> list[str]:
     """
     Validate slot configurations.
 
@@ -95,95 +211,12 @@ def validate_slots(slots: list[SlotMetadata]) -> list[str]:  # noqa: C901
     - Valid names
     """
     errors: list[str] = []
+    seen_indices: set[int] = set()
+    seen_names: set[str] = set()
 
-    if not slots:
-        return errors  # Empty slots is valid
-
-    seen_indices = set()
-    seen_names = set()
-
-    for _i, slot in enumerate(slots):
-        # Check index uniqueness
-        if slot.index in seen_indices:
-            errors.append(f"🔢 Duplicate slot index {slot.index} for slot '{slot.id}'")
-        seen_indices.add(slot.index)
-
-        # Check name validity
-        if not slot.id or not slot.id.strip():
-            errors.append(f"📝 Slot at index {slot.index} has empty name")
-        elif slot.id in seen_names:
-            errors.append(f"📝 Duplicate slot name '{slot.id}'")
-        seen_names.add(slot.id)
-
-        # Check size validity
-        if slot.size < 0:
-            errors.append(f"📏 Slot '{slot.id}' has negative size: {slot.size}")
-
-        # Check operations validity
-        # Operations field is a string like "tar.gz" or "TAR|GZIP"
-        if not isinstance(slot.operations, str):
-            errors.append(
-                f"🗜️ Slot '{slot.id}' has invalid operations type: expected string, got {type(slot.operations).__name__}"
-            )
-
-        # Check source path existence if provided
-        if slot.source:
-            source_path = Path(slot.source)
-            if not source_path.exists():
-                errors.append(f"🔍 Slot {slot.id}: Source path does not exist: {slot.source}")
-            elif not source_path.is_file() and not source_path.is_dir():
-                errors.append(f"🔍 Slot {slot.id}: Source path is not a file or directory: {slot.source}")
-
-        try:
-            normalize_workenv_target(slot.target)
-        except ValueError as exc:
-            errors.append(f"📁 Slot {slot.id}: invalid target path: {exc}")
-
-        # Check purpose validity
-        valid_purposes = [
-            "data",
-            "payload",
-            "code",
-            "runtime",
-            "config",
-            "tool",
-            "media",
-            "asset",
-            "library",
-            "binary",
-            "installer",
-        ]
-        if slot.purpose not in valid_purposes:
-            errors.append(
-                f"🎯 Slot '{slot.id}' has invalid purpose '{slot.purpose}'. "
-                f"Valid options: {', '.join(valid_purposes)}"
-            )
-
-        # Check lifecycle validity
-        valid_lifecycles = [
-            "init",
-            "startup",
-            "runtime",
-            "shutdown",
-            "cache",
-            "temporary",
-            "lazy",
-            "eager",
-            "dev",
-            "config",
-            "platform",
-            "persistent",
-            "volatile",
-        ]
-        if slot.lifecycle not in valid_lifecycles:
-            errors.append(
-                f"♻️ Slot '{slot.id}' has invalid lifecycle '{slot.lifecycle}'. "
-                f"Valid options: {', '.join(valid_lifecycles)}"
-            )
-
-        # Check checksum format if provided
-        if slot.checksum and not isinstance(slot.checksum, str):  # pragma: no cover
-            errors.append(f"🔐 Slot '{slot.id}' checksum must be a string")
+    for slot in slots:
+        errors.extend(_validate_slot_identity(slot, seen_indices, seen_names))
+        errors.extend(_validate_slot_fields(slot))
 
     return errors
 

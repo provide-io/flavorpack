@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import Any
 
 import click
 from provide.foundation.console import perr, pout
@@ -26,6 +27,42 @@ def helper_group() -> None:
     pass
 
 
+def _probe_helper_version(helper_path: Path) -> str | None:
+    """Ask a helper binary its version, giving up quickly and quietly.
+
+    This is a listing, so a helper that will not answer is reported with
+    whatever version was recorded at discovery rather than holding up the rest.
+    """
+    try:
+        result = run([str(helper_path), "--version"], capture_output=True, check=False, timeout=2)
+    except Exception:
+        return None
+
+    if result.returncode != 0:
+        return None
+    lines = result.stdout.strip().split("\n")
+    return lines[0] if lines else None
+
+
+def _print_helper_group(title: str, group: list[Any], verbose: bool) -> None:
+    """Print one group of helpers, blank-line separated."""
+    if not group:
+        return
+
+    pout(f"\n{title}")
+    for i, helper in enumerate(sorted(group, key=lambda h: h.name)):
+        if i > 0:
+            pout("")
+        size_mb = helper.size / (1024 * 1024)
+        version = _probe_helper_version(helper.path) or helper.version or "unknown"
+        pout(f"  • {helper.name} ({helper.language}, {size_mb:.1f} MB) - {version}")
+        pout(f"    Path: {helper.path}")
+        if helper.checksum:
+            pout(f"    SHA256: {helper.checksum}")
+        if verbose and helper.built_from:
+            pout(f"    Source: {helper.built_from}")
+
+
 @helper_group.command("list")
 @click.option(
     "--verbose",
@@ -33,12 +70,11 @@ def helper_group() -> None:
     is_flag=True,
     help="Show detailed information",
 )
-def helper_list(verbose: bool) -> None:  # noqa: C901
+def helper_list(verbose: bool) -> None:
     """List available helper binaries."""
     from flavor.helpers.manager import HelperManager
 
-    manager = HelperManager()
-    helpers = manager.list_helpers()
+    helpers = HelperManager().list_helpers()
 
     if not helpers["launchers"] and not helpers["builders"]:
         pout("No helpers found. Build them with: flavor helpers build")
@@ -47,53 +83,8 @@ def helper_list(verbose: bool) -> None:  # noqa: C901
     pout("🔧 Available Flavor Helpers")
     pout("=" * 60)
 
-    # Helper function to get version
-    def get_version(helper_path: Path) -> str | None:
-        try:
-            result = run(
-                [str(helper_path), "--version"],
-                capture_output=True,
-                check=False,
-                timeout=2,
-            )
-            if result.returncode == 0:
-                # Parse version from output (first line usually)
-                lines = result.stdout.strip().split("\n")
-                if lines:
-                    return lines[0]
-        except Exception:
-            pass
-        return None
-
-    if helpers["launchers"]:
-        pout("\n📦 Launchers:")
-        launchers = sorted(helpers["launchers"], key=lambda h: h.name)
-        for i, launcher in enumerate(launchers):
-            if i > 0:
-                pout("")  # Add newline between entries
-            size_mb = launcher.size / (1024 * 1024)
-            version = get_version(launcher.path) or launcher.version or "unknown"
-            pout(f"  • {launcher.name} ({launcher.language}, {size_mb:.1f} MB) - {version}")
-            pout(f"    Path: {launcher.path}")
-            if launcher.checksum:
-                pout(f"    SHA256: {launcher.checksum}")
-            if verbose and launcher.built_from:
-                pout(f"    Source: {launcher.built_from}")
-
-    if helpers["builders"]:
-        pout("\n🔨 Builders:")
-        builders = sorted(helpers["builders"], key=lambda h: h.name)
-        for i, builder in enumerate(builders):
-            if i > 0:
-                pout("")  # Add newline between entries
-            size_mb = builder.size / (1024 * 1024)
-            version = get_version(builder.path) or builder.version or "unknown"
-            pout(f"  • {builder.name} ({builder.language}, {size_mb:.1f} MB) - {version}")
-            pout(f"    Path: {builder.path}")
-            if builder.checksum:
-                pout(f"    SHA256: {builder.checksum}")
-            if verbose and builder.built_from:
-                pout(f"    Source: {builder.built_from}")
+    _print_helper_group("📦 Launchers:", helpers["launchers"], verbose)
+    _print_helper_group("🔨 Builders:", helpers["builders"], verbose)
 
 
 @helper_group.command("build")

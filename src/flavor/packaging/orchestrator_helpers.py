@@ -114,6 +114,157 @@ def create_slot_tarballs(temp_dir: Path, artifacts: dict[str, Path]) -> dict[str
     return slots
 
 
+def _runtime_command(package_name: str, build_config: dict[str, Any], windows: bool) -> str:
+    """The command the launcher runs once the package is installed.
+
+    Windows invokes python.exe -m <module> rather than the Scripts/*.exe distlib
+    launcher: pip embeds the temporary python.exe path inside that launcher at
+    install time, and the Rust launcher moves the tree to its final work
+    environment afterwards, so the embedded path is stale. The entry-point
+    module is used rather than the script name, since `python -m taster` needs
+    taster/__main__.py, which may not exist.
+    """
+    if windows:
+        return f"{{workenv}}/python.exe -m {get_cli_module_for_windows(package_name, build_config)}"
+    return f"{{workenv}}/bin/{get_cli_executable_name(package_name, build_config, windows)}"
+
+
+def _workenv_layout() -> dict[str, Any]:
+    """The directories a package gets, and the variables pointing at them.
+
+    Every path a program would otherwise take from the host -- temp, cache,
+    config, home -- is redirected inside the work environment, so a package
+    leaves nothing behind and picks nothing up.
+    """
+    return {
+        "directories": [
+            {"path": "{workenv}/tmp", "mode": "0700"},
+            {"path": "{workenv}/var", "mode": "0755"},
+            {"path": "{workenv}/var/log", "mode": "0755"},
+            {"path": "{workenv}/var/cache", "mode": "0755"},
+            {"path": "{workenv}/var/run", "mode": "0755"},
+            {"path": "{workenv}/etc", "mode": "0755"},
+            {"path": "{workenv}/home", "mode": "0700"},
+            {"path": "{workenv}/state", "mode": "0755"},
+        ],
+        "env": {
+            "TMPDIR": "{workenv}/tmp",
+            "TEMP": "{workenv}/tmp",
+            "TMP": "{workenv}/tmp",
+            "XDG_RUNTIME_DIR": "{workenv}/var/run",
+            "XDG_CACHE_HOME": "{workenv}/var/cache",
+            "XDG_DATA_HOME": "{workenv}/share",
+            "XDG_STATE_HOME": "{workenv}/state",
+            "XDG_CONFIG_HOME": "{workenv}/etc",
+            "HOME": "{workenv}/home",
+        },
+    }
+
+
+def _setup_commands(windows: bool, python_path: str) -> list[dict[str, Any]]:
+    """Install the bundled wheels, then record that the install happened.
+
+    The marker file is what the launcher's cache check reads to decide whether
+    this work environment is already built.
+    """
+    install = (
+        "{workenv}/python.exe -m pip install --no-deps"
+        if windows
+        else f"{{workenv}}/bin/uv --no-config pip install --python {python_path} --no-deps"
+    )
+    return [
+        {
+            "type": "enumerate_and_execute",
+            "command": install,
+            "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
+        },
+        {
+            "type": "write_file",
+            "path": "{workenv}/metadata/installed",
+            "content": "{package_name}-{version}",
+        },
+    ]
+
+
+def _package_slots(slots: dict[str, Path], bin_dir: str, uv_exe: str) -> list[dict[str, Any]]:
+    """The three slots a Python package ships: its installer, runtime, payload."""
+    return [
+        {
+            "id": "uv",
+            "source": str(slots["uv"]),
+            "operations": "gzip",
+            "purpose": "tool",
+            "lifecycle": "cache",
+            # For gzip encoding, this is treated as a full file path.
+            "target": f"{bin_dir}/{uv_exe}",
+            "type": "file",
+            "permissions": "0700",  # Owner-only executable permissions
+        },
+        {
+            "id": "python",
+            "source": str(slots["python"]),
+            "operations": "tgz",
+            "purpose": "runtime",
+            "lifecycle": "cache",
+            "target": "{workenv}",
+        },
+        {
+            "id": "wheels",
+            "source": str(slots["wheels"]),
+            "operations": "tgz",
+            "purpose": "payload",
+            "lifecycle": "init",
+            "target": "wheels",
+        },
+    ]
+
+
+def _merge_preserving_order(defaults: list[str], extra: list[str]) -> list[str]:
+    """Defaults first, then anything new, with no duplicates."""
+    seen = set(defaults)
+    return defaults + [item for item in extra if item not in seen]
+
+
+def _runtime_env_config(build_config: dict[str, Any], windows: bool) -> dict[str, Any]:
+    """Build the runtime env operations, isolating the package by default.
+
+    Isolation is on unless the package sets ``isolated: false``. Without it a
+    host virtualenv leaks into the package's Python and quietly changes which
+    interpreter and site-packages it uses.
+
+    Windows keeps its system variables either way: they are needed for DLL
+    loading and process creation, so isolating them breaks the package rather
+    than protecting it.
+    """
+    runtime_env_config = build_config.get("execution", {}).get("runtime", {}).get("env", {})
+    isolated = runtime_env_config.get("isolated", True)  # Safe by default
+    windows_pass = WINDOWS_SYSTEM_PASS if windows else []
+
+    operations: dict[str, Any] = {
+        "pass": _merge_preserving_order(list(windows_pass), runtime_env_config.get("pass", [])),
+        "set": runtime_env_config.get("set", {}),
+        "map": runtime_env_config.get("map", {}),
+    }
+
+    if isolated is False:
+        logger.debug("🔓 Environment isolation disabled via isolated=false flag")
+    else:
+        logger.debug("🔒 Applying default environment isolation for Python/UV")
+        user_unset = runtime_env_config.get("unset", [])
+        merged_unset = _merge_preserving_order(list(DEFAULT_ENV_ISOLATION_UNSET), user_unset)
+        if user_unset:
+            logger.debug(f"Merging user unset vars {user_unset} with defaults")
+            logger.debug(f"Final merged unset list: {merged_unset}")
+        operations["unset"] = merged_unset
+        logger.info(
+            f"✅ Runtime environment configured with isolation: "
+            f"unset={merged_unset[:3]}... ({len(merged_unset)} vars)"
+        )
+
+    # An operation with nothing in it is noise in the manifest.
+    return {key: value for key, value in operations.items() if value}
+
+
 def create_builder_manifest(
     package_name: str,
     version: str,
@@ -125,166 +276,28 @@ def create_builder_manifest(
     windows = is_windows()
     uv_exe = "uv.exe" if windows else "uv"
     bin_dir = "Scripts" if windows else "bin"
-    # On Windows, cpython-build-standalone places python.exe at the root of the install
-    # dir (not inside Scripts/).  On Unix it lives in bin/.
+    # cpython-build-standalone puts python.exe at the install root on Windows,
+    # and in bin/ on Unix.
     python_path = "{workenv}/python.exe" if windows else "{workenv}/bin/python3"
-    package_exe = get_cli_executable_name(package_name, build_config, windows)
-    # On Windows the runtime command uses python.exe -m <module> instead of the
-    # Scripts/*.exe distlib launcher.  The Rust launcher runs setup commands in
-    # the TEMP extraction directory and then moves the tree to the final workenv.
-    # pip embeds the temp python.exe path inside the distlib launcher at install
-    # time, so the launcher's embedded path is stale after the move.  Invoking
-    # python.exe directly avoids the stale-path problem entirely.
-    # Use the entry-point module (e.g. 'taster.cli') not the script name ('taster'),
-    # since 'python -m taster' requires taster/__main__.py which may not exist.
-    if windows:
-        cli_module = get_cli_module_for_windows(package_name, build_config)
-        runtime_command = f"{{workenv}}/python.exe -m {cli_module}"
-    else:
-        runtime_command = f"{{workenv}}/{bin_dir}/{package_exe}"
 
-    manifest = {
+    manifest: dict[str, Any] = {
         "package": {"name": package_name, "version": version},
-        "execution": {"command": runtime_command},
+        "execution": {"command": _runtime_command(package_name, build_config, windows)},
         "cache_validation": {
             "check_file": "{workenv}/metadata/installed",
             "expected_content": f"{package_name}-{version}",
         },
-        "workenv": {
-            "directories": [
-                {"path": "{workenv}/tmp", "mode": "0700"},
-                {"path": "{workenv}/var", "mode": "0755"},
-                {"path": "{workenv}/var/log", "mode": "0755"},
-                {"path": "{workenv}/var/cache", "mode": "0755"},
-                {"path": "{workenv}/var/run", "mode": "0755"},
-                {"path": "{workenv}/etc", "mode": "0755"},
-                {"path": "{workenv}/home", "mode": "0700"},
-                {"path": "{workenv}/state", "mode": "0755"},
-            ],
-            "env": {
-                "TMPDIR": "{workenv}/tmp",
-                "TEMP": "{workenv}/tmp",
-                "TMP": "{workenv}/tmp",
-                "XDG_RUNTIME_DIR": "{workenv}/var/run",
-                "XDG_CACHE_HOME": "{workenv}/var/cache",
-                "XDG_DATA_HOME": "{workenv}/share",
-                "XDG_STATE_HOME": "{workenv}/state",
-                "XDG_CONFIG_HOME": "{workenv}/etc",
-                "HOME": "{workenv}/home",
-            },
-        },
-        "setup_commands": [
-            {
-                "type": "enumerate_and_execute",
-                "command": (
-                    "{workenv}/python.exe -m pip install --no-deps"
-                    if windows
-                    else f"{{workenv}}/bin/uv --no-config pip install --python {python_path} --no-deps"
-                ),
-                "enumerate": {"path": "{workenv}/wheels", "pattern": "*.whl"},
-            },
-            {
-                "type": "write_file",
-                "path": "{workenv}/metadata/installed",
-                "content": "{package_name}-{version}",
-            },
-        ],
-        "slots": [
-            {
-                "id": "uv",
-                "source": str(slots["uv"]),
-                "operations": "gzip",
-                "purpose": "tool",
-                "lifecycle": "cache",
-                "target": f"{bin_dir}/{uv_exe}",  # For gzip encoding, this is treated as full file path
-                "type": "file",
-                "permissions": "0700",  # Owner-only executable permissions
-            },
-            {
-                "id": "python",
-                "source": str(slots["python"]),
-                "operations": "tgz",
-                "purpose": "runtime",
-                "lifecycle": "cache",
-                "target": "{workenv}",
-            },
-            {
-                "id": "wheels",
-                "source": str(slots["wheels"]),
-                "operations": "tgz",
-                "purpose": "payload",
-                "lifecycle": "init",
-                "target": "wheels",
-            },
-        ],
+        "workenv": _workenv_layout(),
+        "setup_commands": _setup_commands(windows, python_path),
+        "slots": _package_slots(slots, bin_dir, uv_exe),
         "signature": {
             "private_key": key_paths.get("private"),
             "public_key": key_paths.get("public"),
         },
     }
 
-    # Default environment isolation for Python/UV to prevent host venv interference
-    execution_config = build_config.get("execution", {})
-    runtime_env_config = execution_config.get("runtime", {}).get("env", {})
-
-    # Check for explicit opt-out via isolated flag
-    isolated = runtime_env_config.get("isolated", True)  # Default to True (safe by default)
-
-    # On Windows, always preserve system vars required for DLL loading and process
-    # creation regardless of isolation mode (merging before dedup below).
-    windows_pass = WINDOWS_SYSTEM_PASS if windows else []
-
-    if isolated is False:
-        logger.debug("🔓 Environment isolation disabled via isolated=false flag")
-        # User has explicitly opted out of isolation - don't add runtime section
-        # unless they provided other env config
-        user_pass = runtime_env_config.get("pass", [])
-        merged_pass = windows_pass + [v for v in user_pass if v not in set(windows_pass)]
-        manifest_runtime_env = {
-            key: value
-            for key, value in {
-                "pass": merged_pass,
-                "set": runtime_env_config.get("set", {}),
-                "map": runtime_env_config.get("map", {}),
-            }.items()
-            if value
-        }
-        if manifest_runtime_env:
-            logger.debug(f"Adding user-specified runtime config (no isolation): {manifest_runtime_env}")
-            manifest["runtime"] = {"env": manifest_runtime_env}
-    else:
-        # Apply default isolation (safe by default)
-        logger.debug("🔒 Applying default environment isolation for Python/UV")
-
-        # Merge user unset vars with defaults (defaults first, then user vars, preserve order)
-        user_unset = runtime_env_config.get("unset", [])
-        # Remove duplicates while preserving order: defaults first, then new user vars
-        seen = set(DEFAULT_ENV_ISOLATION_UNSET)
-        merged_unset = DEFAULT_ENV_ISOLATION_UNSET + [var for var in user_unset if var not in seen]
-
-        if user_unset:
-            logger.debug(f"Merging user unset vars {user_unset} with defaults")
-            logger.debug(f"Final merged unset list: {merged_unset}")
-
-        user_pass = runtime_env_config.get("pass", [])
-        merged_pass = windows_pass + [v for v in user_pass if v not in set(windows_pass)]
-
-        manifest_runtime_env = {
-            key: value
-            for key, value in {
-                "unset": merged_unset,
-                "pass": merged_pass,
-                "set": runtime_env_config.get("set", {}),
-                "map": runtime_env_config.get("map", {}),
-            }.items()
-            if value
-        }
-
-        if manifest_runtime_env:
-            manifest["runtime"] = {"env": manifest_runtime_env}
-            logger.info(
-                f"✅ Runtime environment configured with isolation: unset={merged_unset[:3]}... ({len(merged_unset)} vars)"
-            )
+    if runtime_env := _runtime_env_config(build_config, windows):
+        manifest["runtime"] = {"env": runtime_env}
 
     return manifest
 

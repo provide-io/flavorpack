@@ -8,7 +8,10 @@
 from __future__ import annotations
 
 from collections.abc import Generator
+import contextlib
 from contextlib import contextmanager
+import gzip
+import hashlib
 import io
 from pathlib import Path
 import tarfile
@@ -160,8 +163,116 @@ class PSPFLauncher(PSPFReader):
             safe_rmtree(workenv_dir)
             raise  # Re-raise the exception
 
-    def extract_slot(self, slot_index: int, workenv_dir: Path, verify_checksum: bool = False) -> Path:  # noqa: C901  # ty: ignore[invalid-method-override]
+    def _read_slot_bytes(self, slot_entry: dict[str, Any], slot_index: int, verify_checksum: bool) -> bytes:
+        """Read one slot exactly as stored, and check it if asked.
+
+        The checksum covers the bytes in the file, compressed or not, and is the
+        first eight bytes of their SHA-256 read little-endian -- the same
+        derivation the Go and Rust readers use.
+        """
+        with Path(self.bundle_path).open("rb") as f:
+            f.seek(slot_entry["offset"])
+            slot_data: bytes = f.read(slot_entry["size"])
+
+        if not verify_checksum:
+            return slot_data
+
+        actual_checksum = int.from_bytes(hashlib.sha256(slot_data).digest()[:8], byteorder="little")
+        if actual_checksum != slot_entry["checksum"]:
+            logger.error(
+                f"❌ Checksum mismatch for slot {slot_index}: "
+                f"expected {slot_entry['checksum']:016x}, got {actual_checksum:016x}"
+            )
+            raise ValueError(f"Checksum mismatch for slot {slot_index}")
+
+        return slot_data
+
+    @staticmethod
+    def _decode_slot_bytes(slot_data: bytes, operations: int, slot_index: int) -> bytes:
+        """Undo the slot's stored encoding.
+
+        Anything ending in a tar is left alone: the archive is opened later,
+        during extraction, and decoding it here would only be undone again.
+        This mapping has to match the Go and Rust readers.
+        """
+        if operations in (_OP_NONE, _OP_TAR, _OP_TAR_GZ):
+            return slot_data
+        if operations == _OP_GZIP:
+            logger.debug(f"🗜️ Decompressing slot {slot_index} with gzip")
+            return gzip.decompress(slot_data)
+
+        logger.error(f"❌ Unsupported operations: {operations}")
+        raise ValueError(f"Unsupported operations: {operations}")
+
+    def _slot_target_name(self, slot_index: int) -> tuple[str, dict[str, Any]]:
+        """Where a slot's contents belong, and the metadata that said so."""
+        metadata = self.read_metadata()
+        slot_name = f"slot_{slot_index}"
+        slot_meta: dict[str, Any] = {}
+
+        if "slots" in metadata and slot_index < len(metadata["slots"]):
+            slot_meta = metadata["slots"][slot_index]
+            slot_name = slot_meta.get("target", slot_meta.get("id", slot_meta.get("name", slot_name)))
+
+        return self._normalize_slot_target(str(slot_name)), slot_meta
+
+    @staticmethod
+    def _looks_like_tarball(data: bytes) -> bool:
+        """Decide by content rather than by name, which a package chooses."""
+        with (
+            contextlib.suppress(tarfile.TarError, EOFError),
+            tarfile.open(fileobj=io.BytesIO(data), mode="r:*"),
+        ):
+            return True
+        return False
+
+    @staticmethod
+    def _safe_tar_filter(member: tarfile.TarInfo, path: str) -> tarfile.TarInfo | None:
+        """Reject anything that could write outside the extraction directory.
+
+        tarfile's "data" filter already refuses absolute paths and .., but it
+        still permits links, which can point anywhere once followed.
+        """
+        result = tarfile.data_filter(member, path)
+        if result is not None and (result.issym() or result.islnk()):
+            logger.warning(f"⚠️ Skipping symlink/hardlink in tarball: {result.name}")
+            return None
+        return result
+
+    def _extract_slot_tarball(self, data: bytes, slot_name: str, workenv_dir: Path, slot_index: int) -> Path:
+        """Unpack a tar slot into the work environment."""
+        logger.debug(f"📤 Extracting tarball {slot_name} to {workenv_dir}")
+        try:
+            with tarfile.open(fileobj=io.BytesIO(data), mode="r:*") as tar:
+                tar.extractall(path=workenv_dir, filter=self._safe_tar_filter)  # nosec B202
+        except (OSError, tarfile.ReadError) as e:
+            logger.error(f"❌ Disk or tarball error extracting slot {slot_index} to {workenv_dir}: {e}")
+            raise
+
+        if slot_name in {".", "{workenv}"}:
+            return workenv_dir
+        return workenv_dir / slot_name
+
+    def _write_slot_file(
+        self, data: bytes, slot_name: str, workenv_dir: Path, slot_meta: dict[str, Any], slot_index: int
+    ) -> Path:
+        """Write a single-file slot atomically, then apply its permissions."""
+        output_path = workenv_dir / slot_name
+        try:
+            ensure_parent_dir(output_path)
+            atomic_write(output_path, data)
+            self._apply_slot_permissions(output_path, slot_meta)
+        except OSError as e:
+            logger.error(f"❌ Disk error writing slot {slot_index} to {output_path}: {e}")
+            raise
+        return output_path
+
+    def extract_slot(self, slot_index: int, workenv_dir: Path, verify_checksum: bool = False) -> Path:  # ty: ignore[invalid-method-override]
         """Extract a single slot.
+
+        This is the Python launcher's own implementation; Go and Rust have
+        theirs, and the encoding and checksum rules above have to agree with
+        them.
 
         Args:
             slot_index: Index of the slot to extract
@@ -171,8 +282,6 @@ class PSPFLauncher(PSPFReader):
         Returns:
             Path: Path to the extracted slot content
         """
-
-        # NOTE: This logic is unique to Python launcher - Go/Rust have their own implementations
         slot_table = self.read_slot_table()
 
         if slot_index < 0 or slot_index >= len(slot_table):
@@ -181,101 +290,19 @@ class PSPFLauncher(PSPFReader):
 
         slot_entry = slot_table[slot_index]
         logger.debug(
-            f"📍 Slot {slot_index}: offset={slot_entry['offset']}, size={slot_entry['size']}, operations={slot_entry['operations']}"
+            f"📍 Slot {slot_index}: offset={slot_entry['offset']}, "
+            f"size={slot_entry['size']}, operations={slot_entry['operations']}"
         )
 
-        # Read slot data from bundle
-        with Path(self.bundle_path).open("rb") as f:
-            f.seek(slot_entry["offset"])
-            slot_data = f.read(slot_entry["size"])
+        slot_data = self._read_slot_bytes(slot_entry, slot_index, verify_checksum)
+        data = self._decode_slot_bytes(slot_data, slot_entry["operations"], slot_index)
 
-        # Verify checksum if requested (checksum is of the data AS STORED IN THE FILE)
-        if verify_checksum:
-            # NOTE: Use SHA-256 (first 8 bytes) to match Go/Rust implementations
-            # Checksum is of the slot data as it exists in the file (compressed or not)
-            import hashlib
-
-            hash_bytes = hashlib.sha256(slot_data).digest()[:8]
-            actual_checksum = int.from_bytes(hash_bytes, byteorder="little")
-            if actual_checksum != slot_entry["checksum"]:
-                logger.error(
-                    f"❌ Checksum mismatch for slot {slot_index}: expected {slot_entry['checksum']:016x}, got {actual_checksum:016x}"
-                )
-                raise ValueError(f"Checksum mismatch for slot {slot_index}")
-
-        # NOTE: Decoding logic must match Go/Rust implementations
-        # Decode if needed
-        if slot_entry["operations"] == _OP_NONE:
-            data = slot_data
-        elif slot_entry["operations"] == _OP_TAR:
-            data = slot_data  # Tar archives are extracted later
-        elif slot_entry["operations"] == _OP_GZIP:
-            logger.debug(f"🗜️ Decompressing slot {slot_index} with gzip")
-            import gzip
-
-            data = gzip.decompress(slot_data)
-        elif slot_entry["operations"] == _OP_TAR_GZ:
-            data = slot_data  # Will be decompressed and extracted later
-        else:
-            logger.error(f"❌ Unsupported operations: {slot_entry['operations']}")
-            raise ValueError(f"Unsupported operations: {slot_entry['operations']}")
-
-        # Get slot name from metadata - use target for extraction path
-        metadata = self.read_metadata()
-        slot_name = f"slot_{slot_index}"
-        slot_meta: dict[str, Any] = {}
-        if "slots" in metadata and slot_index < len(metadata["slots"]):
-            slot_meta = metadata["slots"][slot_index]
-            # Use "target" field for extraction path, fallback to "id" or "name"
-            slot_name = slot_meta.get("target", slot_meta.get("id", slot_meta.get("name", slot_name)))
-        slot_name = self._normalize_slot_target(str(slot_name))
+        slot_name, slot_meta = self._slot_target_name(slot_index)
         logger.debug(f"📝 Slot {slot_index} name: {slot_name}")
 
-        # NOTE: Tarball extraction logic matches Go's tar extraction
-        # Check if it's a tarball that needs extraction (by content, not just name)
-        import contextlib
-
-        is_tarball = False
-        with (
-            contextlib.suppress(tarfile.TarError, EOFError),
-            tarfile.open(fileobj=io.BytesIO(data), mode="r:*"),
-        ):
-            # If we can open it, it's a tarball
-            is_tarball = True
-
-        if is_tarball or slot_name.endswith(".tar.gz") or slot_name.endswith(".tgz"):
-            logger.debug(f"📤 Extracting tarball {slot_name} to {workenv_dir}")
-            try:
-                with tarfile.open(fileobj=io.BytesIO(data), mode="r:*") as tar:
-                    # "data" rejects absolute paths and .. but still allows symlinks;
-                    # we additionally strip symlinks to prevent link-based traversal.
-                    def _safe_filter(member: tarfile.TarInfo, path: str) -> tarfile.TarInfo | None:
-                        result = tarfile.data_filter(member, path)
-                        if result is not None and (result.issym() or result.islnk()):
-                            logger.warning(f"⚠️ Skipping symlink/hardlink in tarball: {result.name}")
-                            return None
-                        return result
-
-                    tar.extractall(path=workenv_dir, filter=_safe_filter)  # nosec B202
-
-                if slot_name in {".", "{workenv}"}:
-                    return workenv_dir
-
-                return workenv_dir / slot_name
-            except (OSError, tarfile.ReadError) as e:
-                logger.error(f"❌ Disk or tarball error extracting slot {slot_index} to {workenv_dir}: {e}")
-                raise  # Re-raise the exception
-        else:
-            # Write single file (atomic for safety)
-            output_path = workenv_dir / slot_name
-            try:
-                ensure_parent_dir(output_path)
-                atomic_write(output_path, data)
-                self._apply_slot_permissions(output_path, slot_meta)
-                return output_path
-            except OSError as e:
-                logger.error(f"❌ Disk error writing slot {slot_index} to {output_path}: {e}")
-                raise  # Re-raise the exception
+        if self._looks_like_tarball(data) or slot_name.endswith((".tar.gz", ".tgz")):
+            return self._extract_slot_tarball(data, slot_name, workenv_dir, slot_index)
+        return self._write_slot_file(data, slot_name, workenv_dir, slot_meta, slot_index)
 
     def _apply_slot_permissions(self, output_path: Path, slot_meta: dict[str, Any]) -> None:
         """Apply metadata-driven permissions after single-file extraction."""
