@@ -382,9 +382,7 @@ jobs:
 
       - name: 🧰 Install Rust quality tools
         run: |
-          cargo install cargo-llvm-cov --locked || true
-          cargo install cargo-mutants --locked || true
-          cargo install cargo-fuzz --locked || true
+          ci/install-rust-cargo-tools.sh cargo-llvm-cov cargo-mutants cargo-fuzz
           rustup toolchain install nightly --profile minimal
 
       - name: 📊 Run Rust fast quality

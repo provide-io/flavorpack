@@ -409,7 +409,7 @@ jobs:
           echo "## 🦀 Rust Security Analysis" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          cargo install cargo-audit
+          ci/install-rust-cargo-tools.sh cargo-audit
           
           echo "### Cargo Audit" >> $GITHUB_STEP_SUMMARY
           
@@ -433,7 +433,7 @@ jobs:
         run: |
           echo "### Cargo Deny Security Check" >> $GITHUB_STEP_SUMMARY
           
-          cargo install cargo-deny
+          ci/install-rust-cargo-tools.sh cargo-deny
           
           cd src/flavor-rs
           
@@ -478,7 +478,7 @@ jobs:
           echo "### Unsafe Code Analysis" >> $GITHUB_STEP_SUMMARY
 
           # Install cargo-geiger
-          cargo install cargo-geiger
+          ci/install-rust-cargo-tools.sh cargo-geiger
 
           cd src/flavor-rs
 

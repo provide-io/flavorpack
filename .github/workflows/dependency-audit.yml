@@ -400,13 +400,10 @@ jobs:
       
       - name: 📦 Install Cargo Tools
         run: |
-          cargo install cargo-audit
-          cargo install cargo-outdated
-          cargo install cargo-tree
-          cargo install cargo-license
-          cargo install cargo-deny
-          cargo install cargo-machete
-          cargo install cargo-udeps
+          # cargo-tree is built into cargo (1.44+) and cargo-udeps was installed
+          # here but never invoked, so neither is installed any more.
+          ci/install-rust-cargo-tools.sh cargo-audit cargo-outdated cargo-license cargo-deny
+          ci/install-rust-quality-tools.sh
       
       - name: 🔍 Dependency Tree
         run: |
