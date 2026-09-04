@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-09-03
+
+### Added
+
+- **The Rust launcher logs through `provide-telemetry`, keeping its `🦀 ` prefix.**
+  `flavor-go` already did, so the two launchers described the same operation in two
+  shapes even though either can run any package. What kept them apart was the
+  writer: the Rust crate emitted through `eprintln!` with nothing able to
+  intercept it, so adopting it meant losing the prefix that makes the pretaster's
+  combined four-way output readable. `provide-telemetry` 0.10 added a log sink,
+  and a `log::Log` bridge carries every existing call site into it unchanged.
+  Console records are prefixed and JSON records are not, because a prefixed line
+  is not JSON.
+
+  The Rust launcher's console format changes with it: telemetry's renderer, with
+  `service` and `env` fields, in place of `[timestamp LEVEL target]`.
+
 ### Fixed
 
 - **Windows packages reach the release.** A Windows package is written `.exe` so it is
