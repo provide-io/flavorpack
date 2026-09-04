@@ -26,37 +26,56 @@ pytestmark = [pytest.mark.ci, pytest.mark.packaging]
 
 SCRIPT = Path(__file__).resolve().parents[2] / "ci" / "install-rust-cargo-tools.sh"
 
-# A cargo stub that records its arguments and reports the pinned version back,
-# so the script's "already installed" path is what runs.
+# A cargo stub that answers `cargo install --list` with the tools the test says
+# are present, which is the record the script reads to decide whether to install.
 CARGO_STUB = """#!/bin/bash
 echo "$@" >> "$CALLS"
-if [ "$2" = "--version" ]; then
-    echo "$1 {version}"
+if [ "$1" = "install" ] && [ "$2" = "--list" ]; then
+    cat "$INSTALLED" 2>/dev/null
 fi
 exit 0
 """
 
+# A tool that refuses --version and answers --help, which is what cargo-license
+# 0.7.0 does. Asking it for a version is what broke the first attempt at this
+# script: the install succeeded and the check then called it broken.
+TOOL_STUB = """#!/bin/bash
+if [ "$1" = "--help" ]; then
+    exit 0
+fi
+exit 2
+"""
 
-def _stub_cargo(tmp_path: Path, version: str = "9.9.9") -> tuple[Path, Path]:
-    """A PATH containing only a cargo stub, plus the file it logs calls to."""
+
+def _stub_env(tmp_path: Path, tools: tuple[str, ...], version: str) -> tuple[Path, Path]:
+    """A PATH holding a cargo stub and a stub for each tool cargo reports installed."""
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir(parents=True, exist_ok=True)
-    calls = tmp_path / "calls.txt"
+    installed = tmp_path / "installed.txt"
 
     cargo = bin_dir / "cargo"
-    cargo.write_text(CARGO_STUB.format(version=version))
+    cargo.write_text(CARGO_STUB)
     cargo.chmod(0o755)
 
-    return bin_dir, calls
+    installed.write_text("".join(f"{tool} v{version}:\n    {tool}\n" for tool in tools))
+
+    for tool in tools:
+        binary = bin_dir / tool
+        binary.write_text(TOOL_STUB)
+        binary.chmod(0o755)
+
+    return bin_dir, installed
 
 
 def _run(tmp_path: Path, *tools: str, version: str = "9.9.9") -> subprocess.CompletedProcess[str]:
-    bin_dir, calls = _stub_cargo(tmp_path, version)
+    known = tuple(tool for tool in tools if tool.startswith("cargo-") and "nonexistent" not in tool)
+    bin_dir, installed = _stub_env(tmp_path, known, version)
     env = {
         "PATH": f"{bin_dir}:/usr/bin:/bin",
-        "CALLS": str(calls),
-        # Pin every tool to what the stub reports, so the script takes its
-        # already-installed path and never shells out to a real install.
+        "CALLS": str(tmp_path / "calls.txt"),
+        "INSTALLED": str(installed),
+        # Pin every tool to what the stub reports installed, so the script takes
+        # its already-installed path and never shells out to a real install.
         "CARGO_LICENSE_VERSION": version,
         "CARGO_DENY_VERSION": version,
         "CARGO_AUDIT_VERSION": version,
@@ -72,7 +91,11 @@ def _run(tmp_path: Path, *tools: str, version: str = "9.9.9") -> subprocess.Comp
 
 
 def test_installs_each_tool_it_is_given(tmp_path: Path) -> None:
-    """Every named tool is checked, and the script reports each one."""
+    """Every named tool is checked, and the script reports each one.
+
+    The stubs refuse `--version` the way cargo-license does, so this also pins
+    that a tool without that flag is not mistaken for a broken install.
+    """
     result = _run(tmp_path, "cargo-license", "cargo-deny")
 
     assert result.returncode == 0, result.stderr
@@ -127,7 +150,8 @@ def test_the_source_fallback_is_locked(tmp_path: Path) -> None:
     installs = [
         line.strip()
         for line in body.splitlines()
-        if "cargo install" in line and not line.strip().startswith("#")
+        # `cargo install --list` reads what is installed; it installs nothing.
+        if "cargo install" in line and "--list" not in line and not line.strip().startswith("#")
     ]
 
     assert installs, "no cargo install lines found"

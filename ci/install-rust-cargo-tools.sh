@@ -76,9 +76,11 @@ for tool in "$@"; do
         exit 1
     fi
 
-    subcommand="${tool#cargo-}"
-
-    if cargo "$subcommand" --version 2> /dev/null | grep -q "$version"; then
+    # `cargo install --list` is what cargo itself recorded, which is the only
+    # uniform way to ask: not every subcommand answers --version. cargo-license
+    # 0.7.0 exits 2 on it, so asking the tool would reinstall it every run and
+    # then declare the fresh install broken.
+    if cargo install --list 2> /dev/null | grep -qE "^${tool} v${version}:"; then
         echo "✅ ${tool} ${version} already installed"
     else
         echo "📦 Installing ${tool} ${version}"
@@ -88,10 +90,17 @@ for tool in "$@"; do
     # A tool that is absent has to fail here, where the message names the tool,
     # rather than inside the check that needs it, where a missing subcommand
     # reads as a check that found nothing wrong.
-    if ! cargo "$subcommand" --version > /dev/null 2>&1; then
-        echo "❌ ${tool} is not runnable after installation" >&2
+    if ! command -v "$tool" > /dev/null 2>&1; then
+        echo "❌ ${tool} is not on PATH after installation" >&2
         exit 1
     fi
 
-    echo "✅ Installed: $(cargo "$subcommand" --version | head -1)"
+    # Executing it is the difference between present and working. --version or
+    # --help, because which one a tool answers to is its own business.
+    if ! "$tool" --version > /dev/null 2>&1 && ! "$tool" --help > /dev/null 2>&1; then
+        echo "❌ ${tool} is installed but does not run" >&2
+        exit 1
+    fi
+
+    echo "✅ Installed: ${tool} ${version}"
 done
