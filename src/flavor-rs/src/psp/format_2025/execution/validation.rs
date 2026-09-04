@@ -4,8 +4,8 @@ use super::super::index::Index;
 use super::super::metadata::{CacheValidationInfo, Metadata};
 use super::super::paths::WorkenvPaths;
 use super::placeholders::substitute_placeholders;
-use crate::exceptions::{FlavorError, Result};
-use log::{debug, warn};
+use crate::exceptions::Result;
+use log::debug;
 use serde::{Deserialize, Serialize};
 use std::fs;
 
@@ -48,66 +48,29 @@ pub(super) fn validate_package_checksum(
     }
 }
 
+/// Reports a workenv built by a different package as unusable, at every
+/// validation level.
+///
+/// The stored value identifies the package that produced this workenv, so a
+/// mismatch means the cache belongs to another build and its contents are
+/// stale. Extraction runs again and replaces them.
+///
+/// This is a cache-validity question, not an authenticity one. Authenticity is
+/// settled earlier by signature verification, which runs on every launch and
+/// aborts under `Strict`. Neither checksum covers the extracted tree, so a
+/// mismatch says nothing about whether that tree was modified; re-extraction
+/// overwrites it either way.
 fn validate_package_checksum_mismatch(
     stored_checksum: &str,
     current_checksum: &str,
     validation_level: crate::psp::format_2025::defaults::ValidationLevel,
 ) -> Result<bool> {
-    use crate::psp::format_2025::defaults::ValidationLevel;
-
-    match validation_level {
-        ValidationLevel::None | ValidationLevel::Minimal => {
-            warn!(
-                "⚠️ SECURITY WARNING: Package checksum mismatch! cached: {}, current: {}",
-                stored_checksum, current_checksum
-            );
-            warn!("⚠️ Cache may be compromised or package has changed");
-            warn!(
-                "⚠️ Continuing due to validation level: {:?}",
-                validation_level
-            );
-            Ok(false)
-        }
-        ValidationLevel::Relaxed => {
-            warn!(
-                "⚠️ SECURITY WARNING: Package checksum mismatch! cached: {}, current: {}",
-                stored_checksum, current_checksum
-            );
-            warn!("⚠️ Cache may be compromised or package has changed");
-            warn!("⚠️ Continuing due to relaxed validation");
-            Ok(false)
-        }
-        ValidationLevel::Standard => {
-            eprintln!(
-                "🚨 SECURITY WARNING: Package checksum mismatch! cached: {}, current: {}",
-                stored_checksum, current_checksum
-            );
-            eprintln!("🚨 Cache may be compromised or package has changed");
-            eprintln!(
-                "🚨 Continuing with standard validation (use FLAVOR_VALIDATION=strict to enforce)"
-            );
-            warn!(
-                "⚠️ Package checksum mismatch, continuing with standard validation: cached: {}, current: {}",
-                stored_checksum, current_checksum
-            );
-            Ok(false)
-        }
-        ValidationLevel::Strict => {
-            log::error!(
-                "🚨 CRITICAL: Package checksum mismatch! cached: {}, current: {}",
-                stored_checksum,
-                current_checksum
-            );
-            log::error!("🚨 Cache may be compromised or package has changed");
-            log::error!(
-                "🚨 Refusing to continue. Set FLAVOR_VALIDATION=relaxed to bypass (NOT RECOMMENDED)"
-            );
-            Err(FlavorError::Generic(format!(
-                "package checksum mismatch: cached={}, current={}",
-                stored_checksum, current_checksum
-            )))
-        }
-    }
+    debug!(
+        "🔍 Work environment belongs to package {}, this one is {}; extracting again \
+         (validation level: {:?})",
+        stored_checksum, current_checksum, validation_level
+    );
+    Ok(false)
 }
 
 /// Save package checksum to cache
@@ -318,35 +281,23 @@ mod tests {
     }
 
     #[test]
-    fn validate_package_checksum_mismatch_varies_by_validation_level() {
-        assert!(
-            !validate_package_checksum_mismatch("deadbeef", "cafebabe", ValidationLevel::Relaxed)
-                .expect("relaxed mismatch should be non-fatal")
-        );
-        assert!(
-            !validate_package_checksum_mismatch("deadbeef", "cafebabe", ValidationLevel::Standard)
-                .expect("standard mismatch should be non-fatal")
-        );
-        assert!(
-            validate_package_checksum_mismatch("deadbeef", "cafebabe", ValidationLevel::Strict)
-                .is_err()
-        );
-    }
-
-    #[test]
-    fn validate_package_checksum_mismatch_none_level_is_non_fatal() {
-        assert!(
-            !validate_package_checksum_mismatch("deadbeef", "cafebabe", ValidationLevel::None)
-                .expect("none mismatch should be non-fatal")
-        );
-    }
-
-    #[test]
-    fn validate_package_checksum_mismatch_minimal_level_is_non_fatal() {
-        assert!(
-            !validate_package_checksum_mismatch("deadbeef", "cafebabe", ValidationLevel::Minimal)
-                .expect("minimal mismatch should be non-fatal")
-        );
+    fn a_rebuilt_package_invalidates_the_cache_rather_than_refusing() {
+        // A rebuilt package must stay launchable. The checksum identifies the
+        // package that filled the cache, so a mismatch means the cache is
+        // stale and extraction should run again -- the answer the missing-file
+        // branch already gives. Failing instead strands the package behind a
+        // hidden metadata directory only a hand-written `rm` can clear.
+        for level in [
+            ValidationLevel::None,
+            ValidationLevel::Minimal,
+            ValidationLevel::Relaxed,
+            ValidationLevel::Standard,
+            ValidationLevel::Strict,
+        ] {
+            let reusable = validate_package_checksum_mismatch("deadbeef", "cafebabe", level)
+                .unwrap_or_else(|err| panic!("{level:?} refused a rebuilt package: {err}"));
+            assert!(!reusable, "{level:?} reused a workenv from another package");
+        }
     }
 
     #[test]

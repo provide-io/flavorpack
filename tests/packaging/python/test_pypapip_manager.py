@@ -288,6 +288,54 @@ class TestPyPaPipManager:
             assert "--python-version" in cmd_312 and "3.12" in cmd_312
 
     @patch("flavor.packaging.python.pypapip_manager.run")
+    def test_a_source_archive_is_turned_into_a_wheel(self, mock_run: Mock) -> None:
+        """Everything downstream enumerates `*.whl`, so an sdist must be built.
+
+        `--only-binary :all:` constrains what pip resolves from an index, not a
+        direct reference: `name @ git+https://...` is fetched as a source
+        archive. The packer globs `*.whl` (orchestrator_helpers.py:109, :672),
+        so an archive left beside the wheels is packed by nothing and reported
+        by nothing -- the payload ships without that dependency.
+        """
+        mock_run.return_value = Mock(returncode=0, stderr="")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            dest_dir = Path(tmp)
+            (dest_dir / "attrs-25.1.0-py3-none-any.whl").write_bytes(b"wheel")
+            (dest_dir / "pyvider-0.6.2.zip").write_bytes(b"sdist")
+
+            requirements_file = dest_dir / "requirements.txt"
+            requirements_file.write_text("pyvider @ git+https://example.invalid/pyvider@main\n")
+
+            self.pip_manager.download_wheels_from_requirements(
+                Path("/usr/bin/python3"), requirements_file, dest_dir
+            )
+
+        commands = [call.args[0] for call in mock_run.call_args_list]
+        built = [cmd for cmd in commands if "wheel" in cmd]
+        assert built, f"the source archive was never built into a wheel; ran: {commands}"
+        assert any("pyvider-0.6.2.zip" in " ".join(cmd) for cmd in built), (
+            "a command built a wheel, but not from the archive that needs one"
+        )
+
+    @patch("flavor.packaging.python.pypapip_manager.run")
+    def test_wheels_alone_need_no_building(self, mock_run: Mock) -> None:
+        """The common case stays a single download."""
+        mock_run.return_value = Mock(returncode=0, stderr="")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            dest_dir = Path(tmp)
+            (dest_dir / "attrs-25.1.0-py3-none-any.whl").write_bytes(b"wheel")
+            requirements_file = dest_dir / "requirements.txt"
+            requirements_file.write_text("attrs\n")
+
+            self.pip_manager.download_wheels_from_requirements(
+                Path("/usr/bin/python3"), requirements_file, dest_dir
+            )
+
+        assert mock_run.call_count == 1, "a build ran with nothing to build"
+
+    @patch("flavor.packaging.python.pypapip_manager.run")
     def test_download_wheels_from_requirements(self, mock_run: Mock) -> None:
         """Test downloading wheels from requirements file."""
         mock_result = Mock()
@@ -301,7 +349,8 @@ class TestPyPaPipManager:
 
         try:
             python_exe = Path("/usr/bin/python3")
-            dest_dir = Path("/tmp/wheels")
+            dest_stack = tempfile.TemporaryDirectory()
+            dest_dir = Path(dest_stack.name)
 
             self.pip_manager.download_wheels_from_requirements(python_exe, requirements_file, dest_dir)
 
@@ -314,7 +363,7 @@ class TestPyPaPipManager:
             assert cmd[0] == "/usr/bin/python3"
             assert "download" in cmd
             assert "--dest" in cmd
-            assert "/tmp/wheels" in cmd
+            assert dest_dir.as_posix() in cmd
             assert "-r" in cmd
             # Normalize path separators for cross-platform comparison
             assert any(str(requirements_file).replace("\\", "/") == c.replace("\\", "/") for c in cmd)

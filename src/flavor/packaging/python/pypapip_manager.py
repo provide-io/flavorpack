@@ -44,6 +44,9 @@ _WIN_PIP_NOTRUST_WRAPPER = (
     "sys.exit(main(sys.argv[1:]))"
 )
 
+#: Suffixes pip gives a downloaded source archive when no wheel is available.
+_SOURCE_ARCHIVE_SUFFIXES = (".zip", ".tar.gz", ".tar.bz2", ".tgz")
+
 
 def _pip_base_cmd(python_exe: Path) -> list[str]:
     """Return the base pip invocation.
@@ -285,8 +288,47 @@ class PyPaPipManager:
             error_msg += self._platform_failure_hint(result.stderr)
             logger.error(error_msg)
             raise RuntimeError(error_msg)
-        else:
-            logger.info("✅ Successfully downloaded all wheels")
+
+        self._build_downloaded_source_archives(python_exe, dest_dir)
+        logger.info("✅ Successfully downloaded all wheels")
+
+    def _build_downloaded_source_archives(self, python_exe: Path, dest_dir: Path) -> None:
+        """Turn any source archive in ``dest_dir`` into a wheel beside it.
+
+        ``--only-binary :all:`` governs what pip resolves from an index; a
+        direct reference such as ``name @ git+https://...`` is exempt and
+        arrives as a source archive. Every consumer of this directory
+        enumerates ``*.whl`` (``orchestrator_helpers.py:109`` and ``:672``), so
+        an archive left here is packed by nothing, installed by nothing, and
+        reported by nothing: the payload ships without that dependency while
+        the build reports success. Branch pins produce exactly this shape.
+        """
+        archives = [
+            path
+            for path in sorted(dest_dir.iterdir())
+            if path.is_file() and path.name.endswith(_SOURCE_ARCHIVE_SUFFIXES)
+        ]
+        if not archives:
+            return
+
+        logger.info(
+            "🌐🛠️ Building wheels for source archives",
+            archives=[path.name for path in archives],
+        )
+        for archive in archives:
+            wheel_cmd = self._get_pypapip_wheel_cmd(
+                python_exe=python_exe,
+                wheel_dir=dest_dir,
+                source=archive,
+                no_deps=True,
+            )
+            logger.debug("💻 Building wheel from source archive", command=" ".join(wheel_cmd))
+            built = run(wheel_cmd, check=False, capture_output=True, env=_windows_system_env() or None)
+            if built.returncode != 0:
+                raise RuntimeError(
+                    f"Failed to build a wheel from {archive.name}, which the payload needs: {built.stderr}"
+                )
+            archive.unlink()
 
     @retry(
         ConnectionError,
