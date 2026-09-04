@@ -452,8 +452,7 @@ jobs:
       
       - name: 📦 Install cargo-license
         run: |
-          cargo install cargo-license
-          cargo install cargo-deny
+          ci/install-rust-cargo-tools.sh cargo-license cargo-deny
       
       # Reports every crate's licence, then enforces src/flavor-rs/deny.toml.
       # Script policy: this used to be 74 lines of inline YAML that wrote its
