@@ -25,11 +25,11 @@ fn main() {
 fn run() -> i32 {
     // Initialize logging as early as possible for debugging
     if let Ok(level) = env::var(flavor::env_vars::LAUNCHER_LOG_LEVEL) {
-        flavor::logger::JsonLogger::init_with_level(&level, flavor::env_vars::LAUNCHER_LOG_LEVEL);
+        flavor::logger::FlavorLogger::init_with_level(&level, flavor::env_vars::LAUNCHER_LOG_LEVEL);
     } else if let Ok(level) = env::var(flavor::env_vars::LOG_LEVEL) {
-        flavor::logger::JsonLogger::init_with_level(&level, flavor::env_vars::LOG_LEVEL);
+        flavor::logger::FlavorLogger::init_with_level(&level, flavor::env_vars::LOG_LEVEL);
     } else {
-        flavor::logger::JsonLogger::init();
+        flavor::logger::FlavorLogger::init();
     }
 
     log::debug!("🚀 Launcher process started");

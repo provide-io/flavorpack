@@ -72,9 +72,9 @@ fn run() -> i32 {
 
     // Initialize logging with level if provided
     if let Some(ref level) = args.log_level {
-        flavor::logger::JsonLogger::init_with_level(level, "CLI --log-level");
+        flavor::logger::FlavorLogger::init_with_level(level, "CLI --log-level");
     } else {
-        flavor::logger::JsonLogger::init();
+        flavor::logger::FlavorLogger::init();
     }
 
     let options = BuildOptions {
