@@ -20,6 +20,7 @@ from provide.foundation.file.directory import ensure_dir
 from provide.foundation.logger import logger
 from provide.foundation.process import run
 
+from flavor.exceptions import WheelResolutionError
 from flavor.packaging.python.pypapip_manager import PyPaPipManager
 from flavor.packaging.python.uv_manager import UVManager
 
@@ -310,6 +311,14 @@ class WheelBuilder:
 
         try:
             self.pypapip.download_wheels_from_requirements(python_exe, requirements_file, wheel_dir)
+        except WheelResolutionError:
+            # Deliberately not caught with the rest. The fallbacks are other ways
+            # to fetch the same file, which is no help when the index holds no
+            # wheel for the platform being packaged -- and the UV fallback
+            # resolves for the build host, so it can "succeed" with wheels for
+            # the wrong machine. That is how a darwin_amd64 package shipped
+            # without pyvider in it, exiting 0.
+            raise
         except RuntimeError as e:
             logger.warning(f"pip download failed, trying UV offline cache: {e}")
             if self.uv.download_wheels_offline(requirements_file, wheel_dir):
