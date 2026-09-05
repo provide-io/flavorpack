@@ -21,7 +21,7 @@ dependencies = [
     "provide-foundation[cli,compression,crypto,transport,platform]>=0.4.0; sys_platform == 'win32' and platform_machine == 'ARM64'",
     # exec-test calls build_package_from_manifest() which requires these pinned build
     # backends in the workenv via importlib_metadata (must match flavorpack>=0.4.0's pins)
-    "setuptools==82.0.1",
+    "setuptools==83.0.0",
     "wheel==0.46.3",
 ]
 
