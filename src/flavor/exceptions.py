@@ -46,4 +46,17 @@ class VerificationError(FlavorException):
     pass
 
 
+class WheelResolutionError(BuildError):
+    """Raised when no wheel exists for the platform being packaged.
+
+    Separate from a download that failed in transit, because only one of the
+    two has a second thing worth trying. A connection reset can be retried, or
+    handed to another client; an index that holds no wheel for the requested
+    platform answers the same way however it is asked, and a fallback that
+    resolves for the build host instead answers a different question.
+    """
+
+    pass
+
+
 # 🌶️📦🔚

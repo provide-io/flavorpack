@@ -24,6 +24,7 @@ from provide.foundation.process import run
 from provide.foundation.resilience.types import BackoffStrategy
 
 from flavor.config.defaults import ENV_WHEEL_CACHE
+from flavor.exceptions import WheelResolutionError
 from flavor.packaging.python.manylinux import (
     DEFAULT_MANYLINUX_TAGS,
     platform_constraint_hint,
@@ -285,9 +286,13 @@ class PyPaPipManager:
 
         if result.returncode != 0:
             error_msg = f"Failed to download required wheels: {result.stderr}"
-            error_msg += self._platform_failure_hint(result.stderr)
+            hint = self._platform_failure_hint(result.stderr)
+            error_msg += hint
             logger.error(error_msg)
-            raise RuntimeError(error_msg)
+            # The hint is only produced for pip's "no such wheel" wording, so it
+            # doubles as the classification: a platform with no wheel is not
+            # something the download fallbacks can answer.
+            raise (WheelResolutionError if hint else RuntimeError)(error_msg)
 
         self._build_downloaded_source_archives(python_exe, dest_dir)
         logger.info("✅ Successfully downloaded all wheels")
