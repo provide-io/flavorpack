@@ -27,7 +27,7 @@ from flavor.packaging.python.uv_manager import UVManager
 # These must match [dependency-groups.build-backends] in pyproject.toml.
 # To update: change the version in pyproject.toml, run `uv lock`, update here.
 _PINNED_BUILD_BACKENDS: dict[str, str] = {
-    "setuptools": "82.0.1",
+    "setuptools": "83.0.0",
     "wheel": "0.46.3",
 }
 
