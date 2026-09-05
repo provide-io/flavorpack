@@ -39,7 +39,7 @@ dependencies = [
     "provide-foundation[cli,compression,crypto,transport,platform]>=0.4.1; sys_platform == 'win32' and platform_machine == 'ARM64'",
     "pip>=25.2",
     "uv>=0.9.6",
-    "setuptools==82.0.1",  # Pinned to match build-backends group; checked by _ensure_no_isolation_build_backend
+    "setuptools==83.0.0",  # Pinned to match build-backends group; checked by _ensure_no_isolation_build_backend
     "wheel==0.46.3",       # Required for building wheels; pinned to match build-backends group
 ]
 keywords = ["packaging", "pspf", "flavor", "executable", "bundle"]
@@ -79,7 +79,7 @@ docs = [
     "mkdocs-mermaid2-plugin>=1.1.0",
 ]
 build-backends = [
-    "setuptools==82.0.1",
+    "setuptools==83.0.0",
     "wheel==0.46.3",
 ]
 
