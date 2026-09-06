@@ -103,10 +103,25 @@ impl FlavorLogger {
         (actual_level, source.to_string())
     }
 
+    /// The level to use when nothing in the environment names one.
+    ///
+    /// Info, for the same reason an unrecognised level filters at info: nobody
+    /// asked for trace. It also has to be this low because of who reads the
+    /// launcher's stderr.
+    ///
+    /// A packaged provider is started by a plugin host that waits for a
+    /// handshake line on stdout and does not drain stderr while it waits. At
+    /// trace, one launch writes ~193KB there -- 756 trace records, mostly one
+    /// per mmap read -- against a 64KB pipe. The launcher blocks part-way
+    /// through writing, before it has printed the handshake, and the host sees
+    /// a provider that never started. Measured on the same launch, info and
+    /// above comes to 3.3KB, which fits.
+    pub const DEFAULT_LEVEL: &'static str = "info";
+
     /// Initialize logging from the environment.
     pub fn init() {
-        let log_level =
-            env::var(crate::env_vars::LOG_LEVEL).unwrap_or_else(|_| "trace".to_string());
+        let log_level = env::var(crate::env_vars::LOG_LEVEL)
+            .unwrap_or_else(|_| Self::DEFAULT_LEVEL.to_string());
         Self::init_with_level(&log_level, crate::env_vars::LOG_LEVEL);
     }
 }
@@ -170,6 +185,21 @@ mod tests {
         assert!(use_json);
         assert_eq!(level, "warn");
         assert_eq!(filter, LevelFilter::Warn);
+    }
+
+    /// A plugin host reads stdout for the handshake and does not drain stderr
+    /// while it waits, so the default has to fit in a pipe. Trace does not:
+    /// one launch writes ~193KB, and the launcher blocks part-way through,
+    /// before the handshake line.
+    #[test]
+    fn the_default_level_is_not_trace() {
+        let (_, level, filter) = FlavorLogger::parse_level_mode(FlavorLogger::DEFAULT_LEVEL);
+        assert_eq!(level, "info");
+        assert_eq!(filter, LevelFilter::Info);
+        assert!(
+            filter <= LevelFilter::Info,
+            "default must not enable trace or debug"
+        );
     }
 
     #[test]
