@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const version = "0.5.2"
+const version = "0.5.3"
 
 var (
 	manifestPath   string
