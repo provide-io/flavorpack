@@ -20,7 +20,17 @@ find_matching_run() {
     while IFS= read -r run_id; do
         [ -n "$run_id" ] || continue
 
-        if gh api "repos/$REPOSITORY/actions/runs/$run_id/artifacts" --jq ".artifacts[].name" | grep -Eq "$artifact_pattern"; then
+        # Listed into a variable, then matched. Piping `gh` into `grep -q` has
+        # grep exit on the first match and close the pipe, so `gh` can take
+        # SIGPIPE and exit 141 -- and under `pipefail` that is the status of the
+        # whole pipeline, whether or not grep matched. The result is a run that
+        # is found or not depending on which side finishes first: this step
+        # located the same artifacts at 02:15 and failed to at 02:29, against an
+        # unchanged repository.
+        local names
+        names="$(gh api "repos/$REPOSITORY/actions/runs/$run_id/artifacts" --jq ".artifacts[].name")" || continue
+
+        if printf '%s\n' "$names" | grep -Eq "$artifact_pattern"; then
             echo "$run_id"
             return 0
         fi
