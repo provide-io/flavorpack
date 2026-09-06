@@ -35,7 +35,11 @@ find_matching_run() {
             --jq '.[].databaseId'
     )
 
-    echo "::error::No successful $label run on branch $BRANCH produced artifacts matching version $VERSION"
+    # To stderr: this function's stdout is captured by command substitution,
+    # so an error written there is swallowed and the job fails with nothing but
+    # an exit code. That is what this looked like from the outside.
+    echo "::error::No successful $label run on branch $BRANCH produced artifacts matching version $VERSION" >&2
+    echo "::error::Dispatch $workflow for $VERSION first; the release consumes its artifacts." >&2
     return 1
 }
 
