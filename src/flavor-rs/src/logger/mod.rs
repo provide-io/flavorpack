@@ -13,6 +13,7 @@
 //! existing `log::info!` in this crate reaches it unchanged.
 
 pub mod bridge;
+pub mod budget;
 pub mod prefix;
 
 use std::env;
@@ -138,8 +139,13 @@ fn install_log_output(use_json: bool) {
         .and_then(|path| OpenOptions::new().create(true).append(true).open(path).ok());
 
     match file {
+        // A file has no reader to block on, so it takes the whole log.
         Some(file) => install_destination(file, use_json),
-        None => install_destination(io::stderr(), use_json),
+        // stderr may never be drained -- see budget.rs.
+        None => install_destination(
+            budget::BudgetedWriter::new(io::stderr(), budget::STDERR_BUDGET),
+            use_json,
+        ),
     }
 }
 
