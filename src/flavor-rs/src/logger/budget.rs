@@ -59,17 +59,25 @@ impl<W: Write> BudgetedWriter<W> {
     }
 }
 
+impl<W: Write> BudgetedWriter<W> {
+    /// Say once that the rest is missing.
+    ///
+    /// Best effort: the budget exists because this write can block, and failing
+    /// to explain the truncation is not worth failing the launch over.
+    fn announce_truncation(&mut self) {
+        if self.noticed {
+            return;
+        }
+        self.noticed = true;
+        let _ = self.inner.write_all(NOTICE);
+        let _ = self.inner.flush();
+    }
+}
+
 impl<W: Write> Write for BudgetedWriter<W> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         if self.remaining == 0 {
-            if !self.noticed {
-                self.noticed = true;
-                // Best effort: the budget exists because this write can block,
-                // and failing to explain the truncation is not worth failing
-                // the launch over.
-                let _ = self.inner.write_all(NOTICE);
-                let _ = self.inner.flush();
-            }
+            self.announce_truncation();
             // Reported as written. The caller is a logging backend, and a short
             // write would have it retry the remainder forever.
             return Ok(buf.len());
@@ -78,6 +86,14 @@ impl<W: Write> Write for BudgetedWriter<W> {
         let take = buf.len().min(self.remaining);
         self.inner.write_all(&buf[..take])?;
         self.remaining -= take;
+
+        // Announced here, not on the next write, because there may not be one:
+        // the launcher execs into the payload once it is ready, and a record
+        // that ran out of budget on the way is the last thing it writes. That
+        // left the truncation unmarked in the case it mattered most.
+        if self.remaining == 0 && take < buf.len() {
+            self.announce_truncation();
+        }
         Ok(buf.len())
     }
 
@@ -136,6 +152,22 @@ mod tests {
         }
         let text = String::from_utf8_lossy(&sink);
         assert_eq!(text.matches("truncated").count(), 1);
+    }
+
+    /// The record that exhausts the budget is the one most likely to be the
+    /// last: the launcher execs into the payload shortly after, so waiting for
+    /// a further write to announce the truncation leaves it unannounced. This
+    /// is what a packaged provider actually did -- 16KB of log, no notice.
+    #[test]
+    fn truncation_is_announced_on_the_write_that_exhausts_the_budget() {
+        let mut sink: Vec<u8> = Vec::new();
+        {
+            let mut writer = BudgetedWriter::new(&mut sink, 8);
+            // One write, larger than the budget, and then nothing further.
+            writer.write_all(b"0123456789abcdef").unwrap();
+        }
+        let text = String::from_utf8_lossy(&sink);
+        assert!(text.contains("truncated"), "no notice in {text:?}");
     }
 
     /// A budget of zero still reports progress rather than looping.
