@@ -631,18 +631,19 @@ class TestWindowsSystemEnv:
         assert result == {}
 
     def test_windows_system_env_windows(self) -> None:
+        """Only what Foundation's allowlist omits. SYSTEMROOT is Foundation's."""
         from flavor.packaging.python.uv_manager import _windows_system_env
 
         with (
             patch("sys.platform", "win32"),
             patch.dict(
                 "os.environ",
-                {"SYSTEMROOT": "C:\\Windows", "WINDIR": "C:\\Windows", "OTHER": "nope"},
+                {"PROGRAMFILES": "C:\\Program Files", "SYSTEMROOT": "C:\\Windows", "OTHER": "nope"},
                 clear=False,
             ),
         ):
             result = _windows_system_env()
-        assert "SYSTEMROOT" in result
+        assert "PROGRAMFILES" in result
         assert "OTHER" not in result
 
 

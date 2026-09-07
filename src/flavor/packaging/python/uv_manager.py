@@ -35,35 +35,38 @@ from provide.foundation.tools.base import (
 from flavor.config.defaults import ENV_WHEEL_CACHE
 from flavor.packaging.python.manylinux import DEFAULT_MANYLINUX_TAGS, platform_tags_for_arch
 
+#: Windows variables this package passes through that Foundation's allowlist
+#: does not carry. The DLL-loading set -- SYSTEMROOT, WINDIR, SYSTEMDRIVE,
+#: COMSPEC, USERPROFILE, LOCALAPPDATA, APPDATA -- is deliberately absent: it
+#: lives in `provide.foundation.process.env.SAFE_ENV_ALLOWLIST` as of v0.3.28,
+#: and this package floors Foundation well above that. Restating it here read as
+#: load-bearing while merging values the scrub already kept.
+_WINDOWS_VARS = (
+    "COMPUTERNAME",
+    "PROGRAMFILES",
+    "PROGRAMFILES(X86)",
+    "COMMONPROGRAMFILES",
+    "NUMBER_OF_PROCESSORS",
+    "PROCESSOR_ARCHITECTURE",
+)
+
 
 def _windows_system_env() -> dict[str, str]:
-    """Return Windows system env vars required for subprocess DLL loading.
+    """Return the Windows variables Foundation's subprocess scrub omits.
 
-    provide.foundation scrubs subprocess environments to a safe allowlist, which
-    excludes SYSTEMROOT, WINDIR, etc. Without these, Windows cannot find the
-    Winsock service-provider DLLs (paths stored as %SystemRoot%\\system32\\...)
-    and any socket call — including DNS getaddrinfo — fails with errno 11001.
+    Foundation reduces a subprocess environment to `SAFE_ENV_ALLOWLIST`, which
+    carries what the C runtime needs to load Windows DLLs -- without SYSTEMROOT
+    the loader cannot reach the Winsock service providers stored under
+    %SystemRoot%\\system32, and any socket call, DNS lookup included, fails
+    with errno 11001. Those variables are Foundation's to supply.
 
-    Pass the returned dict as ``env=`` to ``run()`` so these vars are merged
-    into the scrubbed environment as trusted caller overrides.  On non-Windows
-    platforms the dict is empty so this is a no-op.
+    What it does not supply is the machine and program-files set below, which
+    uv and pip read while resolving an interpreter. Pass the returned dict as
+    ``env=`` to ``run()`` and they merge into the scrubbed environment as
+    trusted caller overrides. Off Windows the dict is empty, so this is a no-op.
     """
     if sys.platform != "win32":
         return {}
-    _WINDOWS_VARS = (
-        "SYSTEMROOT",
-        "WINDIR",
-        "SYSTEMDRIVE",
-        "LOCALAPPDATA",
-        "APPDATA",
-        "USERPROFILE",
-        "COMPUTERNAME",
-        "PROGRAMFILES",
-        "PROGRAMFILES(X86)",
-        "COMMONPROGRAMFILES",
-        "NUMBER_OF_PROCESSORS",
-        "PROCESSOR_ARCHITECTURE",
-    )
     return {k: v for k, v in os.environ.items() if k in _WINDOWS_VARS}
 
 
