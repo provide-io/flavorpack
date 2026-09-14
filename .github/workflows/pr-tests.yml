@@ -84,7 +84,7 @@ jobs:
 
       # uv provides the project environment the Python suite runs in.
       - name: 📦 Setup uv + Python
-        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
         with:
           enable-cache: true
 
@@ -98,7 +98,7 @@ jobs:
 
       # Rust toolchain, with the cargo registry and target dir cached.
       - name: 🦀 Setup Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v2
         with:
           workspaces: src/flavor-rs
 
