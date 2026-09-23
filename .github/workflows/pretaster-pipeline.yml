@@ -147,7 +147,7 @@ jobs:
       # Build pretaster test packages via Makefile (FreeBSD QEMU VM)
       - name: 🔨 Build Pretaster packages (FreeBSD VM)
         if: ${{ matrix.vm_arch != '' }}
-        uses: cross-platform-actions/action@v1.5.0
+        uses: cross-platform-actions/action@v1.6.0
         env:
           FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
@@ -302,7 +302,7 @@ jobs:
 
       - name: 🧪 Run cross-language tests (FreeBSD VM)
         if: ${{ matrix.vm_arch != '' }}
-        uses: cross-platform-actions/action@v1.5.0
+        uses: cross-platform-actions/action@v1.6.0
         env:
           FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
@@ -430,7 +430,7 @@ jobs:
 
       - name: 🔧 Build pretaster PSP (FreeBSD VM)
         if: ${{ matrix.vm_arch != '' }}
-        uses: cross-platform-actions/action@v1.5.0
+        uses: cross-platform-actions/action@v1.6.0
         env:
           FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
         with:
