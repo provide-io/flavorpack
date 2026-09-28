@@ -65,7 +65,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
       
       - name: 📥 Download helper artifacts
-        uses: dawidd6/action-download-artifact@v24
+        uses: dawidd6/action-download-artifact@v25
         with:
           workflow: helper-prep.yml
           run_id: ${{ steps.helpers.outputs.run_id }}
@@ -134,7 +134,7 @@ jobs:
           ls -la helpers/bin/
       
       - name: 📦 Setup uv + Python
-        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           python-version: '3.11'
           enable-cache: true
@@ -262,12 +262,12 @@ jobs:
           python-version: '3.11'
 
       - name: 📦 Setup uv
-        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           enable-cache: true
 
       - name: 📥 Download Go helpers
-        uses: dawidd6/action-download-artifact@v24
+        uses: dawidd6/action-download-artifact@v25
         continue-on-error: true
         with:
           workflow: helper-prep.yml
@@ -276,7 +276,7 @@ jobs:
           path: ./helpers-dist
 
       - name: 📥 Download Rust helpers
-        uses: dawidd6/action-download-artifact@v24
+        uses: dawidd6/action-download-artifact@v25
         continue-on-error: true
         with:
           workflow: helper-prep.yml
@@ -423,7 +423,7 @@ jobs:
           python-version: '3.11'
 
       - name: 📦 Setup uv
-        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           enable-cache: true
 
@@ -434,7 +434,7 @@ jobs:
           path: ./wheel-dist
       
       - name: 📥 Download Go helpers
-        uses: dawidd6/action-download-artifact@v24
+        uses: dawidd6/action-download-artifact@v25
         continue-on-error: true
         with:
           workflow: helper-prep.yml
@@ -443,7 +443,7 @@ jobs:
           path: ./helpers-dist
 
       - name: 📥 Download Rust helpers
-        uses: dawidd6/action-download-artifact@v24
+        uses: dawidd6/action-download-artifact@v25
         continue-on-error: true
         with:
           workflow: helper-prep.yml

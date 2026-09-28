@@ -90,7 +90,7 @@ jobs:
       # Native platforms use separate Go/Rust helper artifacts
       - name: 📥 Download Go helpers
         if: ${{ matrix.vm_arch == '' }}
-        uses: dawidd6/action-download-artifact@v24
+        uses: dawidd6/action-download-artifact@v25
         with:
           workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
@@ -99,7 +99,7 @@ jobs:
 
       - name: 📥 Download Rust helpers
         if: ${{ matrix.vm_arch == '' }}
-        uses: dawidd6/action-download-artifact@v24
+        uses: dawidd6/action-download-artifact@v25
         with:
           workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
@@ -109,7 +109,7 @@ jobs:
       # FreeBSD uses a single combined helpers artifact
       - name: 📥 Download combined helpers (FreeBSD)
         if: ${{ matrix.vm_arch != '' }}
-        uses: dawidd6/action-download-artifact@v24
+        uses: dawidd6/action-download-artifact@v25
         with:
           workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
@@ -118,7 +118,7 @@ jobs:
 
       # Download tastesh (embedded shell for self-contained PSPs)
       - name: 📥 Download tastesh
-        uses: dawidd6/action-download-artifact@v24
+        uses: dawidd6/action-download-artifact@v25
         with:
           workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
@@ -190,7 +190,7 @@ jobs:
       # Native platforms use separate Go/Rust helper artifacts
       - name: 📥 Download Go helpers
         if: ${{ matrix.vm_arch == '' }}
-        uses: dawidd6/action-download-artifact@v24
+        uses: dawidd6/action-download-artifact@v25
         with:
           workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
@@ -199,7 +199,7 @@ jobs:
 
       - name: 📥 Download Rust helpers
         if: ${{ matrix.vm_arch == '' }}
-        uses: dawidd6/action-download-artifact@v24
+        uses: dawidd6/action-download-artifact@v25
         with:
           workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
@@ -209,7 +209,7 @@ jobs:
       # FreeBSD uses a single combined helpers artifact
       - name: 📥 Download combined helpers (FreeBSD)
         if: ${{ matrix.vm_arch != '' }}
-        uses: dawidd6/action-download-artifact@v24
+        uses: dawidd6/action-download-artifact@v25
         with:
           workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
@@ -218,7 +218,7 @@ jobs:
 
       # Download tastesh (embedded shell for self-contained PSPs)
       - name: 📥 Download tastesh
-        uses: dawidd6/action-download-artifact@v24
+        uses: dawidd6/action-download-artifact@v25
         with:
           workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
@@ -378,7 +378,7 @@ jobs:
       # Native platforms use separate Go/Rust helper artifacts
       - name: 📥 Download Go helpers
         if: ${{ matrix.vm_arch == '' }}
-        uses: dawidd6/action-download-artifact@v24
+        uses: dawidd6/action-download-artifact@v25
         with:
           workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
@@ -387,7 +387,7 @@ jobs:
 
       - name: 📥 Download Rust helpers
         if: ${{ matrix.vm_arch == '' }}
-        uses: dawidd6/action-download-artifact@v24
+        uses: dawidd6/action-download-artifact@v25
         with:
           workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
@@ -397,7 +397,7 @@ jobs:
       # FreeBSD uses a single combined helpers artifact
       - name: 📥 Download combined helpers (FreeBSD)
         if: ${{ matrix.vm_arch != '' }}
-        uses: dawidd6/action-download-artifact@v24
+        uses: dawidd6/action-download-artifact@v25
         with:
           workflow: helper-prep.yml
           run_id: ${{ needs.setup.outputs.helper_run_id }}
