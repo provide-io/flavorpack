@@ -64,7 +64,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
       - name: 📥 Download Flavor PSP artifacts
-        uses: dawidd6/action-download-artifact@v24
+        uses: dawidd6/action-download-artifact@v25
         with:
           workflow: flavor-pipeline.yml
           run_id: ${{ steps.flavor.outputs.run_id }}
@@ -80,7 +80,7 @@ jobs:
           ls -la flavor-psp/
       
       - name: 📥 Download helper artifacts
-        uses: dawidd6/action-download-artifact@v24
+        uses: dawidd6/action-download-artifact@v25
         with:
           workflow: helper-prep.yml
           name: flavor-helpers-${{ steps.version.outputs.version }}-all
@@ -138,7 +138,7 @@ jobs:
           path: ./flavor-psp
       
       - name: 📥 Download helpers
-        uses: dawidd6/action-download-artifact@v24
+        uses: dawidd6/action-download-artifact@v25
         with:
           workflow: helper-prep.yml
           name: flavor-helpers-${{ needs.setup.outputs.version }}-all
@@ -334,7 +334,7 @@ jobs:
           path: all-results
 
       - name: 📥 Download helpers
-        uses: dawidd6/action-download-artifact@v24
+        uses: dawidd6/action-download-artifact@v25
         with:
           workflow: helper-prep.yml
           name: flavor-helpers-${{ needs.setup.outputs.version }}-all
@@ -364,7 +364,7 @@ jobs:
           ls -la src/flavor/helpers/bin/ || echo "  (empty)"
 
       - name: 📦 Setup uv + Python
-        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           python-version: '3.11'
 
